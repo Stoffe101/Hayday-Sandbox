@@ -20,6 +20,10 @@ extends Node2D
 ## World entries (set_world_entries) are not layout objects: they have string
 ## keys, never get uids, are never part of the layout, and are only reachable
 ## through pick_any() / world_entry_bounds(). Internally they use negative ids.
+##
+## Ambient animation (pack field "anim"): one global clock (advance_anim), only
+## on-screen sprites change frame, and a sprite's frames live on its own canvas
+## item or a child of it, so playback never touches the draw order.
 
 signal order_rebuilt(ms: float)
 
@@ -58,10 +62,19 @@ var _tints: Dictionary = {}        ## uid -> Color
 var _preview: Dictionary = {}      ## uid -> true (drag preview active)
 var _lifted: Dictionary = {}       ## uid -> true
 var last_sort_ms := 0.0
+var _ambient: int = Ambient.FULL
+var _anim_clock := 0.0             ## seconds; the single clock every animation reads
+var _anim: Dictionary = {}         ## id -> Vis of sprites that have an animation
+var _theme := ""                   ## world theme the object sprites were last drawn with
+var _anim_stats := {"ticked": 0, "frame_updates": 0}
 var _stats := {"last_flush": "none", "last_flush_ms": 0.0, "full": 0, "incremental": 0,
 	"fallback": 0, "draw_index_updates": 0, "last_draw_index_updates": 0}
 
 const CELL := 192.0
+
+## Ambient animation modes (settings: off / reduced / full).
+enum Ambient { OFF, REDUCED, FULL }
+const AMBIENT_FROM_SETTING := {"off": Ambient.OFF, "reduced": Ambient.REDUCED, "full": Ambient.FULL}
 
 
 class Vis:
@@ -70,6 +83,8 @@ class Vis:
 	var ci: RID
 	var sci: RID
 	var lci: RID                   ## lift shadow
+	var aci: RID                   ## overlay animation frames (child of ci)
+	var anim_frame := -2           ## frame on screen (-1 = static, -2 = nothing drawn yet)
 	var sprite: AssetLibrary.SpriteInfo
 	var bounds: Rect2              ## sprite bounds at the real position
 	var rect: Rect2i
@@ -116,6 +131,7 @@ func bind(l: FarmLayout, item_db: ItemDatabase, lib: AssetLibrary) -> void:
 	layout = l
 	db = item_db
 	assets = lib
+	_theme = layout.theme()
 	layout.objects_added.connect(_on_added)
 	layout.objects_removed.connect(_on_removed)
 	layout.objects_changed.connect(_on_changed)
@@ -150,6 +166,10 @@ func _exit_tree() -> void:
 
 func _free_vis(v: Vis) -> void:
 	_spatial_remove(v)
+	_anim.erase(v.uid)
+	if v.aci.is_valid():
+		RenderingServer.free_rid(v.aci)
+		v.aci = RID()
 	if v.ci.is_valid():
 		RenderingServer.free_rid(v.ci)
 		v.ci = RID()
@@ -190,14 +210,17 @@ func _draw_vis(v: Vis, o: PlacedObject, it: ItemDef) -> void:
 	var art_key := it.art_key if it else o.item_id
 	v.sprite = null
 	if it:
-		v.sprite = assets.get_sprite(art_key, o.variant, _connection_mask(o, it))
+		v.sprite = assets.get_sprite(art_key, assets.themed_variant(art_key, o.variant, _theme), _connection_mask(o, it))
+	_apply_mirror(v)
 	if v.sprite:
 		var sz := v.sprite.texture.get_size() * v.sprite.scale
 		var r := Rect2(-v.sprite.anchor * v.sprite.scale, sz)
 		RenderingServer.canvas_item_add_texture_rect(v.ci, r, v.sprite.texture.get_rid())
-		v.bounds = v.sprite.world_rect(v.center, o.flipped)
+		v.bounds = v.sprite.world_rect(v.center, v.flipped)
 		v.fallback_poly = PackedVector2Array()
+		_setup_anim(v)
 	else:
+		_clear_anim(v)
 		var col: Color = db.category(it.category)["color"] if it else Color(0.6, 0.6, 0.6)
 		var label := "?" if (it == null or o.missing) else ""
 		_draw_block(v, o.origin, o.size, o.flipped, col, it != null and it.layer == "ground", label)
@@ -281,7 +304,8 @@ func _apply_transform(v: Vis) -> void:
 	RenderingServer.canvas_item_set_transform(v.ci, Transform2D(flip, Vector2(0.0, 1.0), c))
 	var ground := c + Vector2(0.0, v.lift)
 	if v.sci.is_valid():
-		RenderingServer.canvas_item_set_transform(v.sci, Transform2D(flip, Vector2(0.0, 1.0), ground))
+		var sflip := Vector2(-1.0, 0.0) if v.sprite and v.sprite.shadow_mirrored else flip
+		RenderingServer.canvas_item_set_transform(v.sci, Transform2D(sflip, Vector2(0.0, 1.0), ground))
 	if v.lift > 0.0 and _shadow_root != null:
 		if not v.lci.is_valid():
 			v.lci = RenderingServer.canvas_item_create()
@@ -445,6 +469,123 @@ func set_tints(tints: Dictionary) -> void:
 		var o := layout.get_obj(u) if layout else null
 		if v and o:
 			_apply_modulate(v, o)
+
+
+func refresh_theme() -> void:
+	## After the layout's world theme changed: only objects whose art really has
+	## theme variants are redrawn. Landmarks follow through set_world_entries.
+	var t := layout.theme() if layout else ""
+	if t == _theme:
+		return
+	_theme = t
+	for u in _vis:
+		var o := layout.get_obj(u)
+		if o == null:
+			continue
+		var it := db.get_item(o.item_id)
+		if it and assets.has_theme_variants(it.art_key):
+			_draw_vis(_vis[u], o, it)
+
+
+# --- ambient animation -----------------------------------------------------------------
+
+func set_ambient_mode(mode: int) -> void:
+	_ambient = mode
+	for v: Vis in _anim.values():
+		_show_anim_frame(v, _anim_frame_for(v))
+
+
+func ambient_mode() -> int:
+	return _ambient
+
+
+func advance_anim(dt: float, view: Rect2) -> void:
+	## Moves the clock and updates the sprites whose rect touches `view` (world px).
+	_anim_stats["ticked"] = 0
+	_anim_stats["frame_updates"] = 0
+	if _ambient == Ambient.OFF:
+		return
+	_anim_clock += dt
+	for v: Vis in _anim.values():
+		if not v.bounds.intersects(view) or _hidden.has(v.uid) or not v.visible:
+			continue
+		_anim_stats["ticked"] += 1
+		var f := _anim_frame_for(v)
+		if f != v.anim_frame:
+			_show_anim_frame(v, f)
+			_anim_stats["frame_updates"] += 1
+
+
+func anim_stats() -> Dictionary:
+	## {"animated": sprites with an animation, "ticked" / "frame_updates": of the last advance}.
+	return {"animated": _anim.size(), "ticked": _anim_stats["ticked"], "frame_updates": _anim_stats["frame_updates"]}
+
+
+func anim_frame_of(uid: int) -> int:
+	## Frame on screen (-1 = static image, -2 = no animation). Layout uid.
+	var v: Vis = _vis.get(uid)
+	return v.anim_frame if v and v.sprite and v.sprite.anim else -2
+
+
+func _apply_mirror(v: Vis) -> void:
+	## A flipped object whose sprite has hand-drawn mirror art shows that art unflipped.
+	if v.flipped and v.sprite and v.sprite.mirror:
+		v.sprite = v.sprite.mirror
+		v.flipped = false
+
+
+func _anim_frame_for(v: Vis) -> int:
+	## The frame this sprite should show now (-1 = its static image).
+	var a := v.sprite.anim
+	if a.frames < 2 or _ambient == Ambient.OFF or (_ambient == Ambient.REDUCED and posmod(v.uid, 3) != 0):
+		return -1
+	var fps := a.fps * (0.5 if _ambient == Ambient.REDUCED else 1.0)
+	return (floori(_anim_clock * fps) + posmod(v.uid * 7, a.frames)) % a.frames
+
+
+func _setup_anim(v: Vis) -> void:
+	## Called right after the sprite was (re)drawn on v.ci.
+	var a := v.sprite.anim
+	if a == null:
+		_clear_anim(v)
+		return
+	_anim[v.uid] = v
+	v.anim_frame = -2
+	if not a.overlay and v.aci.is_valid():
+		RenderingServer.free_rid(v.aci)
+		v.aci = RID()
+	v.bounds = v.bounds.merge(a.world_rect(v.center, v.flipped, v.sprite.scale))
+	_show_anim_frame(v, _anim_frame_for(v))
+
+
+func _clear_anim(v: Vis) -> void:
+	_anim.erase(v.uid)
+	v.anim_frame = -2
+	if v.aci.is_valid():
+		RenderingServer.free_rid(v.aci)
+		v.aci = RID()
+
+
+func _show_anim_frame(v: Vis, f: int) -> void:
+	if f == v.anim_frame:
+		return
+	var had_static := v.anim_frame == -2   # _draw_vis / _draw_world just drew the static image
+	v.anim_frame = f
+	var a := v.sprite.anim
+	var sc := v.sprite.scale
+	var r := Rect2(-a.anchor * sc, a.frame_size * sc)
+	if a.overlay:
+		if not v.aci.is_valid():
+			v.aci = RenderingServer.canvas_item_create()
+			RenderingServer.canvas_item_set_parent(v.aci, v.ci)
+		RenderingServer.canvas_item_clear(v.aci)
+		RenderingServer.canvas_item_add_texture_rect_region(v.aci, r, a.sheet.get_rid(), a.frame_rect(maxi(f, 0)))
+	elif f >= 0:
+		RenderingServer.canvas_item_clear(v.ci)
+		RenderingServer.canvas_item_add_texture_rect_region(v.ci, r, a.sheet.get_rid(), a.frame_rect(f))
+	elif not had_static:
+		RenderingServer.canvas_item_clear(v.ci)
+		RenderingServer.canvas_item_add_texture_rect(v.ci, Rect2(-v.sprite.anchor * sc, v.sprite.texture.get_size() * sc), v.sprite.texture.get_rid())
 
 
 # --- drag preview / lift ------------------------------------------------------------
@@ -668,12 +809,15 @@ func _draw_world(v: Vis) -> void:
 	v.visible = e["visible"]
 	v.center = Iso.footprint_center(v.rect.position, v.rect.size)
 	v.sprite = _world_sprite(e)
+	_apply_mirror(v)
 	if v.sprite:
 		var sz := v.sprite.texture.get_size() * v.sprite.scale
 		RenderingServer.canvas_item_add_texture_rect(v.ci, Rect2(-v.sprite.anchor * v.sprite.scale, sz), v.sprite.texture.get_rid())
 		v.bounds = v.sprite.world_rect(v.center, v.flipped)
 		v.fallback_poly = PackedVector2Array()
+		_setup_anim(v)
 	else:
+		_clear_anim(v)
 		_draw_block(v, v.rect.position, v.rect.size, v.flipped, WORLD_MARKER_COLOR, false, "")
 	_draw_shadow(v)
 	_apply_transform(v)
@@ -687,9 +831,11 @@ func _draw_world(v: Vis) -> void:
 
 # --- draw order ------------------------------------------------------------------------
 
-func _process(_dt: float) -> void:
+func _process(dt: float) -> void:
 	if _order_dirty or not _pending.is_empty():
 		ensure_sorted()
+	if not _anim.is_empty():
+		advance_anim(dt, get_canvas_transform().affine_inverse() * get_viewport_rect())
 
 
 func ensure_sorted() -> void:
@@ -970,6 +1116,51 @@ func pick_any(world_pos: Vector2, include_hidden: bool = false) -> Dictionary:
 	if best != null:
 		return _pick_result(best)
 	return {"kind": "", "uid": 0, "key": ""}
+
+
+func pick_all(world_pos: Vector2, include_hidden: bool = false) -> Array:
+	## Everything under world_pos, top-most first, in pick_any()'s result shape:
+	## pixel hits by draw rank, then whatever only covers the point with its
+	## footprint tile. The first entry is what pick_any() returns.
+	ensure_sorted()
+	var k := Vector2i(floori(world_pos.x / CELL), floori(world_pos.y / CELL))
+	var hits: Array = []
+	var up: Dictionary = _order.seq.label
+	var fl: Dictionary = _flat_order.seq.label
+	for id: int in _spatial.get(k, []):
+		var v: Vis = _vis.get(id) if id > 0 else _wvis.get(id)
+		if v == null or not v.bounds.has_point(world_pos):
+			continue
+		if id > 0:
+			if not include_hidden and _hidden.has(id):
+				continue
+		elif not v.selectable or not v.visible:
+			continue
+		if _hit(v, world_pos):
+			hits.append([int(fl.get(id, 0)) - FLAT_RANK_OFFSET if v.flat else int(up.get(id, 0)), v])
+	hits.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) > int(b[0]))
+	var out: Array = []
+	var seen := {}
+	for h: Array in hits:
+		var v: Vis = h[1]
+		seen[v.uid] = true
+		out.append(_pick_result(v))
+	var t := Iso.world_to_tile(world_pos)
+	if layout:
+		var stacked: Array = layout.occupancy.all_at(t)
+		stacked.reverse()
+		for u in stacked:
+			if not seen.has(u) and (include_hidden or not _hidden.has(u)):
+				seen[u] = true
+				out.append({"kind": "object", "uid": u, "key": ""})
+	var lms: Array = []
+	for v: Vis in _wvis.values():
+		if not seen.has(v.uid) and v.selectable and v.visible and v.rect.has_point(t):
+			lms.append([_rank(v), v])
+	lms.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) > int(b[0]))
+	for h: Array in lms:
+		out.append(_pick_result(h[1]))
+	return out
 
 
 func _pick_result(v: Vis) -> Dictionary:

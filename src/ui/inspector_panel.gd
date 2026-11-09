@@ -59,7 +59,7 @@ func rebuild() -> void:
 	var s := App.session
 	if s == null:
 		return
-	report = RealisticAnalyzer.analyze(s.layout, s.db, s.map)
+	report = s.analysis()
 	match _tab:
 		0: _build_selection(s)
 		1: _build_farm(s)
@@ -326,7 +326,7 @@ func _brush_row(s: EditorSession) -> HBoxContainer:
 	bar.theme_type_variation = "SegmentBar"
 	var row := UI.hbox(2)
 	bar.add_child(row)
-	for b in [["single", "Single", "paintbrush"], ["line", "Line", "minus"], ["rect", "Fill", "square-dashed"]]:
+	for b in [["single", "Single", "paintbrush"], ["line", "Line", "minus"], ["rect", "Fill", "square-dashed"], ["outline", "Outline", "fence"]]:
 		var btn := UI.button(b[1], b[2], "", "Segment")
 		btn.toggle_mode = true
 		btn.button_pressed = s.brush == b[0]
@@ -774,6 +774,96 @@ func _report_card(s: EditorSession) -> void:
 # View tab: layers, reference image, compare
 # ---------------------------------------------------------------------------
 
+func _build_reference_section(rv: VBoxContainer) -> void:
+	var rows: Array = view_state.get("ref_images", [])
+	if rows.is_empty():
+		rv.add_child(UI.label("Trace your real farm: import a screenshot, line it up with the grid, then rebuild it on top.", "Dim", true))
+		var imp := UI.button("Import screenshot…", "image", "PNG / JPG / WebP")
+		imp.pressed.connect(func(): action.emit("ref_import", null))
+		rv.add_child(imp)
+		return
+	# Top of the stack first, as they appear on the farm.
+	var active: Dictionary = {}
+	for i in range(rows.size() - 1, -1, -1):
+		var r: Dictionary = rows[i]
+		if bool(r["active"]):
+			active = r
+		var row := UI.hbox(2)
+		var title := str(r["name"]) + (" (missing)" if bool(r["missing"]) else "")
+		var pick := UI.button(title, "", "Edit this image", "Accent" if bool(r["active"]) else "Ghost")
+		pick.clip_text = true
+		pick.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pick.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		pick.pressed.connect(func(): action.emit("ref_select", r["id"]))
+		row.add_child(pick)
+		var eye := UI.icon_button("eye" if bool(r["visible"]) else "eye-off", "Show or hide this image")
+		eye.pressed.connect(func(): action.emit("ref", {"id": r["id"], "visible": not bool(r["visible"])}))
+		row.add_child(eye)
+		var lk := UI.icon_button("lock" if bool(r["locked"]) else "lock-open", "Lock this image")
+		lk.pressed.connect(func(): action.emit("ref", {"id": r["id"], "locked": not bool(r["locked"])}))
+		row.add_child(lk)
+		rv.add_child(row)
+	var add := UI.button("Add screenshot…", "plus", "PNG / JPG / WebP")
+	add.pressed.connect(func(): action.emit("ref_import", null))
+	rv.add_child(add)
+	if active.is_empty():
+		return
+	var id := str(active["id"])
+	var locked := bool(active["locked"])
+	var order := UI.hbox(6)
+	for o in [["Up", 1, "Draw above the next image"], ["Down", -1, "Draw below the next image"]]:
+		var b := UI.button(o[0], "", o[2])
+		b.disabled = (o[1] > 0 and id == str(rows[-1]["id"])) or (o[1] < 0 and id == str(rows[0]["id"]))
+		b.pressed.connect(func(): action.emit("ref_order", [id, o[1]]))
+		order.add_child(b)
+	var rm := UI.button("Remove", "trash", "Remove this image")
+	rm.pressed.connect(func(): action.emit("ref_remove", id))
+	order.add_child(rm)
+	rv.add_child(order)
+	var mv := CheckButton.new()
+	mv.text = "Move image by dragging"
+	mv.disabled = locked
+	mv.button_pressed = bool(view_state.get("ref_move", false)) and not locked
+	mv.toggled.connect(func(on): action.emit("ref_move", on))
+	rv.add_child(mv)
+	var above := CheckButton.new()
+	above.text = "Show above objects"
+	above.button_pressed = bool(view_state.get("ref_above", false))
+	above.toggled.connect(func(on): action.emit("ref", {"above": on}))
+	rv.add_child(above)
+	rv.add_child(UI.label("Opacity", "Dim"))
+	var op := HSlider.new()
+	op.min_value = 0.05
+	op.max_value = 1.0
+	op.step = 0.01
+	op.value = float(view_state.get("ref_opacity", 0.5))
+	op.value_changed.connect(func(x): action.emit("ref", {"opacity": x}))
+	rv.add_child(op)
+	for f in [["Scale", "ref_scale", 0.05, 8.0, 0.01, "scale"], ["Rotation°", "ref_rotation", -45.0, 45.0, 0.1, "rotation"]]:
+		var hr := UI.hbox(6)
+		hr.add_child(UI.label(f[0], "Dim"))
+		hr.add_child(UI.spacer())
+		var sb := SpinBox.new()
+		sb.min_value = f[2]
+		sb.max_value = f[3]
+		sb.step = f[4]
+		sb.value = float(view_state.get(f[1], 1.0 if f[5] == "scale" else 0.0))
+		sb.value_changed.connect(func(x): action.emit("ref", {f[5]: x}))
+		hr.add_child(sb)
+		rv.add_child(hr)
+	rv.add_child(UI.label("Line it up roughly by dragging, then calibrate: click 2 or 3 points on the screenshot, then the same tile corners on the grid. Two points set position, rotation and scale; three also fix a stretched image.", "Faint", true))
+	var row2 := UI.hbox(6)
+	for n in [2, 3]:
+		var cal := UI.button("%d points" % n, "crosshair", "Calibrate from %d points" % n)
+		cal.disabled = locked
+		cal.pressed.connect(func(): action.emit("ref_calibrate", n))
+		row2.add_child(cal)
+	rv.add_child(row2)
+	var status := str(view_state.get("ref_status", ""))
+	if not status.is_empty():
+		rv.add_child(UI.label(status, "Faint", true))
+
+
 func _build_view(s: EditorSession) -> void:
 	_build_world_section(s)
 	_body.add_child(UI.section("Layers"))
@@ -788,71 +878,11 @@ func _build_view(s: EditorSession) -> void:
 		cb.toggled.connect(func(on): action.emit("view", [t[0], on]))
 		v.add_child(cb)
 	_body.add_child(card)
-	_body.add_child(UI.section("Screenshot reference"))
+	_body.add_child(UI.section("Screenshot references"))
 	var rc := UI.card()
 	var rv := UI.vbox(6)
 	rc.add_child(rv)
-	var has_ref := bool(view_state.get("ref_loaded", false))
-	if not has_ref:
-		rv.add_child(UI.label("Trace your real farm: import a screenshot, line it up with the grid, then rebuild it on top.", "Dim", true))
-		var imp := UI.button("Import screenshot…", "image", "PNG / JPG / WebP")
-		imp.pressed.connect(func(): action.emit("ref_import", null))
-		rv.add_child(imp)
-	else:
-		var row := UI.hbox(6)
-		var vis := CheckButton.new()
-		vis.text = "Visible"
-		vis.button_pressed = bool(view_state.get("ref_visible", true))
-		vis.toggled.connect(func(on): action.emit("ref", {"visible": on}))
-		row.add_child(vis)
-		var lock := CheckButton.new()
-		lock.text = "Locked"
-		lock.button_pressed = bool(view_state.get("ref_locked", false))
-		lock.toggled.connect(func(on): action.emit("ref", {"locked": on}))
-		row.add_child(lock)
-		rv.add_child(row)
-		var mv := CheckButton.new()
-		mv.text = "Move image by dragging"
-		mv.disabled = bool(view_state.get("ref_locked", false))
-		mv.toggled.connect(func(on): action.emit("ref_move", on))
-		rv.add_child(mv)
-		var above := CheckButton.new()
-		above.text = "Show above objects"
-		above.button_pressed = bool(view_state.get("ref_above", false))
-		above.toggled.connect(func(on): action.emit("ref", {"above": on}))
-		rv.add_child(above)
-		rv.add_child(UI.label("Opacity", "Dim"))
-		var op := HSlider.new()
-		op.min_value = 0.05
-		op.max_value = 1.0
-		op.step = 0.01
-		op.value = float(view_state.get("ref_opacity", 0.5))
-		op.value_changed.connect(func(x): action.emit("ref", {"opacity": x}))
-		rv.add_child(op)
-		for f in [["Scale", "ref_scale", 0.05, 8.0, 0.01, "scale"], ["Rotation°", "ref_rotation", -45.0, 45.0, 0.1, "rotation"]]:
-			var hr := UI.hbox(6)
-			hr.add_child(UI.label(f[0], "Dim"))
-			hr.add_child(UI.spacer())
-			var sb := SpinBox.new()
-			sb.min_value = f[2]
-			sb.max_value = f[3]
-			sb.step = f[4]
-			sb.value = float(view_state.get(f[1], 1.0 if f[5] == "scale" else 0.0))
-			sb.value_changed.connect(func(x): action.emit("ref", {f[5]: x}))
-			hr.add_child(sb)
-			rv.add_child(hr)
-		rv.add_child(UI.label("Line it up roughly by dragging, then calibrate: click 3 points on the screenshot, then the same 3 tile corners on the grid.", "Faint", true))
-		var row2 := UI.hbox(6)
-		var cal := UI.button("Calibrate", "crosshair", "3-point alignment")
-		cal.pressed.connect(func(): action.emit("ref_calibrate", null))
-		row2.add_child(cal)
-		var rm := UI.button("Remove", "trash", "Remove the reference image")
-		rm.pressed.connect(func(): action.emit("ref_remove", null))
-		row2.add_child(rm)
-		rv.add_child(row2)
-		var status := str(view_state.get("ref_status", ""))
-		if not status.is_empty():
-			rv.add_child(UI.label(status, "Faint", true))
+	_build_reference_section(rv)
 	_body.add_child(rc)
 	_body.add_child(UI.section("Compare"))
 	var cc := UI.card()

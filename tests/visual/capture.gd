@@ -21,7 +21,7 @@ const ALL := ["overview", "place_valid", "place_invalid", "selection", "search",
 	"gallery", "help", "settings", "welcome", "reference", "compare", "export", "light",
 	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty", "landmarks", "migration"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
-const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>"]
+const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "winter", "anim_perf"]
 ## Asset scenarios install a synthetic pack generated from the built-in
 ## placeholders (never real artwork); it is removed again before the next scenario.
 const SyntheticPack := preload("res://tests/fixtures/synthetic_pack.gd")
@@ -128,6 +128,7 @@ func _reset() -> void:
 		main._open_template("res://data/samples/01_meadow_showcase.hdlayout", "My first farm")
 		s = _app().session
 	if s:
+		main.ground.set_theme(s.layout.theme())
 		s.set_mode(FarmLayout.MODE_CREATIVE)
 		s.layout.reference = {}
 		main._load_reference()
@@ -252,6 +253,97 @@ func _focus(sc: String) -> bool:
 	return true
 
 
+func _avg_frame_ms(n: int) -> float:
+	await _frames(10)
+	var t0 := Time.get_ticks_usec()
+	await _frames(n)
+	return (Time.get_ticks_usec() - t0) / 1000.0 / n
+
+
+func _anim_perf() -> void:
+	## Frame time with 500 animated sprites in view (extra scenario, run on its own).
+	var s = _session()
+	var it: ItemDef = s.db.get_item("windmill")
+	var objs: Array = []
+	for i in 500:
+		var po := PlacedObject.new()
+		po.item_id = "windmill"
+		po.origin = Vector2i(1 + i % 25, 1 + i / 25)
+		po.size = it.footprint
+		objs.append(po)
+	s.layout.add_objects(objs, true)
+	main.renderer.ensure_sorted()
+	main.camera.smooth = false
+	main.camera.set_zoom_level(0.55)
+	main.camera.zoom = Vector2(0.55, 0.55)
+	main.camera.target_zoom = 0.55
+	main.camera.center_on(Iso.grid_to_world(Vector2(13, 11)))
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	Engine.max_fps = 0
+	var driver := RenderingServer.get_current_rendering_driver_name()
+	var method := RenderingServer.get_current_rendering_method()
+	var adapter := RenderingServer.get_video_adapter_name()
+	main.renderer.set_ambient_mode(ObjectRenderer.Ambient.OFF)
+	var off_ms: float = await _avg_frame_ms(240)
+	main.renderer.set_ambient_mode(ObjectRenderer.Ambient.REDUCED)
+	var red_ms: float = await _avg_frame_ms(240)
+	main.renderer.set_ambient_mode(ObjectRenderer.Ambient.FULL)
+	var full_ms: float = await _avg_frame_ms(240)
+	var st: Dictionary = main.renderer.anim_stats()
+	var view: Rect2 = main.renderer.get_canvas_transform().affine_inverse() * main.renderer.get_viewport_rect()
+	var t0 := Time.get_ticks_usec()
+	for i in 200:
+		main.renderer.advance_anim(1.0 / 6.0, view)
+	var tick_us := (Time.get_ticks_usec() - t0) / 200.0
+	print("PERF anim renderer=%s/%s adapter=%s sprites=%d in_view=%d frame_ms off=%.2f reduced=%.2f full=%.2f script_tick_us=%.1f (every sprite changing frame)" % [
+		driver, method, adapter, st["animated"], main.renderer.anim_stats()["ticked"], off_ms, red_ms, full_ms, tick_us])
+	for theme_id: String in ["winter", s.layout.theme()]:
+		main.ground.set_theme(theme_id)
+		await _frames(3)
+		print("PERF terrain season=%s redraw_ms=%.2f" % [theme_id, main.ground._terrain.last_draw_usec / 1000.0])
+	main.ground.queue_redraw()
+	await _frames(3)
+	print("PERF ground ownership redraw_ms=%.2f" % (main.ground.last_draw_usec / 1000.0))
+	print("PERF terrain build_ms=%.2f" % (main.ground._terrain.last_build_usec / 1000.0))
+
+
+func _drag_pair() -> Array:
+	## [mover, a nearby object to drop it on, the mover's tile that picks it].
+	var s = _session()
+	var objs: Array = s.layout.objects.values()
+	for m: PlacedObject in objs:
+		if m.size.x < 2 or m.size.y < 2 or not s.can_move_object(m):
+			continue
+		var grab := Vector2i(-99999, -99999)
+		for y in m.size.y:
+			for x in m.size.x:
+				var t := m.origin + Vector2i(x, y)
+				if main.renderer.pick(Iso.tile_center(t)) == m.uid:
+					grab = t
+		if grab.x == -99999:
+			continue
+		for o: PlacedObject in objs:
+			if o != m and o.size.x >= 2 and o.size.y >= 2 and (o.origin - m.origin).length() < 14.0:
+				return [m, o, grab]
+	return []
+
+
+func _canvas_move(p: Vector2, mask: int) -> void:
+	var e := InputEventMouseMotion.new()
+	e.position = p
+	e.button_mask = mask
+	main._on_canvas_input(e)
+
+
+func _canvas_button(p: Vector2, pressed: bool) -> void:
+	var e := InputEventMouseButton.new()
+	e.position = p
+	e.button_index = MOUSE_BUTTON_LEFT
+	e.pressed = pressed
+	e.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
+	main._on_canvas_input(e)
+
+
 func _scenario(sc: String) -> bool:
 	var s = _session()
 	if sc.begins_with("at_"):
@@ -311,6 +403,24 @@ func _scenario(sc: String) -> bool:
 			# The farmhouse is a fixed landmark of the world (not an object).
 			var fh: Landmark = s.map.landmark("farmhouse")
 			_ghost_at("dairy", fh.origin + Vector2i(1, 1) if fh else Vector2i(15, 13))
+		"drag_blocked":
+			# A live drag held over another object: lift + shadow, red validity
+			# tiles under the objects, red blocker outline, one chip per reason.
+			var pair: Array = _drag_pair()
+			if pair.is_empty():
+				return false
+			var mover: PlacedObject = pair[0]
+			var other: PlacedObject = pair[1]
+			main.camera.smooth = false
+			main.camera.set_zoom_level(1.6)
+			main.camera.center_on(Iso.footprint_center(other.origin, other.size))
+			await _frames(3)
+			var a: Vector2 = main.camera.world_to_screen(Iso.tile_center(pair[2]))
+			var b: Vector2 = main.camera.world_to_screen(Iso.tile_center(pair[2] + other.origin - mover.origin))
+			_canvas_move(a, 0)
+			_canvas_button(a, true)
+			for i in range(1, 11):
+				_canvas_move(a.lerp(b, i / 10.0), MOUSE_BUTTON_MASK_LEFT)
 		"selection":
 			var uids: Array = []
 			for o: PlacedObject in s.layout.objects.values():
@@ -362,9 +472,15 @@ func _scenario(sc: String) -> bool:
 			img.adjust_bcs(1.1, 0.6, 1.0)
 			var tmp := "user://ref_test.png"
 			img.save_png(tmp)
-			s.layout.reference = main.reference.default_settings(ReferenceLayer.import_image(ProjectSettings.globalize_path(tmp), "test"), r.get_center() + Vector2(40, 20), r.size.x * 0.98)
-			s.layout.reference["opacity"] = 0.6
-			s.layout.reference["above"] = true
+			var first: Dictionary = ReferenceLayer.default_image(ReferenceLayer.import_image(ProjectSettings.globalize_path(tmp), "test"), r.get_center() + Vector2(40, 20), r.size.x * 0.98)
+			first["opacity"] = 0.6
+			first["name"] = "Whole farm"
+			var second := first.duplicate()
+			second["file"] = ReferenceLayer.import_image(ProjectSettings.globalize_path(tmp), "test2")
+			second["name"] = "Farmhouse close-up"
+			second["scale"] = float(first["scale"]) * 0.35
+			second["opacity"] = 0.85
+			s.layout.reference = {"images": [first, second], "above": true}
 			main._load_reference()
 			main.inspector.show_tab(2)
 			main.inspector.rebuild()
@@ -418,6 +534,34 @@ func _scenario(sc: String) -> bool:
 				_dump_objects(p4.get_basename() + ".objects.json", Vector2.ONE, r4, 1.0)
 			print("EXPORT %dx%d" % [img4.get_width(), img4.get_height()])
 			main._fit()
+		"tools_symmetry":
+			# Symmetry on: the mirror line and the mirrored ghost of what's being placed.
+			var tile := _find_free("fence", Vector2i(10, 22))
+			main.camera.smooth = false
+			main.camera.set_zoom_level(1.0)
+			main.camera.center_on(Iso.footprint_center(tile, Vector2i.ONE))
+			s.set_symmetry_kind(LayoutTools.KIND_ACROSS)
+			s.set_symmetry_tile(tile + Vector2i(6, 0))
+			s.set_symmetry_enabled(true)
+			_ghost_at("fence", tile)
+			await _frames(3)
+		"tools_repeat":
+			# Selection tools, repeat preview and the stamps panel.
+			var fid := "field"
+			var at := _find_free(fid, Vector2i(6, 24))
+			var it: ItemDef = s.db.get_item(fid)
+			var objs: Array = [s.make_object(it, at), s.make_object(it, at + Vector2i(it.footprint.x, 0))]
+			var uids: Array = s.place_objects(objs, "Two")
+			main.camera.smooth = false
+			main.camera.set_zoom_level(1.0)
+			main.camera.center_on(Iso.footprint_center(at, Vector2i.ONE))
+			s.select(uids, false, false)
+			main.layout_tools.set_repeat_params({"cols": 3, "rows": 2, "gap": Vector2i(1, 1)})
+			main.dock.tool_action.emit("repeat", true)
+			main.layout_tools.save_selection_stamp("Corner fields")
+			main.dock.tool_action.emit("stamps", true)
+			main.dock.set_stamps_open(true)
+			await _frames(3)
 		"landmarks":
 			# A fixed landmark selected: its card in the inspector, the hover /
 			# selection marks and the "fixed in place" hint near the cursor.
@@ -468,6 +612,11 @@ func _scenario(sc: String) -> bool:
 			await _frames(4)
 			if main.show_load_report(rep) == null:
 				return false
+		"winter":
+			main.ground.set_theme("winter")
+			main._fit()
+		"anim_perf":
+			await _anim_perf()
 		"light":
 			_app().settings.set_v("theme", "light", false)
 			await main._rebuild_ui()

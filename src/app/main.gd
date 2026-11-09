@@ -11,6 +11,7 @@ var reference: ReferenceLayer
 var grid: GridOverlay
 var renderer: ObjectRenderer
 var overlay: EditorOverlay
+var underlay: SelectionUnderlay
 var controller: EditorController
 var exporter: Exporter
 
@@ -21,6 +22,7 @@ var top_bar: TopBar
 var catalog: CatalogPanel
 var inspector: InspectorPanel
 var dock: ToolDock
+var layout_tools: LayoutToolController
 var toasts: Toasts
 var modal_layer: Control
 
@@ -30,6 +32,8 @@ var _panels_hidden := false
 var _diff: LayoutDiff.Result
 var _view_state := {}
 var _calib_world: Array = []
+var _calib_points := 3
+var _ref_ui_sig := ""
 var _ref_drag := false
 var _ref_drag_last := Vector2.ZERO
 var _layout_dirty_ui := true
@@ -70,6 +74,7 @@ func _ready() -> void:
 	_build_world()
 	_apply_ui_scale()
 	_build_ui()
+	_setup_layout_tools()
 	App.notify.connect(_on_notify)
 	App.session_changed.connect(_on_session_changed)
 	App.assets_reloaded.connect(func():
@@ -161,12 +166,20 @@ func _build_world() -> void:
 	grid = GridOverlay.new()
 	grid.visibility_layer = Exporter.LAYER_GRID
 	world.add_child(grid)
+	underlay = SelectionUnderlay.new()
+	underlay.visibility_layer = Exporter.LAYER_OVERLAY
+	world.add_child(underlay)
 	renderer = ObjectRenderer.new()
+	renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
 	world.add_child(renderer)
 	overlay = EditorOverlay.new()
 	overlay.visibility_layer = Exporter.LAYER_OVERLAY
 	world.add_child(overlay)
+	overlay.underlay = underlay
+	underlay.overlay = overlay
 	camera = FarmCamera.new()
+	camera.smooth = bool(App.settings.get_v("smooth_zoom"))
+	camera.wheel_factor = float(App.settings.get_v("wheel_zoom_factor"))
 	world.add_child(camera)
 	camera.make_current()
 	camera.view_changed.connect(_on_view_changed)
@@ -504,6 +517,7 @@ func _on_session_changed() -> void:
 	_diff = null
 	_view_state.erase("diff_summary")
 	controller.bind(s)
+	layout_tools.bind(s)
 	_load_reference()
 	s.selection_changed.connect(_on_selection_changed)
 	s.tool_changed.connect(_on_tool_changed)
@@ -557,6 +571,8 @@ func _refresh_world() -> void:
 	var s := App.session
 	if s == null:
 		return
+	ground.set_theme(s.layout.theme())
+	renderer.refresh_theme()
 	renderer.set_world_entries(LandmarkView.entries_for(s.map, s.layout, App.assets, _landmark_tints()))
 	_update_landmark_overlay()
 
@@ -603,7 +619,7 @@ func _apply_world_bounds() -> void:
 	if s == null:
 		return
 	camera.home = Iso.grid_to_world(LandmarkView.home_tile_point(s.map))
-	camera.set_limits(world_rect_px(s.map))
+	camera.set_world_bounds(world_rect_px(s.map))
 
 
 func go_home() -> void:
@@ -611,8 +627,66 @@ func go_home() -> void:
 	if App.session == null:
 		return
 	_update_view_rect()
-	camera.go_home()
+	camera.fly_home()
 	dock.set_status("Home")
+
+
+func _selection_world_rect(s: EditorSession) -> Rect2:
+	## World rectangle around the selected objects' or landmark's art and
+	## footprints (size 0 = nothing selected).
+	var r := Rect2()
+	for o: PlacedObject in s.selected_objects():
+		var b := Iso.footprint_world_bounds(o.origin, o.size)
+		if renderer.bounds_of(o.uid).size != Vector2.ZERO:
+			b = b.merge(renderer.bounds_of(o.uid))
+		r = r.merge(b) if r.size != Vector2.ZERO else b
+	var lm: Landmark = s.selected_landmark_def()
+	if lm:
+		var b := Iso.footprint_world_bounds(lm.origin, lm.footprint)
+		var art := renderer.world_entry_bounds(LandmarkView.key_of(lm.id))
+		r = b.merge(art) if art.size != Vector2.ZERO else b
+	return r
+
+
+func _fit_selection_or_farm() -> void:
+	## F: fly to the selection, or to the farm when nothing is selected.
+	var s := App.session
+	if s == null:
+		return
+	_update_view_rect()
+	var r := _selection_world_rect(s)
+	if r.size == Vector2.ZERO:
+		camera.fly_to_rect(Exporter.farm_world_rect(s.map, s.layout, "unlocked"), 20.0)
+	else:
+		camera.fly_to_rect(r, 90.0, 1.6)
+
+
+func _fit_world() -> void:
+	## Shift+F: the whole world.
+	var s := App.session
+	if s == null:
+		return
+	_update_view_rect()
+	camera.fly_to_rect(world_rect_px(s.map), 20.0)
+
+
+func _bookmark_key(k: InputEventKey, ctrl: bool) -> void:
+	## Ctrl+1..9 saves the view in layout.camera.bookmarks (undoable), 1..9 flies to it.
+	var s := App.session
+	var slot := str(int(k.keycode) - int(KEY_0))
+	if ctrl:
+		var c := camera.settled_view_center()
+		s.execute(EditCommands.SetCameraBookmark.new(slot, {"x": c.x, "y": c.y, "zoom": camera.target_zoom}))
+		App.toast("View %s saved" % slot, "info")
+		return
+	var marks: Variant = s.layout.camera.get("bookmarks", {})
+	var b: Variant = marks.get(slot) if marks is Dictionary else null
+	if not b is Dictionary:
+		App.toast("No saved view %s yet — Ctrl+%s saves one" % [slot, slot], "info")
+		return
+	_update_view_rect()
+	camera.fly_to(Vector2(float(b.get("x", 0.0)), float(b.get("y", 0.0))), float(b.get("zoom", camera.target_zoom)))
+	dock.set_status("View %s" % slot)
 
 
 func _on_landmark_hovered(id: String) -> void:
@@ -663,7 +737,7 @@ func focus_landmark(id: String) -> void:
 	if lm == null:
 		return
 	s.select_landmark(id)
-	camera.center_on(Iso.footprint_center(lm.origin, lm.footprint))
+	camera.fly_to(Iso.footprint_center(lm.origin, lm.footprint))
 
 
 func _refresh_level_blocks() -> void:
@@ -730,7 +804,7 @@ func show_object(uid: int) -> void:
 	if o == null:
 		return
 	s.select([uid], false, false)
-	camera.center_on(Iso.footprint_center(o.origin, o.size))
+	camera.fly_to(Iso.footprint_center(o.origin, o.size))
 
 
 func _fit_or_restore() -> void:
@@ -741,7 +815,7 @@ func _fit_or_restore() -> void:
 		camera.target_zoom = camera.zoom.x
 		camera.position = Vector2(float(s.layout.camera["x"]), float(s.layout.camera["y"]))
 		camera.force_update_scroll()
-		camera.set_limits(world_rect_px(s.map))
+		camera.set_world_bounds(world_rect_px(s.map))
 		_on_view_changed()
 	else:
 		_fit()
@@ -792,11 +866,11 @@ func _on_history_changed() -> void:
 func _refresh_issues() -> void:
 	var s := App.session
 	var issues := {}
-	var conflicts := PlacementRules.find_conflicts(s.layout, s.map)
+	var conflicts := s.conflicts()
 	for u in conflicts:
 		issues[u] = 2
 	if s.layout.mode == FarmLayout.MODE_REALISTIC:
-		var r := RealisticAnalyzer.analyze(s.layout, s.db, s.map)
+		var r := s.analysis()
 		for u in r.issues:
 			var sev := 0
 			for c in r.issues[u]:
@@ -829,7 +903,12 @@ func _on_view_changed() -> void:
 	overlay.visible_rect = camera.visible_world_rect()
 	overlay.refresh()
 	if App.session:
-		App.session.layout.camera = {"x": camera.position.x, "y": camera.position.y, "zoom": camera.target_zoom}
+		# In place: the saved views (camera.bookmarks) live in the same dictionary.
+		var cam: Dictionary = App.session.layout.camera
+		var rest := camera.settled_position()
+		cam["x"] = rest.x
+		cam["y"] = rest.y
+		cam["zoom"] = camera.target_zoom
 
 
 # ---------------------------------------------------------------------------
@@ -839,6 +918,9 @@ func _on_view_changed() -> void:
 func _on_canvas_input(e: InputEvent) -> void:
 	if _ref_drag and e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
 		if e.pressed:
+			if reference.active_image().is_empty() or bool(reference.active_image().get("locked", false)):
+				App.toast("This reference image is locked", "info")
+				return
 			_ref_drag_last = camera.screen_to_world(e.position)
 			_ref_drag_before = App.session.layout.reference.duplicate(true)
 			_view_state["ref_dragging"] = true
@@ -853,7 +935,17 @@ func _on_canvas_input(e: InputEvent) -> void:
 		return
 	if e is InputEventMouseButton and e.pressed:
 		canvas_area.grab_focus()
+	if layout_tools.handle_input(e):
+		return
 	controller.handle_input(e)
+
+
+func _setup_layout_tools() -> void:
+	## Symmetry, repeat, align, stamps and the outline brush (see LayoutToolController).
+	layout_tools = LayoutToolController.new()
+	layout_tools.name = "LayoutTools"
+	add_child(layout_tools)
+	layout_tools.setup(controller, overlay, dock, world, root, modal_layer)
 
 
 func _unhandled_input(e: InputEvent) -> void:
@@ -914,8 +1006,9 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_I: s.set_tool("pick")
 		KEY_M: s.set_tool("land")
 		KEY_N: s.set_tool("annotate")
-		KEY_H when k.shift_pressed: go_home()
-		KEY_H: s.set_tool("pan")
+		KEY_H: go_home()
+		KEY_D: s.set_tool("pan")
+		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9: _bookmark_key(k, ctrl)
 		KEY_R:
 			if s.tool == "place":
 				_inspector_place_flip()
@@ -931,7 +1024,8 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_L: _toggle_selection_flag("locked", "Lock")
 		KEY_G: _set_view("show_grid", not bool(App.settings.get_v("show_grid")))
 		KEY_O: _set_view("show_occupancy", not bool(App.settings.get_v("show_occupancy")))
-		KEY_F: _fit()
+		KEY_F when k.shift_pressed: _fit_world()
+		KEY_F: _fit_selection_or_farm()
 		KEY_HOME: go_home()
 		KEY_TAB:
 			_panels_hidden = not _panels_hidden
@@ -966,10 +1060,7 @@ func _landmark_key_action(k: InputEventKey, ctrl: bool) -> String:
 
 func _arrow(d: Vector2i) -> void:
 	if App.session.selection.is_empty():
-		var step := Iso.grid_to_world(Vector2(d)) * 2.0
-		camera.position += step
-		camera.force_update_scroll()
-		_on_view_changed()
+		camera.pan_world(Iso.grid_to_world(Vector2(d)) * 2.0)
 	else:
 		App.session.nudge(d)
 
@@ -1032,6 +1123,7 @@ func _context_menu(screen: Vector2, uid: int) -> void:
 		pm.add_item("Select all  (Ctrl+A)", 11)
 		pm.add_item("Fit farm  (F)", 12)
 		pm.add_item("Home: the farmhouse  (Home)", 13)
+	_add_objects_here(pm)
 	pm.id_pressed.connect(_on_context_id.bind(uid))
 	root.add_child(pm)
 	pm.popup_hide.connect(pm.queue_free)
@@ -1051,10 +1143,33 @@ func _landmark_menu(screen: Vector2, landmark_id: String) -> void:
 	pm.add_item("Centre view here", 2)
 	pm.add_item("Rotate  (R)", 3)
 	pm.add_item("Delete  (Del)", 4)
+	_add_objects_here(pm)
 	pm.id_pressed.connect(_on_landmark_menu_id.bind(landmark_id))
 	root.add_child(pm)
 	pm.popup_hide.connect(pm.queue_free)
 	pm.popup(Rect2i(Vector2i(screen), Vector2i.ZERO))
+
+
+const OBJECTS_HERE_ID := 1000
+
+
+func _add_objects_here(pm: PopupMenu) -> void:
+	## Overlapping objects under the right-click: pick any of them from the menu.
+	var stack: Array = controller.last_context_stack
+	if stack.size() < 2:
+		return
+	pm.add_separator("Objects here")
+	for i in stack.size():
+		var e: Dictionary = stack[i]
+		pm.add_radio_check_item("%s%s" % [e["name"], "  (fixed)" if e["kind"] == "landmark" else ""], OBJECTS_HERE_ID + i)
+		pm.set_item_checked(pm.item_count - 1, (e["kind"] == "landmark" and e["id"] == App.session.selected_landmark) or (e["kind"] == "object" and e["uid"] in App.session.selection))
+	pm.id_pressed.connect(_on_objects_here_id)
+
+
+func _on_objects_here_id(id: int) -> void:
+	var i := id - OBJECTS_HERE_ID
+	if i >= 0 and i < controller.last_context_stack.size():
+		controller.select_stack_entry(controller.last_context_stack[i])
 
 
 func _on_landmark_menu_id(id: int, landmark_id: String) -> void:
@@ -1237,12 +1352,15 @@ func _on_inspector_action(a: String, arg: Variant) -> void:
 		"view": _set_view(arg[0], arg[1])
 		"ref_import": _ref_import()
 		"ref": _ref_update(arg)
-		"ref_calibrate": _ref_calibrate()
+		"ref_calibrate": _ref_calibrate(int(arg))
+		"ref_select": _ref_select(str(arg))
+		"ref_order": _ref_reorder(str(arg[0]), int(arg[1]))
 		"ref_remove":
-			_set_reference({}, "Remove reference")
+			_ref_remove(str(arg))
 			inspector.rebuild()
 		"ref_move":
 			_ref_drag = bool(arg)
+			_view_state["ref_move"] = _ref_drag
 		"compare": _compare_pick()
 		"compare_clear":
 			overlay.diff = {}
@@ -1274,6 +1392,8 @@ func _on_setting_changed(key: String) -> void:
 			overlay.show_annotations = bool(App.settings.get_v(key))
 			overlay.refresh()
 		"smooth_zoom": camera.smooth = bool(App.settings.get_v(key))
+		"ambient_animation": renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
+		"wheel_zoom_factor": camera.wheel_factor = float(App.settings.get_v(key))
 
 
 func _on_settings_dialog(what: String) -> void:
@@ -1441,23 +1561,31 @@ func _do_export(path: String, opts: Dictionary) -> void:
 
 func _load_reference() -> void:
 	var s := App.session
-	var ok := reference.load_from_settings(s.layout.reference)
-	_view_state["ref_loaded"] = ok
-	if ok:
-		_sync_reference_view_state()
-	elif not s.layout.reference.is_empty():
-		_view_state["ref_status"] = "Reference image file is missing: %s" % str(s.layout.reference.get("file", ""))
+	s.layout.reference = LayoutIO.normalize_reference(s.layout.reference)
+	reference.load_from_settings(s.layout.reference)
+	_view_state["ref_loaded"] = not s.layout.reference.is_empty()
+	if not reference.missing.is_empty():
+		_view_state["ref_status"] = "Reference image file is missing: %s" % ", ".join(reference.missing)
+	elif str(_view_state.get("ref_status", "")).begins_with("Reference image file is missing"):
+		_view_state.erase("ref_status")
+	_sync_reference_view_state()
 
 
 func _sync_reference_view_state() -> void:
-	var st := App.session.layout.reference
-	_view_state["ref_visible"] = bool(st.get("visible", true))
-	_view_state["ref_locked"] = bool(st.get("locked", false))
-	_view_state["ref_above"] = bool(st.get("above", false))
-	_view_state["ref_opacity"] = float(st.get("opacity", 0.5))
-	_view_state["ref_scale"] = float(st.get("scale", 1.0))
-	_view_state["ref_rotation"] = float(st.get("rotation", 0.0))
-	_place_reference_layer(bool(st.get("above", false)))
+	var rows: Array = []
+	for im: Dictionary in reference.images():
+		var id := str(im.get("id", ""))
+		rows.append({"id": id, "name": str(im.get("name", "")), "visible": bool(im.get("visible", true)),
+			"locked": bool(im.get("locked", false)), "missing": not reference.is_loaded(im), "active": id == reference.active_id})
+	_view_state["ref_images"] = rows
+	var a := reference.active_image()
+	var above := bool(reference.settings.get("above", false))
+	_view_state["ref_locked"] = bool(a.get("locked", false))
+	_view_state["ref_above"] = above
+	_view_state["ref_opacity"] = float(a.get("opacity", 0.5))
+	_view_state["ref_scale"] = float(a.get("scale", 1.0))
+	_view_state["ref_rotation"] = float(a.get("rotation", 0.0))
+	_place_reference_layer(above)
 
 
 func _place_reference_layer(above: bool) -> void:
@@ -1471,13 +1599,11 @@ func _ref_import() -> void:
 	fd.use_native_dialog = true
 	fd.filters = PackedStringArray(["*.png, *.jpg, *.jpeg, *.webp ; Images"])
 	fd.file_selected.connect(func(p):
-		var s := App.session
-		var dst := ReferenceLayer.import_image(p, s.layout.id)
+		var dst := ReferenceLayer.import_image(p, App.session.layout.id)
 		if dst.is_empty():
 			App.toast("Could not read that image", "error")
 			return
-		var land := Exporter.farm_world_rect(s.map, s.layout, "unlocked")
-		_set_reference(reference.default_settings(dst, land.get_center(), land.size.x), "Add reference")
+		_ref_add_image(dst)
 		inspector.show_tab(2)
 		inspector.rebuild()
 		App.toast("Reference added. Calibrate it to line it up with the grid.", "success"))
@@ -1485,15 +1611,69 @@ func _ref_import() -> void:
 	fd.popup_centered_ratio(0.6)
 
 
+func _ref_add_image(file: String) -> void:
+	## Adds an image (already in the user folder) on top of the list and makes it the active one.
+	var s := App.session
+	var doc := LayoutIO.normalize_reference(s.layout.reference)
+	if doc.is_empty():
+		doc = {"images": [], "above": false}
+	var land := Exporter.farm_world_rect(s.map, s.layout, "unlocked")
+	var im := ReferenceLayer.default_image(file, land.get_center(), land.size.x)
+	im["id"] = ReferenceLayer.new_id(doc)
+	(doc["images"] as Array).append(im)
+	reference.active_id = str(im["id"])
+	_set_reference(doc, "Add reference")
+
+
 func _ref_update(d: Dictionary) -> void:
-	var st := App.session.layout.reference.duplicate(true)
+	## Changes the fields in `d` on image d["id"] (default: the active image);
+	## "above" belongs to the whole reference layer.
+	var doc := LayoutIO.normalize_reference(App.session.layout.reference)
+	var id := str(d.get("id", reference.active_id))
+	var im := ReferenceLayer.image_by_id(doc, id)
+	if d.has("above"):
+		doc["above"] = bool(d["above"])
 	for k in d:
-		st[k] = d[k]
+		if k != "id" and k != "above" and not im.is_empty():
+			im[k] = d[k]
 	if d.has("scale") or d.has("rotation"):
-		st.erase("affine")
+		im.erase("affine")
 	if d.has("locked"):
 		_ref_drag = false
-	_set_reference(st, "Adjust reference", "reference")
+		_view_state["ref_move"] = false
+	var keys := d.keys()
+	keys.sort()
+	_set_reference(doc, "Adjust reference", "reference/%s/%s" % [id, str(keys)])
+
+
+func _ref_select(id: String) -> void:
+	## Which image the inspector edits: view state, not part of the document.
+	reference.active_id = id
+	_sync_reference_view_state()
+	inspector.rebuild()
+
+
+func _ref_reorder(id: String, dir: int) -> void:
+	## dir > 0 moves the image up the stack (towards the end of the list).
+	var doc := LayoutIO.normalize_reference(App.session.layout.reference)
+	var list: Array = doc.get("images", [])
+	var i := list.find(ReferenceLayer.image_by_id(doc, id))
+	var j := i + signi(dir)
+	if i < 0 or j < 0 or j >= list.size():
+		return
+	var im: Variant = list[i]
+	list[i] = list[j]
+	list[j] = im
+	_set_reference(doc, "Reorder references")
+
+
+func _ref_remove(id: String) -> void:
+	var doc := LayoutIO.normalize_reference(App.session.layout.reference)
+	var list: Array = doc.get("images", [])
+	list.erase(ReferenceLayer.image_by_id(doc, id))
+	_ref_drag = false
+	_view_state["ref_move"] = false
+	_set_reference({} if list.is_empty() else doc, "Remove reference")
 
 
 func _set_reference(settings: Dictionary, text: String, key: String = "") -> void:
@@ -1502,15 +1682,14 @@ func _set_reference(settings: Dictionary, text: String, key: String = "") -> voi
 
 
 func _on_reference_changed() -> void:
-	## Runs after every reference command, undo and redo included. The image is
-	## only reloaded when the file changed, so sliders stay smooth.
-	var st := App.session.layout.reference
-	if reference.texture != null and str(st.get("file", "")) == str(reference.settings.get("file", "")):
-		reference.settings = st
-		reference.apply()
-		_sync_reference_view_state()
-	else:
-		_load_reference()
+	## Runs after every reference command, undo and redo included. Only new
+	## files are read, so sliders stay smooth; the inspector is rebuilt only
+	## when what its list shows changed (never in the middle of a slider drag).
+	_load_reference()
+	var sig := str(_view_state.get("ref_images", [])) + str(_view_state.get("ref_above", false))
+	if sig != _ref_ui_sig:
+		_ref_ui_sig = sig
+		inspector.queue_rebuild()
 
 
 func _save_reference_settings() -> void:
@@ -1523,40 +1702,45 @@ func _save_reference_settings() -> void:
 	_ref_drag_before = {}
 
 
-func _ref_calibrate() -> void:
+func _ref_calibrate(points: int = 3) -> void:
+	if reference.active_image().is_empty():
+		return
+	_calib_points = clampi(points, 2, 3)
 	_calib_world = []
 	overlay.calibration_points = []
 	controller.calibrating = true
-	App.toast("Calibration: click 3 recognisable points on the screenshot…", "info")
+	App.toast("Calibration: click %d recognisable points on the screenshot…" % _calib_points, "info")
 
 
 func _on_calibration_point(w: Vector2) -> void:
 	_calib_world.append(w)
 	var n := _calib_world.size()
-	if n <= 3:
+	var k := _calib_points
+	if n <= k:
 		overlay.calibration_points = _calib_world.duplicate()
-		if n == 3:
-			App.toast("…now click the matching 3 tile corners on the grid, in the same order", "info")
+		if n == k:
+			App.toast("…now click the matching %d tile corners on the grid, in the same order" % k, "info")
 	else:
 		var g := Iso.world_to_grid(w)
 		var snapped := Iso.grid_to_world(Vector2(roundf(g.x), roundf(g.y)))
 		_calib_world[n - 1] = snapped
 		overlay.calibration_points = _calib_world.duplicate()
 	overlay.refresh()
-	if _calib_world.size() == 6:
+	if n == k * 2:
 		controller.calibrating = false
 		var img_pts: Array = []
-		for i in 3:
+		for i in k:
 			img_pts.append(reference.world_to_image(_calib_world[i]))
-		var aff: Variant = ReferenceLayer.solve_affine(img_pts, _calib_world.slice(3, 6))
+		var aff: Variant = ReferenceLayer.solve_calibration(img_pts, _calib_world.slice(k, k * 2))
 		overlay.calibration_points = []
 		if aff == null:
-			App.toast("Those points are in a line — pick three spread-out points", "warn")
+			App.toast("Those points are too close or in a line — pick spread-out points", "warn")
 			return
-		var st := App.session.layout.reference.duplicate(true)
-		st["affine"] = aff
-		_set_reference(st, "Calibrate reference")
-		_view_state["ref_status"] = "Calibrated with 3 points (affine). Perspective in screenshots isn't corrected."
+		var doc := LayoutIO.normalize_reference(App.session.layout.reference)
+		var target := ReferenceLayer.image_by_id(doc, reference.active_id)
+		target["affine"] = aff
+		_set_reference(doc, "Calibrate reference")
+		_view_state["ref_status"] = "Calibrated with %d points (%s). Perspective in screenshots isn't corrected." % [k, "affine" if k == 3 else "position, rotation and scale"]
 		inspector.rebuild()
 		App.toast("Reference aligned to the grid", "success")
 

@@ -53,6 +53,10 @@ class Result:
 	func message(layout: FarmLayout = null, db: ItemDatabase = null, map: FarmMap = null) -> String:
 		if ok:
 			return "Fits here"
+		return " · ".join(reasons(layout, db, map))
+
+	func reasons(layout: FarmLayout = null, db: ItemDatabase = null, map: FarmMap = null) -> PackedStringArray:
+		## One human-readable line per kind of problem, most specific first.
 		var parts: PackedStringArray = []
 		for c in MESSAGE_ORDER:
 			if not reason_counts.has(c):
@@ -88,7 +92,7 @@ class Result:
 				if not ln.is_empty():
 					t = "Fixed landmark: %s" % ", ".join(PackedStringArray(ln.slice(0, 3)))
 			parts.append(t)
-		return " · ".join(parts)
+		return parts
 
 
 static func check_rect(layout: FarmLayout, map: FarmMap, r: Rect2i, ignore: Dictionary = {}, placeable: bool = true) -> Result:

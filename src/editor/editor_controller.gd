@@ -25,6 +25,16 @@ signal landmark_hovered(id: String)
 signal request_landmark_menu(screen_pos: Vector2, landmark_id: String)
 
 const DRAG_THRESHOLD := 5.0
+## Up to this many dragged objects are previewed live by the renderer (depth
+## sorted at the drop position); more use overlay ghosts, which stay cheap.
+const LIVE_DRAG_MAX := 120
+const LIFT_PX := 10.0
+## Snap-to-valid only searches for selections up to this size.
+const SNAP_MAX := 24
+const BLOCKER_MAX := 40
+## A second click within this distance and time goes one object deeper.
+const CYCLE_SLOP_PX := 5.0
+const CYCLE_WINDOW_MS := 2500
 
 var camera: FarmCamera
 var renderer: ObjectRenderer
@@ -50,6 +60,34 @@ var _hover_lm := ""
 var _press_lm := ""            ## landmark under the pointer when the gesture started
 var stamp_mode := false        ## pasting the clipboard
 var calibrating := false       ## screenshot reference calibration clicks
+var _press_world := Vector2.ZERO
+var _alt_down := false
+# Move drag
+var _drag_raw := Vector2i.ZERO ## tile delta under the pointer (before snapping)
+var _drag_snap := false
+var _drag_live := false        ## renderer preview (else overlay ghosts)
+var _drag_fresh := false       ## nothing shown yet for this drag
+var drag_stats := {"moves": 0, "recomputes": 0}
+# Overlapping objects
+var _press_stack: Array = []   ## objects_here() at the press
+var _press_repeat := false     ## this press is another click on the same spot
+var _last_click_world := Vector2.ZERO
+var _last_click_ms := -1000000
+## objects_here() at the last right-click (main.gd lists it in the context menu).
+var last_context_stack: Array = []
+
+
+func _ready() -> void:
+	if camera:
+		camera.view_changed.connect(_on_camera_view_changed)
+
+
+func _on_camera_view_changed() -> void:
+	## The world moved under a still pointer: a drag must follow it.
+	if session != null and _dragging and not _gesture in ["pan", "rpan"]:
+		_update_drag(tile_at(_last_mouse), _last_mouse)
+		overlay.cursor_world = world_at(_last_mouse)
+		overlay.refresh()
 
 
 func bind(s: EditorSession) -> void:
@@ -90,15 +128,21 @@ func handle_input(event: InputEvent) -> bool:
 
 func _mouse_button(e: InputEventMouseButton) -> bool:
 	_last_mouse = e.position
+	_alt_down = e.alt_pressed
+	# High-precision wheels report fractions of a notch in `factor`.
+	var notches := e.factor if e.factor > 0.0 else 1.0
 	if e.pressed and e.button_index == MOUSE_BUTTON_WHEEL_UP:
-		camera.zoom_at(e.position, 1.15)
+		camera.wheel_zoom(e.position, notches)
 		return true
 	if e.pressed and e.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-		camera.zoom_at(e.position, 1.0 / 1.15)
+		camera.wheel_zoom(e.position, -notches)
 		return true
+	if e.pressed:
+		camera.stop_motion()
 	if e.button_index == MOUSE_BUTTON_MIDDLE or (e.button_index == MOUSE_BUTTON_LEFT and (_space_down or session.tool == "pan")):
 		if e.pressed:
 			_begin(e, "pan")
+			camera.begin_user_pan()
 		else:
 			_end(e)
 		return true
@@ -111,6 +155,8 @@ func _mouse_button(e: InputEventMouseButton) -> bool:
 		else:
 			if not _dragging:
 				_right_click(e.position)
+			elif _gesture == "rpan":
+				camera.end_user_pan()
 			_cancel_gesture_soft()
 		return true
 	if e.button_index == MOUSE_BUTTON_LEFT:
@@ -128,6 +174,7 @@ func _mouse_button(e: InputEventMouseButton) -> bool:
 func _begin(e: InputEventMouseButton, gesture: String) -> void:
 	_press_pos = e.position
 	_press_tile = tile_at(e.position)
+	_press_world = world_at(e.position)
 	_press_button = e.button_index
 	_gesture = gesture
 	_dragging = false
@@ -136,9 +183,11 @@ func _begin(e: InputEventMouseButton, gesture: String) -> void:
 func _mouse_motion(e: InputEventMouseMotion) -> void:
 	var prev := _last_mouse
 	_last_mouse = e.position
+	_alt_down = e.alt_pressed
 	if _gesture == "pan" or (_gesture == "rpan" and (e.button_mask & MOUSE_BUTTON_MASK_RIGHT)):
 		if _gesture == "rpan" and not _dragging and e.position.distance_to(_press_pos) > DRAG_THRESHOLD:
 			_dragging = true
+			camera.begin_user_pan()
 		if _gesture == "pan" or _dragging:
 			camera.pan_screen(e.position - prev)
 		return
@@ -166,6 +215,56 @@ func pick_at(w: Vector2) -> Dictionary:
 		if lid.is_empty() or session.map == null or session.map.landmark(lid) == null:
 			kind = ""
 	return {"kind": kind, "uid": int(r.get("uid", 0)) if kind == "object" else 0, "id": lid}
+
+
+func objects_here(w: Vector2) -> Array:
+	## Everything under a world point, top-most first:
+	## [{"kind": "object" | "landmark", "uid": int, "id": landmark id, "name": String}].
+	var out: Array = []
+	for r: Dictionary in renderer.pick_all(w):
+		if str(r.get("kind", "")) == "landmark":
+			var lid := LandmarkView.id_of(str(r.get("key", "")))
+			var lm: Landmark = session.map.landmark(lid) if session.map != null and not lid.is_empty() else null
+			if lm != null and lm.selectable:
+				out.append({"kind": "landmark", "uid": 0, "id": lid, "name": lm.name})
+		else:
+			var o := session.layout.get_obj(int(r.get("uid", 0)))
+			if o != null:
+				var it := session.db.get_item(o.item_id)
+				out.append({"kind": "object", "uid": o.uid, "id": "", "name": it.name if it else o.item_id + " (unknown)"})
+	return out
+
+
+func _selected_index(stack: Array) -> int:
+	## Index in objects_here() of the first entry that is currently selected, or -1.
+	for i in stack.size():
+		var e: Dictionary = stack[i]
+		if (e["kind"] == "landmark" and e["id"] == session.selected_landmark) or (e["kind"] == "object" and e["uid"] in session.selection):
+			return i
+	return -1
+
+
+func select_stack_entry(e: Dictionary) -> void:
+	## Selects one entry of objects_here() (click cycling, "Objects here" menu).
+	if e.get("kind", "") == "landmark":
+		session.select_landmark(str(e["id"]))
+	else:
+		session.select([int(e["uid"])])
+
+
+func _is_repeat_click(w: Vector2) -> bool:
+	return Time.get_ticks_msec() - _last_click_ms <= CYCLE_WINDOW_MS and w.distance_to(_last_click_world) * camera.current_zoom() <= CYCLE_SLOP_PX
+
+
+func _finish_click(e: InputEventMouseButton) -> void:
+	## Press and release without a drag: another click on the same spot selects
+	## the next object down.
+	if _press_repeat and not (e.shift_pressed or e.ctrl_pressed) and _press_stack.size() >= 2:
+		var i := _selected_index(_press_stack)
+		if i >= 0:
+			select_stack_entry(_press_stack[(i + 1) % _press_stack.size()])
+	_last_click_world = _press_world
+	_last_click_ms = Time.get_ticks_msec()
 
 
 func _refuse_fixed(landmark_id: String, action: String, screen: Vector2) -> void:
@@ -198,6 +297,8 @@ func _update_hover(t: Vector2i, screen: Vector2) -> void:
 		overlay.ghosts = []
 		overlay.ghost_result = null
 		overlay.cursor_text = ""
+		overlay.cursor_reasons = PackedStringArray()
+		_set_blockers(null)
 	if session.tool == "land":
 		var pid := session.map.plot_id_at(t)
 		var blocked := not pid.is_empty() and not plot_unlock_block(pid).is_empty()
@@ -250,6 +351,24 @@ func ghost_origin(item: ItemDef, t: Vector2i) -> Vector2i:
 	return t - Vector2i((sz.x - 1) / 2, (sz.y - 1) / 2)
 
 
+func _set_blockers(r: PlacementRules.Result) -> void:
+	## Outlines what stands in the way of `r` in red (null / ok: nothing).
+	var uids: Array = []
+	var rects: Array = []
+	if r != null and not r.ok:
+		uids = r.blocking_uids.keys().slice(0, BLOCKER_MAX)
+		for lid in r.landmark_ids:
+			var lm: Landmark = session.map.landmark(lid) if session.map else null
+			if lm:
+				rects.append(lm.rect())
+	overlay.blocker_uids = uids
+	overlay.blocker_rects = rects
+
+
+func _result_reasons(r: PlacementRules.Result) -> PackedStringArray:
+	return r.reasons(session.layout, session.db, session.map) if r != null and not r.ok else PackedStringArray()
+
+
 func _update_place_ghost(t: Vector2i) -> void:
 	if stamp_mode:
 		var size := session.clipboard_size()
@@ -262,13 +381,17 @@ func _update_place_ghost(t: Vector2i) -> void:
 			rects.append(Rect2i(at + (c["offset"] as Vector2i), c["size"]))
 		overlay.ghosts = gs
 		overlay.ghost_result = PlacementRules.check_stamp(session.layout, session.map, rects)
-		overlay.cursor_text = "Paste %d object%s%s" % [gs.size(), "" if gs.size() == 1 else "s", "" if overlay.ghost_result.ok else " — " + overlay.ghost_result.message(session.layout, session.db, session.map)]
+		overlay.cursor_text = "Paste %d object%s" % [gs.size(), "" if gs.size() == 1 else "s"]
+		overlay.cursor_reasons = _result_reasons(overlay.ghost_result)
+		_set_blockers(overlay.ghost_result)
 		return
 	var item := session.db.get_item(session.active_item)
 	if item == null:
 		overlay.ghosts = []
 		overlay.ghost_result = null
 		overlay.cursor_text = "Pick an item from the catalogue"
+		overlay.cursor_reasons = PackedStringArray()
+		_set_blockers(null)
 		return
 	var origin := ghost_origin(item, t)
 	var flipped := session.place_flipped and item.flippable
@@ -281,9 +404,9 @@ func _update_place_ghost(t: Vector2i) -> void:
 	var txt := "%s · %d×%d" % [item.name, item.size_for(flipped).x, item.size_for(flipped).y]
 	if not item.is_footprint_trusted():
 		txt += " · size unverified"
-	if not r.ok:
-		txt += "\n" + r.message(session.layout, session.db, session.map)
 	overlay.cursor_text = txt
+	overlay.cursor_reasons = _result_reasons(r)
+	_set_blockers(r)
 
 
 func _preview_mask(item: ItemDef, origin: Vector2i) -> int:
@@ -316,7 +439,18 @@ func _left_press(e: InputEventMouseButton) -> void:
 	_press_lm = ""
 	match session.tool:
 		"select":
-			var hit := pick_at(w)
+			_press_stack = objects_here(w)
+			var si := _selected_index(_press_stack)
+			_press_repeat = si >= 0 and _press_stack.size() >= 2 and session.selection.size() <= 1 \
+				and not (e.shift_pressed or e.ctrl_pressed) and _is_repeat_click(w)
+			if _press_repeat:
+				# Clicking the same spot again: keep the selection for now. A drag
+				# moves what was selected; a plain release goes one object deeper.
+				var cur: Dictionary = _press_stack[si]
+				_press_lm = cur["id"]
+				_gesture = "landmark" if cur["kind"] == "landmark" else "move"
+				return
+			var hit: Dictionary = _press_stack[0] if not _press_stack.is_empty() else {"kind": "", "uid": 0, "id": ""}
 			var uid: int = hit["uid"]
 			if hit["kind"] == "landmark":
 				# Fixed landmark: select it (its own card in the inspector);
@@ -375,28 +509,82 @@ func _start_drag() -> void:
 					else:
 						fixed_refused.emit(why, _press_pos)   # obstacles: subtle hint near the cursor
 				return
-			renderer.set_hidden(_move_uids)
 			_move_delta = Vector2i.ZERO
+			_drag_raw = Vector2i.ZERO
+			_drag_snap = false
+			_drag_fresh = true
+			drag_stats = {"moves": 0, "recomputes": 0}
+			_drag_live = _move_uids.size() <= LIVE_DRAG_MAX
+			if _drag_live:
+				renderer.set_drag_preview(_move_uids, Vector2i.ZERO)
+				renderer.set_lift(_move_uids, LIFT_PX)
+				overlay.begin_drag(_move_uids, LIFT_PX)
+			else:
+				renderer.set_hidden(_move_uids)
+
+
+func _snap_wanted() -> bool:
+	## The setting, flipped while Alt is held; never for big selections.
+	return (bool(App.settings.get_v("drag_snap_valid")) != _alt_down) and _move_uids.size() <= SNAP_MAX
+
+
+func _update_move(screen: Vector2) -> void:
+	drag_stats["moves"] += 1
+	var cont := Iso.world_to_grid(world_at(screen)) - Iso.world_to_grid(_press_world)
+	var raw := DragMath.hysteresis(cont, _drag_raw)
+	var snap := _snap_wanted()
+	if raw == _drag_raw and snap == _drag_snap and not _drag_fresh:
+		return
+	_drag_raw = raw
+	_drag_snap = snap
+	_drag_fresh = false
+	drag_stats["recomputes"] += 1
+	_move_delta = raw
+	var res := PlacementRules.check_group_move(session.layout, session.map, _move_uids, _move_delta)
+	var snapped := false
+	if snap and not res.ok:
+		var near: Variant = DragMath.nearest_valid(raw, DragMath.SNAP_RADIUS, _move_fits)
+		if near != null:
+			_move_delta = near
+			res = PlacementRules.check_group_move(session.layout, session.map, _move_uids, _move_delta)
+			snapped = true
+	if _drag_live:
+		renderer.set_drag_preview(_move_uids, _move_delta)
+		overlay.drag_delta = _move_delta
+		overlay.drag_result = res
+	else:
+		var gs: Array = []
+		for u in _move_uids:
+			var o := session.layout.get_obj(u)
+			if o != null:
+				gs.append({"item": session.db.get_item(o.item_id), "origin": o.origin + _move_delta, "flipped": o.flipped, "variant": o.variant})
+		overlay.ghosts = gs
+		overlay.ghost_result = res
+	_set_blockers(res)
+	overlay.cursor_text = "Move %d · Δ %d, %d%s" % [_move_uids.size(), _move_delta.x, _move_delta.y, " · snapped" if snapped else ""]
+	overlay.cursor_reasons = _result_reasons(res)
+
+
+func _move_fits(delta: Vector2i) -> bool:
+	return PlacementRules.check_group_move(session.layout, session.map, _move_uids, delta).ok
+
+
+func _stop_move_visuals() -> void:
+	if _drag_live:
+		renderer.clear_drag_preview()
+		renderer.set_lift([], 0.0)
+	else:
+		renderer.set_hidden([])
+	_drag_live = false
+	overlay.end_drag()
 
 
 func _update_drag(t: Vector2i, screen: Vector2) -> void:
 	match _gesture:
 		"move":
-			_move_delta = t - _press_tile
-			var gs: Array = []
-			for u in _move_uids:
-				var o := session.layout.get_obj(u)
-				var it := session.db.get_item(o.item_id)
-				var g := {"item": it, "origin": o.origin + _move_delta, "flipped": o.flipped, "variant": o.variant}
-				if it == null:
-					g["item"] = null
-				gs.append(g)
-			overlay.ghosts = gs
-			overlay.ghost_result = PlacementRules.check_group_move(session.layout, session.map, _move_uids, _move_delta)
-			overlay.cursor_text = "Move %d · Δ %d, %d%s" % [_move_uids.size(), _move_delta.x, _move_delta.y,
-				"" if overlay.ghost_result.ok else "\n" + overlay.ghost_result.message(session.layout, session.db, session.map)]
+			_update_move(screen)
 		"marquee", "erase_rect", "zone":
-			var a := world_at(_press_pos)
+			var a := _press_world
 			var b := world_at(screen)
 			if _gesture == "marquee":
 				overlay.marquee = Rect2(a, b - a)
@@ -424,14 +612,21 @@ func _end(e: InputEventMouseButton) -> void:
 	_gesture = ""
 	_dragging = false
 	match g:
+		"pan":
+			camera.end_user_pan()
+		"landmark":
+			_finish_click(e)
 		"move":
-			renderer.set_hidden([])
-			if was_drag and _move_delta != Vector2i.ZERO:
-				var r := PlacementRules.check_group_move(session.layout, session.map, _move_uids, _move_delta)
-				if r.ok:
-					session.execute(EditCommands.MoveObjects.new(_move_uids, _move_delta))
-				else:
-					session.message.emit("Can't drop here: " + r.message(session.layout, session.db, session.map), "warn")
+			if was_drag:
+				_stop_move_visuals()
+				if _move_delta != Vector2i.ZERO:
+					var r := PlacementRules.check_group_move(session.layout, session.map, _move_uids, _move_delta)
+					if r.ok:
+						session.execute(EditCommands.MoveObjects.new(_move_uids, _move_delta))
+					else:
+						session.message.emit("Can't drop here: " + r.message(session.layout, session.db, session.map), "warn")
+			else:
+				_finish_click(e)
 			_move_uids = []
 			overlay.ghosts = []
 			overlay.ghost_result = null
@@ -460,13 +655,17 @@ func _end(e: InputEventMouseButton) -> void:
 			_commit_stamp()
 	overlay.line_tiles = []
 	overlay.cursor_text = ""
+	overlay.cursor_reasons = PackedStringArray()
+	_set_blockers(null)
 	_update_hover(tile_at(e.position), e.position)
 	overlay.refresh()
 
 
 func _cancel_gesture() -> void:
-	if renderer and _gesture == "move":
-		renderer.set_hidden([])
+	if renderer and _gesture == "move" and _dragging:
+		_stop_move_visuals()
+	if _gesture == "pan" or (_gesture == "rpan" and _dragging):
+		camera.end_user_pan()
 	_gesture = ""
 	_press_lm = ""
 	_dragging = false
@@ -477,6 +676,10 @@ func _cancel_gesture() -> void:
 		overlay.ghost_result = null
 		overlay.marquee = Rect2()
 		overlay.line_tiles = []
+		overlay.cursor_text = ""
+		overlay.cursor_reasons = PackedStringArray()
+		overlay.blocker_uids = []
+		overlay.blocker_rects = []
 		overlay.refresh()
 
 
@@ -792,7 +995,13 @@ func _right_click(screen: Vector2) -> void:
 		session.set_tool("select")
 		_cancel_gesture()
 		return
-	var hit := pick_at(world_at(screen))
+	last_context_stack = objects_here(world_at(screen))
+	var si := _selected_index(last_context_stack)
+	if si >= 0 and last_context_stack[si]["kind"] != "object":
+		si = 0     # a selected landmark must not grab clicks meant for objects in front
+	var hit: Dictionary = {"kind": "", "uid": 0, "id": ""}
+	if not last_context_stack.is_empty():
+		hit = last_context_stack[maxi(si, 0)]
 	if hit["kind"] == "landmark":
 		session.select_landmark(hit["id"])
 		request_landmark_menu.emit(screen, hit["id"])

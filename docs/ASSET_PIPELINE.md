@@ -28,11 +28,22 @@ A pack is a folder with `pack.json`:
       "default_variant": "winter",              // optional: appearance for objects without a chosen variant
       "shadow": {"file": "items/bakery.shadow.png", "anchor": [130, 120]},
       "variants": {"winter": {"file": "items/bakery__winter.png", "anchor": [148, 276], "thumb": "…"}},
-      "connections": {"5": {"file": "items/fence__m05.png", "anchor": [64, 70]}}   // fences/paths
+      "connections": {"5": {"file": "items/fence__m05.png", "anchor": [64, 70]}},  // fences/paths
+      "anim": {"sheet": "items/bakery.anim.png", "frames": 6, "fps": 6.0, "mode": "overlay",  // optional, see below
+               "columns": 6, "anchor": [148, 276]},
+      "mirror": {"file": "items/bakery__mirror.png", "anchor": [120, 276]}      // optional, see below
     }
   }
 }
 ```
+
+`anim` is an ambient animation: a sprite sheet of `frames` cells, read left to right in `columns` rows (default: one
+row). `mode` is `overlay` (frames over the static image, which must not contain the moving part) or `replace` (frames
+instead of it). `anchor` is the frame pixel at the ground centre and defaults to the sprite's. All sprites share one
+clock, only sprites in view change frame, and Settings → *Ambient animation* can reduce or stop them. A flipped
+object whose sprite has `mirror` draws that image unflipped (`mirror` takes `shadow` too; without one, the base
+shadow is reused flipped). A variant named `theme_<theme>` is used for objects without a chosen variant while the
+layout's world theme is `<theme>`; a theme with no such variant leaves the object as it is.
 
 Variants inherit `pixels_per_world_px`/`scale` from their base sprite unless they set them. Variant id `@base`
 means "the base image" even when a `default_variant` is set. Textures load lazily on first use and are shared by

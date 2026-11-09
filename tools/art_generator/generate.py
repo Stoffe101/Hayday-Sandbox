@@ -6,7 +6,9 @@ library, and writes:
   assets/placeholders/items/<art_key>.png            sprite
   assets/placeholders/items/<art_key>.shadow.png     soft ground shadow
   assets/placeholders/items/<art_key>__mNN.png       connection shapes (fences/paths)
+  assets/placeholders/items/<stem>.anim.png          ambient animation sheets (world_art.py)
   assets/placeholders/pack.json                      asset-pack manifest
+Art that no catalogue item owns (the truck landmark) lives in world_art.py.
 Unchanged items are skipped using a content hash cache (.cache.json).
 
 Usage:
@@ -28,6 +30,7 @@ sys.path.insert(0, str(HERE))
 
 from iso3d import render  # noqa: E402
 import recipes  # noqa: E402
+import world_art  # noqa: E402
 
 SCALE = 2.0  # art pixels per world pixel (crisp up to 200% zoom)
 PACK_ID = "builtin_placeholders"
@@ -147,6 +150,8 @@ def main() -> int:
                     e["shared"] = True
                 sprites[it.get("art", it["id"])] = e
             cache[fk] = fpk
+    keys_seen |= world_art.build_world_sprites(out, sprites, cache, SCALE, a.force)
+    world_art.build_animations(out, sprites, items, cache, SCALE, file_key, a.force)
     # Drop sprites for items that no longer exist (and their files).
     for key in list(sprites):
         if key not in keys_seen:
@@ -156,6 +161,8 @@ def main() -> int:
         referenced.add(e["file"])
         if "shadow" in e:
             referenced.add(e["shadow"]["file"])
+        if "anim" in e:
+            referenced.add(e["anim"]["sheet"])
         for c in e.get("connections", {}).values():
             referenced.add(c["file"])
             if "shadow" in c:

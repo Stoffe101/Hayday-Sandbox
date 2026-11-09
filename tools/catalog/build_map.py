@@ -91,10 +91,12 @@ def public_landmarks() -> list[dict]:
     tob = (13, START_W - 4)    # old combined 4x3 block x 13..16, y 28..30: split into order board + truck
     return [
         landmark("farmhouse", "Farmhouse", [14, 12], [4, 4], "farmhouse", ["farmhouse"], "house"),
-        # the catalogue placeholder "truck_and_order_board" depicts the board; no truck placeholder exists yet
+        # the catalogue placeholder "truck_and_order_board" depicts only the board; the truck's own original
+        # placeholder comes from tools/art_generator/world_art.py
         landmark("order_board", "Order board", [tob[0], tob[1] + 1], [2, 2], "truck_and_order_board",
                  ["truck_and_order_board"]),
-        landmark("truck", "Truck", [tob[0] + 3, tob[1] + 1], [1, 2], "", ["truck_and_order_board"], "truck", "center"),
+        landmark("truck", "Truck", [tob[0] + 3, tob[1] + 1], [1, 2], "ph_truck", ["truck_and_order_board"], "truck",
+                 "center"),
         landmark("roadside_shop", "Roadside Shop", [19, START_W - 4], [3, 3], "roadside_shop", ["roadside_shop"],
                  "roadside_shop"),
         landmark("newspaper_mailbox", "Mailbox", [18, 12], [1, 1], "mailbox", ["mailbox", "newspaper_daily_dirt"]),

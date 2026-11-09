@@ -26,13 +26,19 @@ const DEFAULTS := {
 	"left_panel": true,
 	"right_panel": true,
 	"smooth_zoom": true,
+	"wheel_zoom_factor": 1.15,  ## zoom per mouse-wheel notch
+	"drag_snap_valid": false,   ## dragged objects jump to the nearest free spot
 	"catalog_icon_size": 76,
 	"catalog_sort": "relevance",
 	"show_unplaceable": false,
 	## Farm level given to new layouts (profile.level). Realistic mode treats the
 	## layout as "my farm at this level"; Creative mode is the full sandbox.
 	"default_farm_level": 1,
+	## "off" | "reduced" | "full", or "auto" = from the OS reduce-motion preference.
+	"ambient_animation": "auto",
 }
+## Stored values of "ambient_animation", in the order the settings dialog lists them.
+const AMBIENT_CHOICES := ["off", "reduced", "full"]
 
 var values: Dictionary = {}
 var _path := PATH
@@ -77,6 +83,23 @@ func set_v(key: String, v: Variant, persist: bool = true) -> void:
 	if persist:
 		save_settings()
 	changed.emit(key)
+
+
+static func os_reduce_motion() -> int:
+	## The OS "reduce motion" preference: 1 on, 0 off, -1 unknown.
+	if DisplayServer.has_method("accessibility_should_reduce_animation"):
+		return int(DisplayServer.call("accessibility_should_reduce_animation"))
+	return -1
+
+
+static func ambient_default(reduce_motion: int) -> String:
+	return "reduced" if reduce_motion == 1 else "full"
+
+
+func ambient_animation() -> String:
+	## The effective choice: "off" | "reduced" | "full".
+	var v := str(get_v("ambient_animation"))
+	return v if v in AMBIENT_CHOICES else ambient_default(os_reduce_motion())
 
 
 func toggle_favorite(item_id: String) -> bool:

@@ -121,6 +121,179 @@ func _free_origin(item: ItemDef, near: Vector2i, flipped: bool = false) -> Vecto
 	return near
 
 
+func _free_block(size: Vector2i) -> Vector2i:
+	## Top corner of a completely empty, landmark-free area of this size (-1 = none).
+	var s := _s()
+	for y in range(0, s.map.size.y - size.y):
+		for x in range(0, s.map.size.x - size.x):
+			var area := Rect2i(Vector2i(x, y), size)
+			if PlacementRules.check_rect(s.layout, s.map, area).ok and not _touches_landmark(area):
+				return area.position
+	return Vector2i(-1, -1)
+
+
+func _first_item(pred: Callable) -> ItemDef:
+	for it: ItemDef in App.db.ordered:
+		if it.can_place() and pred.call(it):
+			return it
+	return null
+
+
+func _layout_tools_check() -> void:
+	print("Layout tools")
+	App.open_layout(App.new_layout("Tools", "expanded"))
+	await _frames(2)
+	var s := _s()
+	s.layout.set_unlocked(s.map.all_plot_ids())
+	var lt: LayoutToolController = main.layout_tools
+	var base := _free_block(Vector2i(28, 18))
+	check(base.x >= 0, "a free block to test the tools on")
+	var fence := _first_item(func(it: ItemDef) -> bool: return it.connect_style == "fence" and it.footprint == Vector2i.ONE)
+	var tall := _first_item(func(it: ItemDef) -> bool: return it.flippable and it.footprint.x != it.footprint.y and it.footprint.x <= 3 and it.footprint.y <= 3)
+	var fid := fence.id
+	# Symmetry: mirrored ghost, one undo step, real pointer events.
+	s.set_active_item(fid)
+	s.set_symmetry_kind(LayoutTools.KIND_ACROSS)
+	s.set_symmetry_tile(base + Vector2i(12, 0))
+	main.dock.tool_action.emit("symmetry", true)
+	check(bool(s.symmetry["enabled"]) and lt.tool_overlay.line == s.mirror_line(), "symmetry on: the mirror line is drawn")
+	var p := _screen_of_tile(base + Vector2i(3, 3))
+	_move(p)
+	await _frames(2)
+	var ov: EditorOverlay = main.overlay
+	check(ov.ghosts.size() == 2 and bool(ov.ghosts[1].get("mirror", false)) and ov.ghosts[1]["origin"] == base + Vector2i(21, 3), "live ghost of the mirrored copy")
+	var n0 := s.layout.count()
+	var h0 := s.stack.size()
+	_button(p, true)
+	_button(p, false)
+	check(s.layout.count() == n0 + 2 and s.stack.size() == h0 + 1, "click places the original and its mirror as one undo step")
+	check(s.layout.object_at(base + Vector2i(21, 3)) != null, "mirrored copy on the far side of the line")
+	s.stack.undo()
+	check(s.layout.count() == n0, "one undo removes both")
+	# Screen mirror flips a rotatable item.
+	s.set_symmetry_kind(LayoutTools.KIND_SCREEN)
+	s.set_symmetry_tile(base + Vector2i(12, 9))
+	s.place_flipped = false
+	s.set_active_item(tall.id)
+	var po := _free_origin(tall, base + Vector2i(14, 9))
+	var placed := s.place_objects([s.make_object(tall, po)], "Place")
+	var mo := s.layout.get_obj(placed[placed.size() - 1]) if placed.size() == 2 else null
+	check(mo != null and mo.flipped and mo.size == tall.size_for(true), "screen mirror places the mirrored (rotated) item")
+	s.stack.undo()
+	main.dock.tool_action.emit("symmetry", false)
+	# Outline brush (connection shapes come from the normal renderer logic).
+	s.set_active_item(fid)
+	s.brush = "outline"
+	var a := base + Vector2i(1, 1)
+	var b := a + Vector2i(5, 4)
+	n0 = s.layout.count()
+	h0 = s.stack.size()
+	var pa := _screen_of_tile(a)
+	var pb := _screen_of_tile(b)
+	_move(pa)
+	_button(pa, true)
+	_move(pa.lerp(pb, 0.5), MOUSE_BUTTON_MASK_LEFT)
+	_move(pb, MOUSE_BUTTON_MASK_LEFT)
+	await _frames(1)
+	check(ov.ghosts.size() == 18 and ov.ghosts[0].has("mask"), "outline preview: perimeter ghosts with connection shapes (%d)" % ov.ghosts.size())
+	_button(pb, false)
+	check(s.layout.count() == n0 + 18 and s.stack.size() == h0 + 1, "outline: 6×5 perimeter is one undo step")
+	check(s.layout.object_at(a + Vector2i(2, 2)) == null, "outline leaves the inside empty")
+	var corner := s.layout.object_at(a)
+	check(Connections.mask_for(s.layout, s.db, corner) == (Connections.SE | Connections.SW), "outline corner connects both ways")
+	s.stack.undo()
+	# Line brush on a fence previews connected pieces; Esc cancels mid-gesture.
+	s.brush = "line"
+	n0 = s.layout.count()
+	_move(pa)
+	_button(pa, true)
+	_move(_screen_of_tile(a + Vector2i(4, 0)), MOUSE_BUTTON_MASK_LEFT)
+	await _frames(1)
+	check(ov.ghosts.size() == 5 and ov.ghosts[2]["mask"] == (Connections.NW | Connections.SE), "fence line preview shows straight pieces")
+	check(lt.cancel(), "cancel ends the gesture")
+	_button(_screen_of_tile(a + Vector2i(4, 0)), false)
+	check(s.layout.count() == n0, "cancelled line places nothing")
+	s.brush = "single"
+	s.set_tool("select")
+	# Repeat, with a live preview that survives hovering.
+	var lamp := _first_item(func(it: ItemDef) -> bool: return it.footprint == Vector2i.ONE and it.connect_style.is_empty())
+	var src: Array = s.place_objects([s.make_object(lamp, base + Vector2i(2, 10)), s.make_object(lamp, base + Vector2i(4, 10))], "Two")
+	s.select(src, false, false)
+	await _frames(1)
+	check(main.dock._sel_row.visible and not main.dock._align_btns[0].disabled and main.dock._dist_btns[0].disabled, "selection tools appear (align needs 2, spacing 3)")
+	lt.set_repeat_params({"cols": 3, "rows": 2, "gap": Vector2i(1, 1)})
+	main.dock.tool_action.emit("repeat", true)
+	_move(_screen_of_tile(base + Vector2i(20, 15)))
+	await _frames(2)
+	check(ov.ghosts.size() == 10, "repeat preview survives hover: %d ghosts" % ov.ghosts.size())
+	n0 = s.layout.count()
+	h0 = s.stack.size()
+	main.dock.tool_action.emit("repeat_apply", null)
+	check(s.layout.count() == n0 + 10 and s.stack.size() == h0 + 1, "repeat 3×2 applies as one undo step")
+	check(lt.mode == "" and ov.ghosts.is_empty(), "repeat preview closes after applying")
+	s.stack.undo()
+	# Align / distribute through the dock.
+	var trio: Array = s.place_objects([s.make_object(lamp, base + Vector2i(2, 13)), s.make_object(lamp, base + Vector2i(5, 15)), s.make_object(lamp, base + Vector2i(11, 16))], "Three")
+	s.select(trio, false, false)
+	h0 = s.stack.size()
+	main.dock.tool_action.emit("align", "top")
+	check(s.layout.get_obj(trio[1]).origin.y == base.y + 13 and s.layout.get_obj(trio[2]).origin.y == base.y + 13 and s.stack.size() == h0 + 1, "align top as one undo step")
+	main.dock.tool_action.emit("distribute", LayoutTools.AXIS_ALONG)
+	check(s.layout.get_obj(trio[1]).origin.x == base.x + 6 or s.layout.get_obj(trio[1]).origin.x == base.x + 7, "equal spacing moves the middle object")
+	s.stack.undo()
+	s.stack.undo()
+	# Stamps: save the selection, list it, place it, one undo step, export/import.
+	s.select(src, false, false)
+	var st: Dictionary = lt.save_selection_stamp("Selftest stamp")
+	check(not st.is_empty() and FileAccess.file_exists(lt.stamps.thumb_path(st["id"])), "stamp saved with a thumbnail")
+	check(lt.panel._ids.has(st["id"]), "stamp listed in the panel")
+	lt.begin_stamp(lt.stamps.get_stamp(st["id"]))
+	var at := _screen_of_tile(base + Vector2i(15, 12))
+	_move(at)
+	await _frames(2)
+	check(ov.ghosts.size() == 2, "stamp ghost follows the pointer")
+	n0 = s.layout.count()
+	h0 = s.stack.size()
+	_button(at, true)
+	_button(at, false)
+	check(s.layout.count() == n0 + 2 and s.stack.size() == h0 + 1, "stamp click places it as one undo step")
+	s.stack.undo()
+	var esc := InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.pressed = true
+	lt._unhandled_input(esc)
+	check(lt.mode == "", "Esc stops stamping")
+	var out := "user://selftest_stamp.%s" % StampLibrary.EXT
+	check(lt.stamps.export_file(st["id"], out) == OK, "stamp exported")
+	var imp: Dictionary = lt.panel.import_path(out)
+	check(not (imp["stamp"] as Dictionary).is_empty() and lt.stamps.list().size() == 2, "stamp imported as a new entry")
+	for e in lt.stamps.list():
+		lt.stamps.delete(str(e["id"]))
+	DirAccess.remove_absolute(out)
+	# Landmarks refuse every tool.
+	var lm_id := "farmhouse" if s.map.landmark("farmhouse") != null else (s.map.landmarks[0].id if not s.map.landmarks.is_empty() else "")
+	if not lm_id.is_empty():
+		s.select_landmark(lm_id)
+		h0 = s.stack.size()
+		check(not s.align_selection("left") and s.make_stamp("x").is_empty() and s.repeat_plan(2, 2, Vector2i.ZERO).is_empty() and s.apply_repeat(2, 2, Vector2i.ZERO).is_empty() and s.stack.size() == h0, "a selected landmark can't be aligned, copied, repeated or stamped")
+		s.clear_landmark_selection()
+	# Issues stay current: conflicts match a full scan; analysis follows mode and level.
+	var locked := _first_item(func(it: ItemDef) -> bool: return it.unlock_level > 1 and it.footprint == Vector2i.ONE)
+	var over: Array = s.place_objects([s.make_object(locked, base + Vector2i(9, 2))], "Locked item")
+	var lock_uid: int = over[0] if not over.is_empty() else -1
+	check(lock_uid > 0 and s.conflicts().keys() == PlacementRules.find_conflicts(s.layout, s.map).keys(), "conflict index agrees with a full scan")
+	var level_before := int(s.layout.profile.get("level", 1))
+	main._set_farm_level(1)
+	s.set_mode(FarmLayout.MODE_REALISTIC)
+	check(ov.issues.has(lock_uid), "Realistic mode lists the locked item right away")
+	main._set_farm_level(locked.unlock_level)
+	check(not ov.issues.has(lock_uid) or RealisticAnalyzer.LEVEL_LOCKED not in s.analysis().issues.get(lock_uid, []), "raising the farm level clears it right away")
+	main.inspector.rebuild()
+	check(is_same(main.inspector.report, s.analysis()), "inspector and canvas share one analysis")
+	s.set_mode(FarmLayout.MODE_CREATIVE)
+	main._set_farm_level(level_before)
+
+
 func _touches_landmark(area: Rect2i) -> bool:
 	## Approximate landmarks allow placement, but their sprites still catch clicks.
 	for y in range(area.position.y, area.end.y):
@@ -206,6 +379,9 @@ func _integration() -> void:
 	_template_check()
 	await _landmark_check()
 	await _world_ui_check()
+	await _camera_check()
+	await _drag_check()
+	await _world_art_check()
 	var bakery := App.db.get_item("bakery")
 	var at := _free_origin(bakery, Vector2i(14, 28))
 	main.camera.center_on(Iso.tile_center(at))
@@ -362,6 +538,7 @@ func _integration() -> void:
 	await _asset_pack_check()
 	await _world_pack_check()
 	await _load_report_check()
+	await _layout_tools_check()
 	App.library.delete(s.layout.id)
 
 
@@ -743,6 +920,7 @@ func _perf() -> void:
 	App.maps[big.id] = big
 	for n in [2000, 5000, 10000]:
 		results[n] = await _bench(str(n), n, big)
+	results["thumbnails"] = await _bench_thumbs()
 	for k in results:
 		print("PERF %s %s" % [k, JSON.stringify(results[k])])
 	var r5: Dictionary = results[5000]
@@ -752,6 +930,9 @@ func _perf() -> void:
 	check(r5["pick_us"] < 5000.0, "pixel-accurate pick: %.0f µs" % r5["pick_us"])
 	check(r5["save_ms"] < 3000.0 and r5["load_ms"] < 3000.0, "save %.0f ms / load %.0f ms" % [r5["save_ms"], r5["load_ms"]])
 	App.maps.erase(big.id)
+	var e5: Dictionary = r5["edits"]
+	if e5.has(FarmLayout.MODE_REALISTIC):
+		check(float(e5[FarmLayout.MODE_REALISTIC]["total"]["p95"]) < 1500.0, "edit at %d objects, Realistic mode: p95 %.1f ms" % [r5["objects"], e5[FarmLayout.MODE_REALISTIC]["total"]["p95"]])
 
 
 func _bench_world() -> Dictionary:
@@ -861,6 +1042,7 @@ func _bench(label: String, n: int, map: FarmMap) -> Dictionary:
 	t0 = Time.get_ticks_usec()
 	RealisticAnalyzer.analyze(l, App.db, map)
 	var analyze_ms := (Time.get_ticks_usec() - t0) / 1000.0
+	var edits := await _bench_edits(l, map, rng) if label != "farm" else {}
 	var frame_ms := -1.0
 	if DisplayServer.get_name() != "headless":
 		main.camera.smooth = false
@@ -876,7 +1058,150 @@ func _bench(label: String, n: int, map: FarmMap) -> Dictionary:
 		"sort_ms": snappedf(sort_ms, 0.1), "place_check_us": snappedf(place_us, 0.1), "pick_us": snappedf(pick_us, 0.1),
 		"edit_resort_ms": snappedf(edit_ms, 0.1), "save_ms": snappedf(save_ms, 0.1), "load_ms": snappedf(load_ms, 0.1),
 		"analyze_ms": snappedf(analyze_ms, 0.1), "file_kb": text.length() / 1024, "loaded": back.count() if back else -1,
-		"frame_ms": snappedf(frame_ms, 0.01), "mem_mb": snappedf(OS.get_static_memory_usage() / 1048576.0, 0.1)}
+		"frame_ms": snappedf(frame_ms, 0.01), "mem_mb": snappedf(OS.get_static_memory_usage() / 1048576.0, 0.1), "edits": edits}
+
+
+static func _stats(samples: Array) -> Dictionary:
+	## {mean, p95} of millisecond samples.
+	if samples.is_empty():
+		return {"n": 0}
+	var v := samples.duplicate()
+	v.sort()
+	var total := 0.0
+	for x: float in v:
+		total += x
+	return {"n": v.size(), "mean": snappedf(total / v.size(), 0.01), "p95": snappedf(float(v[clampi(int(ceil(0.95 * v.size())) - 1, 0, v.size() - 1)]), 0.01)}
+
+
+func _fine_ms(t0: int) -> float:
+	return (Time.get_ticks_usec() - t0) / 1000.0
+
+
+func _bench_edits(l: FarmLayout, map: FarmMap, rng: RandomNumberGenerator) -> Dictionary:
+	## Per-edit UI cost, Creative and Realistic: one synchronous edit (command ->
+	## history_changed -> issues, tints, top bar) plus the draw-order update, and
+	## each component on its own. Cycles move / add / undo so the layout stays dense.
+	var s := _s()
+	var out := {}
+	var idx: Variant = null
+	if ClassDB.class_exists("ConflictIndex") or ResourceLoader.exists("res://src/core/conflict_index.gd"):
+		idx = load("res://src/core/conflict_index.gd").new(l, map)
+	var ids: Array = []
+	for it: ItemDef in App.db.ordered:
+		if it.can_place() and it.footprint == Vector2i.ONE:
+			ids.append(it.id)
+	var keys := l.objects.keys()
+	for mode: String in [FarmLayout.MODE_CREATIVE, FarmLayout.MODE_REALISTIC]:
+		s.set_mode(mode)
+		main.inspector.rebuild()
+		await _frames(1)
+		var total: Array = []
+		var draw: Array = []
+		var full_conf: Array = []
+		var index_conf: Array = []
+		var full_an: Array = []
+		var fast_an: Array = []
+		var inspector: Array = []
+		var i := 0
+		while total.size() < 45 and i < 2000:
+			i += 1
+			var cmd: Command = null
+			var undo := false
+			match total.size() % 3:
+				0:
+					var u: int = keys[rng.randi() % keys.size()]
+					var delta := Vector2i(rng.randi_range(-3, 3), rng.randi_range(-3, 3))
+					if l.objects.has(u) and delta != Vector2i.ZERO and PlacementRules.check_group_move(l, map, [u], delta).ok:
+						cmd = EditCommands.MoveObjects.new([u], delta)
+				1:
+					var t := Vector2i(rng.randi_range(0, map.size.x - 1), rng.randi_range(0, map.size.y - 1))
+					if PlacementRules.check_rect(l, map, Rect2i(t, Vector2i.ONE)).ok:
+						var po := PlacedObject.new()
+						po.item_id = ids[rng.randi() % ids.size()]
+						po.origin = t
+						cmd = EditCommands.AddObjects.new([po])
+				_:
+					undo = true
+			if cmd == null and not undo:
+				continue
+			var t0 := Time.get_ticks_usec()
+			if undo:
+				s.stack.undo()
+			else:
+				s.execute(cmd)
+			var t1 := Time.get_ticks_usec()
+			main.renderer.ensure_sorted()
+			var t2 := Time.get_ticks_usec()
+			total.append((t2 - t0) / 1000.0)
+			draw.append((t2 - t1) / 1000.0)
+			t0 = Time.get_ticks_usec()
+			PlacementRules.find_conflicts(l, map)
+			full_conf.append(_fine_ms(t0))
+			t0 = Time.get_ticks_usec()
+			var cf: Variant = idx.conflicts() if idx != null else null
+			if idx != null:
+				index_conf.append(_fine_ms(t0))
+			t0 = Time.get_ticks_usec()
+			RealisticAnalyzer.analyze(l, s.db, map)
+			full_an.append(_fine_ms(t0))
+			if idx != null:
+				t0 = Time.get_ticks_usec()
+				Callable(RealisticAnalyzer, "analyze").call(l, s.db, map, cf)
+				fast_an.append(_fine_ms(t0))
+			t0 = Time.get_ticks_usec()
+			main.inspector.rebuild()
+			inspector.append(_fine_ms(t0))
+		out[mode] = {"total": _stats(total), "draw_index": _stats(draw), "conflicts_full": _stats(full_conf),
+			"conflicts_index": _stats(index_conf), "analyzer_full": _stats(full_an), "analyzer_with_index": _stats(fast_an),
+			"inspector_rebuild": _stats(inspector)}
+	s.set_mode(FarmLayout.MODE_CREATIVE)
+	await _frames(1)
+	return out
+
+
+func _bench_thumbs() -> Dictionary:
+	## The catalogue's own thumbnail batches over the full catalogue, cold (no
+	## texture held by anything) and warm. Memory = static + reported texture memory.
+	var cat: Node = main.catalog
+	cat._list.clear()
+	cat._ids.clear()
+	cat._icon_queue.clear()
+	App.open_layout(App.new_layout("Thumb bench", "expanded"))
+	cat._list.clear()
+	cat._ids.clear()
+	cat._icon_queue.clear()
+	await _frames(2)
+	var lib := App.assets
+	lib.clear_cache()
+	await _frames(2)
+	var items: Array = App.db.ordered
+	var mem0 := OS.get_static_memory_usage()
+	var tex0 := Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)
+	var loads0 := lib.texture_loads + lib.thumb_loads
+	var cold: Array = []
+	var t_all := Time.get_ticks_usec()
+	for b in range(0, items.size(), 24):
+		var t0 := Time.get_ticks_usec()
+		for j in range(b, mini(b + 24, items.size())):
+			var it: ItemDef = items[j]
+			lib.get_thumbnail(it.art_key, "", UI.preview_mask(it))
+		cold.append(_fine_ms(t0))
+	var cold_total := _fine_ms(t_all)
+	var mem1 := OS.get_static_memory_usage()
+	var tex1 := Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED)
+	var loads1 := lib.texture_loads + lib.thumb_loads
+	var warm: Array = []
+	for b in range(0, items.size(), 24):
+		var t0 := Time.get_ticks_usec()
+		for j in range(b, mini(b + 24, items.size())):
+			var it: ItemDef = items[j]
+			lib.get_thumbnail(it.art_key, "", UI.preview_mask(it))
+		warm.append(_fine_ms(t0))
+	cat.refresh()
+	await _frames(2)
+	return {"items": items.size(), "cold_batch_24": _stats(cold), "cold_total_ms": snappedf(cold_total, 0.1), "warm_batch_24": _stats(warm),
+		"images_decoded": loads1 - loads0, "static_mem_delta_mb": snappedf((mem1 - mem0) / 1048576.0, 0.1),
+		"texture_mem_delta_mb": snappedf((tex1 - tex0) / 1048576.0, 0.1)}
 
 
 # --- art check (installed private/user packs) --------------------------------------
@@ -1186,6 +1511,330 @@ func _artflow() -> void:
 	print("ARTFLOW MEM ", JSON.stringify(mem))
 
 
+# --- camera (animated path, keys, bookmarks) and object dragging ---------------------------
+
+func _settle_camera() -> int:
+	## Frames until the camera has stopped moving.
+	for i in 900:
+		if not main.camera.is_animating():
+			return i
+		await get_tree().process_frame
+	return 900
+
+
+func _camera_check() -> void:
+	print("Camera")
+	var s := _s()
+	var cam: FarmCamera = main.camera
+	s.set_tool("select")
+	s.clear_selection()
+	main.controller.stamp_mode = false
+	cam.go_home()
+	# Wheel: zoom at the cursor by the configured factor.
+	var at_screen: Vector2 = cam.view_rect.get_center() + Vector2(120, 40)
+	var w0: Vector2 = cam.screen_to_world(at_screen)
+	var factor0: float = cam.wheel_factor
+	cam.wheel_factor = 1.3
+	_button(at_screen, true, MOUSE_BUTTON_WHEEL_UP)
+	check(is_equal_approx(cam.zoom.x, 1.3 * FarmCamera.HOME_ZOOM), "wheel notch uses the wheel-factor setting (zoom %.3f)" % cam.zoom.x)
+	check(cam.world_to_screen(w0).distance_to(at_screen) < 0.75, "wheel zooms at the cursor")
+	cam.wheel_factor = factor0
+	# Animated path: the pan made during a running zoom survives it.
+	cam.smooth = true
+	cam.go_home()
+	var anchor: Vector2 = cam.view_rect.get_center() + Vector2(90, -30)
+	cam.zoom_at(anchor, 1.6)
+	await _settle_camera()
+	var plain_end: Vector2 = cam.position
+	check(is_equal_approx(cam.target_zoom, 1.6) and absf(cam.zoom.x - 1.6) < 0.002, "smooth zoom arrives (%.3f)" % cam.zoom.x)
+	cam.go_home()
+	cam.zoom_at(anchor, 1.6)
+	await get_tree().process_frame
+	check(cam.is_animating(), "zoom is still animating when the pan comes")
+	var z_now: float = cam.zoom.x
+	var pan := Vector2(-70, 44)
+	cam.pan_screen(pan)
+	await _settle_camera()
+	var kept: Vector2 = cam.position - plain_end
+	check(kept.distance_to(-pan / z_now) < 0.75, "panning during a zoom is kept (moved %s, expected %s)" % [str(kept), str(-pan / z_now)])
+	# Fly-to.
+	var dest: Vector2 = Iso.grid_to_world(LandmarkView.home_tile_point(s.map)) + Vector2(260, 120)
+	cam.fly_to(dest, 1.5)
+	check(cam.is_animating(), "fly-to animates")
+	var fly_frames: int = await _settle_camera()
+	check(cam.view_center().distance_to(dest) < 1.0 and is_equal_approx(snappedf(cam.zoom.x, 0.001), 1.5), "fly-to arrives (%d frames)" % fly_frames)
+	# Inertia, and the immediate path that interrupts it.
+	cam.go_home()
+	var before: Vector2 = cam.position
+	cam.throw(Vector2(-900, 200))
+	await _frames(3)
+	check(cam.position != before and cam.is_animating(), "a released pan coasts")
+	await _settle_camera()
+	check(cam.position.x > before.x, "…in the direction of the throw and comes to rest")
+	cam.throw(Vector2(900, 0))
+	await get_tree().process_frame
+	var tile := Iso.grid_to_world(LandmarkView.home_tile_point(s.map))
+	cam.center_on(tile)
+	check(not cam.is_animating() and cam.view_center().distance_to(tile) < 1.0, "center_on is immediate and stops the motion")
+	# Rubber band: past the limit while held, back afterwards.
+	cam.begin_user_pan()
+	cam.pan_screen(Vector2(-400000, -300000))
+	var lim: Rect2 = cam.limits
+	check(not lim.grow(1.0).has_point(cam.view_center()), "dragging past the limit overshoots (rubber band)")
+	cam.end_user_pan()
+	await _settle_camera()
+	check(lim.grow(1.0).has_point(cam.view_center()), "…and springs back inside")
+	cam.smooth = false
+	cam.go_home()
+	# Limits and minimum zoom come from the world.
+	var wr: Rect2 = main.world_rect_px(s.map)
+	check(lim == wr.grow(FarmCamera.LIMIT_MARGIN), "limits = world bounds + margin")
+	check(cam.min_zoom <= CameraMath.fit_zoom(cam.view_rect.size, wr.size) + 0.0001 and cam.min_zoom >= FarmCamera.ABS_MIN_ZOOM, "minimum zoom comes from fitting the world (%.3f)" % cam.min_zoom)
+	for i in 80:
+		cam.wheel_zoom(cam.view_rect.get_center(), -1.0)
+	check(is_equal_approx(snappedf(cam.zoom.x, 0.0001), snappedf(cam.min_zoom, 0.0001)), "zooming out stops at the minimum")
+	cam.go_home()
+	# Keys.
+	var o: PlacedObject = s.layout.objects.values()[0]
+	s.select([o.uid])
+	_key(KEY_F)
+	var r: Rect2 = main._selection_world_rect(s)
+	check(cam.view_center().distance_to(r.get_center()) < 1.0, "F fits the selection")
+	s.clear_selection()
+	_key(KEY_F)
+	var z_key: float = cam.zoom.x
+	main._fit()
+	check(is_equal_approx(snappedf(z_key, 0.0001), snappedf(cam.zoom.x, 0.0001)), "F without a selection fits the farm")
+	_key(KEY_F, false, true)
+	check(cam.view_center().distance_to(wr.get_center()) < 1.0, "Shift+F shows the whole world")
+	var home_pt := Iso.grid_to_world(LandmarkView.home_tile_point(s.map))
+	cam.center_on(home_pt + Vector2(300, 150))
+	_key(KEY_H)
+	check(cam.view_center().distance_to(home_pt) < 1.0 and s.tool == "select", "H goes home")
+	_key(KEY_D)
+	check(s.tool == "pan", "D is the pan tool now")
+	_key(KEY_ESCAPE)
+	# Bookmarks: saved views, kept through view changes, undoable, in the file.
+	var steps := s.stack.size()
+	var view_a := home_pt + Vector2(200, 100)
+	cam.center_on(view_a)
+	_key(KEY_3, true)
+	check(s.stack.size() == steps + 1 and s.layout.camera.get("bookmarks", {}).has("3"), "Ctrl+3 saves a view as one undo step")
+	cam.center_on(home_pt)
+	cam.pan_screen(Vector2(5, 5))
+	check(s.layout.camera.get("bookmarks", {}).has("3"), "view changes don't wipe the bookmarks")
+	check(s.tool == "select", "digit keys leave the tool alone")
+	_key(KEY_3)
+	check(cam.view_center().distance_to(view_a) < 1.0, "3 returns to the saved view")
+	var saved: Dictionary = LayoutIO.to_dict(s.layout)["camera"]
+	check(saved.get("bookmarks", {}).has("3") and saved.has("x"), "bookmarks are written with the layout")
+	_key(KEY_Z, true)
+	check(not s.layout.camera.has("bookmarks"), "Ctrl+Z removes the bookmark")
+	_key(KEY_5)
+	check(s.stack.size() == steps, "an empty slot does nothing")
+	main.go_home()
+	main.camera.zoom = Vector2(1.5, 1.5)
+	main.camera.target_zoom = 1.5
+
+
+func _free_area(near: Vector2i, size: Vector2i) -> Vector2i:
+	## Origin near `near` of a free size×size area with no landmark (x = -9999: none).
+	var s := _s()
+	for r in 40:
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				var o := near + Vector2i(dx, dy)
+				var a := Rect2i(o, size)
+				if PlacementRules.check_rect(s.layout, s.map, a).ok and not _touches_landmark(a):
+					return o
+	return Vector2i(-9999, -9999)
+
+
+func _put(item_id: String, origin: Vector2i) -> PlacedObject:
+	var s := _s()
+	var uids := s.place_objects([s.make_object(App.db.get_item(item_id), origin)], "selftest drag object")
+	return s.layout.get_obj(uids[0]) if not uids.is_empty() else null
+
+
+func _overlap_point(a: PlacedObject, b: PlacedObject) -> Variant:
+	## A world point where pick_all finds both objects (null: none).
+	var r: Rect2 = main.renderer.bounds_of(a.uid).intersection(main.renderer.bounds_of(b.uid))
+	var y := r.position.y
+	while y < r.end.y:
+		var x := r.position.x
+		while x < r.end.x:
+			var uids := []
+			for h: Dictionary in main.renderer.pick_all(Vector2(x, y)):
+				uids.append(h["uid"])
+			if a.uid in uids and b.uid in uids:
+				return Vector2(x, y)
+			x += 3.0
+		y += 3.0
+	return null
+
+
+func _click_screen(p: Vector2) -> void:
+	_move(p)
+	_button(p, true)
+	_button(p, false)
+
+
+func _drag_check() -> void:
+	print("Dragging and overlapping objects")
+	var s := _s()
+	var cam: FarmCamera = main.camera
+	var ctl: EditorController = main.controller
+	s.set_tool("select")
+	s.clear_selection()
+	check(main.underlay.get_index() < main.renderer.get_index() and main.renderer.get_index() < main.overlay.get_index(), "selection fill is drawn under the objects, outlines above")
+	var at := _free_area(Vector2i(26, 12), Vector2i(12, 8))
+	if at.x == -9999:
+		check(false, "free area for the drag checks")
+		return
+	cam.center_on(Iso.tile_center(at + Vector2i(4, 2)))
+	await _frames(2)
+	var steps0 := s.stack.size()
+	var a := _put("bakery", at)
+	var b := _put("bakery", at + Vector2i(3, 0))
+	main.renderer.ensure_sorted()
+	check(a != null and b != null, "two neighbouring objects placed")
+	if a == null or b == null:
+		return
+	# pick_all / cycling.
+	var p: Variant = _overlap_point(a, b)
+	check(p != null, "the two sprites overlap somewhere")
+	if p != null:
+		var stack: Array = ctl.objects_here(p)
+		check(stack.size() >= 2 and stack[0]["uid"] == main.renderer.pick_any(p)["uid"], "objects_here lists both, top-most first (%d entries)" % stack.size())
+		var sp: Vector2 = cam.world_to_screen(p)
+		_click_screen(sp)
+		check(s.selection == [stack[0]["uid"]], "first click selects the top-most object")
+		_click_screen(sp)
+		check(s.selection == [stack[1]["uid"]], "clicking the same spot again selects the one behind")
+		for i in range(2, stack.size()):
+			_click_screen(sp)
+		_click_screen(sp)
+		check(s.selection == [stack[0]["uid"]], "…and cycles back to the top")
+		# Right-click context list.
+		_button(sp, true, MOUSE_BUTTON_RIGHT)
+		_button(sp, false, MOUSE_BUTTON_RIGHT)
+		check(ctl.last_context_stack.size() == stack.size() and s.selection == [stack[0]["uid"]], "right-click keeps the selection and lists the objects here")
+		main._on_objects_here_id(main.OBJECTS_HERE_ID + 1)
+		check(s.selection == [stack[1]["uid"]], "choosing from “Objects here” selects that object")
+		for c in main.root.get_children():
+			if c is PopupMenu:
+				(c as PopupMenu).hide()
+		s.clear_selection()
+	# Live drag: previewed by the renderer, the layout is untouched until the drop.
+	await _frames(1)
+	var grab := _grab_tile(a)
+	var from: Vector2 = _screen_of_tile(grab)
+	var one_tile: Vector2 = _screen_of_tile(grab + Vector2i(0, 1)) - from
+	var origin0 := a.origin
+	var steps := s.stack.size()
+	_move(from)
+	_button(from, true)
+	for i in range(1, 25):
+		_move(from + one_tile * i / 8.0, MOUSE_BUTTON_MASK_LEFT)
+	var mid_ok: bool = main.renderer.is_previewing(a.uid) and a.origin == origin0 and main.overlay.drag_delta == Vector2i(0, 3) and main.overlay.drag_result != null
+	check(mid_ok, "dragging previews in the renderer; the layout doesn't change until the drop (Δ %s)" % str(main.overlay.drag_delta))
+	check(main.renderer.pick(Iso.tile_center(a.origin)) == a.uid, "picking keeps using the real position while dragging")
+	# A pointer trembling on a tile boundary must not make the object flicker.
+	var boundary: Vector2 = from + one_tile * 3.5
+	var flips := 0
+	var last_delta: Vector2i = main.overlay.drag_delta
+	var rec0: int = ctl.drag_stats["recomputes"]
+	var moves0: int = ctl.drag_stats["moves"]
+	for i in 60:
+		_move(boundary + one_tile * (0.08 if i % 2 == 0 else -0.08), MOUSE_BUTTON_MASK_LEFT)
+		if main.overlay.drag_delta != last_delta:
+			flips += 1
+			last_delta = main.overlay.drag_delta
+	check(flips <= 1 and int(ctl.drag_stats["recomputes"]) - rec0 <= 1, "pointer jitter on a tile boundary: %d flip(s), %d recompute(s) in %d moves" % [flips, int(ctl.drag_stats["recomputes"]) - rec0, int(ctl.drag_stats["moves"]) - moves0])
+	# The camera moving under a still pointer moves the drop target.
+	var dd: Vector2i = main.overlay.drag_delta
+	cam.pan_screen(one_tile * -2.0)
+	check(main.overlay.drag_delta != dd, "a view change during the drag updates the drop position (%s → %s)" % [str(dd), str(main.overlay.drag_delta)])
+	cam.pan_screen(one_tile * 2.0)
+	var dt: Vector2 = from + one_tile * 4.0
+	_move(dt, MOUSE_BUTTON_MASK_LEFT)
+	_button(dt, false)
+	check(a.origin == origin0 + Vector2i(0, 4) and s.stack.size() == steps + 1, "drop commits one move, one undo step (at %s)" % str(a.origin))
+	check(not main.renderer.is_previewing(a.uid) and main.overlay.drag_uids.is_empty(), "the preview and overlay state are cleared")
+	# Dropping on another object: red blocker, one reason per chip, nothing moves.
+	var a_tile := _grab_tile(a)
+	var dpos: Vector2 = _screen_of_tile(a_tile)
+	var onto: Vector2 = _screen_of_tile(a_tile + (b.origin - a.origin))
+	_move(dpos)
+	_button(dpos, true)
+	for i in range(1, 11):
+		_move(dpos.lerp(onto, i / 10.0), MOUSE_BUTTON_MASK_LEFT)
+	check(b.uid in main.overlay.blocker_uids, "a drop on another object outlines the blocker")
+	var reasons: PackedStringArray = main.overlay.cursor_reasons
+	check(reasons.size() >= 1 and reasons[0].begins_with("Blocked by") and main.overlay.cursor_text.find("Blocked") < 0, "the reason gets its own chip: %s" % " | ".join(reasons))
+	var a_at := a.origin
+	var steps2 := s.stack.size()
+	_button(onto, false)
+	check(a.origin == a_at and s.stack.size() == steps2 and main.overlay.blocker_uids.is_empty(), "the drop is refused and the blockers are gone")
+	# Snap to the nearest free spot (setting, not persisted here).
+	App.settings.set_v("drag_snap_valid", true, false)
+	a_tile = _grab_tile(a)
+	dpos = _screen_of_tile(a_tile)
+	onto = _screen_of_tile(a_tile + (b.origin - a.origin) + Vector2i(1, 0))
+	_move(dpos)
+	_button(dpos, true)
+	for i in range(1, 11):
+		_move(dpos.lerp(onto, i / 10.0), MOUSE_BUTTON_MASK_LEFT)
+	check(main.overlay.cursor_text.find("snapped") >= 0 and main.overlay.drag_result.ok and main.overlay.blocker_uids.is_empty(), "with snapping on, an occupied drop jumps to the nearest free spot (%s)" % main.overlay.cursor_text)
+	var snap_delta: Vector2i = main.overlay.drag_delta
+	var b0 := a.origin
+	_button(onto, false)
+	App.settings.set_v("drag_snap_valid", false, false)
+	check(a.origin == b0 + snap_delta and PlacementRules.check_rect(s.layout, s.map, a.rect(), {a.uid: true}).ok, "…and drops there")
+	# Very large drags use overlay ghosts instead of re-sorting every object.
+	var big := _free_area(at + Vector2i(0, 12), Vector2i(12, 15))
+	if big.x != -9999:
+		var objs: Array = []
+		var item := App.db.get_item("fence")
+		for y in 12:
+			for x in 12:
+				objs.append(s.make_object(item, big + Vector2i(x, y)))
+		var uids := s.place_objects(objs, "selftest many")
+		check(uids.size() > EditorController.LIVE_DRAG_MAX, "%d objects placed for the large drag" % uids.size())
+		cam.center_on(Iso.tile_center(big + Vector2i(5, 5)))
+		await _frames(2)
+		var g0: Vector2 = _screen_of_tile(big + Vector2i(5, 5))
+		var g1: Vector2 = _screen_of_tile(big + Vector2i(5, 8))
+		# Cost of a live preview at a size near the limit (informational).
+		s.select(uids.slice(0, 100), false, false)
+		_move(g0)
+		_button(g0, true)
+		_move(g0.lerp(g1, 1.0 / 6.0), MOUSE_BUTTON_MASK_LEFT)
+		main.renderer.ensure_sorted()
+		var t_live := Time.get_ticks_usec()
+		for i in range(2, 7):
+			_move(g0.lerp(g1, i / 6.0), MOUSE_BUTTON_MASK_LEFT)
+			main.renderer.ensure_sorted()
+		print("  DRAG live preview, 100 objects: %.2f ms per tile change (%d recomputes in %d moves)" % [(Time.get_ticks_usec() - t_live) / 1000.0 / 3.0, ctl.drag_stats["recomputes"], ctl.drag_stats["moves"]])
+		_key(KEY_ESCAPE)
+		check(not main.renderer.is_previewing(uids[0]) and s.layout.get_obj(uids[0]).origin == big, "Esc cancels a live drag without moving anything")
+		s.select(uids, false, false)
+		var st3 := s.stack.size()
+		_move(g0)
+		_button(g0, true)
+		for i in range(1, 7):
+			_move(g0.lerp(g1, i / 6.0), MOUSE_BUTTON_MASK_LEFT)
+		check(main.overlay.ghosts.size() == uids.size() and not main.renderer.is_previewing(uids[0]), "large drag: %d overlay ghosts, nothing re-sorted per move" % main.overlay.ghosts.size())
+		_button(g1, false)
+		check(s.stack.size() == st3 + 1 and s.layout.get_obj(uids[0]).origin == big + Vector2i(0, 3), "large drag still commits as one move")
+	while s.stack.size() > steps0:
+		s.stack.undo()
+	s.clear_selection()
+	main.go_home()
+	main.camera.zoom = Vector2(1.5, 1.5)
+	main.camera.target_zoom = 1.5
+
+
 # --- world layer in the app: landmark rendering + interaction, home, land level ----------
 
 func _landmark_pick_tile(id: String) -> Vector2i:
@@ -1386,7 +2035,7 @@ func _world_ui_check() -> void:
 	var ok_home: bool = main.camera.view_center().distance_to(home_pt) < 1.0
 	main.camera.center_on(home_pt + Vector2(500, -300))
 	_key(KEY_H, false, true)
-	check(ok_home and main.camera.view_center().distance_to(home_pt) < 1.0 and s.tool == "select", "Home key and Shift+H go home too (H alone stays the pan tool)")
+	check(ok_home and main.camera.view_center().distance_to(home_pt) < 1.0 and s.tool == "select", "Home key and Shift+H go home too")
 	# Camera bounds: the view centre can't leave the world.
 	main.camera.pan_screen(Vector2(-200000, -150000))
 	var lim: Rect2 = main.camera.limits
@@ -1496,3 +2145,132 @@ func _load_report_check() -> void:
 			and (not is_instance_valid(m) or m.is_queued_for_deletion()), "Show closes the dialog, selects the object and centres it")
 	if is_instance_valid(m):
 		m.close()
+
+
+# --- world art, terrain, ambient animation, references -----------------------------------
+
+func _world_art_check() -> void:
+	print("World art")
+	var s := _s()
+	if not App.map.is_game_data():
+		var truck: AssetLibrary.SpriteInfo = main.renderer.world_sprite_of(LandmarkView.key_of("truck"))
+		check(truck != null and truck.path == "items/ph_truck.png", "the public truck landmark draws its own placeholder")
+		await _frames(2)
+		main.ground._terrain.queue_redraw()
+		await _frames(2)
+		var plain_us: int = main.ground._terrain.last_draw_usec
+		main.ground.set_theme("winter")
+		await _frames(2)
+		var winter_us: int = main.ground._terrain.last_draw_usec
+		main.ground.set_theme(s.layout.theme())
+		await _frames(2)
+		print("  TERRAIN build %d us, redraw %d us, season change %d us" % [main.ground._terrain.last_build_usec, plain_us, winter_us])
+		check(winter_us > 0 and winter_us < 50000, "a season change rebuilds the terrain in under 50 ms (%.1f ms)" % (winter_us / 1000.0))
+		main.ground.setup(s.map, s.layout.unlocked_plots)
+		main.ground.queue_redraw()
+		await _frames(2)
+		print("  GROUND ownership redraw %d us" % main.ground.last_draw_usec)
+		check(main.ground.last_draw_usec > 0 and main.ground.last_draw_usec < 50000, "an ownership change redraws in under 50 ms (%.1f ms)" % (main.ground.last_draw_usec / 1000.0))
+	# A real ambient animation from the built-in placeholders.
+	var wm: ItemDef = s.db.get_item("windmill")
+	var at := _free_origin(wm, Vector2i(6, 6))
+	var po := PlacedObject.new()
+	po.item_id = "windmill"
+	po.origin = at
+	po.size = wm.footprint
+	s.execute(EditCommands.AddObjects.new([po]))
+	var uid: int = s.layout.objects.keys().max()
+	check(main.renderer.anim_stats()["animated"] >= 1 and main.renderer.anim_frame_of(uid) >= -1, "a windmill placeholder is animated")
+	var view := Rect2(-1e6, -1e6, 2e6, 2e6)
+	main.renderer.set_ambient_mode(ObjectRenderer.Ambient.FULL)
+	var f0: int = main.renderer.anim_frame_of(uid)
+	main.renderer.advance_anim(1.0 / 6.0 + 0.001, view)
+	check(main.renderer.anim_frame_of(uid) != f0, "its frame advances with the clock")
+	App.settings.set_v("ambient_animation", "off", false)
+	check(main.renderer.anim_frame_of(uid) == -1, "Ambient animation: Off shows the static image")
+	App.settings.set_v("ambient_animation", "full", false)
+	check(main.renderer.anim_frame_of(uid) >= 0, "…and Full plays it again")
+	s.stack.undo()
+	check(main.renderer.anim_frame_of(uid) == -2, "removing the object removes its animation")
+	await _reference_check()
+
+
+func _reference_check() -> void:
+	print("References")
+	var s := _s()
+	var before := s.layout.reference.duplicate(true)
+	DirAccess.make_dir_recursive_absolute("user://references")
+	var files: Array[String] = []
+	for i in 2:
+		var img := Image.create(64, 32, false, Image.FORMAT_RGBA8)
+		img.fill(Color(0.5, 0.5 + i * 0.2, 0.9))
+		var f := "user://references/selftest_%d.png" % i
+		img.save_png(f)
+		files.append(f)
+	var depth: int = s.stack.history_labels().size()
+	main._ref_add_image(files[0])
+	main._ref_add_image(files[1])
+	check((s.layout.reference["images"] as Array).size() == 2 and s.stack.history_labels().size() == depth + 2, "two reference images, one undo step each")
+	check(main.reference.visible and main._view_state["ref_loaded"] and (main._view_state["ref_images"] as Array).size() == 2, "both are loaded and listed")
+	var ids: Array = (s.layout.reference["images"] as Array).map(func(im): return im["id"])
+	check(main.reference.active_id == ids[1], "a new image becomes the active one")
+	main._on_inspector_action("ref", {"id": ids[0], "opacity": 0.25})
+	check(is_equal_approx(float(s.layout.reference["images"][0]["opacity"]), 0.25) and not is_equal_approx(float(s.layout.reference["images"][1]["opacity"]), 0.25), "opacity is per image")
+	s.stack.undo()
+	check(not is_equal_approx(float(s.layout.reference["images"][0]["opacity"]), 0.25), "undo restores it")
+	main._on_inspector_action("ref", {"id": ids[0], "visible": false})
+	check(not bool(s.layout.reference["images"][0].get("visible", true)) and main.reference.visible, "hiding one image leaves the other")
+	main._on_inspector_action("ref_order", [ids[1], -1])
+	check(s.layout.reference["images"][0]["id"] == ids[1], "order changes")
+	s.stack.undo()
+	s.stack.undo()
+	# A drag of the active image is one undo step, and only moves that image.
+	main._on_inspector_action("ref_move", true)
+	var p := Vector2(600, 400)
+	var x0 := float(s.layout.reference["images"][1]["x"])
+	var y0_other := float(s.layout.reference["images"][0]["y"])
+	depth = s.stack.history_labels().size()
+	_button(p, true)
+	for i in range(1, 8):
+		_move(p + Vector2(i * 6, 0), MOUSE_BUTTON_MASK_LEFT)
+	_button(p + Vector2(42, 0), false)
+	main._on_inspector_action("ref_move", false)
+	check(s.stack.history_labels().size() == depth + 1, "a reference drag is one undo step")
+	check(not is_equal_approx(float(s.layout.reference["images"][1]["x"]), x0) and is_equal_approx(float(s.layout.reference["images"][0]["y"]), y0_other), "the drag moved only the active image")
+	s.stack.undo()
+	check(is_equal_approx(float(s.layout.reference["images"][1]["x"]), x0), "undo puts it back")
+	# Locked images don't move.
+	main._on_inspector_action("ref", {"locked": true})
+	main._on_inspector_action("ref_move", true)
+	depth = s.stack.history_labels().size()
+	_button(p, true)
+	_move(p + Vector2(30, 0), MOUSE_BUTTON_MASK_LEFT)
+	_button(p + Vector2(30, 0), false)
+	main._on_inspector_action("ref_move", false)
+	check(s.stack.history_labels().size() == depth, "a locked image can't be dragged")
+	s.stack.undo()
+	# Two-point calibration through the same click path as the editor.
+	main._on_inspector_action("ref_calibrate", 2)
+	check(main.controller.calibrating, "calibration started")
+	var a := Vector2(100, 40)
+	var b := Vector2(260, 120)
+	main._on_calibration_point(a)
+	main._on_calibration_point(b)
+	var ga := Iso.grid_to_world(Vector2(10, 10))
+	var gb := Iso.grid_to_world(Vector2(16, 10))
+	var ia: Vector2 = main.reference.world_to_image(a)
+	var ib: Vector2 = main.reference.world_to_image(b)
+	main._on_calibration_point(ga)
+	main._on_calibration_point(gb)
+	check(not main.controller.calibrating and s.layout.reference["images"][1].has("affine"), "two pairs of clicks calibrate the active image")
+	var xf: Transform2D = ReferenceLayer.xform_of(s.layout.reference["images"][1])
+	check((xf * ia).distance_to(ga) < 0.01 and (xf * ib).distance_to(gb) < 0.01, "the clicked points land on the tile corners")
+	s.stack.undo()
+	check(not s.layout.reference["images"][1].has("affine"), "calibration is undoable")
+	main._on_inspector_action("ref_remove", ids[1])
+	check((s.layout.reference["images"] as Array).size() == 1 and main.reference.active_id == ids[0], "removing one keeps the other")
+	s.stack.undo()
+	s.execute(EditCommands.SetReference.new(s.layout.reference, before, "Reset"))
+	check(s.layout.reference == before, "reference state restored")
+	for f in files:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(f))

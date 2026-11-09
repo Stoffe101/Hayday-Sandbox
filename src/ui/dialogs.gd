@@ -17,7 +17,8 @@ const SHORTCUTS := [
 	["Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y", "Undo / redo"],
 	["Click a landmark", "Farmhouse, truck, shop…: details, state and look (they are fixed in place)"],
 	["View & file", ""],
-	["Mouse wheel / + / -", "Zoom"], ["F", "Fit the farm"], ["Home / Shift+H", "Home: centre the farmhouse"], ["G", "Grid"], ["O", "Occupied-tile overlay"], ["Tab", "Hide / show panels"],
+	["Mouse wheel / + / -", "Zoom"], ["F / Shift+F", "Fit the selection or farm / the whole world"], ["H / Home", "Home: centre the farmhouse"],
+	["1…9 / Ctrl+1…9", "Go to / save a view"], ["Click again on the same spot", "Select the object behind (right-click lists all)"], ["D or hold Space", "Pan tool / pan"], ["G", "Grid"], ["O", "Occupied-tile overlay"], ["Tab", "Hide / show panels"],
 	["Ctrl+F", "Search catalogue"], ["Ctrl+M", "Switch Creative / Realistic"], ["Ctrl+S", "Save (keeps a revision)"], ["Ctrl+O", "Layouts"],
 	["Ctrl+N", "New layout"], ["Ctrl+E", "Export image"], ["Ctrl+Shift+A", "Asset manager (art, anchors, review)"], ["F1", "This help"],
 ]
@@ -157,6 +158,28 @@ static func settings(parent: Control, on_change: Callable) -> void:
 		s.set_v("smooth_zoom", on)
 		on_change.call("smooth_zoom"))
 	grid.add_child(sz)
+	grid.add_child(UI.label("Wheel zoom speed", "Dim"))
+	var wz := OptionButton.new()
+	var wheel_steps := [1.08, 1.15, 1.25, 1.4]
+	for v in ["Slow", "Normal", "Fast", "Very fast"]:
+		wz.add_item(v)
+	wz.selected = maxi(0, wheel_steps.find(float(s.get_v("wheel_zoom_factor"))))
+	wz.item_selected.connect(func(i): s.set_v("wheel_zoom_factor", wheel_steps[i]))
+	grid.add_child(wz)
+	grid.add_child(UI.label("Dragged objects snap to free space", "Dim"))
+	var snap := CheckButton.new()
+	snap.button_pressed = bool(s.get_v("drag_snap_valid"))
+	snap.tooltip_text = "Hold Alt while dragging to do the opposite"
+	snap.toggled.connect(func(on): s.set_v("drag_snap_valid", on))
+	grid.add_child(snap)
+	grid.add_child(UI.label("Ambient animation", "Dim"))
+	var amb := OptionButton.new()
+	for t in ["Off", "Reduced", "Full"]:
+		amb.add_item(t)
+	amb.selected = AppSettings.AMBIENT_CHOICES.find(s.ambient_animation())
+	amb.tooltip_text = "Windmills, water and other idle motion. Reduced animates every third object at half speed."
+	amb.item_selected.connect(func(i): s.set_v("ambient_animation", AppSettings.AMBIENT_CHOICES[i]))
+	grid.add_child(amb)
 	m.body.add_child(grid)
 	m.body.add_child(HSeparator.new())
 	m.body.add_child(UI.section("Artwork"))

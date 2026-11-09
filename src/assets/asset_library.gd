@@ -21,6 +21,32 @@ const OVERRIDES_FILE := "overrides.json"
 const REVIEW_FILE := "review.json"
 ## Variant id meaning "the base image" even when the pack sets a default_variant.
 const BASE_VARIANT := "@base"
+## Item art for a world theme is the variant named THEME_VARIANT_PREFIX + theme.
+const THEME_VARIANT_PREFIX := "theme_"
+
+
+## Ambient animation of a sprite (pack entry field "anim"):
+## {"sheet": <image>, "frames": N, "fps": F, "mode": "overlay" | "replace",
+##  "columns": <default N>, "anchor": [x, y] <frame pixel at the ground centre, default the sprite's>}.
+class AnimInfo:
+	var sheet: Texture2D
+	var frames := 1
+	var columns := 1
+	var fps := 6.0
+	var overlay := true          ## false = "replace": the frames take the place of the static image
+	var frame_size := Vector2.ZERO
+	var anchor := Vector2.ZERO
+
+	func frame_rect(i: int) -> Rect2:
+		var f := posmod(i, frames)
+		return Rect2(Vector2(f % columns, f / columns) * frame_size, frame_size)
+
+	func world_rect(center: Vector2, flipped: bool, sprite_scale: float) -> Rect2:
+		var sz := frame_size * sprite_scale
+		var pos := center - anchor * sprite_scale
+		if flipped:
+			pos.x = center.x - (sz.x - anchor.x * sprite_scale)
+		return Rect2(pos, sz)
 
 
 class SpriteInfo:
@@ -29,9 +55,12 @@ class SpriteInfo:
 	var scale: float = 0.5       ## world px per texture px
 	var shadow: Texture2D
 	var shadow_anchor: Vector2
+	var shadow_mirrored := false ## `shadow` is the base sprite's: draw it flipped (only on a mirror sprite)
 	var pack_id: String = ""
 	var path: String = ""
 	var variant: String = ""     ## variant actually used ("" = base sprite)
+	var anim: AnimInfo           ## null = static
+	var mirror: SpriteInfo       ## drawn unflipped instead of flipping this sprite (pack field "mirror")
 	var _hit: BitMap
 	var _hit_failed := false
 
@@ -77,6 +106,7 @@ var _cache: Dictionary = {}            ## "key|variant|mask|scope" -> SpriteInfo
 var _thumb_cache: Dictionary = {}      ## "key|variant|mask" -> Texture2D or null
 var _tex_cache: Dictionary = {}        ## file path -> Texture2D (shared between keys/variants)
 var _stats_cache: Dictionary = {}      ## pack id -> stats
+var _item_themes: Variant = null       ## cached item_themes() (null = not computed)
 
 
 func load_all(item_db: ItemDatabase = null) -> void:
@@ -87,6 +117,7 @@ func load_all(item_db: ItemDatabase = null) -> void:
 	_thumb_cache.clear()
 	_tex_cache.clear()
 	_stats_cache.clear()
+	_item_themes = null
 	errors.clear()
 	_load_pack(builtin_pack_path, 0)
 	_scan_dir(dev_packs_dir, 50)
@@ -337,6 +368,43 @@ func default_variant_of(art_key: String) -> String:
 	return str(entry_of(art_key).get("default_variant", ""))
 
 
+func themed_variant(art_key: String, variant: String, theme: String) -> String:
+	## The variant to draw under a world theme: "theme_<theme>" when the winning
+	## pack really has it and the object has no variant of its own; otherwise
+	## `variant` unchanged (a look is never invented).
+	if not variant.is_empty() or theme.is_empty() or theme == FarmLayout.DEFAULT_THEME:
+		return variant
+	var themed := THEME_VARIANT_PREFIX + theme
+	var vs: Variant = entry_of(art_key).get("variants")
+	return themed if vs is Dictionary and (vs as Dictionary).has(themed) else variant
+
+
+func has_theme_variants(art_key: String) -> bool:
+	var vs: Variant = entry_of(art_key).get("variants")
+	if vs is Dictionary:
+		for k: String in vs:
+			if k.begins_with(THEME_VARIANT_PREFIX):
+				return true
+	return false
+
+
+func item_themes() -> Array:
+	## Every theme that some item sprite has real art for (sorted, cached).
+	if _item_themes == null:
+		var found := {}
+		for p in packs:
+			for key in p["sprites"]:
+				var e: Variant = p["sprites"][key]
+				if e is Dictionary and (e as Dictionary).get("variants") is Dictionary:
+					for k: String in e["variants"]:
+						if k.begins_with(THEME_VARIANT_PREFIX):
+							found[k.substr(THEME_VARIANT_PREFIX.length())] = true
+		var list: Array = found.keys()
+		list.sort()
+		_item_themes = list
+	return _item_themes
+
+
 func overrides_of(pack_id: String, art_key: String) -> Dictionary:
 	var p := pack_by_id(pack_id)
 	if p.is_empty():
@@ -400,6 +468,11 @@ func get_thumbnail(art_key: String, variant: String = "", mask: int = -1) -> Tex
 		var thumb := str(entry.get("thumb", ""))
 		if not thumb.is_empty():
 			tex = _texture(str(p["base"]).path_join(thumb), true)
+		if tex == null:
+			# Just the image: a catalogue thumbnail never needs the sprite's shadow.
+			var file := str(entry.get("file", ""))
+			if not file.is_empty():
+				tex = _texture(str(p["base"]).path_join(file), false, not p.get("alpha_bleed", false))
 		if tex == null:
 			var info := get_sprite(art_key, variant, mask)
 			tex = info.texture if info else null
@@ -487,7 +560,45 @@ func _make_info(pack: Dictionary, entry: Dictionary) -> SpriteInfo:
 			info.shadow = stex
 			var sa: Array = sh.get("anchor", [stex.get_width() * 0.5, stex.get_height() * 0.5])
 			info.shadow_anchor = Vector2(float(sa[0]), float(sa[1]))
+	info.anim = _anim_from(pack, entry, info)
+	var mv: Variant = entry.get("mirror", null)
+	if mv is Dictionary:
+		var mi := _make_info(pack, _inherit(entry, mv))
+		if mi:
+			if mi.shadow == null and info.shadow != null:
+				mi.shadow = info.shadow
+				mi.shadow_anchor = info.shadow_anchor
+				mi.shadow_mirrored = true
+			info.mirror = mi
 	return info
+
+
+func _anim_from(pack: Dictionary, entry: Dictionary, info: SpriteInfo) -> AnimInfo:
+	## null when the entry has no usable "anim" (a bad one is reported, the sprite stays static).
+	var d: Variant = entry.get("anim", null)
+	if not d is Dictionary:
+		return null
+	var rel := PackOverrides.safe_rel_path(str((d as Dictionary).get("sheet", "")))
+	var frames := int(d.get("frames", 0))
+	var fps := float(d.get("fps", 0.0))
+	if rel.is_empty() or frames < 1 or fps <= 0.0:
+		errors.append("Bad animation on %s in pack %s" % [info.path, pack["id"]])
+		return null
+	var sheet := _texture(str(pack["base"]).path_join(rel), false, not pack.get("alpha_bleed", false))
+	if sheet == null:
+		errors.append("Missing image %s in pack %s" % [rel, pack["id"]])
+		return null
+	var a := AnimInfo.new()
+	a.sheet = sheet
+	a.frames = frames
+	a.columns = clampi(int(d.get("columns", frames)), 1, frames)
+	a.fps = fps
+	a.overlay = str(d.get("mode", "overlay")) != "replace"
+	var rows := ceili(float(frames) / a.columns)
+	a.frame_size = Vector2(sheet.get_width() / float(a.columns), sheet.get_height() / float(rows))
+	var an: Variant = d.get("anchor", null)
+	a.anchor = Vector2(float(an[0]), float(an[1])) if an is Array and (an as Array).size() == 2 else info.anchor
+	return a
 
 
 func pack_image(pack_id: String, rel: String) -> Texture2D:
@@ -563,6 +674,7 @@ func clear_cache() -> void:
 	_cache.clear()
 	_thumb_cache.clear()
 	_tex_cache.clear()
+	_item_themes = null
 
 
 func _invalidate(keys: Array) -> void:
@@ -685,7 +797,7 @@ func pack_stats(pack_id: String) -> Dictionary:
 	if p.is_empty():
 		return {}
 	var files := {}
-	var counts := {"variants": 0, "connections": 0, "shadows": 0, "thumbs": 0}
+	var counts := {"variants": 0, "connections": 0, "shadows": 0, "thumbs": 0, "anims": 0, "mirrors": 0}
 	for key in p["sprites"]:
 		if p["sprites"][key] is Dictionary:
 			_collect_files(p["sprites"][key], files, counts)
@@ -697,7 +809,7 @@ func pack_stats(pack_id: String) -> Dictionary:
 	missing.sort()
 	var st := {"id": p["id"], "name": p["name"], "version": p["version"], "sprites": (p["sprites"] as Dictionary).size(),
 		"variants": counts["variants"], "connections": counts["connections"], "shadows": counts["shadows"],
-		"thumbs": counts["thumbs"], "files": files.size(), "missing_files": missing,
+		"thumbs": counts["thumbs"], "anims": counts["anims"], "mirrors": counts["mirrors"], "files": files.size(), "missing_files": missing,
 		"verified": (p["verified"] as Dictionary).size(), "rejected": (p["rejected"] as Dictionary).size(),
 		"assigned": (p["assigned"] as Dictionary).size(), "review_items": review_queue(p["id"]).size(),
 		"override_errors": (p["override_errors"] as Array) + (p.get("apply_errors", []) as Array)}
@@ -716,6 +828,12 @@ func _collect_files(e: Dictionary, files: Dictionary, counts: Dictionary) -> voi
 	if e.get("shadow") is Dictionary and not str(e["shadow"].get("file", "")).is_empty():
 		files[str(e["shadow"]["file"])] = true
 		counts["shadows"] += 1
+	if e.get("anim") is Dictionary and not str(e["anim"].get("sheet", "")).is_empty():
+		files[str(e["anim"]["sheet"])] = true
+		counts["anims"] += 1
+	if e.get("mirror") is Dictionary:
+		counts["mirrors"] += 1
+		_collect_files(e["mirror"], files, counts)
 	for group in ["variants", "connections"]:
 		if e.get(group) is Dictionary:
 			for k in e[group]:

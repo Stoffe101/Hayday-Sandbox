@@ -16,8 +16,13 @@ src/
     occupancy.gd           tile → uid index (keeps stacked uids so bad data is reported, not lost)
     farm_layout.gd         the document: objects, land, profile, annotations, reference, signals
     placement_rules.gd     per-tile validity + human-readable reasons
+    conflict_index.gd      incremental find_conflicts (rechecks only objects sharing a changed tile)
+    layout_tools.gd        symmetry lines, repeat arrays, align, distribute, brush shapes, fit checks
+    stamp_library.gd       reusable groups: user://stamps/*.hdstamp, import/export, generated thumbnails
     depth_sorter.gd        topological painter's order for rectangular footprints
     connections.gd         fence/path auto-connection masks (derived, never stored)
+    camera_math.gd         camera springs (centre + log-zoom), anchored zoom, inertia, rubber-band limits
+    drag_math.gd           drag-delta hysteresis, nearest-valid search
     commands/              Command, CommandStack (bounded, merge window, dirty tracking), EditCommands
     layout_io.gd           versioned JSON, migrations, missing/renamed items, atomic save + recovery
     layout_library.gd      user layouts: list, duplicate, rename, trash, history snapshots, autosave
@@ -31,18 +36,23 @@ src/
     pack_installer.gd      .zip pack install (validation, zip-slip guard, atomic replace)
     asset_importer.gd      user art import (folders, atlases, manifests, trimming, hashing, report)
   render/                  scene nodes that draw the world
-    ground_layer.gd        terrain runs, raised land edge, locked-plot hatching, plot borders/labels
+    terrain_layer.gd       original procedural ground of worlds without game terrain (grass, road, bridge,
+                           river, forest, cliff), built from the map; a season change only re-tints it
+    ground_layer.gd        terrain runs (game-data worlds), raised land edge, locked-plot tint and hatching,
+                           plot borders/labels
     scenery_layer.gd       decorative forest around the farm (never blocks)
-    reference_layer.gd     screenshot overlay with affine calibration
+    reference_layer.gd     screenshot overlays (several per layout) with 2- or 3-point calibration
     grid_overlay.gd        grid + occupied-tile overlay
     object_renderer.gd     RenderingServer canvas items per object, draw index from DepthSorter, picking
-    editor_overlay.gd      hover, selection, ghosts with per-tile validity, marquee, notes, diff, labels
-    farm_camera.gd         pan, smooth zoom-at-cursor, fit to the visible (un-paneled) area
+    editor_overlay.gd      hover, selection outlines, ghosts, blockers, reason chips, marquee, notes, diff, labels
+    selection_underlay.gd  selection fill + drag validity tiles, drawn under the objects
+    farm_camera.gd         Camera2D side of CameraMath: animated and immediate view changes, limits, bookmarks' fly-to
     exporter.gd            offscreen tiled rendering of the shared World2D → Image
     terrain_textures.gd    procedural seamless textures
   editor/
     editor_session.gd      per-document editing state + high-level operations (shared by UI & keys)
     editor_controller.gd   pointer gestures → tool behaviour → Commands (one gesture = one undo step)
+    layout_tool_controller.gd  stamps, mirror line, outline / fence-line brush, repeat preview (sees canvas input first)
   ui/                      theme (code-built), icons, panels, dialogs — no business logic
     asset_manager.gd       Asset Manager (Ctrl+Shift+A): footprint preview, anchor/scale edits, review queue, packs
   app/

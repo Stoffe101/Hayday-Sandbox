@@ -14,6 +14,8 @@ var _redo: Array[Command] = []
 ## undoing past it). The document is clean when this is 0.
 var _dirty_counter: int = 0
 var _save_point_lost := false
+## Bumped by every do / undo / redo: "has the document changed since I looked?"
+var version: int = 0
 
 
 func _init(l: FarmLayout = null) -> void:
@@ -25,6 +27,7 @@ func execute(cmd: Command) -> void:
 		return
 	cmd.timestamp_ms = Time.get_ticks_msec()
 	cmd.do(layout)
+	version += 1
 	if not _undo.is_empty() and not cmd.merge_key.is_empty():
 		var top := _undo[_undo.size() - 1]
 		if top.merge_key == cmd.merge_key and cmd.timestamp_ms - top.timestamp_ms < MERGE_WINDOW_MS and _redo.is_empty() and top.merge(cmd):
@@ -55,6 +58,7 @@ func undo() -> String:
 		return ""
 	var cmd: Command = _undo.pop_back()
 	cmd.undo(layout)
+	version += 1
 	_redo.append(cmd)
 	_dirty_counter -= 1
 	layout.touch()
@@ -67,6 +71,7 @@ func redo() -> String:
 		return ""
 	var cmd: Command = _redo.pop_back()
 	cmd.do(layout)
+	version += 1
 	_undo.append(cmd)
 	_dirty_counter += 1
 	layout.touch()

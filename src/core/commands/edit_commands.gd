@@ -207,6 +207,36 @@ class SetProfile extends Command:
 		return false
 
 
+class SetCameraBookmark extends Command:
+	## Stores a saved view in layout.camera.bookmarks[slot]; leaves the current
+	## view and the other slots alone.
+	var _slot: String
+	var _new: Dictionary
+	var _old: Variant = null
+
+	func _init(slot: String, view: Dictionary) -> void:
+		_slot = slot
+		_new = view.duplicate(true)
+		label = "Save view %s" % slot
+
+	func do(layout: FarmLayout) -> void:
+		var b: Dictionary = layout.camera.get("bookmarks", {})
+		_old = b[_slot].duplicate(true) if b.get(_slot) is Dictionary else null
+		b[_slot] = _new.duplicate(true)
+		layout.camera["bookmarks"] = b
+
+	func undo(layout: FarmLayout) -> void:
+		var b: Dictionary = layout.camera.get("bookmarks", {})
+		if _old == null:
+			b.erase(_slot)
+		else:
+			b[_slot] = (_old as Dictionary).duplicate(true)
+		if b.is_empty():
+			layout.camera.erase("bookmarks")
+		else:
+			layout.camera["bookmarks"] = b
+
+
 class SetMeta extends Command:
 	## Renames the layout.
 	var _old: String
@@ -277,6 +307,35 @@ class Composite extends Command:
 
 	func is_noop() -> bool:
 		return _cmds.is_empty()
+
+
+class MoveEach extends Command:
+	## Moves each object by its own delta in one step (align, distribute).
+	var _uids: Array
+	var _deltas: Array
+
+	func _init(uids: Array, deltas: Array, text: String) -> void:
+		_uids = uids.duplicate()
+		_deltas = deltas.duplicate()
+		label = text
+
+	func do(layout: FarmLayout) -> void:
+		_apply(layout, 1)
+
+	func undo(layout: FarmLayout) -> void:
+		_apply(layout, -1)
+
+	func _apply(layout: FarmLayout, sign_of: int) -> void:
+		var moved: Array = []
+		for i in _uids.size():
+			var o := layout.get_obj(_uids[i])
+			if o:
+				layout.set_object_rect(o.uid, o.origin + (_deltas[i] as Vector2i) * sign_of, o.size, false)
+				moved.append(o.uid)
+		layout.objects_changed.emit(moved)
+
+	func is_noop() -> bool:
+		return _uids.is_empty()
 
 
 class SetGeometry extends Command:

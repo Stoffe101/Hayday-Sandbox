@@ -47,6 +47,29 @@ var landmark_hover := Rect2i()
 var landmark_selected := Rect2i()
 var landmark_name := ""
 var landmark_bounds := Rect2()
+## Under the objects: selection fill and live-drag validity tiles (reads these fields).
+var underlay: SelectionUnderlay
+## Reason chips listed under cursor_text (one line each).
+var cursor_reasons: PackedStringArray = PackedStringArray()
+## Live drag: objects drawn by the renderer at origin + drag_delta and lifted by drag_lift.
+var drag_uids: Array = []
+var drag_delta := Vector2i.ZERO
+var drag_lift := 0.0
+var drag_result: PlacementRules.Result
+## What blocks the current drop / placement: outlined in red.
+var blocker_uids: Array = []
+var blocker_rects: Array = []
+var _silhouettes: Dictionary = {}   ## texture instance id -> Array[PackedVector2Array]
+
+## Above this many selected objects, footprints are outlined instead of silhouettes.
+const SILHOUETTE_MAX := 150
+const SILHOUETTE_CACHE := 400
+const SILHOUETTE_TEX_MAX := 180     ## long side the mask is reduced to before tracing
+const C_BLOCK := Color(1.0, 0.28, 0.24, 0.95)
+const C_CHIP := Color(0.12, 0.14, 0.13, 0.9)
+const C_CHIP_BAD := Color(0.55, 0.13, 0.11, 0.94)
+const C_VALID := Color(0.4, 1.0, 0.55, 0.95)
+const C_INVALID := Color(1.0, 0.35, 0.3, 0.95)
 
 
 func _ready() -> void:
@@ -55,6 +78,144 @@ func _ready() -> void:
 
 func refresh() -> void:
 	queue_redraw()
+	if underlay:
+		underlay.request_redraw()
+
+
+static func tile_color(code: int) -> Color:
+	match code:
+		PlacementRules.OK_TILE: return C_OK
+		PlacementRules.LOCKED_LAND: return C_LOCKED
+		PlacementRules.OUT_OF_BOUNDS: return C_OUT
+		PlacementRules.LANDMARK: return C_FIXED
+	return C_BAD
+
+
+func begin_drag(uids: Array, lift: float) -> void:
+	drag_uids = uids
+	drag_lift = lift
+	drag_delta = Vector2i.ZERO
+
+
+func end_drag() -> void:
+	drag_uids = []
+	drag_delta = Vector2i.ZERO
+	drag_result = null
+	drag_lift = 0.0
+	blocker_uids = []
+	blocker_rects = []
+	cursor_reasons = PackedStringArray()
+
+
+func _silhouette_of(spr: AssetLibrary.SpriteInfo) -> Array:
+	## Outline polygons of the sprite's opaque pixels, in texture pixels (cached).
+	if spr == null or spr.texture == null:
+		return []
+	var key := spr.texture.get_instance_id()
+	if _silhouettes.has(key):
+		return _silhouettes[key]
+	if _silhouettes.size() >= SILHOUETTE_CACHE:
+		_silhouettes.clear()
+	var out: Array = []
+	var img := spr.texture.get_image()
+	if img != null:
+		if img.is_compressed():
+			img.decompress()
+		var full := Vector2(img.get_size())
+		var s := minf(1.0, float(SILHOUETTE_TEX_MAX) / maxf(full.x, full.y))
+		if s < 1.0:
+			img = img.duplicate()
+			img.resize(maxi(1, int(full.x * s)), maxi(1, int(full.y * s)), Image.INTERPOLATE_BILINEAR)
+		var bm := BitMap.new()
+		bm.create_from_image_alpha(img, 0.25)
+		var back := full / Vector2(bm.get_size())
+		for poly in bm.opaque_to_polygons(Rect2i(Vector2i.ZERO, bm.get_size()), 1.0):
+			var p := PackedVector2Array()
+			for v in poly:
+				p.append(v * back)
+			if p.size() >= 3:
+				p.append(p[0])
+				out.append(p)
+	_silhouettes[key] = out
+	return out
+
+
+func _outline_object(o: PlacedObject, col: Color, w: float, use_silhouette: bool, world_offset: Vector2 = Vector2.ZERO) -> void:
+	var drawn := false
+	if use_silhouette and renderer != null:
+		var spr := renderer.sprite_of(o.uid)
+		var polys := _silhouette_of(spr)
+		if not polys.is_empty():
+			drawn = true
+			var c := Iso.footprint_center(o.origin, o.size) + world_offset
+			draw_set_transform(c - Vector2(spr.anchor.x * (-1.0 if o.flipped else 1.0), spr.anchor.y) * spr.scale, 0.0, Vector2(-1.0 if o.flipped else 1.0, 1.0) * spr.scale)
+			var lw := w / maxf(zoom, 0.05) / spr.scale
+			for p: PackedVector2Array in polys:
+				draw_polyline(p, col, lw, true)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if not drawn:
+		var poly := Iso.footprint_polygon(o.origin, o.size)
+		if world_offset != Vector2.ZERO:
+			for i in poly.size():
+				poly[i] += world_offset
+		_outline(poly, col, w)
+
+
+func _draw_blockers() -> void:
+	for u in blocker_uids:
+		var o := layout.get_obj(u)
+		if o:
+			_outline_object(o, C_BLOCK, 2.5, true)
+	for r: Rect2i in blocker_rects:
+		_outline(Iso.footprint_polygon(r.position, r.size), C_BLOCK, 2.5)
+
+
+func _draw_drag() -> void:
+	## Where the dragged objects came from (dashed) and their outline at the drop.
+	var col := C_VALID if drag_result == null or drag_result.ok else C_INVALID
+	var off := Iso.grid_to_world(Vector2(drag_delta)) - Vector2(0.0, drag_lift)
+	var sil := drag_uids.size() <= SILHOUETTE_MAX
+	for u in drag_uids:
+		var o := layout.get_obj(u)
+		if o == null:
+			continue
+		if drag_delta != Vector2i.ZERO:
+			_dashed(Iso.footprint_polygon(o.origin, o.size), Color(1, 1, 1, 0.55))
+		_outline(Iso.footprint_polygon(o.origin + drag_delta, o.size), col, 2.0)
+		_outline_object(o, col, 2.0, sil, off)
+
+
+func _draw_cursor_chips() -> void:
+	## cursor_text, then one red chip per reason, kept inside the visible area.
+	var inv := 1.0 / maxf(zoom, 0.05)
+	var rows: Array = []
+	if not cursor_text.is_empty():
+		for ln in cursor_text.split("\n"):
+			rows.append([ln, C_CHIP])
+	for r in cursor_reasons:
+		rows.append([r, C_CHIP_BAD])
+	if rows.is_empty():
+		return
+	var fs := 15
+	var lh := font.get_height(fs)
+	var row_h := lh + 8.0
+	var gap := 3.0
+	var width := 0.0
+	for row: Array in rows:
+		width = maxf(width, font.get_string_size(row[0], HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 16.0)
+	var total := Vector2(width, row_h * rows.size() + gap * (rows.size() - 1)) * inv
+	var at := cursor_world + Vector2(18, 22) * inv
+	if visible_rect.size != Vector2.ZERO:
+		at.x = minf(at.x, maxf(visible_rect.position.x, visible_rect.end.x - total.x - 10.0 * inv))
+		at.y = minf(at.y, maxf(visible_rect.position.y, visible_rect.end.y - total.y - 110.0 * inv))
+	draw_set_transform(at, 0.0, Vector2(inv, inv))
+	var y := 0.0
+	for row: Array in rows:
+		var w := font.get_string_size(row[0], HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 16.0
+		draw_rect(Rect2(0.0, y, w, row_h), row[1], true)
+		draw_string(font, Vector2(8.0, y + 4.0 + font.get_ascent(fs)), row[0], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 1, 1, 0.97))
+		y += row_h + gap
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _outline(poly: PackedVector2Array, col: Color, w: float) -> void:
@@ -83,19 +244,16 @@ func _draw() -> void:
 		else:
 			# Warnings (e.g. unverified footprint) stay subtle.
 			_dashed(poly, Color(0.98, 0.72, 0.2, 0.55))
-	# Selection
-	var sel_fill := accent
-	sel_fill.a = 0.20
-	for u in selection:
-		var o := layout.get_obj(u)
-		if o == null:
-			continue
-		var poly := Iso.footprint_polygon(o.origin, o.size)
-		draw_colored_polygon(poly, sel_fill)
-		_outline(poly, accent.lightened(0.2), 2.5)
-	if selection.size() > 1:
-		var r := layout.bounds_of(selection)
-		_dashed(Iso.grid_rect_polygon(r.grow(0)), Color(1, 1, 1, 0.85))
+	# Selection: the fill is under the objects (SelectionUnderlay); here only outlines.
+	if drag_uids.is_empty():
+		var sil := selection.size() <= SILHOUETTE_MAX
+		for u in selection:
+			var o := layout.get_obj(u)
+			if o:
+				_outline_object(o, accent.lightened(0.2), 2.5, sil)
+		if selection.size() > 1:
+			var r := layout.bounds_of(selection)
+			_dashed(Iso.grid_rect_polygon(r.grow(0)), Color(1, 1, 1, 0.85))
 	_draw_landmark_marks()
 	# Hover
 	if hover_uid != 0 and not hover_uid in selection:
@@ -110,23 +268,18 @@ func _draw() -> void:
 	# Ghost tiles + sprites
 	if ghost_result:
 		for i in ghost_result.tiles.size():
-			var code := ghost_result.codes[i]
-			var c := C_OK
-			match code:
-				PlacementRules.OK_TILE: c = C_OK
-				PlacementRules.LOCKED_LAND: c = C_LOCKED
-				PlacementRules.OUT_OF_BOUNDS: c = C_OUT
-				PlacementRules.LANDMARK: c = C_FIXED
-				_: c = C_BAD
-			draw_colored_polygon(Iso.footprint_polygon(ghost_result.tiles[i], Vector2i.ONE), c)
+			draw_colored_polygon(Iso.footprint_polygon(ghost_result.tiles[i], Vector2i.ONE), tile_color(ghost_result.codes[i]))
+	if not drag_uids.is_empty():
+		_draw_drag()
 	for g in ghosts:
 		_draw_ghost(g)
 	if ghost_result:
 		for g in ghosts:
 			var it: ItemDef = g["item"]
 			var sz := it.size_for(g["flipped"]) if it else Vector2i.ONE
-			var col := Color(0.4, 1.0, 0.55, 0.95) if ghost_result.ok else Color(1.0, 0.35, 0.3, 0.95)
+			var col := C_VALID if ghost_result.ok else C_INVALID
 			_outline(Iso.footprint_polygon(g["origin"], sz), col, 2.0)
+	_draw_blockers()
 	# Marquee
 	if marquee.size != Vector2.ZERO:
 		var mf := accent
@@ -141,16 +294,12 @@ func _draw() -> void:
 		draw_arc(p, r * 1.6, 0, TAU, 24, Color(1, 1, 1, 0.9), 1.5 / maxf(zoom, 0.05))
 	if show_labels and zoom > 0.45:
 		_draw_labels()
-	if not cursor_text.is_empty():
-		_draw_tag(cursor_world + Vector2(18, 22) / maxf(zoom, 0.05), cursor_text)
+	_draw_cursor_chips()
 
 
 func _draw_landmark_marks() -> void:
 	if landmark_selected.size != Vector2i.ZERO:
 		var poly := Iso.footprint_polygon(landmark_selected.position, landmark_selected.size)
-		var f := C_LANDMARK
-		f.a = 0.18
-		draw_colored_polygon(poly, f)
 		_outline(poly, C_LANDMARK, 2.5)
 		if not landmark_name.is_empty():
 			var top := landmark_bounds.position + Vector2(landmark_bounds.size.x * 0.5, 0.0) if landmark_bounds.size != Vector2.ZERO \

@@ -305,6 +305,16 @@ def check_pack(items: dict) -> None:
         refs.add(f)
         if "shadow" in e:
             ref(e["shadow"], key + ".shadow")
+        if "anim" in e:
+            a = e["anim"]
+            sheet = a.get("sheet")
+            if not sheet or not (ROOT / "assets/placeholders" / sheet).exists():
+                err(f"pack.json: {key}.anim references missing sheet {sheet}")
+            refs.add(sheet)
+            if not (is_int(a.get("frames")) and a["frames"] > 0) or not a.get("fps", 0) > 0:
+                err(f"pack.json: {key}.anim needs frames > 0 and fps > 0")
+            if a.get("mode", "overlay") not in ("overlay", "replace"):
+                err(f"pack.json: {key}.anim has unknown mode {a.get('mode')!r}")
 
     for key, e in pack["sprites"].items():
         ref(e, key)

@@ -266,8 +266,8 @@ func test_v1_migration_full_fixture() -> void:
 	assert_eq(l.annotations[0]["rect"], [5, 7, 4, 2])
 	assert_almost(float(l.camera["x"]), 36.0)
 	assert_almost(float(l.camera["y"]), -78.0)
-	assert_almost(float(l.reference["x"]), -54.0)
-	assert_almost(float(l.reference["y"]), -108.0)
+	assert_almost(float(l.reference["images"][0]["x"]), -54.0)
+	assert_almost(float(l.reference["images"][0]["y"]), -108.0)
 	# d) starter auto-locks cleared on movable buildings only; user locks kept.
 	assert_false(l.get_obj(5).locked, "barn starter lock cleared")
 	assert_eq(l.get_obj(5).note, "")
@@ -302,13 +302,13 @@ func test_v2_roundtrip_keeps_migration_world_and_unknown_keys() -> void:
 	l.set_world_value("landmark_skins", "farmhouse", "blue")
 	l.set_world_value("landmark_visible", "truck", false)
 	var d := LayoutIO.to_dict(l)
-	assert_eq(int(d["schema_version"]), 2)
+	assert_eq(int(d["schema_version"]), LayoutIO.SCHEMA_VERSION)
 	assert_eq(d["world"]["theme"], "winter")
 	for rec in d["objects"]:
 		assert_false((rec as Dictionary).has("_review"), "internal migration marker never saved")
 	var rep := LayoutIO.LoadReport.new()
 	var back := LayoutIO.from_dict(JsonUtil.parse(JsonUtil.stringify(d)), wdb, rep, map)
-	assert_eq(rep.migrated_from, -1, "v2 file is not migrated again")
+	assert_eq(rep.migrated_from, -1, "a current file is not migrated again")
 	assert_eq(rep.shifted, Vector2i.ZERO)
 	assert_eq(rep.migrated_landmarks.size(), 0, "old migration entries are not reported again")
 	assert_eq(back.get_obj(5).origin, Vector2i(4, 4), "no second shift")
@@ -374,9 +374,9 @@ func test_v1_reference_affine_and_pure_migrate() -> void:
 			{"uid": 1, "item": "farmhouse", "x": 19, "y": 15, "w": 4, "h": 4}]}
 	# Pure migrate without db/map: frame shift only (no landmark knowledge).
 	var m := LayoutIO.migrate(d.duplicate(true), 1)
-	assert_eq(int(m["schema_version"]), 2)
+	assert_eq(int(m["schema_version"]), LayoutIO.SCHEMA_VERSION)
 	assert_eq(m["objects"][0]["x"], 14)
-	assert_eq(m["reference"]["affine"], [1.0, 0.0, 0.0, 1.0, -54.0, -108.0])
+	assert_eq(m["reference"]["images"][0]["affine"], [1.0, 0.0, 0.0, 1.0, -54.0, -108.0])
 	assert_eq(m["world"], FarmLayout.default_world_state())
 	assert_eq((m["migration"]["migrated_landmarks"] as Array).size(), 0)
 	# from_dict with a db still takes the landmark copy out.
@@ -474,7 +474,7 @@ func test_first_save_over_v1_file_keeps_backup() -> void:
 	assert_eq(LayoutIO.save_file(l, path), OK)
 	assert_true(FileAccess.file_exists(bk), "first save keeps the original")
 	assert_eq(JsonUtil.read_text(bk), original, "backup holds the original bytes")
-	assert_eq(LayoutIO.file_schema_version(path), 2)
+	assert_eq(LayoutIO.file_schema_version(path), LayoutIO.SCHEMA_VERSION)
 	assert_eq(l.loaded_schema, LayoutIO.SCHEMA_VERSION)
 	# Later saves never touch the backup.
 	l.name = "Changed"

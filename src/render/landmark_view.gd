@@ -107,6 +107,9 @@ static func themes_with_art(map: FarmMap, assets: AssetLibrary) -> Array[String]
 					if v.ends_with("__" + t):
 						found[t] = true
 						break
+	if assets != null:
+		for t in assets.item_themes():
+			found[t] = true
 	var list: Array = found.keys()
 	list.sort()
 	var out: Array[String] = [FarmLayout.DEFAULT_THEME]

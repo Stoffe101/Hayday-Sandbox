@@ -1843,7 +1843,7 @@
    "mirrored": false,
    "draw_anchor": "center",
    "art": "lm_truck",
-   "fallback_art": "",
+   "fallback_art": "ph_truck",
    "states": [],
    "default_state": "",
    "skin_kind": "truck",

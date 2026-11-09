@@ -8,6 +8,10 @@ extends Node2D
 ## edge, plot borders and labels. Tiles outside the placement grid are never
 ## drawn as land. Drawn once into cached canvas commands and redrawn only when
 ## land / unlock / level state changes.
+##
+## Worlds without game terrain get their ground from a TerrainLayer child drawn
+## behind this node; here they only add what depends on the layout: the
+## locked-plot tint and hatching, blocked areas, the land edge, borders, labels.
 
 var map: FarmMap
 ## Unlocked plots, canonical ids (aliases resolved in setup()).
@@ -21,9 +25,19 @@ var dim_for_land_mode := false
 ## Realistic mode: locked plots whose known min_level is above the farm level
 ## (plot id -> min level). Drawn darker with a "Lv N" tag.
 var level_blocked: Dictionary = {}
+var last_draw_usec := 0   ## script time of the last redraw (ownership changes end here)
+var _terrain: TerrainLayer
+var _procedural := false  ## the TerrainLayer draws the base ground of this map
 
 const ROAD_GROUND_KINDS := ["road", "road_blocked"]
 const BACKDROP_MARGIN := 24
+
+
+func _init() -> void:
+	_terrain = TerrainLayer.new()
+	_terrain.name = "Terrain"
+	_terrain.show_behind_parent = true
+	add_child(_terrain)
 
 
 func _ready() -> void:
@@ -31,7 +45,13 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 
 
+func set_theme(theme_id: String) -> void:
+	_terrain.set_theme(theme_id)
+
+
 func setup(m: FarmMap, unlocked_plots: Dictionary) -> void:
+	_terrain.setup(m)
+	_procedural = TerrainLayer.applies_to(m)
 	if m != map:
 		map = m
 		_build_static()
@@ -119,9 +139,11 @@ func _draw() -> void:
 		return
 	if _cls_grid.size() != map.size.x * map.size.y:
 		_build_static()
-	var wb := map.world_bounds if map.world_bounds.size != Vector2i.ZERO else Rect2i(Vector2i.ZERO, map.size)
-	var back := Iso.grid_rect_polygon(wb.grow(BACKDROP_MARGIN))
-	_poly(back, TerrainTextures.get_tex("meadow"), Color(0.88, 0.92, 0.86))
+	var t0 := Time.get_ticks_usec()
+	if not _procedural:
+		var wb := map.world_bounds if map.world_bounds.size != Vector2i.ZERO else Rect2i(Vector2i.ZERO, map.size)
+		var back := Iso.grid_rect_polygon(wb.grow(BACKDROP_MARGIN))
+		_poly(back, TerrainTextures.get_tex("meadow"), Color(0.88, 0.92, 0.86))
 	var grass := TerrainTextures.get_tex("grass")
 	var open := _plot_open()
 	# Row runs of equal look (kind / plot / road) become single parallelograms.
@@ -142,6 +164,7 @@ func _draw() -> void:
 	_draw_plot_borders(open)
 	if show_plot_labels:
 		_draw_labels()
+	last_draw_usec = Time.get_ticks_usec() - t0
 
 
 func _draw_run(r: Rect2i, cls: int, grass: Texture2D, open: PackedByteArray) -> void:
@@ -150,7 +173,8 @@ func _draw_run(r: Rect2i, cls: int, grass: Texture2D, open: PackedByteArray) -> 
 		var pi := cls - PLOT_BASE
 		var plot_id := str(map.plots[pi]["id"])
 		if open[pi] == 1:
-			_poly(pts, grass, Color.WHITE)
+			if not _procedural:
+				_poly(pts, grass, Color.WHITE)
 		elif hide_locked:
 			_poly(pts, TerrainTextures.get_tex("meadow"), Color(0.8, 0.85, 0.8))
 		else:
@@ -159,8 +183,13 @@ func _draw_run(r: Rect2i, cls: int, grass: Texture2D, open: PackedByteArray) -> 
 				c = Color(0.62, 0.64, 0.6)
 			if plot_id == highlight_plot:
 				c = Color(1.0, 0.72, 0.66) if highlight_blocked else Color(0.95, 1.0, 0.85)
-			_poly(pts, grass, c)
+			if _procedural:
+				_poly(pts, null, _locked_veil(plot_id))
+			else:
+				_poly(pts, grass, c)
 			_poly(pts, TerrainTextures.get_tex("hatch"), Color(1, 1, 1, 1))
+		return
+	if _procedural and cls != FarmMap.Kind.BLOCKED:
 		return
 	match cls:
 		FarmMap.Kind.BUILDABLE:
@@ -179,10 +208,18 @@ func _draw_run(r: Rect2i, cls: int, grass: Texture2D, open: PackedByteArray) -> 
 				_poly(pts, TerrainTextures.get_tex("hatch"), Color(1, 1, 1, 0.22))
 			else:
 				# Public map: unbuildable or not-yet-mapped ground.
-				_poly(pts, TerrainTextures.get_tex("meadow"), Color(0.8, 0.84, 0.78))
+				if not _procedural:
+					_poly(pts, TerrainTextures.get_tex("meadow"), Color(0.8, 0.84, 0.78))
 				_poly(pts, TerrainTextures.get_tex("hatch"), Color(1, 1, 1, 0.6))
 		_:
 			pass   # VOID: the backdrop shows through
+
+
+func _locked_veil(plot_id: String) -> Color:
+	## See-through tint of a locked plot, so the terrain stays visible under it.
+	if plot_id == highlight_plot:
+		return Color(1.0, 0.45, 0.35, 0.4) if highlight_blocked else Color(1.0, 1.0, 0.75, 0.3)
+	return Color(0.2, 0.2, 0.2, 0.42) if level_blocked.has(plot_id) else Color(0.12, 0.17, 0.1, 0.28)
 
 
 func _draw_offgrid_roads() -> void:

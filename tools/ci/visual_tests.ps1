@@ -4,9 +4,9 @@
 # Each configuration gets a fresh APPDATA, so an installed asset pack can never appear
 # in these screenshots and the real user data is never touched.
 param(
-	[string] $Scenarios = 'all',
-	[int] $TimeoutSec = 300,
-	[Parameter(ValueFromRemainingArguments = $true)] [string[]] $Configs
+	[Parameter(Position = 0)] [string] $Scenarios = 'all',
+	[Parameter()] [int] $TimeoutSec = 300,
+	[Parameter(Position = 1, ValueFromRemainingArguments = $true)] [string[]] $Configs
 )
 
 $ErrorActionPreference = 'Stop'

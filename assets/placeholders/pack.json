@@ -16295,7 +16295,14 @@
     1,
     1
    ],
-   "shared": true
+   "shared": true,
+   "anim": {
+    "sheet": "items/g_8e4cdc1af9.anim.png",
+    "frames": 8,
+    "columns": 8,
+    "fps": 5.0,
+    "mode": "overlay"
+   }
   },
   "desert_table": {
    "file": "items/g_67ee743880.png",
@@ -17501,7 +17508,14 @@
    "footprint": [
     4,
     4
-   ]
+   ],
+   "anim": {
+    "sheet": "items/g_37d2c2848b.anim.png",
+    "frames": 8,
+    "columns": 8,
+    "fps": 5.0,
+    "mode": "overlay"
+   }
   },
   "duck_salon": {
    "file": "items/duck_salon.png",
@@ -19461,7 +19475,18 @@
    "footprint": [
     1,
     1
-   ]
+   ],
+   "anim": {
+    "sheet": "items/g_c979e946db.anim.png",
+    "frames": 6,
+    "columns": 6,
+    "fps": 6.0,
+    "mode": "replace",
+    "anchor": [
+     103.0,
+     212.0
+    ]
+   }
   },
   "farmers_market": {
    "file": "items/g_e5892f2049.png",
@@ -23996,7 +24021,14 @@
     1,
     1
    ],
-   "shared": true
+   "shared": true,
+   "anim": {
+    "sheet": "items/g_8e4cdc1af9.anim.png",
+    "frames": 8,
+    "columns": 8,
+    "fps": 5.0,
+    "mode": "overlay"
+   }
   },
   "fox_statue": {
    "file": "items/g_cd48fd6125.png",
@@ -36744,7 +36776,14 @@
     3,
     3
    ],
-   "shared": true
+   "shared": true,
+   "anim": {
+    "sheet": "items/g_0bd8664d66.anim.png",
+    "frames": 8,
+    "columns": 8,
+    "fps": 5.0,
+    "mode": "overlay"
+   }
   },
   "large_pot": {
    "file": "items/g_9aacd05d63.png",
@@ -46656,7 +46695,18 @@
    "footprint": [
     1,
     1
-   ]
+   ],
+   "anim": {
+    "sheet": "items/g_47fda5d7fe.anim.png",
+    "frames": 6,
+    "columns": 6,
+    "fps": 6.0,
+    "mode": "replace",
+    "anchor": [
+     103.0,
+     212.0
+    ]
+   }
   },
   "peach_tree": {
    "file": "items/peach_tree.png",
@@ -47849,6 +47899,25 @@
     1
    ],
    "shared": true
+  },
+  "ph_truck": {
+   "file": "items/ph_truck.png",
+   "anchor": [
+    85.0,
+    87.0
+   ],
+   "shadow": {
+    "file": "items/ph_truck.shadow.png",
+    "anchor": [
+     75.0,
+     56.0
+    ]
+   },
+   "footprint": [
+    1,
+    2
+   ],
+   "world_art": true
   },
   "phone_booth": {
    "file": "items/g_456fea409b.png",
@@ -53200,7 +53269,14 @@
     3,
     3
    ],
-   "shared": true
+   "shared": true,
+   "anim": {
+    "sheet": "items/g_0bd8664d66.anim.png",
+    "frames": 8,
+    "columns": 8,
+    "fps": 5.0,
+    "mode": "overlay"
+   }
   },
   "rocket_adventure": {
    "file": "items/g_57f14f4cc0.png",
@@ -72054,7 +72130,18 @@
     1,
     1
    ],
-   "shared": true
+   "shared": true,
+   "anim": {
+    "sheet": "items/g_c7ebcfea79.anim.png",
+    "frames": 6,
+    "columns": 6,
+    "fps": 6.0,
+    "mode": "replace",
+    "anchor": [
+     103.0,
+     212.0
+    ]
+   }
   },
   "windmill_collection_prize": {
    "file": "items/g_6516ddf1a0.png",
@@ -72072,7 +72159,18 @@
    "footprint": [
     1,
     1
-   ]
+   ],
+   "anim": {
+    "sheet": "items/g_6516ddf1a0.anim.png",
+    "frames": 6,
+    "columns": 6,
+    "fps": 6.0,
+    "mode": "replace",
+    "anchor": [
+     103.0,
+     212.0
+    ]
+   }
   },
   "windmill_vane": {
    "file": "items/g_c7ebcfea79.png",
@@ -72091,7 +72189,18 @@
     1,
     1
    ],
-   "shared": true
+   "shared": true,
+   "anim": {
+    "sheet": "items/g_c7ebcfea79.anim.png",
+    "frames": 6,
+    "columns": 6,
+    "fps": 6.0,
+    "mode": "replace",
+    "anchor": [
+     103.0,
+     212.0
+    ]
+   }
   },
   "wingspan_display": {
    "file": "items/g_ea87accbc2.png",

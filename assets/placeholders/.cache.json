@@ -1,5 +1,45 @@
 {
 "alpaca_house": "a868310636a643ae",
+"anim:g_0bd8664d66": [
+"7aff98e037185ac9",
+null
+],
+"anim:g_37d2c2848b": [
+"7aff98e037185ac9",
+null
+],
+"anim:g_47fda5d7fe": [
+"7aff98e037185ac9",
+[
+103.0,
+212.0
+]
+],
+"anim:g_6516ddf1a0": [
+"7aff98e037185ac9",
+[
+103.0,
+212.0
+]
+],
+"anim:g_8e4cdc1af9": [
+"7aff98e037185ac9",
+null
+],
+"anim:g_c7ebcfea79": [
+"7aff98e037185ac9",
+[
+103.0,
+212.0
+]
+],
+"anim:g_c979e946db": [
+"7aff98e037185ac9",
+[
+103.0,
+212.0
+]
+],
 "apple_tree": "5ac1e10f41319452",
 "bakery": "bc06c7e73799dc32",
 "banana_tree": "0cb1b8720c964ca6",
@@ -740,5 +780,6 @@
 "waffle_maker": "f10781612307c5fd",
 "wheel_of_fortune_truck": "326acc5e26bc0c33",
 "wok_kitchen": "f08362c4637bf0fb",
+"world:ph_truck": "7aff98e037185ac9",
 "yogurt_maker": "affa2fd68f029bfd"
 }

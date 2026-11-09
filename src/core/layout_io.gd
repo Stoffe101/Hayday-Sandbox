@@ -25,9 +25,14 @@ extends RefCounted
 ##   "world": {theme, landmark_states, landmark_skins, landmark_visible}
 ##   "migration": {from, at, shifted_by, from_map, migrated_landmarks, review_uids, notes}
 ##   "footprint_source": {pack, pack_version, overrides_hash}
+##
+## Schema 3 makes "reference" a list of images (see normalize_reference()):
+##   "reference": {"images": [{id, name, file, opacity, visible, locked,
+##                             x, y, scale, rotation | affine}, ...], "above": bool}
+## Earlier files hold one image directly in "reference"; first in the list = bottom.
 
 const FORMAT := "hayday-sandbox-layout"
-const SCHEMA_VERSION := 2
+const SCHEMA_VERSION := 3
 const FILE_EXT := ".hdlayout"
 ## Note the v1 starter template put on its auto-locked core buildings. The 1->2
 ## migration clears that automatic lock on movable items (user locks stay).
@@ -233,8 +238,7 @@ static func from_dict(d: Dictionary, db: ItemDatabase, report: LoadReport = null
 	var prof: Variant = data.get("profile", {})
 	if prof is Dictionary:
 		l.profile.merge(prof, true)
-	var refd: Variant = data.get("reference", {})
-	l.reference = refd if refd is Dictionary else {}
+	l.reference = normalize_reference(data.get("reference", {}))
 	var cam: Variant = data.get("camera", {})
 	l.camera = cam if cam is Dictionary else {}
 	l.world_state = FarmLayout.normalize_world_state(data.get("world"))
@@ -415,6 +419,8 @@ static func migrate(d: Dictionary, from_version: int, db: ItemDatabase = null, m
 				data = _migrate_0_to_1(data)
 			1:
 				data = _migrate_1_to_2(data, db, map)
+			2:
+				data["reference"] = normalize_reference(data.get("reference", {}))
 		v += 1
 	data["schema_version"] = SCHEMA_VERSION
 	data["format"] = FORMAT
@@ -529,6 +535,47 @@ static func _migrate_1_to_2(d: Dictionary, db: ItemDatabase = null, map: FarmMap
 		out["world"] = FarmLayout.default_world_state()
 	out["migration"] = mig
 	return out
+
+
+static func normalize_reference(r: Variant) -> Dictionary:
+	## The canonical reference document, as a fresh copy: {} (no reference) or
+	## {"images": [...], "above": bool}. Accepts the single-image shape of schema
+	## 1 and 2, keeps unknown fields and gives every image a unique id.
+	if not r is Dictionary or (r as Dictionary).is_empty():
+		return {}
+	var doc: Dictionary = (r as Dictionary).duplicate(true)
+	if not doc.get("images") is Array:
+		var above := bool(doc.get("above", false))
+		doc.erase("above")
+		doc = {"images": [doc], "above": above}
+	var imgs: Array = []
+	for im in doc["images"]:
+		if im is Dictionary:
+			imgs.append(im)
+	if imgs.is_empty():
+		return {}
+	var used := {}
+	var next := 1
+	for im: Dictionary in imgs:
+		var id := str(im.get("id", ""))
+		if id.is_empty() or used.has(id):
+			while used.has("r%d" % next) or _reference_id_taken(imgs, "r%d" % next):
+				next += 1
+			id = "r%d" % next
+			im["id"] = id
+		used[id] = true
+		if str(im.get("name", "")).is_empty():
+			im["name"] = str(im.get("file", "")).get_file().get_basename()
+	doc["images"] = imgs
+	doc["above"] = bool(doc.get("above", false))
+	return doc
+
+
+static func _reference_id_taken(imgs: Array, id: String) -> bool:
+	for im: Dictionary in imgs:
+		if str(im.get("id", "")) == id:
+			return true
+	return false
 
 
 static func _is_num(v: Variant) -> bool:

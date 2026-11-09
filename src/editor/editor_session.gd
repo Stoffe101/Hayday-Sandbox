@@ -25,6 +25,8 @@ signal history_changed
 signal message(text: String, kind: String)
 ## A fixed landmark was selected; "" when the landmark selection was cleared.
 signal landmark_selected(id: String)
+## Symmetry settings changed (see `symmetry`).
+signal tools_changed
 
 const TOOLS := ["select", "place", "erase", "pick", "land", "annotate", "pan"]
 const OBSTACLE_MOVE_TEXT := "Obstacles can't be moved in Hay Day — remove it and place it again"
@@ -46,6 +48,12 @@ var place_planned := false
 var clipboard: Array = []        ## [{item, offset: Vector2i, flipped, variant, planned, note}]
 var source_path: String = ""     ## file the layout came from ("" = library)
 var load_report: LayoutIO.LoadReport
+## Keeps "which objects break the placement rules" current incrementally.
+var conflict_index: ConflictIndex
+## Mirror placement: while on, placing also places the mirrored copy.
+## {enabled, kind: LayoutTools.KIND_*, pos} (see LayoutTools for the line maths).
+var symmetry := {"enabled": false, "kind": LayoutTools.KIND_SCREEN, "pos": 0}
+var _analysis: RealisticAnalyzer.Cached
 
 
 func _init(l: FarmLayout, item_db: ItemDatabase, farm_map: FarmMap) -> void:
@@ -56,6 +64,9 @@ func _init(l: FarmLayout, item_db: ItemDatabase, farm_map: FarmMap) -> void:
 	stack.changed.connect(_on_stack_changed)
 	layout.objects_removed.connect(_on_removed)
 	layout.fixed_items = fixed_item_ids(db, map)
+	conflict_index = ConflictIndex.new(layout, map)
+	_analysis = RealisticAnalyzer.Cached.new(layout, stack, conflict_index)
+	symmetry["pos"] = default_mirror_pos(symmetry["kind"])
 
 
 static func fixed_item_ids(item_db: ItemDatabase, farm_map: FarmMap) -> Dictionary:
@@ -95,8 +106,23 @@ func set_map(m: FarmMap) -> void:
 	## installed). The layout itself is untouched.
 	map = m
 	layout.fixed_items = fixed_item_ids(db, map)
+	conflict_index.set_map(map)
+	_analysis.invalidate()
 	if not selected_landmark.is_empty() and (map == null or map.landmark(selected_landmark) == null):
 		clear_landmark_selection()
+
+
+func conflicts() -> Dictionary:
+	## uid -> PlacementRules.Result for every object breaking the placement rules
+	## (same answer as PlacementRules.find_conflicts, kept current incrementally).
+	## Shared: don't modify.
+	return conflict_index.conflicts()
+
+
+func analysis() -> RealisticAnalyzer.Report:
+	## The Realistic analysis of the document as it is now (recomputed only after
+	## a change). Shared: don't modify.
+	return _analysis.report(db, map)
 
 
 # --- fixed things ---------------------------------------------------------------
@@ -570,9 +596,10 @@ func clipboard_size() -> Vector2i:
 	return mx
 
 
-func place_objects(objs: Array, label: String) -> Array:
+func place_objects(objs: Array, label: String, mirror: bool = false) -> Array:
 	## Adds objects as one undo step. Landmark duplicates and items that can't
-	## be placed on the main farm are refused (with a message).
+	## be placed on the main farm are refused (with a message). With symmetry on,
+	## the place tool (and `mirror` callers) also adds what fits of the mirrored copy.
 	var ok: Array = []
 	var refused := ""
 	for o: PlacedObject in objs:
@@ -587,6 +614,11 @@ func place_objects(objs: Array, label: String) -> Array:
 		message.emit(refused, "info")
 	if ok.is_empty():
 		return []
+	if bool(symmetry["enabled"]) and (mirror or tool == "place"):
+		var m := mirrored_objects(ok)
+		ok = ok + (m["objs"] as Array)
+		if int(m["skipped"]) > 0:
+			message.emit("Mirrored copy: %d item%s didn't fit" % [m["skipped"], "" if int(m["skipped"]) == 1 else "s"], "info")
 	var cmd := EditCommands.AddObjects.new(ok, label)
 	execute(cmd)
 	return cmd.added_uids()
@@ -601,3 +633,229 @@ func make_object(item: ItemDef, origin: Vector2i) -> PlacedObject:
 	o.variant = place_variant
 	o.planned = place_planned
 	return o
+
+
+# --- layout tools: symmetry ------------------------------------------------------
+
+func default_mirror_pos(kind: String) -> int:
+	## A mirror line through the middle of the farm.
+	var c: Vector2i = (map.size / 2) if map else Vector2i.ZERO
+	return int(LayoutTools.line_for_tile(kind, c)["pos"])
+
+
+func mirror_line() -> Dictionary:
+	return {"kind": symmetry["kind"], "pos": symmetry["pos"]}
+
+
+func set_symmetry_enabled(on: bool) -> void:
+	if bool(symmetry["enabled"]) == on:
+		return
+	symmetry["enabled"] = on
+	tools_changed.emit()
+
+
+func set_symmetry_kind(kind: String) -> void:
+	if not kind in LayoutTools.KINDS or symmetry["kind"] == kind:
+		return
+	symmetry["kind"] = kind
+	symmetry["pos"] = default_mirror_pos(kind)
+	tools_changed.emit()
+
+
+func set_symmetry_tile(t: Vector2i) -> void:
+	## Puts the mirror line through tile t.
+	symmetry["pos"] = int(LayoutTools.line_for_tile(str(symmetry["kind"]), t)["pos"])
+	tools_changed.emit()
+
+
+func mirrored_objects(objs: Array) -> Dictionary:
+	## Fresh PlacedObjects mirroring `objs` over the current line, keeping only
+	## copies the placement rules accept (next to `objs` themselves too).
+	## {"objs": [...], "skipped": n}. A copy equal to its original is not made.
+	var line := mirror_line()
+	var rects: Array = []
+	for o: PlacedObject in objs:
+		rects.append(o.rect())
+	var copies: Array = []
+	var skipped := 0
+	for o: PlacedObject in objs:
+		var it := db.get_item(o.item_id)
+		var m := LayoutTools.mirror_placement(o.rect(), o.flipped, it != null and it.flippable, line)
+		if m.is_empty():
+			skipped += 1
+			continue
+		var r: Rect2i = m["rect"]
+		if r == o.rect():
+			continue
+		var c := o.duplicate_obj()
+		c.uid = 0
+		c.group_id = 0
+		c.origin = r.position
+		c.size = r.size
+		c.flipped = m["flipped"]
+		copies.append(c)
+		rects.append(r)
+	var fit := LayoutTools.fit_mask(layout, map, rects)
+	var out: Array = []
+	for i in copies.size():
+		if fit[objs.size() + i]:
+			out.append(copies[i])
+		else:
+			skipped += 1
+	return {"objs": out, "skipped": skipped}
+
+
+# --- layout tools: align, distribute, repeat -------------------------------------
+
+func align_selection(op: String) -> bool:
+	return _move_each("align", "Align", 2, func(rects: Array) -> Array: return LayoutTools.align_deltas(rects, op))
+
+
+func distribute_selection(axis: String) -> bool:
+	return _move_each("distribute", "Distribute", 3, func(rects: Array) -> Array: return LayoutTools.distribute_deltas(rects, axis))
+
+
+func _move_each(verb: String, label: String, minimum: int, compute: Callable) -> bool:
+	## One undo step moving each selected, movable object by its own delta.
+	## Whatever the rules refuse stays where it is.
+	if _refuse_if_landmark("move"):
+		return false
+	var uids := movable_selection()
+	if uids.size() < minimum:
+		var why := move_refusal_message()
+		message.emit(why if not why.is_empty() else "Select at least %d movable objects to %s" % [minimum, verb], "info")
+		return false
+	var rects: Array = []
+	for u in uids:
+		rects.append(layout.get_obj(u).rect())
+	var fit := LayoutTools.resolve_moves(layout, map, uids, compute.call(rects))
+	var moved: Array = fit["uids"]
+	if moved.is_empty():
+		message.emit("Nothing can move there" if int(fit["skipped"]) > 0 else "Already in place", "info")
+		return false
+	execute(EditCommands.MoveEach.new(moved, fit["deltas"], label))
+	if int(fit["skipped"]) > 0:
+		message.emit("%s: %d object%s blocked and left in place" % [label, fit["skipped"], "" if int(fit["skipped"]) == 1 else "s"], "info")
+	return true
+
+
+func repeat_plan(cols: int, rows: int, spacing: Vector2i) -> Dictionary:
+	## What repeating the selection as a cols x rows array would do:
+	## {"objs": copies that fit, "rects": every wanted rect, "skipped": n}.
+	## {} when nothing in the selection may be copied.
+	var src: Array = []
+	var uids: Array = []
+	if not selected_landmark.is_empty():
+		return {}
+	for o: PlacedObject in selected_objects():
+		if can_copy_object(o) and level_block_reason(o.item_id).is_empty():
+			src.append(o)
+			uids.append(o.uid)
+	if src.is_empty():
+		return {}
+	var rects: Array = []
+	var copies: Array = []
+	for off: Vector2i in LayoutTools.repeat_offsets(layout.bounds_of(uids).size, cols, rows, spacing):
+		for o: PlacedObject in src:
+			var c := o.duplicate_obj()
+			c.uid = 0
+			c.group_id = 0
+			c.locked = false
+			c.origin += off
+			copies.append(c)
+			rects.append(c.rect())
+	var fit := LayoutTools.fit_mask(layout, map, rects)
+	var out: Array = []
+	for i in copies.size():
+		if fit[i]:
+			out.append(copies[i])
+	return {"objs": out, "rects": rects, "skipped": copies.size() - out.size()}
+
+
+func apply_repeat(cols: int, rows: int, spacing: Vector2i) -> Array:
+	## Adds the array as one undo step; returns the new uids.
+	if _refuse_if_landmark("copy"):
+		return []
+	var plan := repeat_plan(cols, rows, spacing)
+	if plan.is_empty():
+		message.emit("Select something that can be copied first", "info")
+		return []
+	var objs: Array = plan["objs"]
+	if objs.is_empty():
+		message.emit("None of the copies fit", "warn")
+		return []
+	var uids := place_objects(objs, "Repeat %d object%s" % [objs.size(), "" if objs.size() == 1 else "s"])
+	if int(plan["skipped"]) > 0:
+		message.emit("Placed %d, skipped %d blocked spot%s" % [uids.size(), plan["skipped"], "" if int(plan["skipped"]) == 1 else "s"], "info")
+	return uids
+
+
+# --- layout tools: stamps ----------------------------------------------------------
+
+func stamp_refusal(item_id: String) -> String:
+	## Why a stamp may not contain this item ("" = it may). Unknown items are
+	## refused too: nothing could say whether they duplicate a landmark.
+	if db == null or db.get_item(item_id) == null:
+		return "Unknown item: %s" % item_id
+	return item_block_reason(item_id)
+
+
+func make_stamp(stamp_name: String) -> Dictionary:
+	## The selection as a stamp (landmarks and out-of-scope items never enter).
+	## {} when there is nothing usable (with a message).
+	if _refuse_if_landmark("copy"):
+		return {}
+	if selection.is_empty():
+		message.emit("Select some objects to save as a stamp", "info")
+		return {}
+	var r := StampLibrary.from_objects(stamp_name, selected_objects(), stamp_refusal)
+	if (r["stamp"] as Dictionary).is_empty():
+		if not str(r["reason"]).is_empty():
+			message.emit(str(r["reason"]), "info")
+		return {}
+	if int(r["dropped"]) > 0:
+		message.emit("Left out of the stamp: %s" % str(r["reason"]), "info")
+	return r["stamp"]
+
+
+func stamp_plan(stamp: Dictionary, at: Vector2i) -> Dictionary:
+	## Fresh objects for a stamp with its top corner at `at`, keeping what the
+	## catalogue, farm level and placement rules allow.
+	## {"objs": those that fit, "rects": every wanted rect, "skipped": n}.
+	var wanted: Array = []
+	var rects: Array = []
+	var skipped := 0
+	for e: Dictionary in stamp.get("items", []):
+		var id := str(e.get("item", ""))
+		var it := db.get_item(id)
+		if it == null or not item_block_reason(id).is_empty() or not level_block_reason(id).is_empty():
+			skipped += 1
+			continue
+		var o := make_object(it, at + Vector2i(int(e["x"]), int(e["y"])))
+		o.flipped = bool(e.get("flip", false)) and it.flippable
+		o.size = it.size_for(o.flipped)
+		o.variant = str(e.get("variant", ""))
+		o.planned = bool(e.get("planned", false))
+		wanted.append(o)
+		rects.append(o.rect())
+	var fit := LayoutTools.fit_mask(layout, map, rects)
+	var out: Array = []
+	for i in wanted.size():
+		if fit[i]:
+			out.append(wanted[i])
+		else:
+			skipped += 1
+	return {"objs": out, "rects": rects, "skipped": skipped}
+
+
+func place_stamp(stamp: Dictionary, at: Vector2i) -> Array:
+	## One undo step (with the mirrored copy when symmetry is on).
+	var plan := stamp_plan(stamp, at)
+	var objs: Array = plan["objs"]
+	if objs.is_empty():
+		message.emit("This stamp doesn't fit here", "warn")
+		return []
+	var uids := place_objects(objs, "Stamp %s" % str(stamp.get("name", "")), true)
+	if int(plan["skipped"]) > 0:
+		message.emit("Placed %d, skipped %d item%s" % [objs.size(), plan["skipped"], "" if int(plan["skipped"]) == 1 else "s"], "info")
+	return uids

@@ -6,7 +6,9 @@ extends Node2D
 ## rocks from the built-in placeholder art scattered over forest areas and the
 ## world margins behind / beside the farm. Purely visual: never blocks
 ## placement, never covers land tiles, roads or landmarks, and is
-## deterministic for a given map. (Original terrain art is a later step.)
+## deterministic for a given map. Where a TerrainLayer draws the ground, this
+## layer only adds the scattered sprites and keeps them off the terrain's
+## rivers and roads.
 
 const ART := ["leafy_tree", "pine_tree", "big_pine_tree", "dark_leafy_tree", "pine_tree", "leafy_tree", "mossy_rock"]
 const ROCK_ART := ["mossy_rock", "small_rock", "big_rock"]
@@ -68,10 +70,13 @@ func _build() -> void:
 	var land := map.land_bounds()
 	var cands: Array = []   ## [tile, density, kind]
 	var outer := wb.grow(OUTER)
+	var procedural := TerrainLayer.applies_to(map)
+	var bands: Array[Rect2i] = TerrainLayer.feature_bands(map) if procedural else ([] as Array[Rect2i])
+	var cliff_y := TerrainLayer.cliff_line(map) if procedural else outer.position.y - 1
 	for y in range(outer.position.y, outer.end.y):
 		for x in range(outer.position.x, outer.end.x):
 			var t := Vector2i(x, y)
-			if keep_clear.has(t):
+			if keep_clear.has(t) or _in_bands(bands, t):
 				continue
 			if not wb.has_point(t):
 				# Backdrop beyond the world: woods behind and beside the farm only.
@@ -101,6 +106,9 @@ func _build() -> void:
 						# the land), thinning out with distance from the grid.
 						if y < land.position.y or x < 0 or x >= map.size.x:
 							density = 0.3 if (y < 0 or x < -1 or x > map.size.x) else 0.18
+			if y == cliff_y and density > 0.0:
+				density = 0.35   # boulders along the foot of the cliff
+				kind = "rock"
 			if density > 0.0:
 				cands.append([t, density, kind])
 	var expected := 0.0
@@ -115,8 +123,17 @@ func _build() -> void:
 		var spr: AssetLibrary.SpriteInfo = pool[rng.randi() % pool.size()]
 		var jitter := Vector2(rng.randf_range(-0.25, 0.25), rng.randf_range(-0.25, 0.25))
 		var center := Iso.grid_to_world(Vector2(t.x + 0.5, t.y + 0.5) + jitter)
+		if procedural:
+			center.y -= TerrainLayer.plateau_lift(map, t)
 		_items.append([center, spr, rng.randf_range(0.85, 1.35), rng.randf() < 0.5])
 	_items.sort_custom(func(a, b): return a[0].y < b[0].y)
+
+
+static func _in_bands(bands: Array[Rect2i], t: Vector2i) -> bool:
+	for r in bands:
+		if r.has_point(t):
+			return true
+	return false
 
 
 func _area_at(t: Vector2i) -> String:
@@ -153,8 +170,9 @@ func _poly(pts: PackedVector2Array, tex: Texture2D, mod: Color) -> void:
 
 func _draw() -> void:
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-	for a in _areas:
-		_draw_area(a[0], a[1])
+	if not TerrainLayer.applies_to(map):
+		for a in _areas:
+			_draw_area(a[0], a[1])
 	for e in _items:
 		var c: Vector2 = e[0]
 		var spr: AssetLibrary.SpriteInfo = e[1]

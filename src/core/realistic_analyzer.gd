@@ -47,7 +47,50 @@ class Report:
 		return blocking_count == 0 and land_level_locked.is_empty() and not over_budget_coins and not over_budget_diamonds
 
 
-static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap) -> Report:
+class Cached:
+	## The analysis of one layout, recomputed only when something it depends on
+	## changed: layout signals plus the command stack's version catch every edit,
+	## the key below everything else (mode, map, catalogue corrections, and
+	## profile / land edited without a signal). Reports are shared: read-only.
+	var layout: FarmLayout
+	var stack: CommandStack
+	var conflict_index: ConflictIndex
+	var computed := 0                ## recomputations so far (tests, diagnostics)
+	var _report: Report = null
+	var _key: Array = []
+	var _dirty := true
+
+	func _init(l: FarmLayout, s: CommandStack, idx: ConflictIndex = null) -> void:
+		layout = l
+		stack = s
+		conflict_index = idx
+		for sig: Signal in [l.objects_added, l.objects_removed, l.objects_changed]:
+			sig.connect(_on_objects)
+		for sig: Signal in [l.land_changed, l.planning_changed, l.meta_changed]:
+			sig.connect(invalidate)
+
+	func _on_objects(_uids: Array) -> void:
+		_dirty = true
+
+	func invalidate() -> void:
+		_dirty = true
+
+	func report(db: ItemDatabase, map: FarmMap) -> Report:
+		var key := [stack.version if stack else 0, layout.mode, map.get_instance_id() if map else 0,
+			layout.objects.size(), layout.profile.hash(), layout.unlocked_plots.hash(),
+			db.overrides_pack if db else "", str(db.overrides_report.get("hash", "")) if db else ""]
+		if _report == null or _dirty or key != _key:
+			var conflicts: Variant = conflict_index.conflicts() if conflict_index != null and conflict_index.map == map else null
+			_report = RealisticAnalyzer.analyze(layout, db, map, conflicts)
+			_key = key
+			_dirty = false
+			computed += 1
+		return _report
+
+
+static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflicts: Variant = null) -> Report:
+	## `conflicts` (PlacementRules.find_conflicts' result, or ConflictIndex's)
+	## saves re-checking every object's tiles; the report is identical either way.
 	var r := Report.new()
 	var prof := layout.profile
 	var level := farm_level(layout)
@@ -82,10 +125,12 @@ static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap) -> Repor
 			_add(r, o.uid, UNVERIFIED_SIZE)
 	# Land and placement validity.
 	var plots := {}
-	for o: PlacedObject in layout.objects.values():
-		var res := PlacementRules.check_rect(layout, map, o.rect(), {o.uid: true})
-		if res.ok:
+	var bad: Dictionary = conflicts if conflicts is Dictionary else PlacementRules.find_conflicts(layout, map)
+	for u: int in bad:
+		var o: PlacedObject = layout.objects.get(u)
+		if o == null:
 			continue
+		var res: PlacementRules.Result = bad[u]
 		if res.reason_counts.has(PlacementRules.LOCKED_LAND):
 			plots.merge(res.locked_plots)
 			if not o.planned:

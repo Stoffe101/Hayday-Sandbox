@@ -139,21 +139,41 @@ func _integration() -> void:
 	print("Data")
 	check(App.db.count() >= 1900, "catalogue loaded (%d items)" % App.db.count())
 	check(App.db.errors.is_empty(), "catalogue has no errors %s" % str(App.db.errors.slice(0, 3)))
-	check(App.maps.has("hayday_farm") and App.maps.has("hayday_farm_h1"), "both map hypotheses loaded")
-	check(App.map.plots.size() == 52, "main section has 52 plots")
+	check(App.maps.has("hayday_farm") and not App.maps.has("hayday_farm_h1"), "farm world loaded (retired h1 map not shipped)")
+	var pub := WorldLoader.load("res://data/maps/hayday_farm.json", [], "")
+	check(pub.schema_version == 2 and pub.frame == "game" and pub.plots.size() == 52 and pub.landmarks.size() == 5 and not pub.is_game_data(),
+		"public map v2: game frame, 52 plots, 5 approximate landmarks")
+	check(not App.world_label().is_empty() and str(App.map.provenance.get("active", "")) in ["public", "private"], "world provenance shown: %s" % App.world_label())
+	if App.map.is_game_data():
+		check(App.map.plots.size() >= 52 and not App.map.landmarks.is_empty() and App.map.landmark("farmhouse") != null, "private world data replaces the public map")
+	else:
+		check(App.map.plots.size() == 52, "main section has 52 plots")
 	var st := App.assets.stats(App.db)
 	check(float(st["with_art"]) / st["items"] > 0.99, "placeholder art for %d/%d items" % [st["with_art"], st["items"]])
 	check(App.boot_ms < 5000.0, "services boot in %.0f ms" % App.boot_ms)
-	# Every sample loads cleanly.
+	# Every sample is a v2 layout without landmark items that fits the public map
+	# with the public catalogue (what the generator guarantees). With a private
+	# pack active, footprints/landmarks differ: collisions are reported, never fixed.
+	var pdb := ItemDatabase.new()
+	pdb.load_default()
 	var dir := DirAccess.open("res://data/samples")
 	var nsamples := 0
 	for f in dir.get_files():
 		if f.ends_with(LayoutIO.FILE_EXT):
+			var path := "res://data/samples".path_join(f)
 			var rep := LayoutIO.LoadReport.new()
-			var l := App.library.load_path("res://data/samples".path_join(f), rep)
-			check(l != null and rep.missing_items.is_empty() and PlacementRules.find_conflicts(l, App.maps[l.map_id]).is_empty(), "sample %s loads with no conflicts" % f)
+			var l := LayoutIO.load_file(path, pdb, rep, pub)
+			check(l != null and rep.missing_items.is_empty() and rep.migrated_from < 0 and rep.migrated_landmarks.is_empty()
+				and rep.footprint_changes.is_empty() and _landmark_items_in(l) == 0 and PlacementRules.find_conflicts(l, pub).is_empty(),
+				"sample %s: v2, no landmark items, no conflicts on the public map" % f)
+			var rep2 := LayoutIO.LoadReport.new()
+			var l2 := App.library.load_path(path, rep2)
+			check(l2 != null and l2.count() == (l.count() if l else -1), "sample %s opens in the active world with every object kept" % f)
+			if l2 != null and (App.map.is_game_data() or not App.db.overrides_pack.is_empty()):
+				print("  info sample %s with private data: %d collision(s), %d footprint change(s) reported" % [f, rep2.collisions.size(), rep2.footprint_changes.size()])
 			nsamples += 1
 	check(nsamples >= 5, "%d sample layouts" % nsamples)
+	_migration_check()
 
 	print("Editing")
 	App.open_layout(App.new_layout("Selftest farm", "starter"))
@@ -164,10 +184,17 @@ func _integration() -> void:
 	await _frames(3)
 	var s := _s()
 	var base := s.layout.count()
-	check(base >= 5, "starter layout has core buildings (%d)" % base)
+	var ids := {}
+	var any_locked := false
 	for o: PlacedObject in s.layout.objects.values():
-		check(o.locked, "core building %s starts locked" % o.item_id)
-		break
+		ids[o.item_id] = true
+		any_locked = any_locked or o.locked
+	check(base == 2 and ids.has("barn") and ids.has("silo"), "starter template: barn + silo only (%s)" % str(ids.keys()))
+	check(not any_locked, "starter buildings are movable (not locked)")
+	check(_landmark_items_in(s.layout) == 0, "no landmark items placed as objects")
+	check(int(s.layout.profile.get("level", -1)) == App.default_farm_level(), "new layout starts at the default farm level (%d)" % App.default_farm_level())
+	_template_check()
+	await _landmark_check()
 	var bakery := App.db.get_item("bakery")
 	var at := _free_origin(bakery, Vector2i(14, 28))
 	main.camera.center_on(Iso.tile_center(at))
@@ -213,27 +240,29 @@ func _integration() -> void:
 	check(moved != null and moved.uid == placed.uid, "dragging moves the bakery (one gesture; grabbed %s at tile %s)" % [grab_obj.item_id if grab_obj else "nothing", str(grab)])
 	check(s.stack.size() == steps + 1, "a drag-move is a single undo step")
 	check(s.layout.object_at(at + Vector2i(1, 1)) == null or s.layout.object_at(at + Vector2i(1, 1)).uid != placed.uid, "old tiles were freed")
-	# Invalid drop snaps back.
-	var fh: PlacedObject = null
-	for o: PlacedObject in s.layout.objects.values():
-		if o.item_id == "farmhouse":
-			fh = o
-	if fh:
+	# Invalid drop snaps back: the farmhouse is a fixed landmark of the world.
+	var fh_tile := _landmark_tile("farmhouse")
+	if fh_tile.x != -9999:
 		var before := moved.origin
 		main.camera.center_on(Iso.tile_center(before))
 		await _frames(2)
-		_drag_tiles(before + Vector2i(1, 1), fh.origin + Vector2i(1, 1))
-		check(moved.origin == before, "dropping onto the farmhouse is rejected (object stays)")
+		_drag_tiles(before + Vector2i(1, 1), fh_tile + Vector2i(1, 1))
+		check(moved.origin == before, "dropping onto the farmhouse landmark is rejected (object stays)")
 	# Locked objects cannot be moved/deleted.
-	if fh:
-		s.select([fh.uid])
+	var barn: PlacedObject = null
+	for o: PlacedObject in s.layout.objects.values():
+		if o.item_id == "barn":
+			barn = o
+	if barn:
+		s.select([barn.uid])
+		_key(KEY_L)
+		check(barn.locked, "L locks the barn")
 		var c0 := s.layout.count()
 		_key(KEY_DELETE)
-		check(s.layout.count() == c0, "locked farmhouse survives Delete")
+		check(s.layout.count() == c0, "locked barn survives Delete")
 		_key(KEY_L)
-		check(not fh.locked, "L unlocks it")
-		_key(KEY_L)
-		check(fh.locked, "L locks it again")
+		check(not barn.locked, "L unlocks it again")
+		s.clear_selection()
 	# Copy / paste.
 	s.select([moved.uid])
 	_key(KEY_C, true)
@@ -271,7 +300,7 @@ func _integration() -> void:
 	check(s.selection.size() >= 1, "box-select selects objects (%d)" % s.selection.size())
 	# Delete + undo restores everything.
 	var keep := s.layout.count()
-	var nsel := s.editable_selection().size()
+	var nsel := s.removable_selection().size()
 	_key(KEY_DELETE)
 	check(s.layout.count() == keep - nsel, "Delete removes the unlocked selection")
 	_key(KEY_Z, true)
@@ -320,6 +349,7 @@ func _integration() -> void:
 	_importer_check()
 	# Asset packs: zip install, thumbnails, variants, overrides, Asset Manager.
 	await _asset_pack_check()
+	await _world_pack_check()
 	App.library.delete(s.layout.id)
 
 
@@ -482,6 +512,184 @@ func _asset_pack_check() -> void:
 	check(PackInstaller.uninstall(pid) == OK, "pack uninstalled")
 	App.reload_assets()
 	check(lib.art_source("bakery") != pid and lib.pack_by_id(pid).is_empty(), "previous art back after uninstall")
+
+
+func _world_pack_check() -> void:
+	## A pack that declares world data + catalogue corrections (synthetic: a
+	## copy of the PUBLIC map with an extra made-up landmark) replaces the world
+	## on reload; removing it restores the previous world and catalogue.
+	print("World packs")
+	var s := _s()
+	var pid := "selftest_world"
+	PackInstaller.uninstall(pid)   # leftovers of an aborted run
+	var dir := AssetLibrary.USER_PACKS.path_join(pid)
+	DirAccess.make_dir_recursive_absolute(dir.path_join("world"))
+	var world: Dictionary = JsonUtil.read_json("res://data/maps/hayday_farm.json")
+	world["provenance"] = {"kind": "private_game_data", "source": "selftest: synthetic copy of the public map", "generated": "2026-01-01", "confidence": "approximate"}
+	(world["landmarks"] as Array).append({"id": "selftest_statue", "name": "Selftest Statue", "origin": [30, 1], "footprint": [1, 1], "confidence": "approximate"})
+	world["initial_objects"] = [{"item": "barn", "x": 2, "y": 2, "group": "start"}, {"item": "silo", "x": 7, "y": 2, "group": "start"}]
+	JsonUtil.write_atomic(dir.path_join("world/world.json"), JSON.stringify(world), false)
+	var bush_item := App.db.get_item("raspberry_bush")
+	var fp := bush_item.footprint
+	JsonUtil.write_atomic(dir.path_join("catalog_overrides.json"), JSON.stringify({"format": ItemDatabase.OVERRIDES_FORMAT, "version": 1,
+		"items": {"raspberry_bush": {"footprint": [fp.y, fp.x], "change": "axis_swap"}}}), false)
+	JsonUtil.write_atomic(dir.path_join("pack.json"), JSON.stringify({"format": AssetLibrary.PACK_FORMAT, "id": pid, "name": "Selftest world",
+		"version": "0.0-selftest", "priority": 5000, "sprites": {}, "world": "world/world.json", "catalog_overrides": "catalog_overrides.json"}), false)
+	var label0 := App.world_label()
+	var pack0 := App.db.overrides_pack
+	var bush: PlacedObject = null
+	for o: PlacedObject in s.layout.objects.values():
+		if o.item_id == "raspberry_bush":
+			bush = o
+	var bsize := bush.size if bush else Vector2i.ZERO
+	var bflip := bush.flipped if bush else false
+	var got: Array = []
+	var cb := func(): got.append(true)
+	App.map_changed.connect(cb)
+	var steps := s.stack.size()
+	App.reload_assets()
+	await _frames(2)
+	check(got.size() == 1 and App.map.landmark("selftest_statue") != null and s.map == App.map and App.library.map == App.map,
+		"a pack with world data replaces the world on reload (map_changed; session + library rebound)")
+	check(App.world_label().contains("0.0-selftest") and App.map.is_game_data(), "provenance names the pack: %s" % App.world_label())
+	check(App.db.overrides_pack == pid and App.db.get_item("raspberry_bush").footprint == Vector2i(fp.y, fp.x), "catalogue corrections of the pack applied")
+	check(bush != null and bush.size == bsize and bush.flipped != bflip and s.stack.size() == steps + 1,
+		"open layout: an axis-swapped footprint keeps its tiles (flip toggled) as one undo step")
+	check(App.has_initial_objects() and App.layout_templates().any(func(t): return t["id"] == "new_farm"), "fresh game farm template offered with world data")
+	check(PackInstaller.uninstall(pid) == OK, "world pack removed")
+	App.reload_assets()
+	await _frames(2)
+	check(got.size() == 2 and App.map.landmark("selftest_statue") == null and App.world_label() == label0, "removing it restores the previous world (%s)" % App.world_label())
+	check(App.db.overrides_pack == pack0 and App.db.get_item("raspberry_bush").footprint == fp and bush != null and bush.flipped == bflip,
+		"…and the previous catalogue footprints (open layout follows)")
+	App.map_changed.disconnect(cb)
+
+
+# --- world layer: landmarks, templates, migration -------------------------------------
+
+func _landmark_items_in(l: FarmLayout) -> int:
+	var n := 0
+	for o: PlacedObject in l.objects.values():
+		var it := App.db.get_item(o.item_id)
+		if it and not it.landmark.is_empty():
+			n += 1
+	return n
+
+
+func _landmark_tile(id: String) -> Vector2i:
+	## A placement-blocking, on-grid tile of the landmark ((-9999, -9999) = none).
+	var lm := App.map.landmark(id)
+	if lm == null:
+		return Vector2i(-9999, -9999)
+	for r in lm.block_rects():
+		for y in range(r.position.y, r.end.y):
+			for x in range(r.position.x, r.end.x):
+				var t := Vector2i(x, y)
+				if App.map.in_bounds(t) and App.map.kind_at(t) != FarmMap.Kind.VOID:
+					return t
+	return Vector2i(-9999, -9999)
+
+
+func _template_check() -> void:
+	var ids: Array = App.layout_templates().map(func(t): return t["id"])
+	check("starter" in ids and "expanded" in ids and "empty" in ids, "templates offered: %s" % str(ids))
+	check(("new_farm" in ids) == App.has_initial_objects(), "fresh game farm offered only with the game's initial objects")
+	var empty := App.new_layout("t", "empty")
+	check(empty.count() == 0, "empty template has no objects")
+	var exp := App.new_layout("t", "expanded")
+	check(exp.unlocked_plots.size() == App.map.plots.size() and _landmark_items_in(exp) == 0 and exp.count() == 2, "expanded template: all land + barn + silo")
+	if App.has_initial_objects():
+		var nf := App.new_layout("t", "new_farm")
+		check(nf.count() > 0 and _landmark_items_in(nf) == 0 and PlacementRules.find_conflicts(nf, App.map).is_empty(), "fresh game farm template: objects from the world data, no landmarks, no conflicts")
+	var lvl: Variant = App.settings.get_v("default_farm_level")
+	App.settings.set_v("default_farm_level", 60, false)
+	check(int(App.new_layout("t", "empty").profile["level"]) == 60, "default farm level setting applies to new layouts")
+	App.settings.set_v("default_farm_level", lvl, false)
+
+
+func _landmark_check() -> void:
+	print("Landmarks")
+	var s := _s()
+	var tile := _landmark_tile("farmhouse")
+	check(tile.x != -9999, "farmhouse landmark is on the map")
+	if tile.x == -9999:
+		return
+	var lm := App.map.landmark("farmhouse")
+	var lm_before := "%s %s" % [str(lm.origin), str(lm.footprint)]
+	var fence := App.db.get_item("fence")
+	main.camera.center_on(Iso.tile_center(tile))
+	await _frames(2)
+	for mode in [FarmLayout.MODE_CREATIVE, FarmLayout.MODE_REALISTIC]:
+		s.set_mode(mode)
+		var r := PlacementRules.check_item(s.layout, s.map, fence, tile, false)
+		check(not r.ok and r.reason_counts.has(PlacementRules.LANDMARK), "%s mode: landmark tiles block placement (%s)" % [mode, r.message(s.layout, s.db, s.map)])
+		main._on_item_chosen("fence")
+		var c0 := s.layout.count()
+		_click_tile(tile)
+		check(s.layout.count() == c0, "%s mode: clicking the farmhouse with the place tool places nothing" % mode)
+		_key(KEY_ESCAPE)
+	s.set_mode(FarmLayout.MODE_CREATIVE)
+	_key(KEY_ESCAPE)
+	main._on_item_chosen("farmhouse")
+	check(s.active_item != "farmhouse", "the farmhouse can't be picked from the catalogue as an object")
+	# A selected landmark refuses every edit shortcut.
+	check(s.select_landmark("farmhouse") and s.selection.is_empty(), "landmark selection is separate from objects")
+	var snap := JSON.stringify(LayoutIO.to_dict(s.layout)["objects"])
+	var steps := s.stack.size()
+	for k in [KEY_DELETE, KEY_R, KEY_L, KEY_UP]:
+		_key(k)
+	_key(KEY_C, true)
+	_key(KEY_G, true)
+	_key(KEY_D, true)
+	_key(KEY_ESCAPE)
+	check(JSON.stringify(LayoutIO.to_dict(s.layout)["objects"]) == snap and s.stack.size() == steps, "Delete / R / L / arrows / Ctrl+C/G/D change nothing with a landmark selected")
+	check("%s %s" % [str(lm.origin), str(lm.footprint)] == lm_before and App.map.landmark("farmhouse") == lm, "the farmhouse never moved")
+	check(not s.explain_fixed("farmhouse", "move").is_empty(), "friendly explanation: %s" % s.explain_fixed("farmhouse", "move"))
+	s.clear_selection()
+	main.controller.stamp_mode = false
+	# World look is per layout and undoable.
+	s.set_theme("winter")
+	check(s.layout.theme() == "winter", "theme change applied")
+	_key(KEY_Z, true)
+	check(s.layout.theme() == FarmLayout.DEFAULT_THEME, "Ctrl+Z undoes the theme change")
+
+
+func _migration_check() -> void:
+	print("Migration")
+	var note := LayoutIO.V1_STARTER_NOTE
+	var v1 := {"format": LayoutIO.FORMAT, "schema_version": 1, "app_version": "0.1.0",
+		"meta": {"id": "selftest_v1", "name": "Old v1 farm", "mode": "creative"},
+		"map": {"id": "hayday_farm", "unlocked_plots": ["main_01"]},
+		"objects": [
+			{"uid": 1, "item": "farmhouse", "x": 19, "y": 15, "w": 4, "h": 4, "locked": true, "note": note},
+			{"uid": 2, "item": "barn", "x": 9, "y": 7, "w": 4, "h": 4, "locked": true, "note": note},
+			{"uid": 3, "item": "silo", "x": 14, "y": 7, "w": 3, "h": 3, "locked": true, "note": note},
+			{"uid": 4, "item": "truck_and_order_board", "x": 18, "y": 31, "w": 4, "h": 3, "locked": true, "note": note},
+			{"uid": 5, "item": "roadside_shop", "x": 24, "y": 31, "w": 3, "h": 3, "locked": true, "note": note},
+			{"uid": 6, "item": "mailbox", "x": 23, "y": 15, "w": 1, "h": 1, "locked": true, "note": note},
+			{"uid": 7, "item": "bakery", "x": 7, "y": 18, "w": 3, "h": 3},
+		],
+		"camera": {"x": 0.0, "y": 0.0, "zoom": 1.0}}
+	var path := App.library.path_for("selftest_v1")
+	var text := JSON.stringify(v1, "\t")
+	JsonUtil.write_atomic(path, text, false)
+	var rep := LayoutIO.LoadReport.new()
+	var l := App.library.load_layout("selftest_v1", rep)
+	check(l != null and rep.migrated_from == 1 and rep.shifted == Vector2i(-5, -3), "v1 file upgrades into the game frame")
+	if l == null:
+		return
+	check(rep.migrated_landmarks.size() == 4 and _landmark_items_in(l) == 0 and l.count() == 3, "farmhouse, truck, shop and mailbox leave the layout (kept in migration.migrated_landmarks)")
+	var barn: PlacedObject = null
+	for o: PlacedObject in l.objects.values():
+		if o.item_id == "barn":
+			barn = o
+	check(barn != null and barn.origin == Vector2i(4, 4) and not barn.locked, "barn keeps its place, starter lock cleared")
+	check(not rep.summary().is_empty() and rep.backup_path.ends_with(".v1-backup"), "load report: %s" % rep.summary())
+	check(App.library.save(l, false) == OK and FileAccess.file_exists(rep.backup_path) and JsonUtil.read_text(rep.backup_path) == text, "first save keeps the v1 original as .v1-backup")
+	var rep2 := LayoutIO.LoadReport.new()
+	var again := App.library.load_layout("selftest_v1", rep2)
+	check(again != null and rep2.migrated_from < 0 and again.count() == 3 and (again.migration.get("migrated_landmarks", []) as Array).size() == 4, "saved as v2; migration record kept")
+	App.library.delete("selftest_v1")
 
 
 # --- performance -----------------------------------------------------------------

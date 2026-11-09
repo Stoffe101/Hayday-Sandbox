@@ -1,6 +1,6 @@
 {
 	"format": "hayday-sandbox-layout",
-	"schema_version": 1,
+	"schema_version": 2,
 	"app_version": "sample",
 	"meta": {
 		"id": "",
@@ -18,196 +18,158 @@
 		"id": "hayday_farm",
 		"unlocked_plots": []
 	},
-	"next_uid": 24,
+	"next_uid": 20,
 	"next_group": 1,
 	"objects": [
 		{
 			"uid": 1,
-			"item": "farmhouse",
-			"x": 19,
-			"y": 14,
+			"item": "barn",
+			"x": 2,
+			"y": 2,
 			"w": 4,
-			"h": 4,
-			"locked": true
+			"h": 4
 		},
 		{
 			"uid": 2,
-			"item": "barn",
+			"item": "silo",
 			"x": 7,
-			"y": 5,
-			"w": 4,
-			"h": 4,
-			"locked": true
+			"y": 2,
+			"w": 3,
+			"h": 3
 		},
 		{
 			"uid": 3,
-			"item": "silo",
-			"x": 12,
-			"y": 5,
+			"item": "bakery",
+			"x": 2,
+			"y": 15,
 			"w": 3,
-			"h": 3,
-			"locked": true
+			"h": 3
 		},
 		{
 			"uid": 4,
-			"item": "truck_and_order_board",
-			"x": 17,
-			"y": 31,
-			"w": 4,
-			"h": 3,
-			"locked": true
+			"item": "feed_mill",
+			"x": 6,
+			"y": 15,
+			"w": 3,
+			"h": 3
 		},
 		{
 			"uid": 5,
-			"item": "roadside_shop",
-			"x": 22,
-			"y": 31,
+			"item": "chicken_coop",
+			"x": 2,
+			"y": 20,
 			"w": 3,
-			"h": 3,
-			"locked": true
+			"h": 3
 		},
 		{
 			"uid": 6,
-			"item": "mailbox",
-			"x": 23,
-			"y": 16,
+			"item": "field",
+			"x": 2,
+			"y": 25,
 			"w": 1,
-			"h": 1,
-			"locked": true
+			"h": 1
 		},
 		{
 			"uid": 7,
-			"item": "bakery",
-			"x": 7,
-			"y": 18,
-			"w": 3,
-			"h": 3
+			"item": "field",
+			"x": 3,
+			"y": 25,
+			"w": 1,
+			"h": 1
 		},
 		{
 			"uid": 8,
-			"item": "feed_mill",
-			"x": 11,
-			"y": 18,
-			"w": 3,
-			"h": 3
+			"item": "field",
+			"x": 4,
+			"y": 25,
+			"w": 1,
+			"h": 1
 		},
 		{
 			"uid": 9,
-			"item": "chicken_coop",
-			"x": 7,
-			"y": 23,
-			"w": 3,
-			"h": 3
+			"item": "field",
+			"x": 5,
+			"y": 25,
+			"w": 1,
+			"h": 1
 		},
 		{
 			"uid": 10,
 			"item": "field",
-			"x": 7,
-			"y": 28,
+			"x": 6,
+			"y": 25,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 11,
 			"item": "field",
-			"x": 8,
-			"y": 28,
+			"x": 7,
+			"y": 25,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 12,
 			"item": "field",
-			"x": 9,
-			"y": 28,
+			"x": 2,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 13,
 			"item": "field",
-			"x": 10,
-			"y": 28,
+			"x": 3,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 14,
 			"item": "field",
-			"x": 11,
-			"y": 28,
+			"x": 4,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 15,
 			"item": "field",
-			"x": 12,
-			"y": 28,
+			"x": 5,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 16,
 			"item": "field",
-			"x": 7,
-			"y": 29,
+			"x": 6,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 17,
 			"item": "field",
-			"x": 8,
-			"y": 29,
+			"x": 7,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 18,
-			"item": "field",
-			"x": 9,
-			"y": 29,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 19,
-			"item": "field",
-			"x": 10,
-			"y": 29,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 20,
-			"item": "field",
-			"x": 11,
-			"y": 29,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 21,
-			"item": "field",
-			"x": 12,
-			"y": 29,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 22,
 			"item": "plan_reserve_3x3",
-			"x": 15,
-			"y": 18,
+			"x": 10,
+			"y": 15,
 			"w": 3,
 			"h": 3
 		},
 		{
-			"uid": 23,
+			"uid": 19,
 			"item": "plan_reserve_4x4",
-			"x": 11,
-			"y": 23,
+			"x": 6,
+			"y": 20,
 			"w": 4,
 			"h": 4
 		}
@@ -222,5 +184,11 @@
 		"treat_unknown_as_owned": true
 	},
 	"reference": {},
-	"camera": {}
+	"camera": {},
+	"world": {
+		"theme": "default",
+		"landmark_states": {},
+		"landmark_skins": {},
+		"landmark_visible": {}
+	}
 }

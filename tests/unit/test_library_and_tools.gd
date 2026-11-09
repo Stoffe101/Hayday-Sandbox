@@ -119,3 +119,58 @@ func test_settings_roundtrip_and_type_safety() -> void:
 	s3.load_settings()
 	assert_eq(s3.get_v("show_grid"), true, "wrongly-typed values fall back to defaults")
 	DirAccess.remove_absolute(path)
+
+
+func test_settings_default_farm_level() -> void:
+	var path := "user://test_settings_level.cfg"
+	var s := AppSettings.new(path)
+	assert_eq(s.get_v("default_farm_level"), 1, "new layouts default to level 1")
+	s.set_v("default_farm_level", 60)
+	var s2 := AppSettings.new(path)
+	s2.load_settings()
+	assert_eq(s2.get_v("default_farm_level"), 60)
+	var cf := ConfigFile.new()
+	cf.load(path)
+	cf.set_value("app", "default_farm_level", -5)
+	cf.save(path)
+	var s3 := AppSettings.new(path)
+	s3.load_settings()
+	assert_eq(s3.get_v("default_farm_level"), AppSettings.LEVEL_MIN, "out-of-range levels are clamped")
+	DirAccess.remove_absolute(path)
+
+
+func test_library_backs_up_v1_layouts_on_first_save() -> void:
+	var db := fixture_db()
+	var lib := LayoutLibrary.new(db, root)
+	var v1 := {"format": LayoutIO.FORMAT, "schema_version": 1, "meta": {"id": "oldie", "name": "Oldie"},
+		"map": {"id": "hayday_farm"}, "objects": [{"uid": 1, "item": "t_bakery", "x": 9, "y": 9, "w": 3, "h": 3}]}
+	var text := JsonUtil.stringify(v1, true)
+	JsonUtil.write_atomic(lib.path_for("oldie"), text, false)
+	var rep := LayoutIO.LoadReport.new()
+	var l := lib.load_layout("oldie", rep)
+	assert_not_null(l)
+	assert_eq(l.get_obj(1).origin, Vector2i(4, 6), "migrated into the game frame")
+	assert_eq(rep.backup_path, LayoutIO.backup_path_for(lib.path_for("oldie"), 1))
+	assert_has(rep.summary(), "when you save")
+	assert_false(FileAccess.file_exists(rep.backup_path))
+	assert_eq(lib.save(l), OK)
+	assert_true(FileAccess.file_exists(rep.backup_path), "first save keeps the v1 original")
+	assert_eq(JsonUtil.read_text(rep.backup_path), text)
+	assert_has(rep.summary(), "original kept as")
+	assert_eq(lib.list().size(), 1, "the backup is not listed as a layout")
+	assert_eq(lib.history("oldie").size(), 1, "snapshots keep working")
+	assert_eq(lib.save(l), OK)
+	assert_eq(JsonUtil.read_text(rep.backup_path), text, "later saves leave the backup alone")
+	# Importing never touches the source file and makes no backup of it.
+	var ext := root.path_join("ext.hdlayout")
+	JsonUtil.write_atomic(ext, text, false)
+	var rep2 := LayoutIO.LoadReport.new()
+	var nid := lib.import_file(ext, rep2)
+	assert_false(nid.is_empty())
+	assert_eq(JsonUtil.read_text(ext), text, "import source untouched")
+	assert_eq(rep2.backup_path, "")
+	# Deleting moves the backup to the trash with the layout.
+	assert_eq(lib.delete("oldie"), OK)
+	assert_false(FileAccess.file_exists(rep.backup_path))
+	var trash := DirAccess.open(root.path_join("trash"))
+	assert_true(Array(trash.get_files()).any(func(f): return str(f).ends_with(".v1-backup")), "backup moved to the trash")

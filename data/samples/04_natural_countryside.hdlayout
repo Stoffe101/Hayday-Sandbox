@@ -1,6 +1,6 @@
 {
 	"format": "hayday-sandbox-layout",
-	"schema_version": 1,
+	"schema_version": 2,
 	"app_version": "sample",
 	"meta": {
 		"id": "",
@@ -22,187 +22,181 @@
 			"main_03"
 		]
 	},
-	"next_uid": 138,
+	"next_uid": 135,
 	"next_group": 1,
 	"objects": [
 		{
 			"uid": 1,
-			"item": "farmhouse",
-			"x": 19,
-			"y": 14,
+			"item": "barn",
+			"x": 2,
+			"y": 2,
 			"w": 4,
-			"h": 4,
-			"locked": true
+			"h": 4
 		},
 		{
 			"uid": 2,
-			"item": "barn",
+			"item": "silo",
 			"x": 7,
-			"y": 5,
-			"w": 4,
-			"h": 4,
-			"locked": true
+			"y": 2,
+			"w": 3,
+			"h": 3
 		},
 		{
 			"uid": 3,
-			"item": "silo",
-			"x": 12,
-			"y": 5,
-			"w": 3,
-			"h": 3,
-			"locked": true
+			"item": "gravel_path",
+			"x": 0,
+			"y": 20,
+			"w": 1,
+			"h": 1
 		},
 		{
 			"uid": 4,
-			"item": "truck_and_order_board",
-			"x": 17,
-			"y": 31,
-			"w": 4,
-			"h": 3,
-			"locked": true
+			"item": "gravel_path",
+			"x": 1,
+			"y": 20,
+			"w": 1,
+			"h": 1
 		},
 		{
 			"uid": 5,
-			"item": "roadside_shop",
-			"x": 22,
-			"y": 31,
-			"w": 3,
-			"h": 3,
-			"locked": true
+			"item": "gravel_path",
+			"x": 2,
+			"y": 20,
+			"w": 1,
+			"h": 1
 		},
 		{
 			"uid": 6,
-			"item": "mailbox",
-			"x": 23,
-			"y": 16,
+			"item": "gravel_path",
+			"x": 3,
+			"y": 20,
 			"w": 1,
-			"h": 1,
-			"locked": true
+			"h": 1
 		},
 		{
 			"uid": 7,
 			"item": "gravel_path",
-			"x": 5,
-			"y": 23,
+			"x": 4,
+			"y": 20,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 8,
 			"item": "gravel_path",
-			"x": 6,
-			"y": 23,
+			"x": 5,
+			"y": 20,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 9,
 			"item": "gravel_path",
-			"x": 7,
-			"y": 23,
+			"x": 6,
+			"y": 20,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 10,
 			"item": "gravel_path",
-			"x": 8,
-			"y": 23,
+			"x": 6,
+			"y": 19,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 11,
 			"item": "gravel_path",
-			"x": 9,
-			"y": 23,
+			"x": 6,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 12,
 			"item": "gravel_path",
-			"x": 10,
-			"y": 23,
+			"x": 6,
+			"y": 17,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 13,
 			"item": "gravel_path",
-			"x": 11,
-			"y": 23,
+			"x": 6,
+			"y": 16,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 14,
 			"item": "gravel_path",
-			"x": 11,
-			"y": 22,
+			"x": 7,
+			"y": 16,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 15,
 			"item": "gravel_path",
-			"x": 11,
-			"y": 21,
+			"x": 8,
+			"y": 16,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 16,
 			"item": "gravel_path",
-			"x": 11,
-			"y": 20,
+			"x": 9,
+			"y": 16,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 17,
 			"item": "gravel_path",
-			"x": 11,
-			"y": 19,
+			"x": 10,
+			"y": 16,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 18,
 			"item": "gravel_path",
-			"x": 12,
-			"y": 19,
+			"x": 11,
+			"y": 16,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 19,
 			"item": "gravel_path",
-			"x": 13,
-			"y": 19,
+			"x": 12,
+			"y": 16,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 20,
 			"item": "gravel_path",
-			"x": 14,
-			"y": 19,
+			"x": 12,
+			"y": 17,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 21,
 			"item": "gravel_path",
-			"x": 15,
-			"y": 19,
+			"x": 12,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 22,
 			"item": "gravel_path",
-			"x": 16,
+			"x": 12,
 			"y": 19,
 			"w": 1,
 			"h": 1
@@ -210,31 +204,31 @@
 		{
 			"uid": 23,
 			"item": "gravel_path",
-			"x": 17,
-			"y": 19,
+			"x": 12,
+			"y": 20,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 24,
 			"item": "gravel_path",
-			"x": 17,
-			"y": 20,
+			"x": 12,
+			"y": 21,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 25,
 			"item": "gravel_path",
-			"x": 17,
-			"y": 21,
+			"x": 12,
+			"y": 22,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 26,
 			"item": "gravel_path",
-			"x": 17,
+			"x": 13,
 			"y": 22,
 			"w": 1,
 			"h": 1
@@ -242,454 +236,454 @@
 		{
 			"uid": 27,
 			"item": "gravel_path",
-			"x": 17,
-			"y": 23,
+			"x": 14,
+			"y": 22,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 28,
 			"item": "gravel_path",
-			"x": 17,
-			"y": 24,
+			"x": 15,
+			"y": 22,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 29,
 			"item": "gravel_path",
-			"x": 17,
-			"y": 25,
+			"x": 16,
+			"y": 22,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 30,
 			"item": "gravel_path",
-			"x": 18,
-			"y": 25,
+			"x": 17,
+			"y": 22,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 31,
 			"item": "gravel_path",
-			"x": 19,
-			"y": 25,
+			"x": 18,
+			"y": 22,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 32,
 			"item": "gravel_path",
-			"x": 20,
-			"y": 25,
+			"x": 19,
+			"y": 22,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 33,
 			"item": "gravel_path",
-			"x": 21,
-			"y": 25,
+			"x": 20,
+			"y": 22,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 34,
 			"item": "gravel_path",
-			"x": 22,
-			"y": 25,
+			"x": 20,
+			"y": 21,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 35,
 			"item": "gravel_path",
-			"x": 23,
-			"y": 25,
+			"x": 20,
+			"y": 20,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 36,
 			"item": "gravel_path",
-			"x": 24,
-			"y": 25,
+			"x": 20,
+			"y": 19,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 37,
 			"item": "gravel_path",
-			"x": 25,
-			"y": 25,
+			"x": 20,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 38,
 			"item": "gravel_path",
-			"x": 25,
-			"y": 24,
+			"x": 21,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 39,
 			"item": "gravel_path",
-			"x": 25,
-			"y": 23,
+			"x": 22,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 40,
 			"item": "gravel_path",
-			"x": 25,
-			"y": 22,
+			"x": 23,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 41,
 			"item": "gravel_path",
-			"x": 25,
-			"y": 21,
+			"x": 24,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 42,
 			"item": "gravel_path",
-			"x": 26,
-			"y": 21,
+			"x": 25,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 43,
 			"item": "gravel_path",
-			"x": 27,
-			"y": 21,
+			"x": 26,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 44,
 			"item": "gravel_path",
-			"x": 28,
-			"y": 21,
+			"x": 27,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 45,
 			"item": "gravel_path",
-			"x": 29,
-			"y": 21,
+			"x": 28,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 46,
 			"item": "gravel_path",
-			"x": 30,
-			"y": 21,
+			"x": 29,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 47,
 			"item": "gravel_path",
-			"x": 31,
-			"y": 21,
+			"x": 30,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 48,
 			"item": "gravel_path",
-			"x": 32,
-			"y": 21,
+			"x": 31,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 49,
-			"item": "gravel_path",
-			"x": 33,
-			"y": 21,
-			"w": 1,
-			"h": 1
+			"item": "large_pond",
+			"x": 2,
+			"y": 10,
+			"w": 3,
+			"h": 3
 		},
 		{
 			"uid": 50,
-			"item": "gravel_path",
-			"x": 34,
-			"y": 21,
+			"item": "rock_formation",
+			"x": 9,
+			"y": 28,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 51,
-			"item": "gravel_path",
-			"x": 35,
+			"item": "rock_formation",
+			"x": 7,
 			"y": 21,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 52,
-			"item": "gravel_path",
-			"x": 36,
-			"y": 21,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 53,
-			"item": "large_pond",
-			"x": 7,
-			"y": 13,
-			"w": 3,
-			"h": 3
-		},
-		{
-			"uid": 54,
-			"item": "rock_formation",
-			"x": 14,
-			"y": 31,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 55,
-			"item": "rock_formation",
-			"x": 12,
-			"y": 24,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 56,
 			"item": "leafy_tree",
-			"x": 28,
-			"y": 8,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 57,
-			"item": "dark_leafy_tree",
-			"x": 27,
-			"y": 28,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 58,
-			"item": "pine_tree",
-			"x": 19,
-			"y": 12,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 59,
-			"item": "rock_formation",
-			"x": 9,
-			"y": 31,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 60,
-			"item": "pine_tree",
-			"x": 29,
-			"y": 10,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 61,
-			"item": "big_pine_tree",
 			"x": 23,
 			"y": 5,
 			"w": 1,
 			"h": 1
 		},
 		{
-			"uid": 62,
+			"uid": 53,
 			"item": "dark_leafy_tree",
-			"x": 13,
-			"y": 3,
+			"x": 22,
+			"y": 25,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 54,
+			"item": "pine_tree",
+			"x": 14,
+			"y": 9,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 55,
+			"item": "rock_formation",
+			"x": 4,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 56,
+			"item": "pine_tree",
+			"x": 24,
+			"y": 7,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 57,
+			"item": "big_pine_tree",
+			"x": 18,
+			"y": 2,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 58,
+			"item": "dark_leafy_tree",
+			"x": 8,
+			"y": 0,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 59,
+			"item": "dark_leafy_tree",
+			"x": 5,
+			"y": 25,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 60,
+			"item": "big_pine_tree",
+			"x": 0,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 61,
+			"item": "rock_formation",
+			"x": 6,
+			"y": 11,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 62,
+			"item": "big_pine_tree",
+			"x": 1,
+			"y": 27,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 63,
 			"item": "dark_leafy_tree",
-			"x": 10,
-			"y": 28,
+			"x": 12,
+			"y": 31,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 64,
 			"item": "big_pine_tree",
-			"x": 5,
-			"y": 30,
+			"x": 7,
+			"y": 23,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 65,
-			"item": "rock_formation",
-			"x": 11,
-			"y": 14,
+			"item": "dark_leafy_tree",
+			"x": 13,
+			"y": 17,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 66,
-			"item": "big_pine_tree",
-			"x": 6,
-			"y": 30,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 67,
-			"item": "dark_leafy_tree",
-			"x": 17,
-			"y": 34,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 68,
-			"item": "big_pine_tree",
-			"x": 12,
-			"y": 26,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 69,
-			"item": "dark_leafy_tree",
-			"x": 18,
-			"y": 20,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 70,
 			"item": "rock_formation",
-			"x": 23,
-			"y": 14,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 71,
-			"item": "mossy_rock",
-			"x": 26,
-			"y": 15,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 72,
-			"item": "mossy_rock",
-			"x": 22,
-			"y": 3,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 73,
-			"item": "rock_formation",
-			"x": 32,
-			"y": 15,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 74,
-			"item": "mossy_rock",
-			"x": 23,
-			"y": 12,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 75,
-			"item": "dark_leafy_tree",
-			"x": 30,
-			"y": 4,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 76,
-			"item": "big_pine_tree",
-			"x": 32,
-			"y": 12,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 77,
-			"item": "rock_formation",
-			"x": 33,
-			"y": 8,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 78,
-			"item": "big_pine_tree",
-			"x": 7,
-			"y": 9,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 79,
-			"item": "leafy_tree",
-			"x": 26,
-			"y": 4,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 80,
-			"item": "leafy_tree",
-			"x": 27,
-			"y": 10,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 81,
-			"item": "dark_leafy_tree",
-			"x": 25,
-			"y": 27,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 82,
-			"item": "pine_tree",
 			"x": 18,
 			"y": 11,
 			"w": 1,
 			"h": 1
 		},
 		{
-			"uid": 83,
+			"uid": 67,
+			"item": "mossy_rock",
+			"x": 21,
+			"y": 12,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 68,
+			"item": "mossy_rock",
+			"x": 17,
+			"y": 0,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 69,
+			"item": "rock_formation",
+			"x": 27,
+			"y": 12,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 70,
+			"item": "mossy_rock",
+			"x": 18,
+			"y": 9,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 71,
+			"item": "dark_leafy_tree",
+			"x": 25,
+			"y": 1,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 72,
 			"item": "big_pine_tree",
+			"x": 27,
+			"y": 9,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 73,
+			"item": "rock_formation",
+			"x": 28,
+			"y": 5,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 74,
+			"item": "big_pine_tree",
+			"x": 2,
+			"y": 6,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 75,
+			"item": "leafy_tree",
+			"x": 21,
+			"y": 1,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 76,
+			"item": "leafy_tree",
+			"x": 22,
+			"y": 7,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 77,
+			"item": "pine_tree",
+			"x": 18,
+			"y": 13,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 78,
+			"item": "dark_leafy_tree",
+			"x": 20,
+			"y": 24,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 79,
+			"item": "pine_tree",
+			"x": 13,
+			"y": 8,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 80,
+			"item": "big_pine_tree",
+			"x": 6,
+			"y": 21,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 81,
+			"item": "dark_leafy_tree",
+			"x": 8,
+			"y": 26,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 82,
+			"item": "leafy_tree",
+			"x": 3,
+			"y": 26,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 83,
+			"item": "mossy_rock",
 			"x": 11,
 			"y": 24,
 			"w": 1,
@@ -697,9 +691,9 @@
 		},
 		{
 			"uid": 84,
-			"item": "dark_leafy_tree",
-			"x": 13,
-			"y": 29,
+			"item": "big_pine_tree",
+			"x": 15,
+			"y": 24,
 			"w": 1,
 			"h": 1
 		},
@@ -707,423 +701,399 @@
 			"uid": 85,
 			"item": "leafy_tree",
 			"x": 8,
-			"y": 29,
+			"y": 1,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 86,
-			"item": "mossy_rock",
-			"x": 16,
-			"y": 27,
+			"item": "rock_formation",
+			"x": 8,
+			"y": 21,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 87,
-			"item": "big_pine_tree",
-			"x": 20,
-			"y": 27,
+			"item": "dark_leafy_tree",
+			"x": 31,
+			"y": 4,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 88,
-			"item": "leafy_tree",
-			"x": 13,
-			"y": 4,
+			"item": "mossy_rock",
+			"x": 28,
+			"y": 1,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 89,
 			"item": "rock_formation",
-			"x": 13,
-			"y": 24,
+			"x": 26,
+			"y": 31,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 90,
-			"item": "dark_leafy_tree",
-			"x": 36,
-			"y": 7,
+			"item": "big_pine_tree",
+			"x": 28,
+			"y": 3,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 91,
-			"item": "mossy_rock",
-			"x": 33,
-			"y": 4,
+			"item": "big_pine_tree",
+			"x": 24,
+			"y": 6,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 92,
-			"item": "rock_formation",
-			"x": 31,
-			"y": 34,
+			"item": "leafy_tree",
+			"x": 1,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 93,
 			"item": "big_pine_tree",
-			"x": 33,
-			"y": 6,
+			"x": 26,
+			"y": 30,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 94,
 			"item": "big_pine_tree",
-			"x": 29,
-			"y": 9,
+			"x": 4,
+			"y": 30,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 95,
-			"item": "leafy_tree",
-			"x": 6,
-			"y": 21,
+			"item": "big_pine_tree",
+			"x": 24,
+			"y": 9,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 96,
-			"item": "big_pine_tree",
-			"x": 31,
-			"y": 33,
+			"item": "dark_leafy_tree",
+			"x": 1,
+			"y": 5,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 97,
-			"item": "big_pine_tree",
-			"x": 9,
-			"y": 33,
+			"item": "pine_tree",
+			"x": 12,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 98,
 			"item": "big_pine_tree",
-			"x": 29,
-			"y": 12,
+			"x": 28,
+			"y": 15,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 99,
 			"item": "dark_leafy_tree",
-			"x": 6,
-			"y": 8,
+			"x": 27,
+			"y": 20,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 100,
-			"item": "pine_tree",
-			"x": 17,
-			"y": 29,
+			"item": "leafy_tree",
+			"x": 12,
+			"y": 9,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 101,
 			"item": "big_pine_tree",
-			"x": 33,
-			"y": 18,
+			"x": 28,
+			"y": 24,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 102,
-			"item": "dark_leafy_tree",
-			"x": 32,
-			"y": 23,
+			"item": "big_pine_tree",
+			"x": 16,
+			"y": 6,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 103,
-			"item": "leafy_tree",
-			"x": 17,
-			"y": 12,
+			"item": "dark_leafy_tree",
+			"x": 25,
+			"y": 16,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 104,
-			"item": "big_pine_tree",
-			"x": 33,
-			"y": 27,
+			"item": "leafy_tree",
+			"x": 20,
+			"y": 11,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 105,
-			"item": "big_pine_tree",
-			"x": 21,
-			"y": 9,
+			"item": "dark_leafy_tree",
+			"x": 13,
+			"y": 1,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 106,
 			"item": "dark_leafy_tree",
-			"x": 30,
-			"y": 19,
+			"x": 1,
+			"y": 22,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 107,
-			"item": "leafy_tree",
-			"x": 25,
-			"y": 14,
+			"item": "pine_tree",
+			"x": 30,
+			"y": 16,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 108,
-			"item": "dark_leafy_tree",
-			"x": 18,
-			"y": 4,
+			"item": "pine_tree",
+			"x": 8,
+			"y": 28,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 109,
 			"item": "dark_leafy_tree",
-			"x": 6,
-			"y": 25,
+			"x": 14,
+			"y": 18,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 110,
 			"item": "pine_tree",
-			"x": 35,
-			"y": 19,
+			"x": 26,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 111,
-			"item": "pine_tree",
-			"x": 13,
-			"y": 31,
+			"item": "field",
+			"x": 22,
+			"y": 24,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 112,
-			"item": "dark_leafy_tree",
-			"x": 19,
-			"y": 21,
+			"item": "field",
+			"x": 23,
+			"y": 24,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 113,
-			"item": "pine_tree",
-			"x": 31,
-			"y": 29,
+			"item": "field",
+			"x": 24,
+			"y": 24,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 114,
 			"item": "field",
-			"x": 27,
-			"y": 27,
+			"x": 25,
+			"y": 24,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 115,
 			"item": "field",
-			"x": 28,
-			"y": 27,
+			"x": 26,
+			"y": 24,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 116,
 			"item": "field",
-			"x": 29,
-			"y": 27,
+			"x": 27,
+			"y": 24,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 117,
 			"item": "field",
-			"x": 30,
-			"y": 27,
+			"x": 23,
+			"y": 25,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 118,
 			"item": "field",
-			"x": 31,
-			"y": 27,
+			"x": 24,
+			"y": 25,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 119,
 			"item": "field",
-			"x": 32,
-			"y": 27,
+			"x": 25,
+			"y": 25,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 120,
 			"item": "field",
-			"x": 28,
-			"y": 28,
+			"x": 26,
+			"y": 25,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 121,
 			"item": "field",
-			"x": 29,
-			"y": 28,
+			"x": 27,
+			"y": 25,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 122,
 			"item": "field",
-			"x": 30,
-			"y": 28,
+			"x": 22,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 123,
 			"item": "field",
-			"x": 31,
-			"y": 28,
+			"x": 23,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 124,
 			"item": "field",
-			"x": 32,
-			"y": 28,
+			"x": 24,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 125,
 			"item": "field",
-			"x": 27,
-			"y": 29,
+			"x": 25,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 126,
 			"item": "field",
-			"x": 28,
-			"y": 29,
+			"x": 27,
+			"y": 26,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 127,
 			"item": "field",
-			"x": 29,
-			"y": 29,
+			"x": 22,
+			"y": 27,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 128,
 			"item": "field",
-			"x": 30,
-			"y": 29,
+			"x": 23,
+			"y": 27,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 129,
 			"item": "field",
-			"x": 32,
-			"y": 29,
+			"x": 24,
+			"y": 27,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 130,
 			"item": "field",
-			"x": 27,
-			"y": 30,
+			"x": 25,
+			"y": 27,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 131,
 			"item": "field",
-			"x": 28,
-			"y": 30,
+			"x": 26,
+			"y": 27,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 132,
 			"item": "field",
-			"x": 29,
-			"y": 30,
+			"x": 27,
+			"y": 27,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 133,
-			"item": "field",
-			"x": 30,
-			"y": 30,
+			"item": "hay_cart",
+			"x": 29,
+			"y": 25,
 			"w": 1,
 			"h": 1
 		},
 		{
 			"uid": 134,
-			"item": "field",
-			"x": 31,
-			"y": 30,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 135,
-			"item": "field",
-			"x": 32,
-			"y": 30,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 136,
-			"item": "hay_cart",
-			"x": 34,
-			"y": 28,
-			"w": 1,
-			"h": 1
-		},
-		{
-			"uid": 137,
 			"item": "campfire",
-			"x": 13,
-			"y": 16,
+			"x": 8,
+			"y": 13,
 			"w": 1,
 			"h": 1
 		}
@@ -1138,5 +1108,11 @@
 		"treat_unknown_as_owned": true
 	},
 	"reference": {},
-	"camera": {}
+	"camera": {},
+	"world": {
+		"theme": "default",
+		"landmark_states": {},
+		"landmark_skins": {},
+		"landmark_visible": {}
+	}
 }

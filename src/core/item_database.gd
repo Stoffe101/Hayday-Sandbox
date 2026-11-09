@@ -4,6 +4,9 @@ extends RefCounted
 ## data directory), validates it, and answers catalogue queries.
 
 const FORMAT := "hayday-sandbox-items"
+## Private-pack catalogue corrections (catalog_overrides.json, W2 design s9).
+const OVERRIDES_FORMAT := "hayday-sandbox-catalog-overrides"
+const OVERRIDES_VERSION := 1
 
 var items: Dictionary = {}          ## id -> ItemDef
 var ordered: Array[ItemDef] = []    ## stable display order
@@ -12,6 +15,10 @@ var category_index: Dictionary = {} ## id -> category dict
 var aliases: Dictionary = {}        ## old id -> current id
 var errors: PackedStringArray = PackedStringArray()
 var warnings: PackedStringArray = PackedStringArray()
+## Pack whose catalogue overrides are applied ("" = public values) and the
+## report apply_overrides() returned for it.
+var overrides_pack: String = ""
+var overrides_report: Dictionary = {}
 
 
 func load_default() -> void:
@@ -143,7 +150,9 @@ func count() -> int:
 
 ## Catalogue query. `filters` keys (all optional):
 ##   category: String, max_level: int, footprint: Vector2i, ids: Dictionary (whitelist),
-##   status: "trusted" | "unverified", connectable: bool
+##   status: "trusted" | "unverified", connectable: bool,
+##   include_hidden: bool (default false: landmark duplicates and items of other
+##   areas such as the Fishing Lake are left out, see ItemDef.is_catalogue_hidden())
 ## sort: "name" | "level" | "size" | "relevance"
 func search(query: String, filters: Dictionary = {}, sort: String = "relevance") -> Array[ItemDef]:
 	var q := query.strip_edges().to_lower()
@@ -155,7 +164,10 @@ func search(query: String, filters: Dictionary = {}, sort: String = "relevance")
 	var use_ids := filters.has("ids")
 	var fp: Vector2i = filters.get("footprint", Vector2i.ZERO)
 	var status: String = filters.get("status", "")
+	var include_hidden: bool = bool(filters.get("include_hidden", false))
 	for it: ItemDef in ordered:
+		if not include_hidden and it.is_catalogue_hidden():
+			continue
 		if not cat.is_empty() and it.category != cat:
 			continue
 		if use_ids and not ids.has(it.id):
@@ -217,6 +229,136 @@ func search(query: String, filters: Dictionary = {}, sort: String = "relevance")
 	for s in scored:
 		out.append(s[1])
 	return out
+
+
+func landmark_items() -> Array[ItemDef]:
+	## Catalogue entries that duplicate a fixed world landmark.
+	var out: Array[ItemDef] = []
+	for it: ItemDef in ordered:
+		if not it.landmark.is_empty():
+			out.append(it)
+	return out
+
+
+func items_for_landmark(landmark_id: String) -> Array[ItemDef]:
+	var out: Array[ItemDef] = []
+	for it: ItemDef in ordered:
+		if landmark_id in it.landmarks:
+			out.append(it)
+	return out
+
+
+# --- private-pack catalogue overrides ------------------------------------------------
+
+func apply_overrides(data: Variant, pack_id: String) -> Dictionary:
+	## Applies a pack's catalog_overrides.json ({"format", "version", "items":
+	## {"<id>": {"footprint": [w, h], "footprint_status": "game_data",
+	## "unlock_level": n, "change": ..., "was": ...}}}) on top of the public
+	## catalogue. Any previously applied overrides are reverted first, so this
+	## is idempotent and switching packs is safe. Bad entries are skipped and
+	## reported, never guessed. Returns a report:
+	##   {pack_id, applied: int, records: [{id, old, new, axis_swap, old_status, new_status,
+	##    old_unlock, new_unlock, change}], footprint_changed: [{id, old, new, axis_swap}],
+	##    unknown: [ids], invalid: [messages], hash: String}
+	revert_overrides()
+	var rep := {"pack_id": pack_id, "applied": 0, "records": [], "footprint_changed": [], "unknown": [],
+		"invalid": [], "hash": ""}
+	if not data is Dictionary:
+		rep["invalid"].append("catalogue overrides: not a JSON object")
+		return rep
+	var d: Dictionary = data
+	if d.has("format") and str(d["format"]) != OVERRIDES_FORMAT:
+		rep["invalid"].append("catalogue overrides: format must be '%s'" % OVERRIDES_FORMAT)
+		return rep
+	var ver: Variant = d.get("version", OVERRIDES_VERSION)
+	if (ver is int or ver is float) and int(ver) > OVERRIDES_VERSION:
+		rep["invalid"].append("catalogue overrides: version %d is newer than this app (%d); known fields used" % [int(ver), OVERRIDES_VERSION])
+	var list: Variant = d.get("items", {})
+	if not list is Dictionary:
+		rep["invalid"].append("catalogue overrides: 'items' must be an object")
+		return rep
+	rep["hash"] = JSON.stringify(list, "", true).md5_text()
+	var ids: Array = (list as Dictionary).keys()
+	ids.sort()
+	for raw_id in ids:
+		var key := str(raw_id)
+		var e: Variant = list[raw_id]
+		var it := get_item(key)
+		if it == null:
+			rep["unknown"].append(key)
+			continue
+		if not e is Dictionary:
+			rep["invalid"].append("%s: entry is not an object" % key)
+			continue
+		var new_fp := it.footprint
+		var new_status := it.footprint_status
+		var new_level := it.unlock_level
+		var touched := false
+		var bad := ""
+		if e.has("footprint") and e["footprint"] != null:
+			var fp: Variant = e["footprint"]
+			if fp is Array and (fp as Array).size() == 2 and _is_pos_int(fp[0]) and _is_pos_int(fp[1]):
+				new_fp = Vector2i(int(fp[0]), int(fp[1]))
+				new_status = "game_data"
+				touched = true
+			else:
+				bad = "footprint must be [w, h] positive integers"
+		if bad.is_empty() and e.has("footprint_status") and e["footprint_status"] != null:
+			var st := str(e["footprint_status"])
+			if not st in ItemDef.STATUS_ORDER:
+				bad = "unknown footprint_status '%s'" % st
+			else:
+				new_status = st
+				touched = true
+		if bad.is_empty() and e.has("unlock_level") and e["unlock_level"] != null:
+			var ul: Variant = e["unlock_level"]
+			if (ul is int or (ul is float and float(ul) == floorf(ul))) and int(ul) >= 0:
+				new_level = int(ul)
+				touched = true
+			else:
+				bad = "unlock_level must be a non-negative integer"
+		if not bad.is_empty():
+			rep["invalid"].append("%s: %s" % [key, bad])
+			continue
+		if not touched:
+			continue
+		var old := it.footprint
+		var rec := {"id": it.id, "old": old, "new": new_fp,
+			"axis_swap": new_fp != old and new_fp == Vector2i(old.y, old.x),
+			"old_status": it.footprint_status, "new_status": new_status,
+			"old_unlock": it.unlock_level, "new_unlock": new_level, "change": str(e.get("change", ""))}
+		it.footprint = new_fp
+		it.footprint_status = new_status
+		it.unlock_level = new_level
+		it.footprint_source = pack_id
+		rep["records"].append(rec)
+		if new_fp != old:
+			rep["footprint_changed"].append({"id": it.id, "old": old, "new": new_fp, "axis_swap": rec["axis_swap"]})
+		rep["applied"] += 1
+	overrides_pack = pack_id if int(rep["applied"]) > 0 else ""
+	overrides_report = rep
+	return rep
+
+
+func revert_overrides() -> int:
+	## Restores the public catalogue values of every overridden item (e.g. when
+	## the private pack is disabled/removed). Returns how many were restored.
+	var n := 0
+	for it: ItemDef in items.values():
+		if it.footprint_source.is_empty():
+			continue
+		it.footprint = it.public_footprint
+		it.footprint_status = it.public_footprint_status
+		it.unlock_level = it.public_unlock_level
+		it.footprint_source = ""
+		n += 1
+	overrides_pack = ""
+	overrides_report = {}
+	return n
+
+
+static func _is_pos_int(v: Variant) -> bool:
+	return (v is int or (v is float and float(v) == floorf(v))) and int(v) > 0
 
 
 func stats() -> Dictionary:

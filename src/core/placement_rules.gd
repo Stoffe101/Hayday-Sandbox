@@ -11,6 +11,7 @@ const ROAD := 4
 const WATER := 5
 const BLOCKED := 6
 const NOT_PLACEABLE := 7
+const LANDMARK := 8          ## tile blocked by a fixed world landmark (every mode)
 
 const REASON_TEXT := {
 	OUT_OF_BOUNDS: "Outside the farm",
@@ -20,7 +21,10 @@ const REASON_TEXT := {
 	WATER: "Can't build on water",
 	BLOCKED: "Restricted area",
 	NOT_PLACEABLE: "This item can't be placed",
+	LANDMARK: "Fixed landmark",
 }
+## Order in which reasons are listed in messages (most specific first).
+const MESSAGE_ORDER := [NOT_PLACEABLE, LANDMARK, OUT_OF_BOUNDS, OCCUPIED, LOCKED_LAND, ROAD, WATER, BLOCKED]
 
 
 class Result:
@@ -32,6 +36,10 @@ class Result:
 	var reason_counts: Dictionary = {}
 	var blocking_uids: Dictionary = {}
 	var locked_plots: Dictionary = {}
+	## landmark id -> true for LANDMARK tiles
+	var landmark_ids: Dictionary = {}
+	## Item-specific explanation for NOT_PLACEABLE (set by check_item).
+	var not_placeable_text: String = ""
 
 	func primary_reason() -> int:
 		var best := OK_TILE
@@ -46,12 +54,13 @@ class Result:
 		if ok:
 			return "Fits here"
 		var parts: PackedStringArray = []
-		var order := [NOT_PLACEABLE, OUT_OF_BOUNDS, OCCUPIED, LOCKED_LAND, ROAD, WATER, BLOCKED]
-		for c in order:
+		for c in MESSAGE_ORDER:
 			if not reason_counts.has(c):
 				continue
 			var t: String = REASON_TEXT[c]
-			if c == OCCUPIED and layout and db:
+			if c == NOT_PLACEABLE and not not_placeable_text.is_empty():
+				t = not_placeable_text
+			elif c == OCCUPIED and layout and db:
 				var names := {}
 				for u in blocking_uids:
 					var o: PlacedObject = layout.get_obj(u)
@@ -70,6 +79,14 @@ class Result:
 					pn.append(str(map.plot(p).get("name", p)))
 				pn.sort()
 				t = "Locked land: %s" % ", ".join(PackedStringArray(pn.slice(0, 3)))
+			elif c == LANDMARK and map:
+				var ln: Array = []
+				for lid in landmark_ids:
+					var lm := map.landmark(lid)
+					ln.append(lm.name if lm else str(lid))
+				ln.sort()
+				if not ln.is_empty():
+					t = "Fixed landmark: %s" % ", ".join(PackedStringArray(ln.slice(0, 3)))
 			parts.append(t)
 		return " · ".join(parts)
 
@@ -92,11 +109,15 @@ static func check_rect(layout: FarmLayout, map: FarmMap, r: Rect2i, ignore: Dict
 						res.blocking_uids[u] = true
 				elif code == LOCKED_LAND:
 					res.locked_plots[map.plot_id_at(t)] = true
+				elif code == LANDMARK:
+					res.landmark_ids[map.landmark_id_at(t)] = true
 	return res
 
 
 static func tile_code(layout: FarmLayout, map: FarmMap, t: Vector2i, ignore: Dictionary = {}) -> int:
 	var k := map.kind_at(t)
+	if k != FarmMap.Kind.VOID and map.landmark_at(t) >= 0:
+		return LANDMARK
 	match k:
 		FarmMap.Kind.VOID:
 			return OUT_OF_BOUNDS
@@ -107,7 +128,7 @@ static func tile_code(layout: FarmLayout, map: FarmMap, t: Vector2i, ignore: Dic
 		FarmMap.Kind.BLOCKED, FarmMap.Kind.SCENERY:
 			return BLOCKED
 		FarmMap.Kind.PLOT:
-			if not layout.unlocked_plots.has(map.plot_id_at(t)):
+			if not map.is_plot_unlocked(map.plot_id_at(t), layout.unlocked_plots):
 				return LOCKED_LAND
 	if not layout.occupancy.is_free(t, ignore):
 		return OCCUPIED
@@ -115,8 +136,13 @@ static func tile_code(layout: FarmLayout, map: FarmMap, t: Vector2i, ignore: Dic
 
 
 static func check_item(layout: FarmLayout, map: FarmMap, item: ItemDef, origin: Vector2i, flipped: bool, ignore: Dictionary = {}) -> Result:
+	## Items that duplicate a fixed landmark or belong to another area (e.g.
+	## the Fishing Lake) are never placeable: NOT_PLACEABLE on every free tile.
 	var size := item.size_for(flipped) if item else Vector2i.ONE
-	return check_rect(layout, map, Rect2i(origin, size), ignore, item != null and item.placeable)
+	var res := check_rect(layout, map, Rect2i(origin, size), ignore, item != null and item.can_place())
+	if item:
+		res.not_placeable_text = item.not_placeable_reason()
+	return res
 
 
 static func check_group_move(layout: FarmLayout, map: FarmMap, uids: Array, delta: Vector2i) -> Result:
@@ -163,6 +189,7 @@ static func _merge(total: Result, r: Result) -> void:
 		total.reason_counts[c] = total.reason_counts.get(c, 0) + r.reason_counts[c]
 	total.blocking_uids.merge(r.blocking_uids)
 	total.locked_plots.merge(r.locked_plots)
+	total.landmark_ids.merge(r.landmark_ids)
 
 
 static func find_conflicts(layout: FarmLayout, map: FarmMap) -> Dictionary:

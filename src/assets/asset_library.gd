@@ -153,6 +153,8 @@ func _load_pack(path: String, base_priority: int) -> void:
 		"override_errors": [],
 		"rejected": {}, "verified": {}, "assigned": {},
 		"_measure": {},
+		## pack.json "world" / "catalog_overrides" / "terrain" (safe pack-relative paths, "" = none)
+		"data_files": _declared_data_files(data),
 	}
 	if not builtin:
 		var ov_path := base.path_join(OVERRIDES_FILE)
@@ -209,6 +211,40 @@ func _measure(p: Dictionary, rel: String) -> Dictionary:
 			img.decompress()
 		out = {"size": img.get_size(), "used": img.get_used_rect()}
 	m[rel] = out
+	return out
+
+
+const DATA_FILE_KEYS := ["world", "catalog_overrides", "terrain"]
+
+
+static func _declared_data_files(data: Dictionary) -> Dictionary:
+	var out := {}
+	for k in DATA_FILE_KEYS:
+		var v: Variant = data.get(k, null)
+		out[k] = PackOverrides.safe_rel_path(str(v)) if v is String else ""
+	return out
+
+
+func world_data_files() -> Array[Dictionary]:
+	## Installed (non built-in) packs that declare world data in pack.json,
+	## highest priority first. Each entry: {pack_id, name, version, priority,
+	## base, world, catalog_overrides, terrain} where the three file entries are
+	## full paths ("" when the pack does not declare that file; existence is
+	## not checked here). Feed it to WorldLoader.load() / ItemDatabase.apply_overrides().
+	var out: Array[Dictionary] = []
+	for p in packs:
+		if bool(p.get("builtin", false)):
+			continue
+		var df: Dictionary = p.get("data_files", {})
+		var e := {"pack_id": str(p["id"]), "name": str(p.get("name", "")), "version": str(p.get("version", "")),
+			"priority": int(p.get("priority", 0)), "base": str(p.get("base", ""))}
+		var any := false
+		for k in DATA_FILE_KEYS:
+			var rel := str(df.get(k, ""))
+			e[k] = "" if rel.is_empty() else str(p["base"]).path_join(rel)
+			any = any or not rel.is_empty()
+		if any:
+			out.append(e)
 	return out
 
 

@@ -13,6 +13,15 @@ Rules
     planning but flagged as unknown everywhere in the UI.
   * Ids are stable slugs of the item name. Renames must be recorded as aliases
     in item_overrides.json so saved layouts keep working.
+  * World landmarks (farmhouse, truck, roadside shop, mailbox, mine, ...) are
+    drawn by the map's world layer. Their old catalogue entries are kept (so old
+    layouts resolve and migrate) but carry `"landmark": "<landmark id>"` (and
+    `"landmarks": [...]` when one entry duplicated several) plus
+    `"placeable": false, "movable": false`; the app hides them from the palette.
+  * `"scope"` marks items that exist outside the main farm (e.g. "fishing_lake");
+    they are reference-only. Default (omitted) = "main_farm".
+  * Natural obstacles (category "obstacle") are removed, never moved:
+    `"movable": false` unless an override says otherwise.
 """
 from __future__ import annotations
 
@@ -130,8 +139,20 @@ def main() -> int:
             item["flippable"] = False  # PLACEMENT_RESEARCH.md: path tiles cannot be rotated
         if "movable" in o:
             item["movable"] = o["movable"]
+        elif cat == "obstacle":
+            item["movable"] = False
         if "placeable" in o:
             item["placeable"] = o["placeable"]
+        lms = o.get("landmarks") or ([o["landmark"]] if o.get("landmark") else [])
+        if lms:
+            item["landmark"] = lms[0]
+            if len(lms) > 1:
+                item["landmarks"] = list(lms)
+            item["placeable"] = False
+            item["movable"] = False
+        if o.get("scope") and o["scope"] != "main_farm":
+            item["scope"] = o["scope"]
+            item["placeable"] = False
         conn = o.get("connect")
         if conn is None and cat == "fence" and item.get("footprint") == [1, 1]:
             conn = {"group": iid, "style": "fence"}

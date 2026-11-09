@@ -3,13 +3,18 @@ extends SceneTree
 ## real catalogue and placement rules (invalid placements are skipped and
 ## reported, so samples are always valid for the current data).
 ##   godot --headless --path . --script res://tools/samples/generate_samples.gd
+##
+## Layout schema v2, game tile frame: the starting land starts at (0, 0) of the
+## PUBLIC map (data/maps/hayday_farm.json; never the private world). Fixed
+## landmarks (farmhouse, truck, order board, roadside shop, mailbox) are part
+## of the map and are never placed as objects; the movable barn and silo are.
 
 var db: ItemDatabase
 var map: FarmMap
 var l: FarmLayout
 var skipped := 0
-var x0 := 5
-var y0 := 3
+var x0 := 0
+var y0 := 0
 
 
 func _initialize() -> void:
@@ -49,7 +54,11 @@ func _save(file: String) -> void:
 	var d := LayoutIO.to_dict(l)
 	d["app_version"] = "sample"
 	JsonUtil.write_atomic(path, JsonUtil.stringify(d, true), false)
-	print("%s: %d objects, %d skipped, conflicts=%d" % [file, l.count(), skipped, PlacementRules.find_conflicts(l, map).size()])
+	var fixed := 0
+	for o: PlacedObject in l.objects.values():
+		if not db.get_item(o.item_id).can_place():
+			fixed += 1
+	print("%s: %d objects, %d skipped, conflicts=%d, unplaceable=%d" % [file, l.count(), skipped, PlacementRules.find_conflicts(l, map).size(), fixed])
 
 
 func P(id: String, x: int, y: int, flip: bool = false, locked: bool = false, planned: bool = false) -> bool:
@@ -66,7 +75,8 @@ func P(id: String, x: int, y: int, flip: bool = false, locked: bool = false, pla
 	o.size = it.size_for(o.flipped)
 	o.locked = locked
 	o.planned = planned
-	if not PlacementRules.check_rect(l, map, o.rect()).ok:
+	# check_item: fixed landmarks / other-area items are never placeable.
+	if not PlacementRules.check_item(l, map, it, o.origin, o.flipped).ok:
 		skipped += 1
 		return false
 	l.add_objects([o], false)
@@ -96,12 +106,10 @@ func fill(id: String, r: Rect2i, step: Vector2i = Vector2i.ONE) -> void:
 
 
 func _core() -> void:
-	P("farmhouse", 14, 11, false, true)
-	P("barn", 2, 2, false, true)
-	P("silo", 7, 2, false, true)
-	P("truck_and_order_board", 12, 28, false, true)
-	P("roadside_shop", 17, 28, false, true)
-	P("mailbox", 18, 13, false, true)
+	## The movable starter buildings. Farmhouse, truck, order board, roadside
+	## shop and mailbox are fixed landmarks of the map, not objects.
+	P("barn", 2, 2)
+	P("silo", 7, 2)
 
 
 func _meadow() -> void:

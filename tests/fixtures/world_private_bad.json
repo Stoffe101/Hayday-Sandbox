@@ -1,0 +1,300 @@
+{
+ "format": "hayday-sandbox-map",
+ "schema_version": 2,
+ "id": "test_world",
+ "name": "Test world",
+ "frame": "game",
+ "provenance": {
+  "kind": "private_game_data",
+  "source": "synthetic private fixture",
+  "client_version": "0.0.1",
+  "generated": "2026-02-03T10:00:00Z",
+  "confidence": "verified-in-data"
+ },
+ "geometry_status": "game_data",
+ "size": [
+  24,
+  20
+ ],
+ "world_bounds": [
+  -4,
+  -2,
+  28,
+  22
+ ],
+ "regions": [
+  {
+   "id": "start",
+   "kind": "buildable",
+   "name": "Start",
+   "rects": [
+    [
+     0,
+     0,
+     10,
+     14
+    ]
+   ]
+  },
+  {
+   "id": "road",
+   "kind": "road",
+   "name": "Road",
+   "rects": [
+    [
+     0,
+     14,
+     24,
+     2
+    ]
+   ]
+  },
+  {
+   "id": "plot_east",
+   "kind": "plot",
+   "name": "East plot",
+   "section": "main",
+   "number": 1,
+   "min_level": 12,
+   "rects": [
+    [
+     10,
+     0,
+     5,
+     14
+    ]
+   ],
+   "aliases": [
+    "exp_7"
+   ],
+   "game_id": 7,
+   "client_locked": false,
+   "wiki": {
+    "section": "main",
+    "plot": 1
+   }
+  },
+  {
+   "id": "plot_far",
+   "kind": "plot",
+   "name": "Far plot",
+   "section": "main",
+   "number": 2,
+   "min_level": 30,
+   "rects": [
+    [
+     15,
+     0,
+     5,
+     14
+    ]
+   ],
+   "aliases": [
+    "exp_8"
+   ],
+   "game_id": 8,
+   "client_locked": true,
+   "locked_text": "Coming soon",
+   "exclusive_decorations": [
+    "t_lamp"
+   ]
+  },
+  {
+   "id": "across",
+   "kind": "blocked",
+   "name": "Across the road",
+   "rects": [
+    [
+     0,
+     16,
+     24,
+     4
+    ]
+   ]
+  },
+  {
+   "id": "plot_extra",
+   "kind": "plot",
+   "name": "Extra plot",
+   "section": "main",
+   "number": 3,
+   "rects": [
+    [
+     20,
+     0,
+     4,
+     14
+    ]
+   ],
+   "aliases": [
+    "exp_9"
+   ],
+   "game_id": 9
+  }
+ ],
+ "sections": [
+  {
+   "id": "main",
+   "name": "Main",
+   "side": "main",
+   "plots": [
+    "plot_east",
+    "exp_8",
+    "plot_extra"
+   ],
+   "status": "approximation"
+  }
+ ],
+ "landmarks": [
+  {
+   "id": "house",
+   "name": "Test House",
+   "area": "farm_side",
+   "origin": [
+    5,
+    5
+   ],
+   "footprint": [
+    3,
+    3
+   ],
+   "art": "lm_house",
+   "fallback_art": "t_bakery",
+   "states": [
+    "broken",
+    "fixed"
+   ],
+   "default_state": "fixed",
+   "skin_kind": "house",
+   "themes": [
+    "winter"
+   ],
+   "replaces_items": [
+    "w_house"
+   ],
+   "confidence": "verified-in-data",
+   "evidence": "synthetic",
+   "note": "A synthetic house",
+   "custom_field": {
+    "kept": true
+   },
+   "skins": [
+    {
+     "id": "red",
+     "name": "Red"
+    }
+   ]
+  },
+  {
+   "id": "dock",
+   "name": "Test Dock",
+   "area": "river",
+   "origin": [
+    -3,
+    6
+   ],
+   "footprint": [
+    0,
+    2
+   ],
+   "blocks": [
+    [
+     -3,
+     6,
+     4,
+     1
+    ]
+   ],
+   "draw_anchor": "center",
+   "confidence": "approximate"
+  },
+  {
+   "id": "sign",
+   "name": "Road Sign",
+   "area": "road_verge",
+   "origin": [
+    12,
+    14
+   ],
+   "footprint": [
+    1,
+    1
+   ],
+   "blocks": [],
+   "confidence": "approximate"
+  }
+ ],
+ "scenery": [
+  {
+   "id": "river",
+   "kind": "river",
+   "name": "River",
+   "rect": [
+    -4,
+    -2,
+    4,
+    22
+   ]
+  },
+  {
+   "id": "cliff",
+   "kind": "cliff",
+   "name": "Cliff",
+   "rect": [
+    0,
+    -2,
+    20,
+    2
+   ]
+  }
+ ],
+ "tile_types": {
+  "0": {
+   "name": "Grass",
+   "kind": "buildable",
+   "art": "grass"
+  },
+  "2": {
+   "name": "Road",
+   "kind": "road",
+   "art": null
+  },
+  "3": {
+   "name": "Path",
+   "kind": "buildable",
+   "art": "path"
+  },
+  "5": {
+   "name": "Blocked",
+   "kind": "blocked",
+   "art": null
+  }
+ },
+ "initial_objects": [
+  {
+   "item": "t_lamp",
+   "x": 1,
+   "y": 1,
+   "flip": false,
+   "group": "start",
+   "game_name": "Lamp"
+  },
+  {
+   "item": "t_long",
+   "x": 8,
+   "y": 2,
+   "flip": true,
+   "group": "exp_7"
+  }
+ ],
+ "terrain": "terrain/terrain.json",
+ "labels": [
+  {
+   "text": "Road",
+   "at": [
+    10,
+    15
+   ]
+  }
+ ]
+}

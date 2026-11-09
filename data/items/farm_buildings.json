@@ -44,12 +44,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
    "placeable": false,
+   "landmark": "derby",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Derby"
    ],
-   "notes": "Fixed scenery in town; listed for reference only. | derbies from L18; unlocks with the neighborhood house; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. | derbies from L18; unlocks with the neighborhood house; footprint not stated by any source; movability not documented"
   },
   {
    "id": "event_board",
@@ -68,12 +70,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
    "placeable": false,
+   "landmark": "event_board",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Events"
    ],
-   "notes": "Fixed scenery; listed for reference only. | events unlocked L9; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. | events unlocked L9; footprint not stated by any source; movability not documented"
   },
   {
    "id": "farmhouse",
@@ -92,11 +96,13 @@
    "max_count": 1,
    "flippable": false,
    "movable": false,
+   "placeable": false,
+   "landmark": "farmhouse",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Farmhouse"
    ],
-   "notes": "Footprint not stated by any consulted source; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm. | pre-placed at game start; achievements from L6; customization from L31; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. Footprint not stated by any consulted source; provisional planning size. | pre-placed at game start; achievements from L6; customization from L31; footprint not stated by any source; movability not documented"
   },
   {
    "id": "fishing_boat",
@@ -115,12 +121,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
    "placeable": false,
+   "landmark": "fishing_boat",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Fishing_Lake"
    ],
-   "notes": "Fishing area scenery; listed for reference only. | repair 10,000 coins, 5 min; 47 XP; gateway to the Fishing Lake; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. | repair 10,000 coins, 5 min; 47 XP; gateway to the Fishing Lake; footprint not stated by any source; movability not documented"
   },
   {
    "id": "helpers_house",
@@ -139,11 +147,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
+   "placeable": false,
+   "landmark": "helpers_house",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Helpers'_House"
    ],
-   "notes": "unlocked L33; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. Footprint not stated by any consulted source; provisional planning size. | unlocked L33; footprint not stated by any source; movability not documented"
   },
   {
    "id": "leaderboard",
@@ -161,12 +172,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
    "placeable": false,
+   "landmark": "boat_leaderboard",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Leaderboard"
    ],
-   "notes": "Fixed scenery; listed for reference only. | boat leaderboard sign on the farm; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. | boat leaderboard sign on the farm; footprint not stated by any source; movability not documented"
   },
   {
    "id": "mailbox",
@@ -186,11 +199,18 @@
    "max_count": 1,
    "flippable": false,
    "movable": false,
+   "placeable": false,
+   "landmark": "newspaper_mailbox",
+   "landmarks": [
+    "newspaper_mailbox",
+    "letter_mailbox",
+    "neighborhood_request_board"
+   ],
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Mailbox"
    ],
-   "notes": "Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm. | newspaper mailbox L7, neighborhood mailbox L10, letter mailbox L15; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. The game has three mailboxes (newspaper, letters, neighborhood requests); this entry stood for all of them. Footprint not stated by any consulted source; provisional planning size. | newspaper mailbox L7, neighborhood mailbox L10, letter mailbox L15; footprint not stated by any source; movability not documented"
   },
   {
    "id": "neighborhood_house",
@@ -209,12 +229,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
    "placeable": false,
+   "landmark": "neighborhood_house",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Neighborhood"
    ],
-   "notes": "Fixed scenery; listed for reference only. | repair 200 coins, 1 min (or 10 diamonds); unlocked L10; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. | repair 200 coins, 1 min (or 10 diamonds); unlocked L10; footprint not stated by any source; movability not documented"
   },
   {
    "id": "newspaper_daily_dirt",
@@ -233,12 +255,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
    "placeable": false,
+   "landmark": "newspaper_mailbox",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Daily_Dirt"
    ],
-   "notes": "Part of the mailbox / fixed UI scenery; listed for reference only. | read via the newspaper mailbox; unlocked L7; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. Read through the newspaper mailbox; not a structure of its own. | read via the newspaper mailbox; unlocked L7; footprint not stated by any source; movability not documented"
   },
   {
    "id": "riverboat_dock",
@@ -257,12 +281,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
    "placeable": false,
+   "landmark": "riverboat_dock",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Boat"
    ],
-   "notes": "Fixed scenery; listed for reference only. | repair 7,000 coins, 2 min; 27 XP; unlocked L17; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. | repair 7,000 coins, 2 min; 27 XP; unlocked L17; footprint not stated by any source; movability not documented"
   },
   {
    "id": "roadside_shop",
@@ -282,11 +308,13 @@
    "max_count": 1,
    "flippable": false,
    "movable": false,
+   "placeable": false,
+   "landmark": "roadside_shop",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Roadside_Shop"
    ],
-   "notes": "Footprint not stated; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm. | unlocked L7; does not need to be repaired or bought; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. Footprint not stated by any consulted source; provisional planning size. | unlocked L7; does not need to be repaired or bought; footprint not stated by any source; movability not documented"
   },
   {
    "id": "silo",
@@ -329,11 +357,12 @@
    "max_count": 1,
    "flippable": false,
    "placeable": false,
+   "scope": "fishing_lake",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Tackle_Box"
    ],
-   "notes": "Fishing area scenery; listed for reference only. | Fishing Lake storage; already standing, no repair; footprint not stated by any source; movability not documented"
+   "notes": "Fishing Lake building, not on the main farm: reference only (not placeable). | Fishing Lake storage; already standing, no repair; footprint not stated by any source; movability not documented"
   },
   {
    "id": "train_station_farm",
@@ -352,12 +381,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
    "placeable": false,
+   "landmark": "farm_train_station",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Train_Station"
    ],
-   "notes": "Fixed scenery; listed for reference only. | repair 20,000 coins, 5 min; 39 XP; gateway to the town; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. | repair 20,000 coins, 5 min; 39 XP; gateway to the town; footprint not stated by any source; movability not documented"
   },
   {
    "id": "truck_and_order_board",
@@ -377,11 +408,17 @@
    "max_count": 1,
    "flippable": false,
    "movable": false,
+   "placeable": false,
+   "landmark": "truck",
+   "landmarks": [
+    "truck",
+    "order_board"
+   ],
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Truck"
    ],
-   "notes": "Footprint not stated; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm. | truck parked next to the order board near the farmhouse; unlocked L3; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. The game has two separate landmarks: the truck and the order board. Footprint not stated by any consulted source; provisional planning size. | truck parked next to the order board near the farmhouse; unlocked L3; footprint not stated by any source; movability not documented"
   },
   {
    "id": "valley_board",
@@ -400,12 +437,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
    "placeable": false,
+   "landmark": "valley_board",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Valley"
    ],
-   "notes": "Fixed scenery; listed for reference only. | valley unlocked L25 (no coin cost); footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. | valley unlocked L25 (no coin cost); footprint not stated by any source; movability not documented"
   },
   {
    "id": "wheel_of_fortune_truck",
@@ -424,12 +463,14 @@
    },
    "max_count": 1,
    "flippable": false,
+   "movable": false,
    "placeable": false,
+   "landmark": "wheel_of_fortune",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Wheel_of_Fortune"
    ],
-   "notes": "Fixed scenery outside the buildable farm; listed for reference only. | unlocked L8; footprint not stated by any source; movability not documented"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. | unlocked L8; footprint not stated by any source; movability not documented"
   }
  ]
 }

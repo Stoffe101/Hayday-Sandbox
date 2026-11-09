@@ -1,5 +1,5 @@
 {
- "about": "Hand-maintained corrections applied by tools/catalog/build_catalog.py on top of items_research.json. 'provisional_footprint' values are PLANNING PLACEHOLDERS chosen by the editor team, not facts; such items stay flagged footprint_status=unknown in the app until a real source is recorded here with 'footprint' + 'footprint_status'.",
+ "about": "Hand-maintained corrections applied by tools/catalog/build_catalog.py on top of items_research.json. 'provisional_footprint' values are PLANNING PLACEHOLDERS chosen by the editor team, not facts; such items stay flagged footprint_status=unknown in the app until a real source is recorded here with 'footprint' + 'footprint_status'. 'landmark'/'landmarks' mark catalogue entries that duplicate a fixed world landmark (drawn by the map; never placeable, hidden from the palette, kept so old layouts migrate); 'scope' marks items that exist outside the main farm (e.g. 'fishing_lake'; reference only).",
  "items": {
   "Field": {
    "footprint": [
@@ -14,8 +14,10 @@
     4,
     4
    ],
-   "note": "Footprint not stated by any consulted source; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm.",
-   "movable": false
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. Footprint not stated by any consulted source; provisional planning size.",
+   "movable": false,
+   "landmark": "farmhouse",
+   "placeable": false
   },
   "Barn": {
    "provisional_footprint": [
@@ -36,16 +38,23 @@
     4,
     3
    ],
-   "note": "Footprint not stated; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm.",
-   "movable": false
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. The game has two separate landmarks: the truck and the order board. Footprint not stated by any consulted source; provisional planning size.",
+   "movable": false,
+   "landmarks": [
+    "truck",
+    "order_board"
+   ],
+   "placeable": false
   },
   "Roadside Shop": {
    "provisional_footprint": [
     3,
     3
    ],
-   "note": "Footprint not stated; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm.",
-   "movable": false
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. Footprint not stated by any consulted source; provisional planning size.",
+   "movable": false,
+   "landmark": "roadside_shop",
+   "placeable": false
   },
   "Mailbox (newspaper / neighborhood / letters)": {
    "name": "Mailbox",
@@ -54,58 +63,89 @@
     1
    ],
    "movable": false,
-   "note": "Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm.",
-   "id": "mailbox"
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. The game has three mailboxes (newspaper, letters, neighborhood requests); this entry stood for all of them. Footprint not stated by any consulted source; provisional planning size.",
+   "id": "mailbox",
+   "landmarks": [
+    "newspaper_mailbox",
+    "letter_mailbox",
+    "neighborhood_request_board"
+   ],
+   "placeable": false
   },
   "Helpers' House": {
    "provisional_footprint": [
     3,
     3
-   ]
+   ],
+   "landmark": "helpers_house",
+   "placeable": false,
+   "movable": false,
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. Footprint not stated by any consulted source; provisional planning size."
   },
   "Newspaper (Daily Dirt)": {
    "placeable": false,
-   "note": "Part of the mailbox / fixed UI scenery; listed for reference only."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. Read through the newspaper mailbox; not a structure of its own.",
+   "landmark": "newspaper_mailbox",
+   "movable": false
   },
   "Wheel of Fortune truck": {
    "placeable": false,
-   "note": "Fixed scenery outside the buildable farm; listed for reference only."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically.",
+   "landmark": "wheel_of_fortune",
+   "movable": false
   },
   "Event board": {
    "placeable": false,
-   "note": "Fixed scenery; listed for reference only."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically.",
+   "landmark": "event_board",
+   "movable": false
   },
   "Neighborhood house": {
    "placeable": false,
-   "note": "Fixed scenery; listed for reference only."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically.",
+   "landmark": "neighborhood_house",
+   "movable": false
   },
   "Riverboat dock": {
    "placeable": false,
-   "note": "Fixed scenery; listed for reference only."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically.",
+   "landmark": "riverboat_dock",
+   "movable": false
   },
   "Derby stand": {
    "placeable": false,
-   "note": "Fixed scenery in town; listed for reference only."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically.",
+   "landmark": "derby",
+   "movable": false
   },
   "Valley board": {
    "placeable": false,
-   "note": "Fixed scenery; listed for reference only."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically.",
+   "landmark": "valley_board",
+   "movable": false
   },
   "Fishing boat": {
    "placeable": false,
-   "note": "Fishing area scenery; listed for reference only."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically.",
+   "landmark": "fishing_boat",
+   "movable": false
   },
   "Tackle Box": {
    "placeable": false,
-   "note": "Fishing area scenery; listed for reference only."
+   "note": "Fishing Lake building, not on the main farm: reference only (not placeable).",
+   "scope": "fishing_lake"
   },
   "Train station (farm)": {
    "placeable": false,
-   "note": "Fixed scenery; listed for reference only."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically.",
+   "landmark": "farm_train_station",
+   "movable": false
   },
   "Leaderboard": {
    "placeable": false,
-   "note": "Fixed scenery; listed for reference only."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically.",
+   "landmark": "boat_leaderboard",
+   "movable": false
   },
   "Alpaca House": {
    "provisional_footprint": [
@@ -217,7 +257,14 @@
   "Mine": {
    "movable": false,
    "flippable": false,
-   "note": "The Mine sits on the cliff and cannot be moved or rotated (PLACEMENT_RESEARCH.md)."
+   "note": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. It sits on the cliff and cannot be moved or rotated (PLACEMENT_RESEARCH.md).",
+   "landmark": "mine",
+   "placeable": false
+  },
+  "Duck Salon": {
+   "scope": "fishing_lake",
+   "note": "Stands at the Fishing Lake, not on the main farm: reference only (not placeable).",
+   "placeable": false
   }
  },
  "extra_items": [

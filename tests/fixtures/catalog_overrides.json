@@ -1,0 +1,77 @@
+{
+ "format": "hayday-sandbox-catalog-overrides",
+ "version": 1,
+ "source": {
+  "kind": "synthetic"
+ },
+ "items": {
+  "w_shed": {
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "game_data",
+   "change": "axis_swap",
+   "was": {
+    "footprint": [
+     2,
+     3
+    ]
+   },
+   "evidence": "synthetic",
+   "confidence": "verified-in-data"
+  },
+  "t_lamp": {
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "game_data",
+   "change": "status_only"
+  },
+  "t_mystery": {
+   "footprint": [
+    3,
+    3
+   ],
+   "change": "resize"
+  },
+  "t_bakery": {
+   "unlock_level": 5,
+   "change": "unlock_level"
+  },
+  "old_fence": {
+   "footprint": [
+    1,
+    2
+   ],
+   "change": "resize"
+  },
+  "ghost_item": {
+   "footprint": [
+    1,
+    1
+   ],
+   "change": "resize"
+  },
+  "t_long": {
+   "footprint": [
+    0,
+    2
+   ],
+   "change": "resize"
+  },
+  "t_path": {
+   "evidence": "nothing to change"
+  }
+ },
+ "candidates_need_confirmation": {
+  "x": {
+   "footprint": [
+    1,
+    1
+   ]
+  }
+ },
+ "structural": {}
+}

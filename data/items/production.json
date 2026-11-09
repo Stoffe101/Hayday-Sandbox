@@ -297,11 +297,13 @@
    },
    "max_count": 1,
    "flippable": false,
+   "placeable": false,
+   "scope": "fishing_lake",
    "data_status": "unverified",
    "sources": [
     "https://hayday.fandom.com/wiki/Duck_Salon"
    ],
-   "notes": "located at the Fishing Lake, not on the farm grid; en wiki: cannot be moved or rotated (fixed position); build_time=2 d 5 h; build_xp=34; footprint not stated by any source; no ru-wiki infobox found"
+   "notes": "Stands at the Fishing Lake, not on the main farm: reference only (not placeable). | located at the Fishing Lake, not on the farm grid; en wiki: cannot be moved or rotated (fixed position); build_time=2 d 5 h; build_xp=34; footprint not stated by any source; no ru-wiki infobox found"
   },
   {
    "id": "doner_kebab_stand",
@@ -804,11 +806,13 @@
    "max_count": 1,
    "flippable": false,
    "movable": false,
+   "placeable": false,
+   "landmark": "mine",
    "data_status": "community",
    "sources": [
     "https://hayday.fandom.com/wiki/Mine"
    ],
-   "notes": "The Mine sits on the cliff and cannot be moved or rotated (PLACEMENT_RESEARCH.md). | en wiki: cannot be moved or rotated (fixed position); build_time=1 d 11 h; build_xp=28; en infobox: size not stated; en list: size not stated; shootingspeed: size not stated; build time (seconds) differs: en infobox=126000, en list=126000, ru=129600, shootingspeed=126000"
+   "notes": "Fixed landmark of the farm: the map's world layer draws it at its place and it can't be moved or placed. Kept in the catalogue (hidden) so old layouts still load; they migrate it automatically. It sits on the cliff and cannot be moved or rotated (PLACEMENT_RESEARCH.md). | en wiki: cannot be moved or rotated (fixed position); build_time=1 d 11 h; build_xp=28; en infobox: size not stated; en list: size not stated; shootingspeed: size not stated; build time (seconds) differs: en infobox=126000, en list=126000, ru=129600, shootingspeed=126000"
   },
   {
    "id": "net_maker",

@@ -1,0 +1,20 @@
+{
+ "landmarks": {
+  "house": {
+   "origin": [
+    6,
+    6
+   ]
+  },
+  "nope": {
+   "origin": [
+    1,
+    1
+   ]
+  },
+  "dock": {
+   "art": "x",
+   "note": "moved by me"
+  }
+ }
+}

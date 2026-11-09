@@ -30,6 +30,13 @@ Huge exports (e.g. background.sc bg_edge_* / deco_layer_01, > 64 megapixels at t
 ``--max-pixels``; ``--huge chunk`` renders them at full scale as ``<export>__chunks/r<row>_c<col>.png`` tiles
 (``--chunk-size``, default 2048) whose pixel offsets are listed in the index entry's ``chunks`` (no ``file`` key).
 
+Degenerate-uv fills (uv points on one texel or one line) are drawn: Supercell uses them for solid colours and 1-D
+gradients (river water, doorways). Pure-red single-texel fills are runtime placeholder slots that the game fills
+itself (collected-item icons, reward slots, emblems) and are dropped; so are exports made only of single-texel fills
+(marker layers such as habitat animal slots). Such fills under screen/add blending become fills whose alpha is their
+brightest channel (black = invisible, as in the game); under other non-normal blend modes they are not drawn. ``extract --only-degenerate`` re-renders only
+the exports that contain degenerate-uv fills, i.e. the ones whose output changed with that fix (2026-11-09).
+
 Every rendered PNG is proprietary Supercell art: personal use only, never commit, never redistribute.
 
 What is TESTED (2026-11-09) on three Supercell-signed builds (signer SHA-256 2265e901...0cc1bab):
@@ -64,6 +71,8 @@ Usage:
   python3 tools/private_assets/extract_from_apk.py list    ~/hayday/hayday.xapk
   python3 tools/private_assets/extract_from_apk.py extract ~/hayday/base.apk --only buildings_new,decos01_generic
   python3 tools/private_assets/extract_from_apk.py extract ~/hayday/ --exports "bakery|feed_mill" --atlases
+  python3 tools/private_assets/extract_from_apk.py extract <root>/raw/apk_extracted/1.73.89 --only buildings_new \
+      --only-degenerate        # refresh the renders affected by the degenerate-uv fix, from already-copied files
 """
 from __future__ import annotations
 
@@ -1075,26 +1084,60 @@ IDENT = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
 CT_IDENT = ((255.0, 255.0, 255.0, 255.0), (0.0, 0.0, 0.0))
 
 
+# Runtime placeholder slots: Supercell marks nodes that the game fills at runtime (collected-item icons, the order
+# board's reward slot, the neighborhood emblem, ...) with solid fills whose uv points all name ONE pure-red texel
+# (255, 0, 0). Since degenerate-uv fills are drawn (solid colours are real art), exactly these red single-texel fills
+# are dropped from every display list, or static art would show red squares.
+PLACEHOLDER_RGB = (255, 0, 0)
+PLACEHOLDER_WARN = "runtime placeholder fills (pure-red single texel) dropped"
+
+
 class Renderer:
-	def __init__(self, swf: Swf, max_depth: int = 64):
+	def __init__(self, swf: Swf, max_depth: int = 64, drop_placeholders: bool = True):
 		self.swf = swf
 		self.max_depth = max_depth
+		self.drop_placeholders = drop_placeholders
+		self._ph_cache: dict = {}
+
+	def is_runtime_placeholder(self, cmd: Command) -> bool:
+		"""True for a fill whose uv points all name one texel and that texel is pure red (a runtime slot)."""
+		uv = cmd.uv
+		if not uv or any(p != uv[0] for p in uv):
+			return False
+		key = (cmd.tex, cmd.tag, tuple(uv[0]))
+		hit = self._ph_cache.get(key)
+		if hit is not None:
+			return hit
+		tex = self.swf.textures[cmd.tex] if cmd.tex < len(self.swf.textures) else None
+		res = False
+		if tex is not None and tex.image is not None:
+			u, v = self._uv_px(cmd, tex)[0]
+			px = tex.image.getpixel((min(tex.w - 1, max(0, int(u))), min(tex.h - 1, max(0, int(v)))))
+			res = tuple(px[:3]) == PLACEHOLDER_RGB
+		self._ph_cache[key] = res
+		return res
 
 	# ---- display list -------------------------------------------------------------------------
 	def display_list(self, obj_id: int, frame: int = 0) -> tuple[list, list[str]]:
+		"""Flattened draw list: ("draw", cmd, matrix, colour transform, blend mode) and mask markers. The blend mode
+		is the nearest ancestor's non-normal mode (Flash numbering: 0/1 normal, 3 multiply, 4 screen, 8 add, ...)."""
 		ops: list = []
 		warns: list[str] = []
 		self._emit(obj_id, IDENT, CT_IDENT, frame, ops, warns, 0)
 		return ops, warns
 
-	def _emit(self, oid, m, ct, frame, ops, warns, depth):
+	def _emit(self, oid, m, ct, frame, ops, warns, depth, blend: int = 0):
 		swf = self.swf
 		if depth > self.max_depth:
 			warns.append("max nesting depth reached")
 			return
 		if oid in swf.shapes:
 			for cmd in swf.shapes[oid].commands:
-				ops.append(("draw", cmd, m, ct))
+				if self.drop_placeholders and self.is_runtime_placeholder(cmd):
+					if PLACEHOLDER_WARN not in warns:
+						warns.append(PLACEHOLDER_WARN)
+					continue
+				ops.append(("draw", cmd, m, ct, blend))
 			return
 		if oid in swf.textfields:
 			if "text fields are not rendered" not in warns:
@@ -1119,9 +1162,11 @@ class Renderer:
 				continue
 			cm = bank["m"][mi] if mi != 0xFFFF and mi < len(bank["m"]) else IDENT
 			cc = bank["c"][ki] if ki != 0xFFFF and ki < len(bank["c"]) else CT_IDENT
-			if ci < len(clip.blends) and clip.blends[ci] not in (0,) and "non-normal blend modes ignored" not in warns:
+			b = clip.blends[ci] if ci < len(clip.blends) else 0
+			if b not in (0, 1) and "non-normal blend modes ignored" not in warns:
 				warns.append("non-normal blend modes ignored")
-			self._emit(clip.children[ci], mat_mul(m, cm), ct_mul(ct, cc), 0, ops, warns, depth + 1)
+			self._emit(clip.children[ci], mat_mul(m, cm), ct_mul(ct, cc), 0, ops, warns, depth + 1,
+				b if b not in (0, 1) else blend)
 
 	# ---- geometry -----------------------------------------------------------------------------
 	@staticmethod
@@ -1136,7 +1181,7 @@ class Renderer:
 		for op in ops:
 			if op[0] != "draw":
 				continue
-			_, cmd, m, _ = op
+			cmd, m = op[1], op[2]
 			for x, y in cmd.xy:
 				xs.append((m[0] * x + m[2] * y + m[4]) * scale)
 				ys.append((m[1] * x + m[3] * y + m[5]) * scale)
@@ -1150,7 +1195,7 @@ class Renderer:
 		for op in ops:
 			if op[0] != "draw":
 				continue
-			_, cmd, m, _ = op
+			cmd, m = op[1], op[2]
 			tex = self.swf.textures[cmd.tex] if cmd.tex < len(self.swf.textures) else None
 			if tex is None or len(cmd.xy) < 3:
 				continue
@@ -1191,6 +1236,10 @@ class Renderer:
 			raise ToolError(f"unreasonable canvas size {W}x{H}")
 		layers = [np.zeros((H, W, 4), np.float32)]  # premultiplied, 0..1
 		mask_stack: list = []
+		# A display list made ONLY of single-texel fills is a marker layer (e.g. the animal slots of a habitat's
+		# "middle" piece: one dark square per level), not art: its canvas is kept, nothing is drawn.
+		draws = [op for op in ops if op[0] == "draw"]
+		marker_only = bool(draws) and all(op[1].uv and all(q == op[1].uv[0] for q in op[1].uv) for op in draws)
 		for op in ops:
 			kind = op[0]
 			if kind == "mask":
@@ -1212,12 +1261,23 @@ class Renderer:
 					dst *= 1.0 - c[..., 3:4]
 					dst += c
 				continue
-			_, cmd, m, ct = op
+			if marker_only:
+				continue
+			cmd, m, ct = op[1], op[2], op[3]
+			blend = op[4] if len(op) > 4 else 0
 			tex = self.swf.textures[cmd.tex] if cmd.tex < len(self.swf.textures) else None
 			if tex is None or tex.image is None:
 				continue
 			world = [(px * scale - x0, py * scale - y0) for px, py in _world(cmd.xy, m)]
 			uv = self._uv_px(cmd, tex)
+			# Non-normal blend modes are drawn as normal (historic behaviour, renders checked by eye), EXCEPT solid
+			# degenerate-uv fills: those were invisible before the 2026-11-09 fix and are almost always screen/add
+			# glows or multiply shading whose black/white fill must not become an opaque block. Screen (4) and add (8)
+			# fills become normal fills whose alpha is their brightest channel (black = no-op, as in the game);
+			# other modes keep the old behaviour for such fills (not drawn).
+			solid_blend = blend not in (0, 1) and _uv_degenerate(uv)
+			if solid_blend and blend not in (4, 8):
+				continue
 			pieces = _pieces(world, uv)
 			for poly_xy, poly_uv, inv in pieces:  # inv: xy -> uv
 				if inv is None:
@@ -1237,6 +1297,8 @@ class Renderer:
 				ImageDraw.Draw(mask).polygon([((x - bx0) * 4, (y - by0) * 4) for x, y in poly_xy], fill=255)
 				mask = mask.resize((w, h), Image.Resampling.BOX)
 				arr = np.asarray(patch, np.float32) / 255.0
+				if solid_blend:   # screen/add -> premultiplied colour with alpha = brightest channel
+					arr[..., 3] = arr[..., :3].max(axis=-1)
 				arr *= (np.asarray(mask, np.float32) / 255.0)[..., None]
 				(rm, gm, bm, am), (ra, ga, ba) = ct
 				if (rm, gm, bm, am, ra, ga, ba) != (255.0, 255.0, 255.0, 255.0, 0.0, 0.0, 0.0):
@@ -1330,6 +1392,32 @@ def _invert(A):
 	return (ia, ib, -(ia * c + ib * f), id_, ie, -(id_ * c + ie * f))
 
 
+def _uv_degenerate(uv) -> bool:
+	"""True when some fan triangle of the uv polygon has zero area (one texel or a line)."""
+	for k in range(1, len(uv) - 1):
+		(u0, v0), (u1, v1), (u2, v2) = uv[0], uv[k], uv[k + 1]
+		if abs((u1 - u0) * (v2 - v0) - (u2 - u0) * (v1 - v0)) < 1e-9:
+			return True
+	return False
+
+
+def uv_degenerate_commands(rend: "Renderer", ops) -> int:
+	"""Number of draw commands in ``ops`` with a degenerate uv triangle (all uv points on one texel or one line in
+	some fan triangle). Before the 2026-11-09 fix these were (partly) dropped, so exports that contain any render
+	differently now (``extract --only-degenerate`` re-renders exactly these)."""
+	n = 0
+	for op in ops:
+		if op[0] != "draw":
+			continue
+		cmd = op[1]
+		tex = rend.swf.textures[cmd.tex] if cmd.tex < len(rend.swf.textures) else None
+		if tex is None or len(cmd.uv) < 3:
+			continue
+		if _uv_degenerate(rend._uv_px(cmd, tex)):
+			n += 1
+	return n
+
+
 def _pieces(xy, uv):
 	"""Split a draw command into pieces that each have ONE affine xy->uv map (whole polygon when consistent).
 
@@ -1396,12 +1484,10 @@ def read_version(files: dict) -> str:
 	fp = [k for k in files if k.endswith("fingerprint.json")]
 	if not fp:
 		return "unknown"
-	apk, n = files[fp[0]]
-	with zipfile.ZipFile(apk) as z:
-		try:
-			return str(json.loads(z.read(n)).get("version") or "unknown")
-		except ValueError:
-			return "unknown"
+	try:  # a member of an APK, or a plain file when the input is a folder of already-extracted assets
+		return str(json.loads(_read_file(files[fp[0]])).get("version") or "unknown")
+	except (ValueError, OSError, zipfile.BadZipFile):
+		return "unknown"
 
 
 def cmd_verify(args) -> int:
@@ -1542,7 +1628,7 @@ def cmd_extract(args) -> int:
 				sdir.mkdir(parents=True, exist_ok=True)
 				index_path = sdir / "index.json"
 				index = json.loads(index_path.read_text()) if index_path.exists() else {}
-				done = failed = 0
+				done = failed = skipped_same = 0
 				for oid, ename in exports:
 					entry = {"id": oid, "kind": "clip" if oid in swf.clips else ("shape" if oid in swf.shapes else "other")}
 					try:
@@ -1555,6 +1641,9 @@ def cmd_extract(args) -> int:
 									frame, label = starts[want], want
 									break
 						ops, warns = rend.display_list(oid, frame)
+						if getattr(args, "only_degenerate", False) and not uv_degenerate_commands(rend, ops):
+							skipped_same += 1
+							continue
 						scale = args.scale if args.scale else round(max(0.25, rend.texel_scale(ops)) * 4) / 4
 						huge = getattr(args, "huge", "error")
 						bb = rend.canvas(ops, scale)
@@ -1603,15 +1692,33 @@ def cmd_extract(args) -> int:
 				index_path.write_text(json.dumps(index, indent=1, sort_keys=True))
 				rep["rendered"] = done
 				rep["failed"] = failed
+				if getattr(args, "only_degenerate", False):
+					rep["unchanged_skipped"] = skipped_same
 				log(f"{base}: {len(exports)} exports, rendered {done}, failed {failed}, "
+					+ (f"unchanged (no degenerate uv) {skipped_same}, " if getattr(args, "only_degenerate", False) else "") +
 					f"textures {sum(1 for t in swf.textures if t.image is not None)}/{len(swf.textures)}")
 			except ToolError as ex:
 				rep["error"] = str(ex)
 				log(f"{base}: SKIPPED - {ex}")
 		report["finished"] = dt.datetime.now(dt.timezone.utc).isoformat()
 		spr_root.mkdir(parents=True, exist_ok=True)
-		(spr_root / "extract_report.json").write_text(json.dumps(report, indent=1, default=str))
-		log(f"report: {spr_root / 'extract_report.json'}")
+		rep_path = spr_root / "extract_report.json"
+		partial = bool(args.only or args.exports or args.max or getattr(args, "only_degenerate", False))
+		if partial and rep_path.exists():
+			# a partial re-render must not replace the full run's report (its input/signature provenance is used
+			# by build_pack.py): merge the per-file results and record the run
+			try:
+				prev = json.loads(rep_path.read_text())
+			except ValueError:
+				prev = None
+			if isinstance(prev, dict):
+				prev.setdefault("files", {}).update(report["files"])
+				prev.setdefault("partial_runs", []).append({"started": report["started"], "finished": report["finished"],
+					"input": report["input"], "files": sorted(report["files"]),
+					"only_degenerate": bool(getattr(args, "only_degenerate", False)), "exports": args.exports})
+				report = prev
+		rep_path.write_text(json.dumps(report, indent=1, default=str))
+		log(f"report: {rep_path}")
 		return 0
 	finally:
 		shutil.rmtree(tmpdir, ignore_errors=True)
@@ -1631,6 +1738,9 @@ def main(argv=None) -> int:
 			p.add_argument("--only", help="comma-separated .sc base names, e.g. buildings_new,decos01_generic")
 			p.add_argument("--exports", help="regex filter on export names")
 			p.add_argument("--max", type=int, default=0, help="render at most N exports per file")
+			p.add_argument("--only-degenerate", action="store_true",
+				help="re-render only exports that contain degenerate-uv fills (their output changed with the "
+				"2026-11-09 renderer fix); other index entries and PNGs are left untouched")
 			p.add_argument("--frame", type=int, default=0, help="frame of the exported clip to render")
 			p.add_argument("--scale", type=float, default=1.5,
 				help="output px per SC unit (default 1.5 = buildings' native texel density = 3 px per world px; "

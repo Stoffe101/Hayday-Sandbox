@@ -282,3 +282,112 @@ static func apply(raw_sprites: Dictionary, ov: Dictionary, item_info: Callable, 
 		if sprites[key] is Dictionary and bool((sprites[key] as Dictionary).get("verified", false)):
 			res["verified"][key] = true
 	return res
+
+
+# --- catalogue overrides (catalog_overrides.json in a private pack) -------------------
+##
+##   {"format": "hayday-sandbox-catalog-overrides", "version": 1, "source": {...},
+##    "items": {"<item id>": {"footprint": [w, h], "footprint_status": "game_data",
+##                            "unlock_level": n, "was": {...}, "change": "resize|axis_swap|status_only|unlock_level",
+##                            "evidence": "...", "confidence": "..."}},
+##    "candidates_need_confirmation": {...}, "structural": {...}}
+##
+## parse_catalog_overrides() validates and normalises the file; the result is
+## what ItemDatabase.apply_overrides() consumes. Bad entries are dropped and
+## reported; unknown top-level/entry fields are kept.
+
+const CATALOG_FORMAT := "hayday-sandbox-catalog-overrides"
+const CATALOG_VERSION := 1
+const CATALOG_CHANGES := ["resize", "axis_swap", "status_only", "unlock_level"]
+const CATALOG_STATUSES := ["confirmed", "game_data", "community", "approximation", "unverified", "unknown", "original"]
+
+
+static func empty_catalog_overrides() -> Dictionary:
+	return {"format": CATALOG_FORMAT, "version": CATALOG_VERSION, "items": {}}
+
+
+static func parse_catalog_overrides(data: Variant, errors: Array = []) -> Dictionary:
+	var out := empty_catalog_overrides()
+	if data == null:
+		return out
+	if not data is Dictionary:
+		errors.append("catalogue overrides: not a JSON object")
+		return out
+	var d: Dictionary = data
+	if str(d.get("format", "")) != CATALOG_FORMAT:
+		errors.append("catalogue overrides: format must be '%s'" % CATALOG_FORMAT)
+		return out
+	var vv: Variant = d.get("version", CATALOG_VERSION)
+	var ver := int(vv) if (vv is int or vv is float) else CATALOG_VERSION
+	if ver > CATALOG_VERSION:
+		errors.append("catalogue overrides: version %d is newer than this app (%d); known fields are used" % [ver, CATALOG_VERSION])
+	out["version"] = ver
+	var items: Variant = d.get("items", {})
+	if not items is Dictionary:
+		errors.append("catalogue overrides: 'items' is not an object")
+		items = {}
+	for k in items:
+		var iid := str(k).strip_edges()
+		var e: Variant = items[k]
+		if iid.is_empty():
+			continue
+		if not e is Dictionary:
+			errors.append("catalogue overrides: %s is not an object" % iid)
+			continue
+		var clean := _clean_catalog_entry(e, iid, errors)
+		if not clean.is_empty():
+			out["items"][iid] = clean
+	for k in d:
+		if not k in ["format", "version", "items"]:
+			out[k] = d[k]
+	return out
+
+
+static func _clean_catalog_entry(e: Dictionary, iid: String, errors: Array) -> Dictionary:
+	var out := {}
+	var useful := false
+	for f in e:
+		var val: Variant = e[f]
+		match str(f):
+			"footprint":
+				if val == null:
+					continue
+				if val is Array and (val as Array).size() == 2 and _pos_int(val[0]) and _pos_int(val[1]):
+					out["footprint"] = [int(val[0]), int(val[1])]
+					useful = true
+				else:
+					errors.append("catalogue overrides: %s.footprint must be [w, h] positive integers" % iid)
+					return {}
+			"footprint_status":
+				if val is String and val in CATALOG_STATUSES:
+					out["footprint_status"] = val
+				else:
+					errors.append("catalogue overrides: %s.footprint_status '%s' is unknown" % [iid, str(val)])
+					return {}
+			"unlock_level":
+				if val == null:
+					continue
+				if (val is int or val is float) and float(val) == floorf(val) and int(val) >= 0:
+					out["unlock_level"] = int(val)
+					useful = true
+				else:
+					errors.append("catalogue overrides: %s.unlock_level must be a non-negative integer" % iid)
+					return {}
+			"change":
+				if not str(val) in CATALOG_CHANGES:
+					errors.append("catalogue overrides: %s.change '%s' is unknown (kept)" % [iid, str(val)])
+				out["change"] = str(val)
+			_:
+				out[str(f)] = val
+	if out.has("footprint_status") and not out.has("footprint") and not out.has("unlock_level"):
+		useful = true   # status_only
+	if not useful:
+		errors.append("catalogue overrides: %s changes nothing; ignored" % iid)
+		return {}
+	if out.has("footprint") and not out.has("footprint_status"):
+		out["footprint_status"] = "game_data"
+	return out
+
+
+static func _pos_int(v: Variant) -> bool:
+	return (v is int or (v is float and float(v) == floorf(v))) and int(v) > 0

@@ -1,0 +1,78 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "items": [
+  {
+   "id": "w_house",
+   "name": "World House",
+   "category": "production",
+   "footprint": null,
+   "provisional_footprint": [
+    3,
+    3
+   ],
+   "landmark": "house",
+   "placeable": false,
+   "movable": false
+  },
+  {
+   "id": "w_combo",
+   "name": "Combo Board",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "landmarks": [
+    "sign",
+    "dock"
+   ],
+   "placeable": false,
+   "movable": false
+  },
+  {
+   "id": "w_lake",
+   "name": "Lake Hut",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "scope": "fishing_lake"
+  },
+  {
+   "id": "w_rock",
+   "name": "Big Rock",
+   "category": "decoration",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community"
+  },
+  {
+   "id": "w_stump",
+   "name": "Old Stump",
+   "category": "obstacle",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community"
+  },
+  {
+   "id": "w_shed",
+   "name": "Garden Shed",
+   "category": "production",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "flippable": true,
+   "unlock_level": 40
+  }
+ ]
+}

@@ -38,6 +38,11 @@ Pipeline:
                  user's overrides.json).
   7. coverage    mapping/coverage.json + dashboard/index.html (self-contained, thumbnails linked relatively).
   8. sheets      review_sheets/contact_*.png for eyeballing matches and anchors.
+  World          when build_world.py has written <root>/packs/hayday_original_world/ (or with --build-world): its
+                 catalog_overrides.json footprints are used for anchoring and mirroring (an item whose footprint the
+                 client states is never mirrored to fit an old catalogue size), and world/world.json, the landmark
+                 sprites "lm_<id>" and catalog_overrides.json are copied into the pack; pack.json declares "world"
+                 and "catalog_overrides".
 
 Usage:
   python3 tools/private_assets/build_pack.py                         # build into <root>/packs/hayday_original
@@ -45,6 +50,7 @@ Usage:
   python3 tools/private_assets/build_pack.py --only-match            # inventory + matching + coverage, no images
   python3 tools/private_assets/build_pack.py --rebuild               # ignore the inventory cache, rewrite the pack
   python3 tools/private_assets/build_pack.py --report                # print the last coverage summary and exit
+  python3 tools/private_assets/build_pack.py --build-world --install-dir ...   # world data + landmarks too
 
 Requires Python 3.10+, Pillow (with WebP) and numpy; rapidfuzz is used when installed (difflib otherwise).
 """
@@ -405,6 +411,28 @@ def load_catalog() -> tuple[list[dict], dict]:
 			})
 	cats = read_json(REPO_ROOT / "data" / "items" / "categories.json", {}).get("categories", [])
 	return items, {c["id"]: c for c in cats}
+
+
+WORLD_DIR_NAME = "hayday_original_world"   # build_world.py output folder under <root>/packs/
+
+
+def apply_catalog_overrides(items: list[dict], doc: dict | None) -> list[str]:
+	"""Use the client-stated footprints of catalog_overrides.json (build_world.py) for anchoring and mirroring.
+	Returns the ids changed. Unlock levels are not used by the builder."""
+	changed = []
+	if not isinstance(doc, dict):
+		return changed
+	ov = doc.get("items") or {}
+	for it in items:
+		e = ov.get(it["id"])
+		fp = (e or {}).get("footprint")
+		if isinstance(fp, list) and len(fp) == 2 and all(isinstance(v, int) and v > 0 for v in fp):
+			if tuple(fp) != it["fp"] or not it["fp_trusted"]:
+				changed.append(it["id"])
+			it["fp"] = (fp[0], fp[1])
+			it["fp_trusted"] = True
+			it["fp_status"] = "game_data"
+	return changed
 
 
 class CatalogIndex:
@@ -1309,10 +1337,17 @@ class Builder:
 		self.notes: list[str] = []
 		self.t0 = time.time()
 		self.qa_verified = load_qa_verified(self.mapdir / "visually_verified.json")
+		self.world_dir = None if getattr(args, "no_world", False) else (getattr(args, "world_dir", None)
+			or self.root / "packs" / WORLD_DIR_NAME)
+		self.world_overrides = read_json(self.world_dir / "catalog_overrides.json") if self.world_dir else None
 
 	# --- stage 1
 	def inventory(self):
 		self.items, self.categories = load_catalog()
+		self.fp_overridden = apply_catalog_overrides(self.items, self.world_overrides)
+		if self.world_overrides:
+			log(f"catalog overrides: {len(self.fp_overridden)} items use client-stated footprints "
+				f"({self.world_dir / 'catalog_overrides.json'})")
 		self.cat = CatalogIndex(self.items)
 		recs, self.src_meta = discover(self.root)
 		vers = sorted({r["apk"]["build"] for r in recs if r["source"] == "apk"}, key=_version_tuple)
@@ -2058,8 +2093,10 @@ class Builder:
 				if f"{sub}/{p.name}" not in live:
 					p.unlink()
 					removed += 1
+		world_decl, world_sums = self._merge_world(pd, sprites)
 		# the version changes whenever an entry OR an image changes (e.g. re-encoded edges)
 		img_sums = sorted(f"{k}:{v.get('sha256', '')}:{v.get('thumb_sha256', '')}" for k, v in results.items() if "error" not in v)
+		img_sums += world_sums
 		digest = hashlib.sha256((json.dumps(sprites, sort_keys=True) + "\n".join(img_sums)).encode()).hexdigest()[:8]
 		prev = read_json(pd / "pack.json", {}) or {}
 		pv = str(prev.get("version", ""))
@@ -2071,6 +2108,7 @@ class Builder:
 				"private_root": str(self.root), "client_build": self.game_version,
 				"sources": self.src_meta.get("sources", {}),
 				"note": "PRIVATE personal-use pack built from original Supercell art. Never commit, share or redistribute."},
+			**world_decl,
 			"sprites": sprites}
 		write_json(pd / "pack.json", pack)
 		write_json(pd / "review.json", {"items": review_items, "generated": now_iso(),
@@ -2090,6 +2128,59 @@ class Builder:
 		log(f"pack: {len(sprites)} sprites, {sum(len(s.get('variants', {})) for s in sprites.values())} variants, "
 			f"{sum(len(s.get('connections', {})) for s in sprites.values())} connection entries, {len(review_items)} review "
 			f"images; {len(errors)} render errors; {removed} stale files removed")
+
+	def _merge_world(self, pd: Path, sprites: dict) -> tuple[dict, list[str]]:
+		"""Copy build_world.py's output (world/world.json, landmark sprites, catalog_overrides.json) into the pack and
+		merge the "lm_<id>" sprite entries. Returns (pack.json declarations, file digests for the version)."""
+		self.world_stats = {}
+		for stale in (pd / "world", pd / "catalog_overrides.json"):
+			if stale.is_dir():
+				shutil.rmtree(stale)
+			elif stale.exists():
+				stale.unlink()
+		wd = self.world_dir
+		if wd is None or not (wd / "world" / "world.json").exists():
+			if wd is not None:
+				log(f"world: none at {wd} (run build_world.py or use --build-world); the pack has no world data")
+			return {}, []
+		decl: dict = {}
+		sums = []
+		(pd / "world").mkdir(parents=True, exist_ok=True)
+		shutil.copy2(wd / "world" / "world.json", pd / "world" / "world.json")
+		decl["world"] = "world/world.json"
+		frag = read_json(wd / "world" / "landmark_sprites.json", {}) or {}
+		lm = frag.get("sprites") or {}
+		clash = sorted(k for k in lm if k in sprites)
+		if clash:
+			raise SystemExit(f"landmark sprite keys clash with catalogue art keys: {clash[:5]}")
+		files = set()
+		for e in lm.values():
+			files.add(e["file"])
+			if e.get("thumb"):
+				files.add(e["thumb"])
+			files.update(v["file"] for v in (e.get("variants") or {}).values())
+		missing = [f for f in sorted(files) if not (wd / f).exists()]
+		if missing:
+			raise SystemExit(f"world sprites missing in {wd}: {missing[:5]} (re-run build_world.py)")
+		for f in sorted(files):
+			dst = pd / f
+			dst.parent.mkdir(parents=True, exist_ok=True)
+			shutil.copy2(wd / f, dst)
+			sums.append(f"{f}:{sha256_file(dst)}")
+		sprites.update(lm)
+		if (wd / "catalog_overrides.json").exists():
+			shutil.copy2(wd / "catalog_overrides.json", pd / "catalog_overrides.json")
+			decl["catalog_overrides"] = "catalog_overrides.json"
+			sums.append(f"catalog_overrides.json:{sha256_file(pd / 'catalog_overrides.json')}")
+		sums.append(f"world/world.json:{sha256_file(pd / 'world' / 'world.json')}")
+		wr = read_json(wd / "build_report.json", {}) or {}
+		self.world_stats = {"landmark_sprites": len(lm), "landmark_variants": sum(len(e.get("variants") or {}) for e in lm.values()),
+			"counts": wr.get("counts"), "overrides": wr.get("overrides_counts")}
+		decl["world_provenance"] = {"tool": "tools/private_assets/build_world.py", "generated": wr.get("generated"),
+			"client_version": wr.get("client_version")}
+		log(f"world: world.json + {len(lm)} landmark sprites ({self.world_stats['landmark_variants']} variants)"
+			+ (" + catalog_overrides.json" if "catalog_overrides" in decl else ""))
+		return decl, sums
 
 	def _review_plan(self):
 		"""Review queue: medium matches and unmatched client objects / object-like images with suggestions."""
@@ -2302,7 +2393,7 @@ class Builder:
 	def contact_sheets(self):
 		out_dir = self.root / "review_sheets"
 		out_dir.mkdir(parents=True, exist_ok=True)
-		sprites = self.sprites
+		sprites = {k: v for k, v in self.sprites.items() if k in self.entries}   # catalogue art (landmarks: build_world --sheet)
 		ts = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
 		rng = np.random.default_rng(11)
 		by_cat = collections.defaultdict(list)
@@ -2512,9 +2603,69 @@ func _init() -> void:
 	out["implausible_world_size"] = bad_size
 	out["review_queue"] = lib.review_queue("hayday_original").size()
 	out["missing_files"] = lib.missing_files("hayday_original")
+	_check_world(lib, db, out)
 	out["errors_total"] = lib.errors.size()
 	out["errors_sample"] = Array(lib.errors).slice(0, 20)
 	_finish(out, t0)
+
+
+func _global_script(cls: String) -> Script:
+	for c in ProjectSettings.get_global_class_list():
+		if str(c["class"]) == cls:
+			return load(str(c["path"]))
+	return null
+
+
+func _check_world(lib: AssetLibrary, db: ItemDatabase, out: Dictionary) -> void:
+	## Landmark sprites (every variant) + the pack's world/catalogue-override files through the app's own loaders
+	## when this checkout has them (resolved dynamically, so older checkouts still run this check).
+	var pack := lib.pack_by_id("hayday_original")
+	var lm_ok := 0
+	var lm_bad := []
+	var lm_keys := 0
+	var pf: Variant = JsonUtil.read_json(str(pack.get("base", "")).path_join("pack.json"))
+	var sprites: Dictionary = pf.get("sprites", {}) if pf is Dictionary else {}
+	for key: String in sprites:
+		if not key.begins_with("lm_"):
+			continue
+		lm_keys += 1
+		for v in [""] + lib.variants_of(key):
+			var info := lib.get_sprite(key, v)
+			if info != null and info.texture != null and (v == "" or info.variant == v):
+				lm_ok += 1
+			else:
+				lm_bad.append("%s/%s" % [key, v])
+		lib.clear_cache()
+	out["landmark_sprites"] = lm_keys
+	out["landmark_images_ok"] = lm_ok
+	out["landmark_images_bad"] = lm_bad
+	var wl := _global_script("WorldLoader")
+	var files: Array = lib.call("world_data_files") if lib.has_method("world_data_files") else []
+	out["world_candidates"] = files.size()
+	if wl == null or files.is_empty():
+		out["world_check"] = "skipped (WorldLoader or world_data_files not available)" if wl == null or not lib.has_method("world_data_files") else "no pack declares world data"
+		return
+	var m: Variant = wl.call("load_world", "res://data/maps/hayday_farm.json", files, "")
+	if m == null:
+		out["world_check"] = "load_world returned null"
+		return
+	out["world_check"] = "ok"
+	out["world_active"] = str(m.provenance.get("active", ""))
+	out["world_label"] = str(m.provenance.get("label", ""))
+	out["world_errors"] = Array(m.errors)
+	out["world_warnings"] = Array(m.warnings).slice(0, 10)
+	out["world_size"] = [m.size.x, m.size.y]
+	out["world_plots"] = m.plots.size()
+	out["world_landmarks"] = m.landmarks.size()
+	out["world_initial_objects"] = m.initial_objects.size()
+	out["world_rejected"] = m.provenance.get("rejected", [])
+	var ov := str((files[0] as Dictionary).get("catalog_overrides", ""))
+	if not ov.is_empty() and db.has_method("apply_overrides"):
+		var rep: Dictionary = db.call("apply_overrides", JsonUtil.read_json(ov), "hayday_original")
+		out["overrides_applied"] = rep.get("applied", 0)
+		out["overrides_footprint_changed"] = (rep.get("footprint_changed", []) as Array).size()
+		out["overrides_unknown"] = rep.get("unknown", [])
+		out["overrides_invalid"] = rep.get("invalid", [])
 
 
 func _finish(out: Dictionary, t0: int) -> void:
@@ -2525,9 +2676,11 @@ func _finish(out: Dictionary, t0: int) -> void:
 		var f := FileAccess.open(path, FileAccess.WRITE)
 		f.store_string(txt)
 		f.close()
-	print("PACK-CHECK items=%s from_pack=%s loaded=%s variants_ok=%s conn_ok=%s missing=%s" % [out.get("items"),
+	print("PACK-CHECK items=%s from_pack=%s loaded=%s variants_ok=%s conn_ok=%s missing=%s landmarks=%s/%s world=%s/%s plots=%s lms=%s overrides=%s" % [out.get("items"),
 		out.get("items_resolved_to_pack"), out.get("base_sprites_loaded"), out.get("variants_ok"),
-		out.get("connections_ok"), (out.get("missing_files", []) as Array).size()])
+		out.get("connections_ok"), (out.get("missing_files", []) as Array).size(), out.get("landmark_images_ok"),
+		(out.get("landmark_images_bad", []) as Array).size(), out.get("world_check"), out.get("world_active"),
+		out.get("world_plots"), out.get("world_landmarks"), out.get("overrides_applied")])
 	quit(0)
 '''
 
@@ -2677,10 +2830,24 @@ def main(argv=None) -> int:
 	ap.add_argument("--app-check", action="store_true",
 		help="after installing, load the pack with the app's AssetLibrary in headless Godot (needs --install-dir)")
 	ap.add_argument("--workers", type=int, default=min(4, os.cpu_count() or 1))
+	ap.add_argument("--world-dir", type=Path, default=None,
+		help=f"build_world.py output to include (default <root>/packs/{WORLD_DIR_NAME})")
+	ap.add_argument("--build-world", action="store_true", help="run build_world.py (world, overrides, landmark sprites) first")
+	ap.add_argument("--no-world", action="store_true", help="build the pack without world data / catalogue overrides")
 	args = ap.parse_args(argv)
 	root = ensure_private(args.root, "the private root")
 	if args.report:
 		return print_report(root)
+	if args.build_world and not args.no_world:
+		sys.path.insert(0, str(Path(__file__).resolve().parent))
+		import build_world  # noqa: PLC0415
+		wargs = ["--root", str(root), "--workers", str(args.workers)]
+		if args.world_dir:
+			wargs += ["--out", str(args.world_dir)]
+		rc = build_world.main(wargs)
+		if rc:
+			log("build_world.py failed; the pack is not built")
+			return rc
 	b = Builder(args)
 	b.inventory()
 	b.match()

@@ -12,8 +12,9 @@ or ``--dest <folder>`` (the pack folder itself) / ``--dest-root <asset_packs fol
 
 What it does
   * finds pack.json at the root of the folder/zip or exactly one folder deep (same rule as the in-app installer);
-  * validates it: format "hayday-sandbox-asset-pack", a safe id, a "sprites" object, safe relative file paths,
-    anchors as [x, y]; counts referenced files that are missing (warning; an error with --strict);
+  * validates it: format "hayday-sandbox-asset-pack", a safe id, a "sprites" object, safe relative file paths
+    (sprites and the optional "world" / "catalog_overrides" / "terrain" data files), anchors as [x, y]; counts
+    referenced files that are missing (warning; an error with --strict);
   * refuses a destination inside a git work tree (private art must never land in a repository);
   * skips unsafe zip entries (absolute paths, '..', symlinks), copies/extracts into a hidden temporary folder next to
     the destination and swaps it into place, so an interrupted install never leaves a half-written pack; the
@@ -45,6 +46,7 @@ REPO_ROOT = TOOLS_DIR.parents[1]
 PACK_FORMAT = "hayday-sandbox-asset-pack"
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]{0,63}$")
 KEEP_FILES = ("overrides.json",)
+WORLD_FIELDS = ("world", "catalog_overrides", "terrain")   # optional pack-level JSON files (map v2 world, overrides)
 
 
 class PackError(RuntimeError):
@@ -116,6 +118,10 @@ def referenced_files(pack: dict) -> tuple[list[str], list[str]]:
 		if a is not None and not (isinstance(a, list) and len(a) == 2 and all(isinstance(x, (int, float)) for x in a)):
 			probs.append(f"{key}: anchor must be [x, y], got {a!r}")
 
+	# pack-level data files (private world data written by build_world.py): safe relative paths, counted like images
+	for field in WORLD_FIELDS:
+		if field in pack:
+			add(f"pack.{field}", pack, field)
 	for key, e in pack["sprites"].items():
 		if not isinstance(e, dict):
 			probs.append(f"{key}: sprite entry must be an object")
@@ -437,6 +443,17 @@ def self_test() -> int:
 			except PackError as ex:
 				if why not in str(ex):
 					fails.append(f"bad pack ({why}) rejected for the wrong reason: {ex}")
+		try:
+			install(make_pack(tmp / "b5", extra={"world": "../world.json"}), None, user, False, True, [priv], quiet)
+			fails.append("an unsafe world path must be rejected")
+		except PackError as ex:
+			if "unsafe" not in str(ex):
+				fails.append(f"unsafe world path rejected for the wrong reason: {ex}")
+		wpack = make_pack(tmp / "w1", extra={"world": "world/world.json", "catalog_overrides": "catalog_overrides.json"})
+		(wpack / "world").mkdir()
+		(wpack / "world" / "world.json").write_text('{"format": "hayday-sandbox-map", "schema_version": 2}')
+		if install(wpack, None, user, False, True, [priv], quiet)["missing"] != 1:
+			fails.append("a declared but missing catalog_overrides.json must be counted as missing")
 		miss = make_pack(tmp / "m1", extra={"sprites": {"x": {"file": "items/nope.png"}}})
 		if install(miss, None, user, False, True, [priv], quiet)["missing"] != 1:
 			fails.append("missing files must be counted")

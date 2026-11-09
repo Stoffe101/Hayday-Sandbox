@@ -5,6 +5,9 @@ extends RefCounted
 signal changed(key: String)
 
 const PATH := "user://settings.cfg"
+## Farm level range accepted for "default_farm_level" / layout profile.level.
+const LEVEL_MIN := 1
+const LEVEL_MAX := 9999
 const DEFAULTS := {
 	"theme": "dark",            ## dark | light
 	"ui_scale": 0.0,            ## 0 = automatic from screen DPI
@@ -26,6 +29,9 @@ const DEFAULTS := {
 	"catalog_icon_size": 76,
 	"catalog_sort": "relevance",
 	"show_unplaceable": false,
+	## Farm level given to new layouts (profile.level). Realistic mode treats the
+	## layout as "my farm at this level"; Creative mode is the full sandbox.
+	"default_farm_level": 1,
 }
 
 var values: Dictionary = {}
@@ -46,6 +52,7 @@ func load_settings() -> void:
 			var v: Variant = cf.get_value("app", k)
 			if typeof(v) == typeof(DEFAULTS[k]) or (DEFAULTS[k] is float and v is int):
 				values[k] = v
+	values["default_farm_level"] = clampi(int(values["default_farm_level"]), LEVEL_MIN, LEVEL_MAX)
 
 
 func save_settings() -> void:

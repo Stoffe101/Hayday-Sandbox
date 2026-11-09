@@ -18,7 +18,9 @@ class AddObjects extends Command:
 			copies.append(o.duplicate_obj())
 		_uids = layout.add_objects(copies)
 		for i in _objs.size():
-			_objs[i].uid = _uids[i]   # stable uids across undo/redo
+			# stable uids across undo/redo (objects the layout refused keep theirs)
+			if layout.objects.get(copies[i].uid) == copies[i]:
+				_objs[i].uid = copies[i].uid
 
 	func undo(layout: FarmLayout) -> void:
 		layout.remove_objects(_uids)
@@ -224,3 +226,39 @@ class Composite extends Command:
 
 	func is_noop() -> bool:
 		return _cmds.is_empty()
+
+
+class SetGeometry extends Command:
+	## Sets footprint size and orientation of objects together, keeping each
+	## origin (top corner). Used to apply corrected catalogue footprints to an
+	## open layout (LayoutIO.reconcile_footprint: an axis-only change toggles
+	## `flipped` on the same tiles). values[i] = {"size": Vector2i, "flipped": bool}.
+	var _uids: Array
+	var _new: Array
+	var _old: Array = []
+
+	func _init(uids: Array, values: Array, text: String = "Apply corrected footprints") -> void:
+		_uids = uids.duplicate()
+		_new = values.duplicate(true)
+		label = text
+
+	func do(layout: FarmLayout) -> void:
+		_old = []
+		for i in _uids.size():
+			var o := layout.get_obj(_uids[i])
+			_old.append({"size": o.size, "flipped": o.flipped} if o else {})
+			if o:
+				o.flipped = bool(_new[i].get("flipped", o.flipped))
+				layout.set_object_rect(o.uid, o.origin, _new[i].get("size", o.size), false)
+		layout.objects_changed.emit(_uids)
+
+	func undo(layout: FarmLayout) -> void:
+		for i in _uids.size():
+			var o := layout.get_obj(_uids[i])
+			if o and not (_old[i] as Dictionary).is_empty():
+				o.flipped = bool(_old[i]["flipped"])
+				layout.set_object_rect(o.uid, o.origin, _old[i]["size"], false)
+		layout.objects_changed.emit(_uids)
+
+	func is_noop() -> bool:
+		return _uids.is_empty()

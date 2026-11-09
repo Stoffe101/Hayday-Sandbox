@@ -126,3 +126,95 @@ func test_composite_undo_order() -> void:
 	stack.undo()
 	assert_eq(layout.get_obj(uid).origin, Vector2i(0, 0))
 	assert_eq(layout.get_obj(uid).note, "")
+
+
+# --- world state (theme / landmark look) -------------------------------------------
+
+func test_world_state_command_undo_redo() -> void:
+	var seen: Array = []
+	layout.world_changed.connect(func(keys): seen.append(keys))
+	stack.execute(SetWorldStateCommand.for_theme(layout, "winter"))
+	assert_eq(layout.theme(), "winter")
+	assert_eq(seen.back(), ["theme"], "world_changed names what changed")
+	stack.execute(SetWorldStateCommand.new([
+		{"field": "landmark_states", "id": "farmhouse", "value": "stage_2"},
+		{"field": "landmark_skins", "id": "truck", "value": "red"},
+		{"field": "landmark_visible", "id": "truck", "value": false}], "Preset", layout))
+	assert_eq(stack.size(), 2, "a multi-change preset is one undo step")
+	assert_eq(layout.landmark_state("farmhouse"), "stage_2")
+	assert_eq(layout.landmark_skin("truck"), "red")
+	assert_false(layout.is_landmark_visible("truck"))
+	assert_has(seen.back(), "landmark_skins/truck")
+	stack.undo()
+	assert_eq(layout.landmark_state("farmhouse", "default"), "default", "undo removes the value again")
+	assert_eq(layout.landmark_skin("truck"), "")
+	assert_true(layout.is_landmark_visible("truck"))
+	assert_false((layout.world_state["landmark_states"] as Dictionary).has("farmhouse"))
+	stack.undo()
+	assert_eq(layout.theme(), FarmLayout.DEFAULT_THEME)
+	stack.redo()
+	stack.redo()
+	assert_eq(layout.theme(), "winter")
+	assert_eq(layout.landmark_skin("truck"), "red")
+	# null = back to the default
+	stack.execute(SetWorldStateCommand.for_landmark(layout, "landmark_skins", "truck", null))
+	assert_eq(layout.landmark_skin("truck"), "")
+	stack.undo()
+	assert_eq(layout.landmark_skin("truck"), "red")
+
+
+func test_world_state_gesture_merges_and_noop() -> void:
+	stack.execute(SetWorldStateCommand.for_landmark(layout, "landmark_skins", "farmhouse", "a"))
+	stack.execute(SetWorldStateCommand.for_landmark(layout, "landmark_skins", "farmhouse", "b"))
+	stack.execute(SetWorldStateCommand.for_landmark(layout, "landmark_skins", "farmhouse", "c"))
+	assert_eq(stack.size(), 1, "scrubbing through skins is one undo step")
+	assert_eq(layout.landmark_skin("farmhouse"), "c")
+	stack.undo()
+	assert_eq(layout.landmark_skin("farmhouse"), "", "one undo returns to the original look")
+	stack.redo()
+	assert_eq(layout.landmark_skin("farmhouse"), "c")
+	stack.execute(SetWorldStateCommand.for_landmark(layout, "landmark_skins", "farmhouse", "c"))
+	assert_eq(stack.size(), 1, "setting the current value is a no-op")
+	stack.execute(SetWorldStateCommand.for_theme(layout, FarmLayout.DEFAULT_THEME))
+	assert_eq(stack.size(), 1, "default theme again is a no-op")
+	stack.execute(SetWorldStateCommand.new([{"field": "bogus", "id": "x", "value": 1}]))
+	assert_eq(stack.size(), 1, "unknown fields are ignored")
+	assert_true(stack.is_dirty())
+
+
+func test_world_state_never_touches_objects() -> void:
+	stack.execute(EditCommands.AddObjects.new([_obj("t_bakery", Vector2i(1, 1))]))
+	var before := JsonUtil.stringify(LayoutIO.to_dict(layout)["objects"])
+	stack.execute(SetWorldStateCommand.for_theme(layout, "halloween"))
+	stack.execute(SetWorldStateCommand.for_landmark(layout, "landmark_states", "farmhouse", "broken"))
+	stack.undo()
+	stack.redo()
+	assert_eq(JsonUtil.stringify(LayoutIO.to_dict(layout)["objects"]), before)
+
+
+func test_set_geometry_command() -> void:
+	stack.execute(EditCommands.AddObjects.new([_obj("t_long", Vector2i(2, 2))]))
+	var uid: int = layout.objects.keys()[0]
+	stack.execute(EditCommands.SetGeometry.new([uid], [{"size": Vector2i(1, 4), "flipped": true}]))
+	assert_true(layout.get_obj(uid).flipped)
+	assert_eq(layout.get_obj(uid).origin, Vector2i(2, 2))
+	stack.execute(EditCommands.SetGeometry.new([uid], [{"size": Vector2i(2, 2), "flipped": true}]))
+	assert_eq(layout.get_obj(uid).size, Vector2i(2, 2))
+	assert_not_null(layout.object_at(Vector2i(3, 3)), "occupancy follows the new size")
+	stack.undo()
+	stack.undo()
+	assert_false(layout.get_obj(uid).flipped)
+	assert_eq(layout.get_obj(uid).size, Vector2i(1, 4))
+	assert_null(layout.object_at(Vector2i(3, 3)))
+
+
+func test_layout_refuses_fixed_items() -> void:
+	layout.fixed_items = {"t_lamp": true}
+	var cmd := EditCommands.AddObjects.new([_obj("t_lamp", Vector2i(0, 0)), _obj("t_bakery", Vector2i(3, 3))])
+	stack.execute(cmd)
+	assert_eq(layout.count(), 1, "the fixed item never entered layout.objects")
+	assert_eq(layout.objects.values()[0].item_id, "t_bakery")
+	stack.undo()
+	assert_eq(layout.count(), 0)
+	stack.redo()
+	assert_eq(layout.count(), 1)

@@ -11,6 +11,12 @@ extends SceneTree
 ##   ... -- --gallery=production+animal_home   every item of these categories in rows
 ##   ... -- --items=barn+silo+...              these items in rows (QA galleries)
 ## Invalid placements are skipped and reported; the result has no conflicts.
+##
+## Layout schema v2, game tile frame (starting land at 0,0). The layout is built
+## on the world the app will show: the private world data of an installed pack
+## (WorldLoader) when present, else the public map; the pack's catalogue
+## corrections are applied as in the app. Fixed landmarks (farmhouse, truck,
+## shop, mailbox, ...) are part of the world, never objects.
 
 var db: ItemDatabase
 var map: FarmMap
@@ -52,7 +58,19 @@ func _initialize() -> void:
 	db.load_categories("res://data/items/categories.json")
 	db.load_directory("res://data/items")
 	db.finalize()
-	map = FarmMap.load_file("res://data/maps/hayday_farm.json")
+	var lib := AssetLibrary.new()
+	lib.load_all(db)
+	var worlds: Array = []
+	for e in lib.world_data_files():
+		if not str(e.get("world", "")).is_empty():
+			worlds.append(e)
+		var co := str(e.get("catalog_overrides", ""))
+		if db.overrides_pack.is_empty() and not co.is_empty() and FileAccess.file_exists(co):
+			var errs: Array = []
+			var rep := db.apply_overrides(PackOverrides.parse_catalog_overrides(JsonUtil.read_json(co), errs), str(e["pack_id"]))
+			print("catalogue overrides of %s: %d applied" % [e["pack_id"], int(rep.get("applied", 0))])
+	map = WorldLoader.load("res://data/maps/hayday_farm.json", worlds)
+	print("world: %s (%dx%d, %d landmarks)" % [map.provenance_label(), map.size.x, map.size.y, map.landmarks.size()])
 	var pj: Variant = JsonUtil.read_json("user://asset_packs/hayday_original/pack.json")
 	if pj is Dictionary:
 		pack = pj.get("sprites", {})
@@ -102,6 +120,9 @@ func P(id: String, x: int, y: int, opts: Dictionary = {}) -> PlacedObject:
 	o.size = it.size_for(o.flipped)
 	o.locked = bool(opts.get("locked", false))
 	o.planned = bool(opts.get("planned", false))
+	if not it.can_place():
+		skipped.append("%s (%s)" % [id, it.not_placeable_reason()])
+		return null
 	var v := str(opts.get("variant", ""))
 	if not v.is_empty():
 		var e: Dictionary = pack.get(it.art_key, {})
@@ -164,16 +185,12 @@ func _build() -> void:
 	for p in map.plots:
 		plots.append(p["id"])
 	l.set_unlocked(plots, false)
-	# Start land is x 5..36, y 3..34 (32x32); expansions east of x = 37.
-	var X := 5
-	var Y := 3
-	# --- core buildings (as in the starter template) ---
-	P("barn", X + 2, Y + 2, {"locked": true})
-	P("silo", X + 7, Y + 2, {"locked": true})
-	P("farmhouse", X + 14, Y + 11, {"locked": true})
-	P("mailbox", X + 18, Y + 13, {"locked": true})
-	P("truck_and_order_board", X + 12, Y + 28, {"locked": true})
-	P("roadside_shop", X + 17, Y + 28, {"locked": true})
+	# Game frame: start land is x 0..31, y 0..31 (32x32); main expansions east of x = 32.
+	var X := 0
+	var Y := 0
+	# --- movable starter buildings (the farmhouse, truck, shop and mailbox are landmarks) ---
+	P("barn", X + 2, Y + 2)
+	P("silo", X + 7, Y + 2)
 	# --- path cross through the start land (junctions) ---
 	line("cobblestone_path", Vector2i(X + 0, Y + 19), Vector2i(X + 31, Y + 19))
 	line("cobblestone_path", Vector2i(X + 12, Y + 8), Vector2i(X + 12, Y + 27))
@@ -218,47 +235,43 @@ func _build() -> void:
 	row(["daisies", "tulip_patch", "colorful_flowers", "raised_flowerbed", "tricolour_flowerbed", "flower_field"], X + 0, Y + 9, 0)
 	row(["streetlight", "cone_topiary", "well", "windmill", "garden_lantern", "park_bench"], X + 0, Y + 12, 1)
 	# --- expansion east: more production (2x2/3x3/4x4) on a stone-wall ring ---
-	row(["cake_oven", "pie_oven", "lobster_pool", "mine"], 38, 4, 1)
-	row(["smelter", "loom", "sewing_machine", "candle_maker", "cupcake_maker"], 38, 9, 1)
-	row(["sandwich_bar", "salad_bar", "sauce_maker"], 54, 4, 1)
-	ring("stone_wall_fence", Rect2i(37, 3, 29, 10), [Vector2i(45, 12), Vector2i(46, 12)])
+	row(["cake_oven", "pie_oven", "lobster_pool"], 33, 1, 1)
+	row(["smelter", "loom", "sewing_machine", "candle_maker", "cupcake_maker"], 33, 6, 1)
+	row(["sandwich_bar", "salad_bar", "sauce_maker"], 49, 1, 1)
+	ring("stone_wall_fence", Rect2i(32, 0, 29, 10), [Vector2i(40, 9), Vector2i(41, 9)])
 	# --- more animals ---
-	row(["goat_yard", "lamb_pasture", "horse_stable", "dog_house", "cat_house", "beehive_tree"], 38, 15, 1)
-	ring("farm_fence", Rect2i(37, 14, 30, 6))
+	row(["goat_yard", "lamb_pasture", "horse_stable", "dog_house", "cat_house", "beehive_tree"], 33, 12, 1)
+	ring("farm_fence", Rect2i(32, 11, 30, 6))
 	# --- path variety: gravel / stone / golden, each with a T junction ---
-	var py := 21
+	var py := 18
 	for pid in ["gravel_path", "stone_path", "golden_path", "brick_path"]:
-		line(pid, Vector2i(38, py), Vector2i(46, py))
-		line(pid, Vector2i(42, py + 1), Vector2i(42, py + 2))
+		line(pid, Vector2i(33, py), Vector2i(41, py))
+		line(pid, Vector2i(37, py + 1), Vector2i(37, py + 2))
 		py += 3
 	# --- fence variety: short runs with an L corner ---
-	var fx := 49
+	var fx := 44
 	for fid in ["log_fence", "rustic_fence", "hedge", "fence", "stone_wall_fence"]:
-		line(fid, Vector2i(fx, 22), Vector2i(fx, 26))
-		line(fid, Vector2i(fx + 1, 26), Vector2i(fx + 2, 26))
+		line(fid, Vector2i(fx, 19), Vector2i(fx, 23))
+		line(fid, Vector2i(fx + 1, 23), Vector2i(fx + 2, 23))
 		fx += 4
 	# --- nature: big decorative trees + pond ---
-	row(["leafy_tree", "pine_tree", "baobab_tree", "acacia_tree", "weeping_willow", "red_tree", "winter_tree"], 70, 4, 2)
-	P("duck_pond", 70, 8)
-	P("lighthouse", 76, 8)
-	P("helpers_house", 80, 8)
-	# --- large objects ---
-	P("neighborhood_house", 70, 14)
-	P("fishing_boat", 80, 14)
-	P("train_station_farm", 84, 14)
+	row(["leafy_tree", "pine_tree", "baobab_tree", "acacia_tree", "weeping_willow", "red_tree", "winter_tree"], 65, 1, 2)
+	P("duck_pond", 65, 5)
+	P("lighthouse", 71, 5)
+	# (helpers house, neighborhood house, fishing boat, train station and the
+	# mine are fixed landmarks of the world: the world layer draws them.)
 	# --- variants ---
-	P("bakery", 70, 22, {"variant": "mastered"})
-	P("dairy", 74, 22, {"variant": "mastered"})
-	P("farmhouse", 79, 22, {"variant": "lvl_10"})
-	P("silo", 84, 22, {"variant": "lvl_11"})
-	P("barn", 70, 27, {"variant": "lvl_11"})
+	P("bakery", 65, 19, {"variant": "mastered"})
+	P("dairy", 69, 19, {"variant": "mastered"})
+	P("silo", 79, 19, {"variant": "lvl_11"})
+	P("barn", 65, 24, {"variant": "lvl_11"})
 	# --- planned objects (ghosts) ---
-	P("dairy", 76, 28, {"planned": true})
-	P("cherry_tree", 81, 28, {"planned": true})
-	P("cherry_tree", 82, 28, {"planned": true})
-	P("fence", 81, 30, {"planned": true})
-	P("fence", 82, 30, {"planned": true})
-	P("fence", 83, 30, {"planned": true})
+	P("dairy", 71, 25, {"planned": true})
+	P("cherry_tree", 76, 25, {"planned": true})
+	P("cherry_tree", 77, 25, {"planned": true})
+	P("fence", 76, 27, {"planned": true})
+	P("fence", 77, 27, {"planned": true})
+	P("fence", 78, 27, {"planned": true})
 
 
 func _gallery(cats: Array, ids: Array) -> void:
@@ -277,21 +290,21 @@ func _gallery(cats: Array, ids: Array) -> void:
 	l.set_unlocked(plots, false)
 	var list: Array = []
 	for it: ItemDef in db.ordered:
-		if (it.category in cats or it.id in ids) and it.placeable:
+		if (it.category in cats or it.id in ids) and it.can_place():
 			list.append(it)
 	list.sort_custom(func(a: ItemDef, b: ItemDef) -> bool:
 		var aa := a.footprint.x * a.footprint.y
 		var bb := b.footprint.x * b.footprint.y
 		return aa > bb if aa != bb else a.id < b.id)
-	var x := 6
-	var y := 4
+	var x := 1
+	var y := 1
 	var row_h := 0
 	for it: ItemDef in list:
 		var fp := it.footprint
 		var placed := false
-		while not placed and y < 35:
-			if x + fp.x > 90:
-				x = 6
+		while not placed and y < map.size.y:
+			if x + fp.x > map.size.x:
+				x = 1
 				y += row_h + 1
 				row_h = 0
 				continue

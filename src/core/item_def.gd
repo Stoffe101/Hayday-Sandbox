@@ -5,16 +5,40 @@ extends RefCounted
 ## be swapped without touching metadata or saved layouts.
 
 ## Confidence levels, best to worst. Used for footprints and general data.
-const STATUS_ORDER := ["confirmed", "community", "approximation", "unverified", "unknown", "original"]
+## "game_data" = read from the user's own game files (private pack catalogue
+## overrides, see ItemDatabase.apply_overrides); never present in public data.
+const STATUS_ORDER := ["confirmed", "game_data", "community", "approximation", "unverified", "unknown", "original"]
+const TRUSTED_STATUSES := ["confirmed", "game_data", "community", "original"]
+const STATUS_LABELS := {
+	"confirmed": "Confirmed", "game_data": "From your game files (private pack)", "community": "Community data",
+	"approximation": "Approximate", "unverified": "Unverified", "unknown": "Size unknown", "original": "Editor item",
+}
+const SCOPE_MAIN_FARM := "main_farm"
+const SCOPES := ["main_farm", "fishing_lake"]
+const SCOPE_NAMES := {"main_farm": "the main farm", "fishing_lake": "the Fishing Lake"}
 
 var id: String = ""
 var name: String = ""
 var category: String = "decoration"
 var tags: PackedStringArray = PackedStringArray()
 var footprint: Vector2i = Vector2i.ONE
-## confirmed | community | approximation | unverified | unknown | original
+## confirmed | game_data | community | approximation | unverified | unknown | original
 var footprint_status: String = "unverified"
 var unlock_level: int = -1           ## -1 = unknown
+## Values from the public catalogue, kept while a private pack's catalogue
+## overrides are applied (ItemDatabase.revert_overrides restores them).
+var public_footprint: Vector2i = Vector2i.ONE
+var public_footprint_status: String = "unverified"
+var public_unlock_level: int = -1
+## "" = public catalogue; else the id of the pack whose overrides set footprint/unlock level.
+var footprint_source: String = ""
+## Id of the fixed world landmark this catalogue entry duplicates ("" = none).
+## Such items are kept so old layouts resolve, but are never placeable and are
+## hidden from the catalogue (the world layer draws the landmark itself).
+var landmark: String = ""
+var landmarks: PackedStringArray = PackedStringArray()   ## all duplicated landmarks (first == landmark)
+## Where the item exists in the game: "main_farm" (default) or e.g. "fishing_lake".
+var scope: String = SCOPE_MAIN_FARM
 var cost_coins: int = -1             ## -1 = unknown / not applicable
 var cost_diamonds: int = -1
 var cost_other: String = ""
@@ -74,8 +98,33 @@ static func from_dict(d: Dictionary, errors: Array) -> ItemDef:
 		it.cost_other = "" if cost.get("other", null) == null else str(cost.get("other"))
 	it.max_count = _int_or(d.get("max_count", null), -1)
 	it.flippable = bool(d.get("flippable", false))
-	it.movable = bool(d.get("movable", true))
+	# Natural obstacles are removed, never moved, in Hay Day.
+	it.movable = bool(d.get("movable", it.category != "obstacle"))
 	it.placeable = bool(d.get("placeable", true))
+	var lms := _as_array(d.get("landmarks", []))
+	var lm: Variant = d.get("landmark", null)
+	if lm is Array:
+		lms = (lm as Array) + lms
+	elif lm != null and str(lm) != "":
+		lms = [lm] + lms
+	for l in lms:
+		var ls := str(l).strip_edges()
+		if not ls.is_empty() and not ls in it.landmarks:
+			if not _valid_id(ls):
+				errors.append("%s: landmark id '%s' must be lowercase snake_case" % [it.id, ls])
+			it.landmarks.append(ls)
+	it.landmark = it.landmarks[0] if not it.landmarks.is_empty() else ""
+	it.scope = str(d.get("scope", SCOPE_MAIN_FARM)) if d.get("scope") != null else SCOPE_MAIN_FARM
+	if it.scope.is_empty():
+		it.scope = SCOPE_MAIN_FARM
+	if not _valid_id(it.scope):
+		errors.append("%s: bad scope '%s'" % [it.id, it.scope])
+		it.scope = SCOPE_MAIN_FARM
+	if not it.landmark.is_empty() or it.scope != SCOPE_MAIN_FARM:
+		# Landmark duplicates / other areas: never placeable, whatever the record says.
+		it.placeable = false
+	if not it.landmark.is_empty():
+		it.movable = false
 	var conn: Variant = d.get("connect", null)
 	if conn is Dictionary:
 		it.connect_group = str(conn.get("group", ""))
@@ -90,6 +139,9 @@ static func from_dict(d: Dictionary, errors: Array) -> ItemDef:
 		if v is Dictionary and v.has("id"):
 			it.variants.append({"id": str(v["id"]), "name": str(v.get("name", v["id"]))})
 	it.aliases = PackedStringArray(_as_array(d.get("aliases", [])))
+	it.public_footprint = it.footprint
+	it.public_footprint_status = it.footprint_status
+	it.public_unlock_level = it.unlock_level
 	it.rebuild_search_text()
 	return it
 
@@ -104,7 +156,55 @@ func size_for(flipped: bool) -> Vector2i:
 
 
 func is_footprint_trusted() -> bool:
-	return footprint_status in ["confirmed", "community", "original"]
+	return footprint_status in TRUSTED_STATUSES
+
+
+static func status_label(status: String) -> String:
+	## Human text for a footprint/data status ("game_data" -> "From your game files (private pack)").
+	return STATUS_LABELS.get(status, status.capitalize())
+
+
+func is_landmark_duplicate() -> bool:
+	return not landmark.is_empty()
+
+
+func is_in_scope() -> bool:
+	return scope == SCOPE_MAIN_FARM
+
+
+func is_catalogue_hidden() -> bool:
+	## Landmark duplicates and items of other areas never show in the catalogue
+	## (ItemDatabase.search hides them unless filters.include_hidden).
+	return not landmark.is_empty() or scope != SCOPE_MAIN_FARM
+
+
+func can_place() -> bool:
+	return placeable and landmark.is_empty() and scope == SCOPE_MAIN_FARM
+
+
+func not_placeable_reason() -> String:
+	## Why the item can't be placed ("" when it can).
+	if not landmark.is_empty():
+		return "%s is a fixed landmark — it is already part of the farm" % name
+	if scope != SCOPE_MAIN_FARM:
+		return "%s belongs to %s, not the main farm" % [name, SCOPE_NAMES.get(scope, scope.replace("_", " "))]
+	if not placeable:
+		return "%s can't be placed (listed for reference only)" % name
+	return ""
+
+
+func level_state(level: int) -> String:
+	## "unlocked" | "locked" | "unknown" for a farm at `level` (unknown unlock
+	## levels are never guessed; a negative level means "no level limit").
+	if unlock_level < 0:
+		return "unknown"
+	if level < 0 or unlock_level <= level:
+		return "unlocked"
+	return "locked"
+
+
+func has_overrides() -> bool:
+	return not footprint_source.is_empty()
 
 
 func has_known_cost() -> bool:
@@ -133,6 +233,11 @@ func to_dict() -> Dictionary:
 	if not notes.is_empty(): d["notes"] = notes
 	if not variants.is_empty(): d["variants"] = variants.duplicate(true)
 	if not aliases.is_empty(): d["aliases"] = Array(aliases)
+	if not landmarks.is_empty():
+		d["landmark"] = landmark
+		if landmarks.size() > 1:
+			d["landmarks"] = Array(landmarks)
+	if scope != SCOPE_MAIN_FARM: d["scope"] = scope
 	return d
 
 

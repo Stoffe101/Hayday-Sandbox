@@ -9,7 +9,8 @@ Runs the documented tools in order, each as a subprocess, with resume:
   apk      tools/private_assets/extract_from_apk.py extract <file> --out <root>  (ONLY with --apk: an APK/XAPK
            you already have, e.g. pulled from your own phone; nothing is downloaded)
   build    tools/private_assets/build_pack.py   --root <root> --install-dir <install dir>
-           (if build_pack.py has no --install-dir option, the built pack is installed with install_pack.py)
+           (+ --build-world when client tables were extracted: map v2 world, landmarks, catalogue overrides;
+           if build_pack.py has no --install-dir option, the built pack is installed with install_pack.py)
 
 Defaults
   <root>         %USERPROFILE%\\hayday-sandbox-private-assets (Windows), ~/hayday-sandbox-private-assets elsewhere,
@@ -333,8 +334,13 @@ def step_commands(step: str, args, tools: Path) -> tuple[list[list[str]], str | 
 			return [], f"{s.name} not found in {tools} (update your checkout; the pack builder is required)"
 		h = help_text(s)
 		inst = tools / "install_pack.py"
+		extra = []
+		# world data (map v2, landmarks, catalogue overrides) needs the client tables the apk step extracts
+		if "--build-world" in h and "--no-world" not in args.build_arg and "--build-world" not in args.build_arg \
+				and any(Path(root).glob("raw/apk_extracted/*/assets/data/level_0.csv")):
+			extra.append("--build-world")
 		if "--install-dir" in h or not h:
-			return [py + [str(s), "--root", root, "--install-dir", str(args.install_dir), *args.build_arg]], None
+			return [py + [str(s), "--root", root, "--install-dir", str(args.install_dir), *extra, *args.build_arg]], None
 		cmds = [py + [str(s), "--root", root, *args.build_arg]]
 		if inst.is_file():
 			cmds.append(py + [str(inst), "--find-in", root, "--dest", str(args.install_dir)])

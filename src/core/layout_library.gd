@@ -7,11 +7,19 @@ extends RefCounted
 ##   <root>/history/<id>/<stamp>.hdlayout  snapshots taken on every manual save
 ##   <root>/autosave/<id>.hdlayout       crash-recovery copy
 ##   <root>/trash/                       deleted layouts (recoverable)
+##   <root>/layouts/<id>.hdlayout.v1-backup  original bytes of a pre-v2 layout,
+##                                       kept on its first save in the new format
+##
+## Every load/import goes through LayoutIO.from_dict (schema migration, landmark
+## items taken out, footprint reconciliation, collision report).
 
 const MAX_HISTORY := 30
 
 var root: String
 var db: ItemDatabase
+## World the layouts are shown on (App keeps it current). Optional: lets loads
+## name replaced landmarks and report collisions with the world.
+var map: FarmMap = null
 
 
 func _init(item_db: ItemDatabase, root_dir: String = "user://") -> void:
@@ -117,14 +125,19 @@ func history(id: String) -> Array[Dictionary]:
 
 
 func load_layout(id: String, report: LayoutIO.LoadReport) -> FarmLayout:
-	var l := LayoutIO.load_file(path_for(id), db, report)
+	var l := LayoutIO.load_file(path_for(id), db, report, map)
 	if l and l.id.is_empty():
 		l.id = id
+	if l and report.migrated_from >= 0 and report.recovered_from.is_empty():
+		# Saving writes over this file: its pre-v2 original is kept next to it.
+		report.backup_path = LayoutIO.backup_path_for(path_for(id), report.migrated_from)
 	return l
 
 
 func load_path(path: String, report: LayoutIO.LoadReport) -> FarmLayout:
-	return LayoutIO.load_file(path, db, report)
+	## Opens any layout file (template, sample, external file). The file itself
+	## is never written: saving goes to the library.
+	return LayoutIO.load_file(path, db, report, map)
 
 
 func duplicate_layout(id: String, new_name: String = "") -> String:
@@ -162,6 +175,10 @@ func delete(id: String) -> Error:
 	for extra in [path_for(id) + ".bak", thumb_for(id), autosave_path(id)]:
 		if FileAccess.file_exists(extra):
 			DirAccess.remove_absolute(extra)
+	for v in range(LayoutIO.SCHEMA_VERSION):
+		var bk := LayoutIO.backup_path_for(path_for(id), v)
+		if FileAccess.file_exists(bk):
+			DirAccess.rename_absolute(bk, LayoutIO.backup_path_for(dst, v))
 	return OK
 
 
@@ -203,7 +220,9 @@ func discard_autosave(id: String) -> void:
 
 
 func import_file(src_path: String, report: LayoutIO.LoadReport) -> String:
-	var l := LayoutIO.load_file(src_path, db, report)
+	## Copies an external layout into the library (migrated, landmark items
+	## taken out). The source file is never modified.
+	var l := LayoutIO.load_file(src_path, db, report, map)
 	if l == null:
 		return ""
 	l.id = new_id()

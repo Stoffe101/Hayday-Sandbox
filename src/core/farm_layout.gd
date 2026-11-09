@@ -12,9 +12,18 @@ signal land_changed
 signal meta_changed
 signal annotations_changed
 signal planning_changed
+## Per-layout world state changed (theme, landmark state/skin/visibility).
+## `keys` lists what changed: "theme" and/or "<field>/<landmark id>"
+## (field = landmark_states | landmark_skins | landmark_visible).
+signal world_changed(keys: Array)
 
 const MODE_CREATIVE := "creative"
 const MODE_REALISTIC := "realistic"
+const DEFAULT_THEME := "default"
+## Per-landmark world-state maps (landmark id -> value). Landmarks themselves are
+## world data (FarmMap.landmarks) and never PlacedObjects; a layout only stores
+## how they look in this design.
+const WORLD_FIELDS := ["landmark_states", "landmark_skins", "landmark_visible"]
 
 var id: String = ""
 var name: String = "Untitled farm"
@@ -38,6 +47,24 @@ var profile: Dictionary = {"level": 1, "owned": {}, "budget_coins": -1, "budget_
 var reference: Dictionary = {}          ## screenshot overlay settings
 var camera: Dictionary = {}             ## last view {x, y, zoom}
 var extra: Dictionary = {}              ## unknown top-level keys preserved
+## Cosmetic world state of this design (schema v2 "world"):
+## {theme, landmark_states: {id: state}, landmark_skins: {id: skin}, landmark_visible: {id: bool}}.
+## Absent entries mean "the landmark's default". Edited only via SetWorldStateCommand.
+var world_state: Dictionary = default_world_state()
+## Record of the schema 1 -> 2 upgrade (schema v2 "migration"), {} when none.
+## Kept and saved so landmark objects taken out of old layouts are never lost.
+var migration: Dictionary = {}
+## Which catalogue footprints the object sizes were reconciled with (schema v2
+## "footprint_source": {pack, pack_version, overrides_hash}); {} = public catalogue.
+var footprint_source: Dictionary = {}
+## Item ids that may never become placed objects: catalogue entries that
+## duplicate a fixed world landmark (EditorSession fills it from the item
+## database and map). add_objects() refuses them, so no command or import
+## can put a landmark copy into `objects`. Not saved.
+var fixed_items: Dictionary = {}
+## Schema version of the file this layout was read from (-1 = created in this
+## session). LayoutIO.save_file backs up a pre-v2 file before overwriting it.
+var loaded_schema: int = -1
 
 
 func new_uid() -> int:
@@ -55,9 +82,13 @@ func count() -> int:
 
 
 func add_objects(list: Array, emit: bool = true) -> Array:
-	## Adds PlacedObjects (uids assigned if 0). Returns their uids.
+	## Adds PlacedObjects (uids assigned if 0). Returns their uids. Objects
+	## whose item is in `fixed_items` (landmark duplicates) are refused.
 	var uids: Array = []
 	for o: PlacedObject in list:
+		if fixed_items.has(o.item_id):
+			push_warning("FarmLayout: '%s' is a fixed landmark and can't be placed as an object" % o.item_id)
+			continue
 		if o.uid <= 0 or objects.has(o.uid):
 			o.uid = new_uid()
 		else:
@@ -190,6 +221,88 @@ func item_counts(include_planned: bool = true) -> Dictionary:
 			continue
 		counts[o.item_id] = counts.get(o.item_id, 0) + 1
 	return counts
+
+
+# --- world state ------------------------------------------------------------------
+
+static func default_world_state() -> Dictionary:
+	return {"theme": DEFAULT_THEME, "landmark_states": {}, "landmark_skins": {}, "landmark_visible": {}}
+
+
+static func normalize_world_state(v: Variant) -> Dictionary:
+	## Sanitises a saved "world" dictionary (wrong types are dropped, unknown
+	## keys are kept verbatim).
+	var out := default_world_state()
+	if not v is Dictionary:
+		return out
+	var d: Dictionary = v
+	for k in d:
+		var ks := str(k)
+		if ks == "theme":
+			var t := str(d[k]).strip_edges() if d[k] != null else ""
+			out["theme"] = t if not t.is_empty() else DEFAULT_THEME
+		elif ks in WORLD_FIELDS:
+			if not d[k] is Dictionary:
+				continue
+			for lid in d[k]:
+				var val: Variant = d[k][lid]
+				if ks == "landmark_visible":
+					if val is bool:
+						out[ks][str(lid)] = val
+				elif val is String and not (val as String).is_empty():
+					out[ks][str(lid)] = val
+		else:
+			out[ks] = d[k]
+	return out
+
+
+func theme() -> String:
+	return str(world_state.get("theme", DEFAULT_THEME))
+
+
+func world_value(field: String, landmark_id: String = "") -> Variant:
+	## field "theme" -> the theme; a WORLD_FIELDS field -> the landmark's value or null.
+	if field == "theme":
+		return theme()
+	var m: Variant = world_state.get(field, {})
+	return (m as Dictionary).get(landmark_id) if m is Dictionary else null
+
+
+func set_world_value(field: String, landmark_id: String, value: Variant, emit: bool = true) -> void:
+	## Sets (value != null) or clears (null = back to the landmark's default) one
+	## world-state value. Use SetWorldStateCommand so the change is undoable.
+	if field == "theme":
+		world_state["theme"] = DEFAULT_THEME if value == null or str(value).is_empty() else str(value)
+		if emit:
+			world_changed.emit(["theme"])
+		return
+	if not field in WORLD_FIELDS:
+		push_warning("FarmLayout: unknown world field '%s'" % field)
+		return
+	if not world_state.get(field) is Dictionary:
+		world_state[field] = {}
+	var m: Dictionary = world_state[field]
+	if value == null:
+		m.erase(landmark_id)
+	else:
+		m[landmark_id] = value
+	if emit:
+		world_changed.emit(["%s/%s" % [field, landmark_id]])
+
+
+func landmark_state(landmark_id: String, fallback: String = "") -> String:
+	var v: Variant = world_value("landmark_states", landmark_id)
+	return fallback if v == null else str(v)
+
+
+func landmark_skin(landmark_id: String, fallback: String = "") -> String:
+	var v: Variant = world_value("landmark_skins", landmark_id)
+	return fallback if v == null else str(v)
+
+
+func is_landmark_visible(landmark_id: String, fallback: bool = true) -> bool:
+	var v: Variant = world_value("landmark_visible", landmark_id)
+	return fallback if v == null else bool(v)
 
 
 func clear_all() -> void:

@@ -38,6 +38,8 @@ function Invoke-Logged {
 		[string] $AppData = '',
 		[int] $TimeoutSec = 900
 	)
+	# .NET resolves relative paths against the process folder, not the PowerShell location.
+	$Log = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Log)
 	$psi = New-Object System.Diagnostics.ProcessStartInfo
 	$psi.FileName = $Exe
 	$psi.Arguments = (($Arguments | ForEach-Object {

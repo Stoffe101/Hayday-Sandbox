@@ -142,7 +142,7 @@ func _ready() -> void:
 	_list.focus_mode = Control.FOCUS_CLICK
 	_list.allow_rmb_select = true
 	_list.draw.connect(_draw_badges)
-	_list.resized.connect(_fit_columns)
+	_list.resized.connect(_on_list_resized)
 	v.add_child(_list)
 	_empty = UI.label("", "Dim", true)
 	_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -457,6 +457,14 @@ func refresh() -> void:
 	_list.queue_redraw()
 
 
+func _on_list_resized() -> void:
+	_fit_columns()
+	# A selection scrolled into view before the grid shrank (detail card, the
+	# level note wrapping at larger UI scales) would end up half hidden.
+	if _list.is_anything_selected():
+		_list.ensure_current_is_visible()
+
+
 func _fit_columns() -> void:
 	## Tiles fill the list's width exactly (2+ columns); names are re-wrapped to
 	## the new tile width, so they never break inside a word.
@@ -709,8 +717,10 @@ func select_item(id: String) -> void:
 	for i in _ids.size():
 		if _ids[i] == id:
 			_list.select(i)
-			_list.ensure_current_is_visible()
+	# The detail card grows below the grid, so the grid shrinks after this; the
+	# list re-scrolls on resize (_on_list_resized) to keep the whole tile in view.
 	_show_detail(id)
+	_list.ensure_current_is_visible()
 
 
 func _notification(what: int) -> void:

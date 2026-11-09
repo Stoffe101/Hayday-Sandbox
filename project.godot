@@ -46,7 +46,7 @@ common/physics_ticks_per_second=30
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-textures/canvas_textures/default_texture_filter=3
+textures/canvas_textures/default_texture_filter=2
 2d/snap/snap_2d_transforms_to_pixel=false
 environment/defaults/default_clear_color=Color(0.33, 0.52, 0.30, 1)
 textures/vram_compression/import_etc2_astc=false

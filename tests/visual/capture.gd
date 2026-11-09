@@ -142,8 +142,19 @@ func _reset() -> void:
 		main.camera.smooth = false
 		main.controller.cancel()
 		main.controller.cancel()
+		# Layout tools (tools_symmetry / tools_repeat): no armed stamp, axis pick or
+		# repeat preview, symmetry off with its default line, default repeat counts,
+		# stamps panel closed.
+		var lt: LayoutToolController = main.layout_tools
+		lt.cancel()
+		lt.set_repeat_params({"cols": 3, "rows": 1, "gap": Vector2i.ZERO})
+		s.set_symmetry_enabled(false)
+		s.set_symmetry_kind(LayoutTools.KIND_SCREEN)
+		lt.panel.visible = false
+		main.dock.set_stamps_open(false)
 		s.clear_selection()
 		s.set_tool("select")
+		main.dock.set_status("")   # e.g. "Select something that can be copied"
 		main.inspector.show_tab(0)   # the auto-hiding inspector starts closed
 	if hide_panels and not main._panels_hidden:
 		main._panels_hidden = true

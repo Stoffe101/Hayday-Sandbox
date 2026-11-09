@@ -5,8 +5,8 @@
 export_credentials.cfg
 
 # Build output
-build/
-artifacts/
+/build/
+/artifacts/
 *.tmp
 
 # Python

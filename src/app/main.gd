@@ -38,6 +38,7 @@ var _last_title := ""
 
 func _ready() -> void:
 	get_tree().root.min_size = Vector2i(1024, 640)
+	get_tree().set_auto_accept_quit(false)
 	var capture := OS.get_cmdline_user_args().has("--capture")
 	if capture:
 		# Deterministic state for visual tests (never persisted).
@@ -1094,5 +1095,24 @@ func _show_welcome() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST and App.session and App.session.stack.is_dirty():
-		App.library.autosave(App.session.layout)
+	if what != NOTIFICATION_WM_CLOSE_REQUEST:
+		return
+	if App.session == null or not App.session.stack.is_dirty():
+		get_tree().quit()
+		return
+	# Keep a recovery copy no matter what the user answers.
+	App.library.autosave(App.session.layout)
+	if modal_layer.get_child_count() > 0:
+		for c in modal_layer.get_children():
+			c.queue_free()
+	var m := Modal.open(modal_layer, "Save changes before closing?", 480, "save")
+	m.body.add_child(UI.label("“%s” has unsaved changes." % App.session.layout.name, "Dim", true))
+	m.add_button("Cancel", "", m.close)
+	m.add_button("Don't save", "", func():
+		App.library.discard_autosave(App.session.layout.id)
+		get_tree().quit())
+	m.add_button("Save", "Accent", func():
+		if App.save_current(true) == OK:
+			get_tree().quit()
+		else:
+			m.close())

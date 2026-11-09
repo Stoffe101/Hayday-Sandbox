@@ -41,7 +41,7 @@ Status: ✅ implemented & tested · 🟡 implemented, partially verified · ⬜ 
 ## Layouts
 * ✅ Create from templates (starter with locked core buildings, fully expanded, empty), 5 original sample designs
 * ✅ Gallery with thumbnails, filter, open, duplicate, rename, delete→trash, revision restore, import/export `.hdlayout`
-* ✅ Atomic saves + .bak, recovery from corrupted files, autosave + crash recovery prompt, revision snapshots
+* ✅ Atomic saves + .bak, recovery from corrupted files, autosave + crash recovery prompt, revision snapshots, Save / Don't save / Cancel prompt when closing with unsaved changes
 * ✅ Versioned schema, migrations, missing/renamed/resized item handling, unknown fields preserved
 * ✅ Compare with another layout: added/removed/moved overlay and item deltas
 * ✅ Export PNG: whole farm / unlocked land / objects / view; 0.5–3×; transparent; grid; labels; tiled rendering for large images

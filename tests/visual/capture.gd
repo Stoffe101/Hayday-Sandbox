@@ -41,6 +41,7 @@ var _migration_layout_open := false
 
 
 func _ready() -> void:
+	_apply_window_size_arg()
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out_dir = a.substr(6)
@@ -92,6 +93,19 @@ func _run() -> void:
 			_dump_objects(path.get_basename() + ".objects.json", Vector2(img.get_size()) / size)
 		print(("SHOT " if ok else "FAIL ") + path + " logical=" + str(size))
 	get_tree().quit(0)
+
+
+func _apply_window_size_arg() -> void:
+	## `--window-size=WxH` (Windows runner): an exact client size, even above the
+	## monitor's, in an off-screen window so it stays out of the user's way.
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--window-size="):
+			var parts: PackedStringArray = a.substr(14).split("x")
+			if parts.size() == 2:
+				DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
+				DisplayServer.window_set_position(Vector2i(-20000, -20000))
+				DisplayServer.window_set_size(Vector2i(int(parts[0]), int(parts[1])))
 
 
 func _reset() -> void:

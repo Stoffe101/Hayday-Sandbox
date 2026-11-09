@@ -48,11 +48,13 @@ var hint_hold_s := 1.8                ## how long the hint stays (visual tests r
 var _lm_hover := ""
 var _reported_session: EditorSession
 var _suppress_open_toast := false
+var _ref_drag_before: Dictionary = {}
 var load_report_modal: Modal
 
 
 func _ready() -> void:
-	get_tree().root.min_size = Vector2i(1024, 640)
+	if not OS.get_cmdline_user_args().has("--capture"):
+		get_tree().root.min_size = Vector2i(1024, 640)
 	get_tree().set_auto_accept_quit(false)
 	if not _handle_install_args():
 		return
@@ -525,7 +527,10 @@ func _on_session_changed() -> void:
 	if not s.landmark_selected.is_connected(_on_landmark_selected):
 		s.landmark_selected.connect(_on_landmark_selected)
 	s.layout.annotations_changed.connect(overlay.refresh)
-	s.layout.meta_changed.connect(func(): top_bar.update_state(s))
+	s.layout.meta_changed.connect(func():
+		top_bar.update_state(s)
+		_update_title())
+	s.layout.reference_changed.connect(_on_reference_changed)
 	s.layout.planning_changed.connect(func():
 		_refresh_issues()
 		_refresh_level_blocks()
@@ -835,6 +840,7 @@ func _on_canvas_input(e: InputEvent) -> void:
 	if _ref_drag and e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
 		if e.pressed:
 			_ref_drag_last = camera.screen_to_world(e.position)
+			_ref_drag_before = App.session.layout.reference.duplicate(true)
 			_view_state["ref_dragging"] = true
 		else:
 			_view_state["ref_dragging"] = false
@@ -1107,11 +1113,7 @@ func _on_top_action(a: String) -> void:
 		"rename":
 			Modal.prompt(modal_layer, "Rename layout", App.session.layout.name, func(t):
 				if not t.strip_edges().is_empty():
-					App.session.layout.name = t.strip_edges()
-					App.session.layout.meta_changed.emit()
-					App.session.stack._dirty_counter += 1
-					top_bar.update_state(App.session)
-					_update_title())
+					App.session.execute(EditCommands.SetMeta.new(App.session.layout.name, t.strip_edges())))
 		"mode_creative":
 			App.session.set_mode(FarmLayout.MODE_CREATIVE)
 			top_bar.update_state(App.session)
@@ -1237,9 +1239,7 @@ func _on_inspector_action(a: String, arg: Variant) -> void:
 		"ref": _ref_update(arg)
 		"ref_calibrate": _ref_calibrate()
 		"ref_remove":
-			s.layout.reference = {}
-			s.stack._dirty_counter += 1
-			_load_reference()
+			_set_reference({}, "Remove reference")
 			inspector.rebuild()
 		"ref_move":
 			_ref_drag = bool(arg)
@@ -1444,16 +1444,20 @@ func _load_reference() -> void:
 	var ok := reference.load_from_settings(s.layout.reference)
 	_view_state["ref_loaded"] = ok
 	if ok:
-		var st := s.layout.reference
-		_view_state["ref_visible"] = bool(st.get("visible", true))
-		_view_state["ref_locked"] = bool(st.get("locked", false))
-		_view_state["ref_above"] = bool(st.get("above", false))
-		_view_state["ref_opacity"] = float(st.get("opacity", 0.5))
-		_view_state["ref_scale"] = float(st.get("scale", 1.0))
-		_view_state["ref_rotation"] = float(st.get("rotation", 0.0))
-		_place_reference_layer(bool(st.get("above", false)))
+		_sync_reference_view_state()
 	elif not s.layout.reference.is_empty():
 		_view_state["ref_status"] = "Reference image file is missing: %s" % str(s.layout.reference.get("file", ""))
+
+
+func _sync_reference_view_state() -> void:
+	var st := App.session.layout.reference
+	_view_state["ref_visible"] = bool(st.get("visible", true))
+	_view_state["ref_locked"] = bool(st.get("locked", false))
+	_view_state["ref_above"] = bool(st.get("above", false))
+	_view_state["ref_opacity"] = float(st.get("opacity", 0.5))
+	_view_state["ref_scale"] = float(st.get("scale", 1.0))
+	_view_state["ref_rotation"] = float(st.get("rotation", 0.0))
+	_place_reference_layer(bool(st.get("above", false)))
 
 
 func _place_reference_layer(above: bool) -> void:
@@ -1473,9 +1477,7 @@ func _ref_import() -> void:
 			App.toast("Could not read that image", "error")
 			return
 		var land := Exporter.farm_world_rect(s.map, s.layout, "unlocked")
-		s.layout.reference = reference.default_settings(dst, land.get_center(), land.size.x)
-		s.stack._dirty_counter += 1
-		_load_reference()
+		_set_reference(reference.default_settings(dst, land.get_center(), land.size.x), "Add reference")
 		inspector.show_tab(2)
 		inspector.rebuild()
 		App.toast("Reference added. Calibrate it to line it up with the grid.", "success"))
@@ -1484,24 +1486,41 @@ func _ref_import() -> void:
 
 
 func _ref_update(d: Dictionary) -> void:
-	var st := App.session.layout.reference
+	var st := App.session.layout.reference.duplicate(true)
 	for k in d:
 		st[k] = d[k]
-		_view_state["ref_" + k] = d[k]
 	if d.has("scale") or d.has("rotation"):
 		st.erase("affine")
-	if d.has("above"):
-		_place_reference_layer(bool(d["above"]))
 	if d.has("locked"):
 		_ref_drag = false
-	reference.settings = st
-	reference.apply()
-	App.session.stack._dirty_counter += 1
+	_set_reference(st, "Adjust reference", "reference")
+
+
+func _set_reference(settings: Dictionary, text: String, key: String = "") -> void:
+	var s := App.session
+	s.execute(EditCommands.SetReference.new(s.layout.reference, settings, text, key))
+
+
+func _on_reference_changed() -> void:
+	## Runs after every reference command, undo and redo included. The image is
+	## only reloaded when the file changed, so sliders stay smooth.
+	var st := App.session.layout.reference
+	if reference.texture != null and str(st.get("file", "")) == str(reference.settings.get("file", "")):
+		reference.settings = st
+		reference.apply()
+		_sync_reference_view_state()
+	else:
+		_load_reference()
 
 
 func _save_reference_settings() -> void:
-	App.session.layout.reference = reference.settings
-	App.session.stack._dirty_counter += 1
+	## End of a reference drag: the whole drag is one undo step.
+	if _ref_drag_before.is_empty():
+		return
+	var after := reference.settings.duplicate(true)
+	if after != _ref_drag_before:
+		App.session.execute(EditCommands.SetReference.new(_ref_drag_before, after, "Move reference"))
+	_ref_drag_before = {}
 
 
 func _ref_calibrate() -> void:
@@ -1534,11 +1553,9 @@ func _on_calibration_point(w: Vector2) -> void:
 		if aff == null:
 			App.toast("Those points are in a line — pick three spread-out points", "warn")
 			return
-		var st := App.session.layout.reference
+		var st := App.session.layout.reference.duplicate(true)
 		st["affine"] = aff
-		reference.settings = st
-		reference.apply()
-		App.session.stack._dirty_counter += 1
+		_set_reference(st, "Calibrate reference")
 		_view_state["ref_status"] = "Calibrated with 3 points (affine). Perspective in screenshots isn't corrected."
 		inspector.rebuild()
 		App.toast("Reference aligned to the grid", "success")

@@ -116,7 +116,7 @@ static func check_rect(layout: FarmLayout, map: FarmMap, r: Rect2i, ignore: Dict
 
 static func tile_code(layout: FarmLayout, map: FarmMap, t: Vector2i, ignore: Dictionary = {}) -> int:
 	var k := map.kind_at(t)
-	if k != FarmMap.Kind.VOID and map.landmark_at(t) >= 0:
+	if k != FarmMap.Kind.VOID and map.blocking_landmark_at(t) >= 0:
 		return LANDMARK
 	match k:
 		FarmMap.Kind.VOID:

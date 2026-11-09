@@ -125,8 +125,7 @@ func _card_action(what: String, e: Dictionary) -> void:
 				if t.strip_edges().is_empty():
 					return
 				if App.session and App.session.layout.id == e["id"]:
-					App.session.layout.name = t.strip_edges()
-					App.session.layout.meta_changed.emit()
+					App.session.execute(EditCommands.SetMeta.new(App.session.layout.name, t.strip_edges()))
 					App.save_current(false)
 				else:
 					App.library.rename(e["id"], t.strip_edges())

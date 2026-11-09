@@ -114,10 +114,20 @@ func _free_origin(item: ItemDef, near: Vector2i, flipped: bool = false) -> Vecto
 				var ok := PlacementRules.check_item(s.layout, s.map, item, o, flipped).ok
 				if ok:
 					# keep a 1-tile free margin so neighbours don't interfere
-					var ring := PlacementRules.check_rect(s.layout, s.map, Rect2i(o - Vector2i.ONE, item.size_for(flipped) + Vector2i(2, 2)))
-					if ring.ok:
+					var area := Rect2i(o - Vector2i.ONE, item.size_for(flipped) + Vector2i(2, 2))
+					var ring := PlacementRules.check_rect(s.layout, s.map, area)
+					if ring.ok and not _touches_landmark(area):
 						return o
 	return near
+
+
+func _touches_landmark(area: Rect2i) -> bool:
+	## Approximate landmarks allow placement, but their sprites still catch clicks.
+	for y in range(area.position.y, area.end.y):
+		for x in range(area.position.x, area.end.x):
+			if _s().map.landmark_at(Vector2i(x, y)) >= 0:
+				return true
+	return false
 
 
 func _grab_tile(o: PlacedObject) -> Vector2i:
@@ -243,7 +253,7 @@ func _integration() -> void:
 	check(s.layout.object_at(at + Vector2i(1, 1)) == null or s.layout.object_at(at + Vector2i(1, 1)).uid != placed.uid, "old tiles were freed")
 	# Invalid drop snaps back: the farmhouse is a fixed landmark of the world.
 	var fh_tile := _landmark_tile("farmhouse")
-	if fh_tile.x != -9999:
+	if fh_tile.x != -9999 and App.map.landmark("farmhouse").blocks_placement():
 		var before := moved.origin
 		main.camera.center_on(Iso.tile_center(before))
 		await _frames(2)
@@ -648,12 +658,15 @@ func _landmark_check() -> void:
 	for mode in [FarmLayout.MODE_CREATIVE, FarmLayout.MODE_REALISTIC]:
 		s.set_mode(mode)
 		var r := PlacementRules.check_item(s.layout, s.map, fence, tile, false)
-		check(not r.ok and r.reason_counts.has(PlacementRules.LANDMARK), "%s mode: landmark tiles block placement (%s)" % [mode, r.message(s.layout, s.db, s.map)])
-		main._on_item_chosen("fence")
-		var c0 := s.layout.count()
-		_click_tile(tile)
-		check(s.layout.count() == c0, "%s mode: clicking the farmhouse with the place tool places nothing" % mode)
-		_key(KEY_ESCAPE)
+		if lm.blocks_placement():
+			check(not r.ok and r.reason_counts.has(PlacementRules.LANDMARK), "%s mode: landmark tiles block placement (%s)" % [mode, r.message(s.layout, s.db, s.map)])
+			main._on_item_chosen("fence")
+			var c0 := s.layout.count()
+			_click_tile(tile)
+			check(s.layout.count() == c0, "%s mode: clicking the farmhouse with the place tool places nothing" % mode)
+			_key(KEY_ESCAPE)
+		else:
+			check(not r.reason_counts.has(PlacementRules.LANDMARK), "%s mode: an approximate landmark raises no false conflict" % mode)
 	s.set_mode(FarmLayout.MODE_CREATIVE)
 	_key(KEY_ESCAPE)
 	main._on_item_chosen("farmhouse")

@@ -207,6 +207,57 @@ class SetProfile extends Command:
 		return false
 
 
+class SetMeta extends Command:
+	## Renames the layout.
+	var _old: String
+	var _new: String
+
+	func _init(old_name: String, new_name: String, text: String = "Rename layout") -> void:
+		_old = old_name
+		_new = new_name
+		label = text
+
+	func do(layout: FarmLayout) -> void:
+		layout.name = _new
+		layout.meta_changed.emit()
+
+	func undo(layout: FarmLayout) -> void:
+		layout.name = _old
+		layout.meta_changed.emit()
+
+	func is_noop() -> bool:
+		return _old == _new
+
+
+class SetReference extends Command:
+	## Replaces the screenshot-reference settings. An empty dictionary = no reference.
+	var _old: Dictionary
+	var _new: Dictionary
+
+	func _init(old_settings: Dictionary, new_settings: Dictionary, text: String = "Edit reference", key: String = "") -> void:
+		_old = old_settings.duplicate(true)
+		_new = new_settings.duplicate(true)
+		label = text
+		merge_key = key
+
+	func do(layout: FarmLayout) -> void:
+		layout.reference = _new.duplicate(true)
+		layout.reference_changed.emit()
+
+	func undo(layout: FarmLayout) -> void:
+		layout.reference = _old.duplicate(true)
+		layout.reference_changed.emit()
+
+	func is_noop() -> bool:
+		return _old == _new
+
+	func merge(other: Command) -> bool:
+		if other is SetReference:
+			_new = (other as SetReference)._new.duplicate(true)
+			return true
+		return false
+
+
 class Composite extends Command:
 	var _cmds: Array[Command] = []
 

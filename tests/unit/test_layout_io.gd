@@ -201,7 +201,7 @@ static func world_map() -> FarmMap:
 			{"id": "order_board", "name": "Order Board", "origin": [13, 21], "footprint": [2, 2], "replaces_items": ["truck_and_order_board"], "confidence": "approximate"},
 			{"id": "roadside_shop", "name": "Roadside Shop", "origin": [19, 20], "footprint": [3, 3], "replaces_items": ["roadside_shop"], "confidence": "approximate"},
 			{"id": "newspaper_mailbox", "name": "Mailbox", "origin": [18, 10], "footprint": [1, 1], "replaces_items": ["mailbox"], "confidence": "approximate"},
-			{"id": "well", "name": "Old Well", "origin": [24, 4], "footprint": [2, 2], "confidence": "approximate"},
+			{"id": "well", "name": "Old Well", "origin": [24, 4], "footprint": [2, 2], "confidence": "strong"},
 		]})
 
 

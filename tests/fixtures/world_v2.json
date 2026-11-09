@@ -152,7 +152,7 @@
    "replaces_items": [
     "w_house"
    ],
-   "confidence": "approximate",
+   "confidence": "strong",
    "evidence": "synthetic",
    "note": "A synthetic house",
    "custom_field": {
@@ -180,7 +180,7 @@
     ]
    ],
    "draw_anchor": "center",
-   "confidence": "approximate"
+   "confidence": "strong"
   },
   {
    "id": "sign",

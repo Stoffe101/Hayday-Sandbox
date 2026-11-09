@@ -138,6 +138,65 @@ func test_landmark_selection_is_separate_and_refuses_every_edit() -> void:
 	_invariants("end")
 
 
+func test_realistic_level_rule_covers_every_new_copy() -> void:
+	var it := _level_item()
+	layout.mode = FarmLayout.MODE_REALISTIC
+	layout.profile["level"] = 1
+	s.set_active_item(it.id)
+	assert_ne(s.active_item, it.id, "the brush and eyedropper refuse an item above the farm level")
+	var c0 := layout.count()
+	assert_eq(s.place_objects([make_obj(it, Vector2i(0, 4))], "t"), [], "placing is refused")
+	s.clipboard = [{"item": it.id, "offset": Vector2i.ZERO, "flipped": false, "variant": "", "planned": false,
+		"note": "", "size": it.size_for(false), "group": 0}]
+	assert_eq(s.clipboard_objects(Vector2i(0, 4)), [], "paste skips it")
+	assert_eq(layout.count(), c0)
+	layout.mode = FarmLayout.MODE_CREATIVE
+	assert_eq(s.place_objects([make_obj(it, Vector2i(0, 4))], "t").size(), 1, "the sandbox places anything")
+	layout.mode = FarmLayout.MODE_REALISTIC
+	assert_eq(layout.count(), c0 + 1, "switching mode never removes the copy that is already there")
+
+
+func _level_item() -> ItemDef:
+	for candidate: ItemDef in db.ordered:
+		if candidate.can_place() and not s.is_fixed_item(candidate.id):
+			candidate.unlock_level = 50
+			return candidate
+	return null
+
+
+func test_rename_and_reference_are_undoable() -> void:
+	var name0 := layout.name
+	s.execute(EditCommands.SetMeta.new(name0, "Renamed"))
+	assert_eq(layout.name, "Renamed")
+	s.stack.undo()
+	assert_eq(layout.name, name0, "undo restores the name")
+	var a := {"file": "user://a.png", "opacity": 0.5}
+	s.execute(EditCommands.SetReference.new({}, a, "Add"))
+	assert_eq(layout.reference, a)
+	s.execute(EditCommands.SetReference.new(a, {}, "Remove"))
+	assert_eq(layout.reference, {}, "removed")
+	s.stack.undo()
+	assert_eq(layout.reference, a, "undo brings the reference back")
+	s.stack.undo()
+	assert_eq(layout.reference, {}, "undo again removes it")
+	s.stack.redo()
+	assert_eq(layout.reference, a)
+	assert_true(EditCommands.SetMeta.new("x", "x").is_noop(), "same name is a no-op")
+
+
+func test_out_of_scope_objects_are_flagged() -> void:
+	var it := db.get_item("t_lamp")
+	var uid: int = layout.objects.keys()[0]
+	var obj := layout.get_obj(uid)
+	var scope0 := db.get_item(obj.item_id).scope
+	db.get_item(obj.item_id).scope = "fishing_lake"
+	var r := RealisticAnalyzer.analyze(layout, db, map)
+	assert_has(" ".join(PackedStringArray(r.issues.get(uid, []))), RealisticAnalyzer.OUT_OF_SCOPE)
+	assert_true(layout.objects.has(uid), "the object itself is kept")
+	assert_not_null(it)
+	db.get_item(obj.item_id).scope = scope0
+
+
 func test_explain_fixed_texts() -> void:
 	assert_has(s.explain_fixed("house", "move"), "The Test House is fixed in place in Hay Day")
 	assert_has(s.explain_fixed("house", "rotate"), "can't be moved or rotated")

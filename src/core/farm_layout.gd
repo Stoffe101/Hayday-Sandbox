@@ -12,6 +12,7 @@ signal land_changed
 signal meta_changed
 signal annotations_changed
 signal planning_changed
+signal reference_changed
 ## Per-layout world state changed (theme, landmark state/skin/visibility).
 ## `keys` lists what changed: "theme" and/or "<field>/<landmark id>"
 ## (field = landmark_states | landmark_skins | landmark_visible).

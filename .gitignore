@@ -1,4 +1,5 @@
 # Godot
+override.cfg
 .godot/
 .import/
 *.translation

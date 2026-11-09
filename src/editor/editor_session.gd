@@ -124,6 +124,16 @@ func item_block_reason(item_id: String) -> String:
 	return ""
 
 
+func level_block_reason(item_id: String) -> String:
+	## Why Realistic mode refuses a NEW copy of the item at this farm level ("" =
+	## it doesn't). Covers arming the brush, the eyedropper, paste and duplicate.
+	## Objects already on the farm are left alone and listed as issues instead.
+	var it := db.get_item(item_id) if db else null
+	if it == null:
+		return ""
+	return RealisticAnalyzer.item_level_block(it, layout.mode, RealisticAnalyzer.farm_level(layout))
+
+
 func can_move_object(o: PlacedObject) -> bool:
 	if o == null or o.locked or is_fixed_item(o.item_id):
 		return false
@@ -277,6 +287,8 @@ func set_active_item(id: String) -> void:
 	## Landmark duplicates and items of other areas can't become the brush.
 	if not id.is_empty():
 		var why := item_block_reason(id)
+		if why.is_empty():
+			why = level_block_reason(id)
 		if not why.is_empty():
 			message.emit(why, "info")
 			return
@@ -530,7 +542,7 @@ func clipboard_objects(at: Vector2i) -> Array:
 	var out: Array = []
 	var new_groups := {}
 	for c in clipboard:
-		if not item_block_reason(str(c["item"])).is_empty():
+		if not item_block_reason(str(c["item"])).is_empty() or not level_block_reason(str(c["item"])).is_empty():
 			continue
 		var o := PlacedObject.new()
 		o.item_id = c["item"]
@@ -565,6 +577,8 @@ func place_objects(objs: Array, label: String) -> Array:
 	var refused := ""
 	for o: PlacedObject in objs:
 		var why := item_block_reason(o.item_id)
+		if why.is_empty():
+			why = level_block_reason(o.item_id)
 		if why.is_empty():
 			ok.append(o)
 		elif refused.is_empty():

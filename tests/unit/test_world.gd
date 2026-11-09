@@ -416,6 +416,24 @@ func test_landmark_blocks_placement_in_every_mode() -> void:
 	assert_eq(r2.landmark_ids, {"house": true})
 
 
+func _approx_vs_strong_map() -> FarmMap:
+	var rows: Array = []
+	for y in 10:
+		rows.append([[1, 10]])
+	return FarmMap.from_data({"format": FarmMap.FORMAT, "schema_version": 2, "frame": "game", "id": "c", "size": [10, 10],
+		"regions": [], "ground": {"encoding": "rle-rows", "rows": rows}, "landmarks": [
+			{"id": "guess", "origin": [1, 1], "footprint": [3, 3], "confidence": "approximate"},
+			{"id": "known", "origin": [3, 3], "footprint": [2, 2], "confidence": "strong"}]})
+
+
+func test_approximate_landmarks_do_not_block_placement() -> void:
+	var m := _approx_vs_strong_map()
+	assert_eq(m.landmark_id_at(Vector2i(1, 1)), "guess", "still located on the map")
+	assert_eq(m.blocking_landmark_at(Vector2i(1, 1)), -1, "but it refuses nothing")
+	assert_eq(m.blocking_landmark_at(Vector2i(4, 4)), m.landmark_index["known"])
+	assert_eq(m.blocking_landmark_at(Vector2i(3, 3)), m.landmark_index["known"], "a real block wins an overlap")
+
+
 func test_landmark_and_out_of_scope_items_not_placeable() -> void:
 	var db := world_db()
 	var m := FarmMap.load_file(WORLD)

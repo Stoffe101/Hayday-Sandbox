@@ -188,6 +188,12 @@ func block_rects() -> Array[Rect2i]:
 	return out
 
 
+func blocks_placement() -> bool:
+	## Approximate positions are a visual guide only: they must not raise false
+	## conflicts against objects the user could really place there.
+	return confidence != "approximate"
+
+
 func blocks_tile(t: Vector2i) -> bool:
 	for r in block_rects():
 		if r.has_point(t):

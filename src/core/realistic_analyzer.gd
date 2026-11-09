@@ -12,8 +12,9 @@ const UNVERIFIED_SIZE := "unverified_size"
 const UNKNOWN_ITEM := "unknown_item"
 const PLANNED := "planned"
 const PLACEMENT := "placement"
+const OUT_OF_SCOPE := "out_of_scope"
 
-const SEVERITY := {LEVEL_LOCKED: 2, NOT_OWNED: 2, OVER_MAX: 2, LOCKED_LAND: 2, PLACEMENT: 2, UNKNOWN_ITEM: 1, UNVERIFIED_SIZE: 1, PLANNED: 0}
+const SEVERITY := {LEVEL_LOCKED: 2, NOT_OWNED: 2, OVER_MAX: 2, LOCKED_LAND: 2, PLACEMENT: 2, OUT_OF_SCOPE: 2, UNKNOWN_ITEM: 1, UNVERIFIED_SIZE: 1, PLANNED: 0}
 
 ## Item / plot availability at a farm level (see level_state()).
 const AVAILABLE := "unlocked"
@@ -68,6 +69,8 @@ static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap) -> Repor
 			r.unknown_items[o.item_id] = r.unknown_items.get(o.item_id, 0) + 1
 			_add(r, o.uid, UNKNOWN_ITEM)
 			continue
+		if not it.is_in_scope():
+			_add(r, o.uid, OUT_OF_SCOPE)
 		if it.unlock_level > 0:
 			r.required_level = maxi(r.required_level, it.unlock_level)
 			if it.unlock_level > level:
@@ -262,6 +265,7 @@ static func issue_text(code: String) -> String:
 		LOCKED_LAND: return "Stands on locked expansion land"
 		UNVERIFIED_SIZE: return "Footprint not verified"
 		UNKNOWN_ITEM: return "Unknown item type"
+		OUT_OF_SCOPE: return "Belongs to another area, not the main farm"
 		PLANNED: return "Planned (future) object"
 		PLACEMENT: return "Invalid placement"
 	return code

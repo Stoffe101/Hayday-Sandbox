@@ -336,7 +336,8 @@ func _parse_landmarks(list: Variant) -> void:
 
 func _rebuild_landmark_mask() -> void:
 	## Per in-grid tile landmark index for O(1) placement checks. The first
-	## landmark listed wins where two blocks overlap (reported as a warning).
+	## landmark listed wins where two blocks overlap (reported as a warning),
+	## except that a landmark which really blocks beats an approximate one.
 	_lm_mask = PackedInt32Array()
 	if landmarks.is_empty():
 		return
@@ -357,6 +358,8 @@ func _rebuild_landmark_mask() -> void:
 						_lm_mask[row + x] = li
 					elif cur != li:
 						overlaps["%s/%s" % [landmarks[cur].id, landmarks[li].id]] = true
+						if landmarks[li].blocks_placement() and not landmarks[cur].blocks_placement():
+							_lm_mask[row + x] = li
 	for k in overlaps:
 		warnings.append("map %s: landmark blocks overlap (%s)" % [id, k])
 
@@ -680,6 +683,19 @@ func landmark_at(t: Vector2i) -> int:
 		return _lm_mask[t.y * size.x + t.x]
 	for i in landmarks.size():
 		if landmarks[i].blocks_tile(t):
+			return i
+	return -1
+
+
+func blocking_landmark_at(t: Vector2i) -> int:
+	## Like landmark_at(), but only landmarks that refuse placement count.
+	if landmarks.is_empty():
+		return -1
+	if in_bounds(t):
+		var li := _lm_mask[t.y * size.x + t.x]
+		return li if li >= 0 and landmarks[li].blocks_placement() else -1
+	for i in landmarks.size():
+		if landmarks[i].blocks_placement() and landmarks[i].blocks_tile(t):
 			return i
 	return -1
 

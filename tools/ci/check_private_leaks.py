@@ -102,6 +102,22 @@ GENERIC_NAME_RE = re.compile(r"^(licen[cs]e|notice|copying|readme|authors|third[
 # Defaults for where private art lives (local machine only)
 # ---------------------------------------------------------------------------------------------------------------
 
+def _is_dir(p: Path) -> bool:
+    """Path.is_dir() that treats an unreadable location as absent (e.g. /root on a CI runner): this user cannot
+    have private art there, and the check must not crash on it."""
+    try:
+        return p.is_dir()
+    except OSError:
+        return False
+
+
+def _is_file(p: Path) -> bool:
+    try:
+        return p.is_file()
+    except OSError:
+        return False
+
+
 def default_private_roots() -> list[Path]:
     cands: list[Path] = []
     env = os.environ.get("HAYDAY_PRIVATE_ASSETS")
@@ -134,8 +150,8 @@ def default_private_pack_dirs() -> list[Path]:
     """The app's installed private packs: asset_packs/hayday_original* (other user packs are not assumed private;
     tools/private_assets/install_pack.py additionally records every pack it installs, see PrivateHashDB)."""
     base = godot_user_dir() / "asset_packs"
-    found = sorted(base.glob("hayday_original*")) if base.is_dir() else []
-    return [p for p in found if p.is_dir()] or [base / "hayday_original"]
+    found = sorted(base.glob("hayday_original*")) if _is_dir(base) else []
+    return [p for p in found if _is_dir(p)] or [base / "hayday_original"]
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -368,7 +384,7 @@ def _hashes_in_json(obj, any_key: bool, label: str, out: dict[str, str], key: st
 class PrivateHashDB:
     def __init__(self, roots: list[Path], pack_dirs: list[Path], sweep: bool = True,
                  log: Callable[[str], None] = lambda s: print(s, file=sys.stderr)):
-        self.roots = [r for r in roots if r.is_dir()]
+        self.roots = [r for r in roots if _is_dir(r)]
         # packs installed by tools/private_assets/install_pack.py are recorded in <root>/.leakcheck/installed_packs.json
         recorded: list[Path] = []
         for r in self.roots:
@@ -379,7 +395,7 @@ class PrivateHashDB:
                 pass
         self.pack_dirs = []
         for p in list(pack_dirs) + recorded:
-            if p.is_dir() and p.resolve() not in [q.resolve() for q in self.pack_dirs]:
+            if _is_dir(p) and p.resolve() not in [q.resolve() for q in self.pack_dirs]:
                 self.pack_dirs.append(p)
         self.sweep = sweep
         self.log = log

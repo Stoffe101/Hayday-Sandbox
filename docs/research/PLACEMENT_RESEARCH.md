@@ -490,6 +490,30 @@ set is a useful baseline: grid overlay, paint tools, save/share links, item coun
 
 ---
 
+## 7a. How the app uses these conclusions (state at HEAD 8c93360)
+
+This section records decisions in the code, not new research. Confidence labels as above.
+
+| Topic | What the app does | Confidence of the underlying fact |
+|---|---|---|
+| Tile frame | Maps and layouts (schema 2+) use the game's frame from §1.1: X along the road, Y from the cliff/forest to the road. | Approximation, high |
+| Starting land | The public map uses **32 × 32** (H2). Its notes say this was concluded from client-data research; the 48 × 32 map (H1) was retired and its layouts migrate, with objects in the shifted area flagged for review. Not re-checked in this wave. | Approximation (public docs still list it as open in §1.4) |
+| Main road | A 5-tile strip directly south of the starting land; never buildable. | Approximation |
+| Main section | The 52 plots of §2.3. | Approximation (shapes), Community (costs) |
+| Upper and across-road plots | Listed in `unmapped_sections`, not drawn. The across-road strip is blocked ground. No unlock (adjacency) seed rule is invented for them. | Unknown geometry |
+| Fixed scenery (§3) | Modelled as **landmarks**: world data, never placed objects, never movable or rotatable. Catalogue items that duplicate one can't be placed. | Community / Approximation |
+| Public landmark positions | Farmhouse, order board, truck, roadside shop and newspaper mailbox, carried over from the v1 public map. All marked `approximate`. | Approximation, low |
+| Other areas of the game | Items of other areas (`scope` other than `main_farm`) can't be placed, and any found in a layout is flagged by the Realistic analysis (the object is kept). | Community |
+
+**Approximate public landmarks don't block placement.** A landmark blocks its tiles only when its confidence is
+`verified-in-data`, `strong` or `plausible` (`Landmark.blocks_placement()`). The public positions are rough
+guesses, so treating them as solid would mark objects as conflicts on tiles that may be free in the real game,
+and would push users to plan around a farmhouse that is not really there. They are drawn as a guide instead, and
+the user can line their layout up with a screenshot reference. Landmarks from private world data carry their own
+confidence and block as usual (that path is covered by tests with synthetic data only).
+
+---
+
 ## 8. Sources (all accessed 2026-11-09)
 
 Official (Supercell):

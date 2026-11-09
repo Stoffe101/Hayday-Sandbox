@@ -31,7 +31,9 @@ tools/build/build.sh            # release; `debug` for a debug build
   Project → Export → Windows Desktop → Export Project.
 
 User data: Windows `%APPDATA%\HaydaySandbox\` (`layouts/`, `history/`, `autosave/`, `trash/`, `asset_packs/`,
-`references/`, `settings.cfg`); Linux `~/.local/share/HaydaySandbox/`. Settings → *Open data folder*.
+`references/`, `stamps/`, optional `world_overrides/`, `settings.cfg`); Linux `~/.local/share/HaydaySandbox/`.
+Settings → *Open data folder*. Tests never use this folder: see [TESTING.md](TESTING.md) for the Windows and
+Linux runners and their isolated data folders.
 
 No installer yet (portable zip is the primary format). No telemetry, no network access at runtime.
 

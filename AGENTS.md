@@ -23,20 +23,32 @@ these layouts in the real game, so **never invent facts** — unknown data stays
    `python3 tools/ci/check_private_leaks.py` must pass. See `docs/PRIVATE_ASSETS.md`.
 
 ## Commands
+Linux / cloud box (counts as of 2026-11-09, HEAD 8c93360):
 ```bash
 godot --headless --path . --import                                   # after adding class_name scripts / assets
-godot --headless --path . --script res://tools/ci/check_scripts.gd   # compile every script
-godot --headless --path . --script res://tests/run_tests.gd          # unit tests (86)
-godot --headless --path . -- --selftest                              # in-app integration test (88 checks)
+godot --headless --path . --script res://tools/ci/check_scripts.gd   # compile every script (92)
+godot --headless --path . --script res://tests/run_tests.gd          # unit tests (266 tests / 11,239 assertions)
+godot --headless --path . -- --selftest                              # in-app integration test (329 checks)
+godot --headless --path . -- --selftest=perf                         # benchmarks (7 checks)
 godot --path . -- --install-pack=<zip> [--quit-after-install]        # install an asset pack into user://asset_packs
-godot --headless --path . -- --selftest=perf                         # benchmarks
 tools/ci/visual_tests.sh all [1920x1080:1 ...]                       # Xvfb screenshots → artifacts/screens (isolated data dir)
-python3 tools/ci/validate_data.py                                    # data + licence guard
+python3 tools/ci/validate_data.py                                    # data + licence guard (1,967 items)
 python3 tools/ci/check_private_leaks.py [--staged|--include-untracked] # private-art leak guard (+ --self-test)
 tools/ci/install_git_hooks.sh                                        # once per clone: pre-commit/pre-push guard
 godot --path .                                                       # run the app
 tools/build/build.sh                                                 # Windows portable build (+ verified Linux export)
 ```
+Windows (PowerShell 5.1; set `$env:GODOT` to the Godot 4.7.2 exe or put `godot` on PATH):
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1 [-Perf] [-SkipImport] [-Tag name]
+#   import, check_scripts, unit_tests, selftest[, selftest_perf], validate_data, leak guard (+ self-test),
+#   export-check self-test, coverage report + diff. Logs: artifacts\checks\[name\]<step>.log
+powershell -ExecutionPolicy Bypass -File tools\ci\visual_tests.ps1 [scenarios] [WxH:scale ...]
+#   real OpenGL screenshots → artifacts\screens\ (one run at a time: it writes a temporary override.cfg)
+```
+Both Windows runners start every Godot child with a fresh temporary `APPDATA` (real user data and installed packs
+are never touched), headless for checks and off-screen without focus for captures. Python comes from `.venv\` in
+the repository when present, else `python` on PATH. See `docs/TESTING.md`.
 Data regeneration: `python3 tools/catalog/build_catalog.py` (items), `python3 tools/catalog/build_map.py` (maps),
 `python3 tools/art_generator/generate.py` (placeholder art, incremental), `godot --headless --path . --script
 res://tools/samples/generate_samples.gd` (sample layouts), `python3 tools/catalog/coverage_report.py`.
@@ -48,12 +60,19 @@ res://tools/samples/generate_samples.gd` (sample layouts), `python3 tools/catalo
 * Scripts referencing the `App` autoload cannot be compiled in `--script` mode — test them via `--selftest`.
 * Lambdas: don't end a lambda with `)` right after a `match` branch (parser limitation) — use a method.
 * `set_anchors_preset` after `add_child` keeps the old size — use `set_anchors_and_offsets_preset`.
+* Fixed landmarks (`src/core/landmark.gd`) are world data, never `PlacedObject`s; catalogue items that duplicate
+  one are refused by `FarmLayout.add_objects`. Only landmarks whose confidence is not `approximate` block placement.
+* The layout name, reference images and camera bookmarks are edited through commands too (`SetMeta`,
+  `SetReference`, `SetCameraBookmark`); world look (theme, landmark state/skin/visibility) through
+  `SetWorldStateCommand`.
+* Tests must not touch the real user folder: the Windows runners and `visual_tests.sh` isolate it; never launch a
+  visible Godot window on the user's machine (headless checks, off-screen captures).
 
 ## Where things are
 See `docs/ARCHITECTURE.md` (module map, state ownership), `docs/ASSET_PIPELINE.md`, `docs/ITEM_DATABASE.md`,
 `docs/TESTING.md`, `docs/KNOWN_ISSUES.md`, `docs/ROADMAP.md`.
 
 ## Priorities (next)
-See `docs/ROADMAP.md`. Top: verify uncertain geometry in-game (starting land 32×32 vs 48×32, across-road plots),
-incremental depth sorting, more item-specific placeholder art. Asset packs: see the Asset Manager
-(`src/ui/asset_manager.gd`) and `PackOverrides` / `PackInstaller` in `src/assets/`.
+See `docs/ROADMAP.md` (main farm only; no separate-region editors). Open problems are in `docs/KNOWN_ISSUES.md`.
+Asset packs: see the Asset Manager (`src/ui/asset_manager.gd`) and `PackOverrides` / `PackInstaller` in
+`src/assets/`; world data from a pack is chosen by `WorldLoader` (`src/core/world_loader.gd`).

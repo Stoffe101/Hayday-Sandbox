@@ -121,6 +121,7 @@ verified files and continue partial downloads. On Linux/macOS run `python3 tools
 | Leak guard: `tools/ci/check_private_leaks.py` | Fails on: images/audio/video outside `assets/placeholders/items/`, `assets/ui/`, `docs/screenshots/`; archives and game/package formats (`.zip .xapk .apk .obb .sc .sctx .ktx .zktx .pck …`); files whose bytes are media although the extension says otherwise; paths containing `private-assets`, `hayday_original`, `raw/fankit`, `raw/wiki` or an `asset_packs/` folder; images named like official art (`hayday_` prefix, `fankit`, `supercell`); files > 5 MB; Fan Kit download tokens, signed or bulk `media.ffycdn.net` URLs, private index files; **any file identical (SHA-256/SHA-1) to a file in the private storage**. That last check uses `<root>/raw/**/index.json`, `<root>/packs/**/hashes.json` and a cached hash of every image under `<root>` and the installed pack, plus every other file of 64 B to 5 MB under `<root>/raw/`, `packs/`, `mapping/`, `dashboard/` and the installed pack (game data CSVs, fonts, indexes, pack manifests, mapping DBs; generic LICENSE/README/NOTICE files excepted). Text files are compared too. It only runs where private storage exists, never in CI. Modes: whole tracked tree (default), `--staged`, `--range`, `--rev`, `--paths [--artifact]`, `--self-test`. |
 | Git hooks: `tools/git-hooks/` | `pre-commit` checks the staged blobs. `pre-push` checks every file version in the commits being pushed, which catches `--no-verify` commits. Both fail closed when Python is missing. Install once per clone with `tools/ci/install_git_hooks.sh` (Git Bash on Windows works), or `git config core.hooksPath tools/git-hooks`. |
 | CI (`.github/workflows/ci.yml`) | *validate*: the guard's self-tests, the whole tracked tree, and every commit of the push or PR. *visual*: fails if `assets/original/` or a user `asset_packs` folder has content; screenshots are rendered with an empty, isolated user-data folder (placeholders only) and checked before upload; only `artifacts/screens/` is uploaded. *windows-build*: export presets exclude `assets/original/`, `asset_packs/`, `*hayday_original*`, `private/`; after export (also inside `tools/build/build.sh`, which deletes the bundle zip if the check fails) `tools/ci/check_export_contents.py` reads the PCK file lists inside the `.exe` and the Linux binary (and the bundle zip) and fails on any private path or on imported media from outside the public art folders; only the verified zip is uploaded. |
+| Test runners | `tools/ci/visual_tests.sh` (temporary `XDG_DATA_HOME`) and the Windows runners `tools\ci\windows_checks.ps1` / `visual_tests.ps1` (temporary `APPDATA` per Godot child) never load the user's installed packs, so test logs and screenshots show placeholders or synthetic packs only. |
 | App | Packs live in the user folder and are never part of the export; `res://assets/original/` is git-ignored and excluded from exports. |
 
 If the guard blocks a commit, unstage the file (`git restore --staged -- <path>`) and move it into `<root>`. If it
@@ -133,6 +134,11 @@ history (e.g. `git filter-repo`) and force-push before anyone else fetches.
 * `docs/screenshots/` and the CI screenshot artifacts are produced by `tools/ci/visual_tests.sh`. It gives every
   run a fresh, empty user-data folder, so a private pack in `user://asset_packs` can never appear in them.
   `assets/original/` must stay empty in git.
+* On Windows, `tools\ci\visual_tests.ps1` and `tools\ci\windows_checks.ps1` do the same: every Godot child gets a
+  fresh temporary `APPDATA`, so `%APPDATA%\HaydaySandbox\asset_packs\hayday_original\` is never loaded and private
+  art can't appear in public screenshots or test runs. The temporary folder is deleted afterwards.
+  `windows_checks.ps1` also refuses to import when `hayday-sandbox-private-assets` is inside the repository, and
+  runs the leak guard and its self-test as part of every check run.
 * Screenshots made *with* the private pack (QA, comparison) belong under `<root>` and nowhere else. The leak guard's
   hash check flags such a file if it is copied into the repository.
 * CI machines never have the private storage. Uploaded artifacts are limited to test logs, `artifacts/screens/`
@@ -166,9 +172,9 @@ All of these write only to `<root>` (they refuse the repository) and contain no 
   (add `--include-untracked` for a pre-flight of new files) must pass.
 * Tools you write must not embed art and must default their output to the private root.
 
-## Verification status (2026-11-09, development box)
+## Verification status (2026-11-09, Linux cloud development box)
 
-* Run and passing: `check_private_leaks.py --self-test` (58 checks), `check_export_contents.py --self-test`,
+* Run and passing: `check_private_leaks.py --self-test` (current count in the section below), `check_export_contents.py --self-test`,
   `acquire.py --self-test` (stub tools: dry run, failure and resume, refresh, git-tree refusal),
   `install_pack.py --self-test`. The guard passes the real tracked tree, untracked files and the full history.
   The hash check caught real Fan Kit, wiki and APK-sprite images that were renamed into public folders, in a
@@ -183,8 +189,19 @@ All of these write only to `<root>` (they refuse the repository) and contain no 
   and `check_export_contents.py` flagged it. The export filters match names only; the content check is what
   catches other folders. Fresh exports of the real tree, with the private pack installed in the user folder,
   contained only the 2,158 placeholder textures and 2 `assets/ui` resources.
-* **Not yet run:** the PowerShell/batch wrappers (no Windows or PowerShell on the dev box); `acquire.py` against the
-  live sources (only `--dry-run` and stub runs); the new CI steps on GitHub
-  (they were executed locally). `build_pack.py` is maintained separately. A `--dry-run` of `acquire.py` resolves
-  its `--root`/`--install-dir` options and its imports (Pillow, numpy, optional rapidfuzz), but the build step was
-  not run as part of this work.
+* **Not yet run:** the acquisition PowerShell/batch wrappers; `acquire.py` against the live sources (only
+  `--dry-run` and stub runs); the new CI steps on GitHub (they were executed locally). `build_pack.py` is maintained
+  separately. A `--dry-run` of `acquire.py` resolves its `--root`/`--install-dir` options and its imports (Pillow,
+  numpy, optional rapidfuzz), but the build step was not run as part of this work.
+
+## Verification status (2026-11-09, Windows development PC, HEAD 8c93360)
+
+* `windows_checks.ps1` passed the leak guard self-test (56/56 checks), the export-check self-test and the guard on
+  the whole tracked tree, with the private hash check active because private storage exists on that PC.
+* The Windows runners isolate `APPDATA` for every Godot child (see above); the self-test and visual runs of this
+  wave used only the placeholders and synthetic packs.
+* Not done in this wave: client-file (XAPK) extraction, Fan Kit / wiki downloads, private terrain mesh replay,
+  animation-sheet extraction, map authoring against game data, screenshots with private art and checks with the
+  installed pack. `tools/private_assets/` was not changed. The pack loader, pack world data and landmarks from game
+  data exist in code and pass tests with synthetic packs, but nothing in this wave verified them against the real
+  private pack.

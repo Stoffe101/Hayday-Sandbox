@@ -1,8 +1,8 @@
 # Hayday Sandbox
 
-An offline, isometric **farm layout designer** for planning Hay Day farms — unlimited items, no coins, no
-diamonds, no grinding. Design dream farms in **Creative Mode**, then switch to **Realistic Mode** to see what
-your level, inventory, land and budget actually allow.
+An offline, isometric **farm layout designer** for planning Hay Day farms. It is a planning editor only: there is
+no gameplay, no coins, no diamonds and no grinding. Design freely in **Creative Mode** (the full sandbox), then
+switch to **Realistic Mode** to see what your farm level, inventory, land and budget actually allow.
 
 > **Unofficial fan tool.** This material is unofficial and is not endorsed by Supercell. For more information see
 > Supercell's Fan Content Policy: <https://www.supercell.com/fan-content-policy>. Hayday Sandbox contains **no
@@ -13,40 +13,60 @@ your level, inventory, land and budget actually allow.
 
 ## What it does today
 
-* **Isometric farm canvas** — 2:1 grid matching Hay Day's, pan/zoom, crisp at 100–400 %, soft shadows, correct
-  depth ordering (topological sort, not sprite-order luck), decorative forest surroundings.
-* **1,967-item catalogue** built from fan-wiki research: production buildings, animal homes, trees, bushes, fences,
-  paths, water, flowers, seasonal and event decorations… with instant search, category chips, favourites,
-  recently-used, sorting and filters. Each item shows its footprint confidence (*confirmed / community /
-  unverified / unknown*). See [catalogue coverage](docs/CATALOG_COVERAGE.md).
-* **Real farm geometry** — starting land plus the 52-plot main expansion section (shapes reconstructed from the
-  wiki map), with two hypotheses for the starting-land size. Unlock plots individually with the Land tool.
-* **Professional editing** — click/drag placement with per-tile green/red/orange validity and plain-language
-  reasons ("Blocked by Bakery", "Locked land: Plot 12"), paint strokes, lines (Shift), rectangle fills (Ctrl),
-  multi-select, box select, drag-move groups, copy/paste stamps, duplicate, rotate (Hay Day's mirror, only where
-  the game allows), lock, group, eyedropper, eraser, notes & zones, **auto-connecting fences and paths**, and
-  command-based **undo/redo** (one gesture = one step).
-* **Realistic Mode** — non-destructive "can I build this?" report: required level, items above your level,
-  inventory shortages, per-farm maximums, land you'd need to unlock, estimated cost (only from known prices —
-  unknown prices are listed, never invented) and budget checks. Problem objects are highlighted.
-* **Future planning** — place *planned* (ghost) objects and editor-only "reserved space" markers.
-* **Layouts** — unlimited local layouts, gallery with thumbnails, templates, rename/duplicate/delete (to trash),
-  import/export files, autosave with crash recovery, revision snapshots on every save, versioned crash-safe files.
-* **Screenshot reference** — import a screenshot of your real farm, set opacity, drag it, and align it to the grid
-  with **3-point calibration**, then rebuild your farm on top of it.
+* **Isometric farm canvas** in the 2:1 grid of the game's tile frame. Smooth zoom toward the cursor (12–400 %),
+  pan with inertia, a camera that stays inside the world, fit/home keys and up to nine saved views per layout.
+  Depth order is a real topological sort that is updated incrementally after each edit.
+* **Original procedural world** for the public map: grass, road, a bridge over the river, forest and a cliff along
+  the north edge. The ground is drawn by this project; the cliff is a visual choice, not map data. A few
+  placeholder decorations (windmills, ponds, fountains) have ambient animation. Seasons can only be chosen when
+  installed art has seasonal variants, which the public placeholders don't.
+* **Main farm only**: the 32×32 starting land plus the 52-plot main expansion section (shapes reconstructed from
+  the wiki map). The upper plots and the across-the-road sections are listed in the map file but not drawn because
+  their tile geometry is unknown.
+* **Fixed landmarks** (farmhouse, order board, truck, roadside shop, newspaper mailbox) are part of the world, not
+  objects. They can be selected and inspected but never moved, rotated, copied or deleted. In the public map their
+  positions are **approximate**, so they are drawn as a guide and do **not** block placement.
+* **1,967-item catalogue** built from fan-wiki research, with instant search, a category rail, favourites,
+  recently used, sorting and filters. Each item shows its footprint confidence (*confirmed / community /
+  unverified / unknown*) and badges for footprint, unlock level and art source. See
+  [catalogue coverage](docs/CATALOG_COVERAGE.md).
+* **Editing**: click/drag placement with per-tile green/red validity and plain-language reasons ("Blocked by
+  Bakery"), paint strokes, lines (Shift), rectangle fills (Ctrl), multi-select, box select, click-again to select the
+  object behind, an "Objects here" list on right-click, live drag preview with blocker outlines, optional snap to the
+  nearest free spot, copy/cut/paste, duplicate, rotate (Hay Day's mirror, only where the game allows), lock, group,
+  eyedropper, eraser, notes and zones, auto-connecting fences and paths. Every edit is an undoable command
+  (one gesture = one undo step).
+* **Layout tools**: symmetry placement (three mirror lines), repeat arrays with a live preview, align and equal
+  spacing, fence/path line and outline brushes, and reusable **stamps** saved as `.hdstamp` files that can be
+  exported and imported.
+* **Realistic Mode**: a non-destructive "can I build this?" report. It covers required level, items above your
+  farm level, plots your level can't unlock yet, inventory shortages, per-farm maximums, land you'd need, estimated
+  cost from known prices only (unknown prices are listed, never invented) and budget checks. Objects from other
+  areas of the game are flagged. In Realistic Mode the eyedropper, paste and duplicate refuse items above your farm
+  level. The issues list groups problems by reason.
+* **Future planning**: *planned* (ghost) objects and editor-only reserved-space markers.
+* **Layouts**: unlimited local layouts, gallery with thumbnails, templates, rename/duplicate/delete (to trash),
+  import/export, autosave with crash recovery, revision snapshots on every save, versioned crash-safe files
+  (schema 3; older files are migrated and the original file is backed up before the first save).
+* **Screenshot references**: several reference images per layout, each with its own opacity, visibility, lock and
+  order, aligned to the grid with **2- or 3-point calibration**. All changes are undoable.
 * **Compare** two layouts: added / removed / moved objects highlighted on the farm, plus item count changes.
-* **Export** PNG images of the whole farm, unlocked land, objects or the view — up to poster size (tiled
-  rendering), optional transparency, grid and labels.
-* **Your own artwork** — import PNG/WebP/JPG folders or sprite sheets (TexturePacker JSON) into a *private* pack;
-  name matching, manifests, transparency trimming, duplicate detection and an import report.
-* **Light and dark themes**, UI scale 100–300 % (crisp at 4K), works at 1080p, 1440p and 3440×1440 ultrawide.
+* **Export** PNG images of the whole farm, unlocked land, objects or the view, up to poster size (tiled
+  rendering), with optional transparency, grid and labels.
+* **Your own artwork**: import PNG/WebP/JPG folders or sprite sheets into a *private* pack, then tune anchors and
+  scale in the Asset Manager. A pack can also carry world data (landmark positions, terrain, initial objects) and
+  catalogue corrections. That code path is covered by tests with synthetic packs only; see
+  [PRIVATE_ASSETS.md](docs/PRIVATE_ASSETS.md).
+* **Interface**: light and dark themes, UI scale 100–300 %, resizable and collapsible side panels with remembered
+  widths, an inspector that hides itself when nothing needs it, and an ambient-animation setting (Off / Reduced /
+  Full; the default follows the OS reduce-motion preference).
 * Fully **offline**, no accounts, no telemetry. Everything is stored locally.
 
 ## Run it
 
 **Windows (portable):** download `HaydaySandbox-windows-x86_64.zip` from the latest CI run (Actions → *CI* →
-artifacts) or build it yourself (below), unzip anywhere and run `HaydaySandbox.exe`. Requires OpenGL 3.3
-(any GPU from the last decade). Your layouts live in `%APPDATA%\HaydaySandbox\`.
+artifacts) or build it yourself (below), unzip anywhere and run `HaydaySandbox.exe`. Requires OpenGL 3.3.
+Your layouts live in `%APPDATA%\HaydaySandbox\`.
 
 **From source (any OS):** install [Godot 4.7.2](https://godotengine.org/download) and run
 `godot --path .` in this folder (or open `project.godot` in the editor and press F5).
@@ -55,10 +75,30 @@ artifacts) or build it yourself (below), unzip anywhere and run `HaydaySandbox.e
 templates if needed, exports `build/windows/HaydaySandbox.exe` and zips a portable bundle. See
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
+### Windows quick start for developers
+
+```powershell
+# Point the runners at the Godot 4.7.2 executable (or put `godot` on PATH).
+$env:GODOT = 'C:\path\to\Godot_v4.7.2-stable_win64.exe'
+
+# Headless checks: import, scripts, unit tests, self-test, data, leak guard, coverage. Logs: artifacts\checks\
+powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1            # add -Perf for benchmarks
+powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1 -SkipImport -Tag mytag
+
+# Screenshots of the real app (OpenGL) into artifacts\screens\
+powershell -ExecutionPolicy Bypass -File tools\ci\visual_tests.ps1 'overview,selection' 1920x1080:1
+```
+
+Both runners give every Godot child a fresh, temporary `APPDATA`, so your real layouts, settings and any installed
+asset pack are never read or changed. Capture windows open off-screen and never take focus. Run one visual run at a
+time: it writes a temporary `override.cfg` into the project folder and refuses to start if one already exists.
+Details: [docs/TESTING.md](docs/TESTING.md).
+
 **Private original-art pack (optional, personal use only):** if you are allowed to use original Hay Day art
 privately, `tools\private_assets\acquire_windows.bat` (or installing a pack zip from Settings) builds and installs
 it into your user folder. It is never part of this repository, CI or releases. See
-[docs/PRIVATE_ASSETS.md](docs/PRIVATE_ASSETS.md). Contributors: run `tools/ci/install_git_hooks.sh` once per clone.
+[docs/PRIVATE_ASSETS.md](docs/PRIVATE_ASSETS.md). Contributors: run `tools/ci/install_git_hooks.sh` once per clone
+(Git Bash on Windows).
 
 ## Quick tour
 
@@ -67,9 +107,22 @@ it into your user folder. It is never part of this repository, CI or releases. S
 | ![Placing](docs/screenshots/placing_1440p.jpg) | ![Realistic mode](docs/screenshots/realistic_1080p.jpg) |
 | ![Ultrawide](docs/screenshots/ultrawide.jpg) | ![Light theme](docs/screenshots/light_1080p.jpg) |
 
-Press **F1** in the app for every shortcut. Essentials: **V** select · **B** place · **E** erase · **I**
-eyedropper · **M** land · **N** notes · **R** rotate · **Ctrl+Z / Ctrl+Shift+Z** undo/redo · **Ctrl+S** save ·
-**Ctrl+F** search · **Tab** hide panels · **F** fit farm · Space/middle/right-drag to pan.
+Press **F1** in the app for every shortcut (the help is built from the real key bindings). Highlights:
+
+| Keys | Action |
+|---|---|
+| **V** · **B** · **E** · **I** · **M** · **N** · **D** | select · place · erase · eyedropper · land · notes · pan tool |
+| Space / middle / right-drag | pan with any tool |
+| Shift+drag · Ctrl+drag | line of items · rectangle fill |
+| Click again on the same spot | select the object behind (cycles); right-click → *Objects here* |
+| Alt while dragging | toggle snap to free space |
+| **R** · **L** · **P** | rotate (mirror) · lock · planned |
+| Ctrl+C / X / V · Ctrl+D | copy / cut / paste · duplicate |
+| Ctrl+Z · Ctrl+Shift+Z / Ctrl+Y | undo · redo |
+| **F** · Shift+F · **H** / Home | fit selection or farm · whole world · centre the farmhouse |
+| 1…9 · Ctrl+1…9 | go to · save a view (saved with the layout, undoable) |
+| **[** · **]** · Tab | collapse catalogue · show/hide inspector · hide all panels |
+| Ctrl+M · Ctrl+S · Ctrl+F | Creative/Realistic · save · search |
 
 ## Documentation
 

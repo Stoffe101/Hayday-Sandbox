@@ -62,6 +62,7 @@ func _ready() -> void:
 	h.add_child(_redo)
 	h.add_child(VSeparator.new())
 	for b in [["layout-grid", "Layouts (Ctrl+O)", "gallery"], ["save", "Save (Ctrl+S)", "save"], ["image-down", "Export image (Ctrl+E)", "export"],
+			["image", "Asset manager — art packs, anchors, review (Ctrl+Shift+A)", "assets"],
 			["settings", "Settings", "settings"], ["circle-question-mark", "Help & shortcuts (F1)", "help"]]:
 		var btn := UI.icon_button(b[0], b[1])
 		btn.pressed.connect(func(): action.emit(b[2]))

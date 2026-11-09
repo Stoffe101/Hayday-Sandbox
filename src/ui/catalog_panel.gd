@@ -3,6 +3,7 @@ extends PanelContainer
 ## Searchable, filterable item catalogue with thumbnail grid.
 
 signal item_chosen(id: String)
+signal open_assets(id: String)      ## open the Asset Manager on this item
 
 var _search: LineEdit
 var _list: ItemList
@@ -33,6 +34,9 @@ func _ready() -> void:
 	head.add_child(UI.spacer())
 	_count = UI.label("", "Faint")
 	head.add_child(_count)
+	var am := UI.icon_button("image", "Asset manager — art, anchors, review (Ctrl+Shift+A)", "Ghost", 18)
+	am.pressed.connect(func(): open_assets.emit(_selected_id))
+	head.add_child(am)
 	v.add_child(head)
 	_search = LineEdit.new()
 	_search.placeholder_text = "Search 1,900+ items…  (Ctrl+F)"
@@ -236,9 +240,30 @@ func _process(_dt: float) -> void:
 		var idx: int = _icon_queue.pop_front()
 		if idx < _ids.size() and not _ids[idx].is_empty():
 			var it := App.db.get_item(_ids[idx])
-			var spr := App.assets.get_sprite(it.art_key, "", UI.preview_mask(it))
-			_list.set_item_icon(idx, spr.texture if spr else Icons.get_icon("box", 48))
+			# Thumbnails only: never forces full-size art of large packs to load.
+			var th := App.assets.get_thumbnail(it.art_key, "", UI.preview_mask(it))
+			_list.set_item_icon(idx, th if th else Icons.get_icon("box", 48))
 		budget -= 1
+
+
+func refresh_art(art_keys: Array) -> void:
+	## Re-queue thumbnails of items whose art changed (override edits).
+	var ks := {}
+	for k in art_keys:
+		ks[str(k)] = true
+	for i in _ids.size():
+		if _ids[i].is_empty():
+			continue
+		var it := App.db.get_item(_ids[i])
+		if it and ks.has(it.art_key) and not i in _icon_queue:
+			_icon_queue.append(i)
+	if ks.has(_art_key_of(_selected_id)):
+		_show_detail(_selected_id)
+
+
+func _art_key_of(id: String) -> String:
+	var it := App.db.get_item(id)
+	return it.art_key if it else ""
 
 
 func _tooltip(it: ItemDef) -> String:
@@ -306,8 +331,8 @@ func _show_detail(id: String) -> void:
 		return
 	var top := UI.hbox(10)
 	var tex := TextureRect.new()
-	var spr := App.assets.get_sprite(it.art_key, "", UI.preview_mask(it))
-	tex.texture = spr.texture if spr else Icons.get_icon("box", 48)
+	var th := App.assets.get_thumbnail(it.art_key, "", UI.preview_mask(it))
+	tex.texture = th if th else Icons.get_icon("box", 48)
 	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tex.custom_minimum_size = Vector2(64, 56)
@@ -324,8 +349,14 @@ func _show_detail(id: String) -> void:
 	if it.cost_diamonds >= 0:
 		meta += " · %d 💎" % it.cost_diamonds
 	info.add_child(UI.label(meta, "Dim"))
-	var badges := UI.hbox(4)
+	var badges := HFlowContainer.new()
+	badges.add_theme_constant_override("h_separation", 4)
+	badges.add_theme_constant_override("v_separation", 4)
 	badges.add_child(UI.badge(UI.status_text(it.footprint_status), UI.status_color(it.footprint_status)))
+	badges.add_child(UI.art_badge(App.assets.art_status(it.art_key)))
+	var nv := App.assets.variants_of(it.art_key).size()
+	if nv > 0:
+		badges.add_child(UI.badge("%d variant%s" % [nv, "" if nv == 1 else "s"], UiTheme.c("info")))
 	if it.flippable:
 		badges.add_child(UI.badge("Rotatable", UiTheme.c("text_dim")))
 	info.add_child(badges)

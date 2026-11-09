@@ -7,8 +7,8 @@ Linux cloud dev environment on 2026-11-09 with Godot 4.7.2 (llvmpipe software Op
 |---|---|---|---|
 | Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 59/59 ✅ |
 | Data | `python3 tools/ci/validate_data.py` | manifests, maps, asset pack refs, samples (no overlaps), **licence guard** | 1,967 items, 0 errors ✅ |
-| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 69 tests / 314 assertions ✅ |
-| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 52 checks ✅ |
+| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 86 tests / 511 assertions ✅ |
+| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 88 checks ✅ |
 | Exported build | `build/linux/HaydaySandbox.x86_64 --headless -- --selftest` | packaging of data/art/samples in an export | 52 checks ✅ |
 | Performance | `godot --headless --path . -- --selftest=perf` | synthetic farms 2k/5k/10k + densely packed real farm | ✅ (numbers below) |
 | Visual | `tools/ci/visual_tests.sh all` | 16 UI states × 4 resolutions/scales, real rendering under Xvfb | 64 screenshots ✅ (inspected) |
@@ -26,7 +26,11 @@ atomic save + .bak, recovery from a truncated file, missing items preserved with
 resized items, newer/foreign files rejected, v0→v1 migration, malformed records, duplicate uids) ·
 `test_planning` (fence masks, groups, degradation rules, realistic level/ownership/max/cost/budget/land/planned,
 default ownership, layout diff) · `test_library_and_tools` (gallery lifecycle, trash, snapshots, autosave
-recovery, affine calibration solver, importer name matching, settings type safety).
+recovery, affine calibration solver, importer name matching, settings type safety) · `test_asset_packs`
+(overrides parsing/normalising/merging/pruning, auto-anchor maths, path safety, zip install: folder-deep pack.json,
+zip-slip, atomic replace, overrides kept on update, interrupted-swap restore, bad zips; AssetLibrary: priority,
+version/provenance, thumbnails without full-texture loads, variants/default variant, overrides save/reload,
+reject → fallback, review queue + assign, missing files, pack stats).
 
 ## Integration self-test (`tests/integration/app_selftest.gd`)
 Runs inside the real application (autoloads, UI, renderer, controller) and feeds synthetic mouse/keyboard
@@ -35,7 +39,17 @@ reject; Ctrl+Z/Ctrl+Shift+Z; Shift-drag fence line = one undo step and auto-conn
 frees old tiles; drop onto the farmhouse is rejected; locked objects survive Delete; L toggles lock; Ctrl+C / Ctrl+V
 stamp; R mirrors and swaps the footprint; box select; Delete + undo; Land tool unlock + undo; Creative↔Realistic
 leaves objects byte-identical; unknown items render as fallbacks; save → reload matches every object; unknown
-item preserved; revision snapshot written; asset importer (match, duplicate, unmatched, trimming, pack.json).
+item preserved; revision snapshot written; asset importer (match, duplicate, unmatched, trimming, pack.json);
+asset packs: a synthetic pack zip built at runtime from the placeholder PNGs (`tests/fixtures/synthetic_pack.gd`,
+no real artwork) is installed, wins over placeholders, thumbnails don't load full textures, missing files are
+detected, the inspector variant picker is one undoable command (Ctrl+Z / Ctrl+Shift+Z), Ctrl+Shift+A opens the Asset
+Manager, nudged and mouse-dragged anchors / verified / wrong match / category scale / review assignment persist in overrides.json,
+survive reload and a pack update, uninstall restores the previous art. The checks are written so they also pass
+when other packs are installed in the data folder.
+
+Two more self-test modes exist for a user's installed original-art pack (private; see `docs/PRIVATE_ASSETS.md`):
+`--selftest=artcheck` (every catalogue item resolves to the pack and its texture loads; memory) and
+`--selftest=artflow` (editing workflows with that art, with timings). They need the pack and are not run in CI.
 
 ## Performance (`--selftest=perf`, headless, this container: 4 vCPU)
 
@@ -55,7 +69,10 @@ object, no per-frame script work while panning) is expected to be GPU-bound and 
 The app is launched normally under Xvfb with `--rendering-driver opengl3` and `-- --capture`; a driver node
 stages each scenario and saves the real framebuffer. Scenarios: overview, place_valid, place_invalid, selection,
 search, realistic, land, zoomed, gallery, help, settings, welcome, reference, compare, export (also writes a
-full-farm export PNG), light theme. Configurations: 1920×1080 @100 %, 2560×1440 @125 %, 3440×1440 @100 %
+full-farm export PNG), light theme, asset_manager / asset_review / asset_packs (Asset Manager tabs) and
+original_art (variant on the farm) — the asset scenarios install the synthetic placeholder-derived pack and remove
+it again. Each configuration runs with its own temporary `XDG_DATA_HOME`, so the real data folder (layouts,
+private asset packs) is never touched and never appears in screenshots. Configurations: 1920×1080 @100 %, 2560×1440 @125 %, 3440×1440 @100 %
 (ultrawide), 3840×2160 @200 %.
 
 Screenshots were inspected manually for clipping, overlap, anchoring, depth order, scaling and readability. Bugs

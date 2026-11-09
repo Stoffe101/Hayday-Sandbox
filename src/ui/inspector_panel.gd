@@ -99,6 +99,7 @@ func _build_selection(s: EditorSession) -> void:
 		var it := s.db.get_item(o.item_id)
 		_body.add_child(UI.section("Selected object"))
 		_item_card(it, o)
+		_variant_picker(s, [o])
 		_issue_list(o)
 		_object_actions(s, [o])
 		_note_editor(s, o)
@@ -121,7 +122,67 @@ func _build_selection(s: EditorSession) -> void:
 	_body.add_child(card)
 	var r := s.layout.bounds_of(s.selection)
 	_body.add_child(UI.label("Area: %d × %d tiles" % [r.size.x, r.size.y], "Dim"))
+	_variant_picker(s, objs)
 	_object_actions(s, objs)
+
+
+var variant_option: OptionButton    ## exposed for tests
+
+
+func _variant_picker(s: EditorSession, objs: Array) -> void:
+	## Shown when the selected objects share art that has variants. Changing it
+	## is one undoable command (EditCommands.SetProperty "variant").
+	variant_option = null
+	if objs.is_empty():
+		return
+	var it0 := s.db.get_item((objs[0] as PlacedObject).item_id)
+	if it0 == null:
+		return
+	var mixed := false
+	for o: PlacedObject in objs:
+		var it := s.db.get_item(o.item_id)
+		if it == null or it.art_key != it0.art_key:
+			return
+		mixed = mixed or o.variant != (objs[0] as PlacedObject).variant
+	var vars := App.assets.variants_of(it0.art_key)
+	if vars.is_empty():
+		return
+	_body.add_child(UI.section("Appearance"))
+	var row := UI.hbox(8)
+	row.add_child(UI.label("Variant", "Dim"))
+	var ob := OptionButton.new()
+	ob.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ob.tooltip_text = "Art variant from the installed asset pack (Ctrl+Z undoes)"
+	ob.focus_mode = Control.FOCUS_NONE
+	var def := App.assets.default_variant_of(it0.art_key)
+	ob.add_item("Default" + (" (%s)" % _variant_name(it0, def) if not def.is_empty() else ""))
+	ob.set_item_metadata(0, "")
+	var cur := (objs[0] as PlacedObject).variant
+	ob.selected = 0
+	if not def.is_empty():
+		ob.add_item("Base image")
+		ob.set_item_metadata(1, AssetLibrary.BASE_VARIANT)
+		if cur == AssetLibrary.BASE_VARIANT:
+			ob.selected = 1
+	for v in vars:
+		ob.add_item(_variant_name(it0, v))
+		ob.set_item_metadata(ob.item_count - 1, v)
+		if v == cur:
+			ob.selected = ob.item_count - 1
+	if mixed:
+		ob.selected = -1
+		ob.text = "Mixed"
+	ob.item_selected.connect(func(i): action.emit("variant", ob.get_item_metadata(i)))
+	row.add_child(ob)
+	_body.add_child(row)
+	variant_option = ob
+
+
+static func _variant_name(it: ItemDef, vid: String) -> String:
+	for v in it.variants:
+		if str(v.get("id", "")) == vid:
+			return str(v.get("name", vid))
+	return vid.replace("_", " ").capitalize()
 
 
 func _brush_row(s: EditorSession) -> HBoxContainer:
@@ -194,8 +255,10 @@ func _item_card(it: ItemDef, o: PlacedObject) -> void:
 			badges.add_child(UI.badge("Planned", UiTheme.c("planned")))
 		if o and o.locked:
 			badges.add_child(UI.badge("Locked", UiTheme.c("text_dim")))
-		if spr and spr.pack_id == "builtin_placeholders":
-			badges.add_child(UI.badge("Placeholder art", UiTheme.c("text_faint")))
+		badges.add_child(UI.art_badge(App.assets.art_status(key)))
+		var nv := App.assets.variants_of(key).size()
+		if nv > 0:
+			badges.add_child(UI.badge("%d variant%s" % [nv, "" if nv == 1 else "s"], UiTheme.c("info")))
 		info.add_child(badges)
 	top.add_child(info)
 	v.add_child(top)

@@ -18,7 +18,7 @@ const SHORTCUTS := [
 	["View & file", ""],
 	["Mouse wheel / + / -", "Zoom"], ["F / Home", "Fit the farm"], ["G", "Grid"], ["O", "Occupied-tile overlay"], ["Tab", "Hide / show panels"],
 	["Ctrl+F", "Search catalogue"], ["Ctrl+M", "Switch Creative / Realistic"], ["Ctrl+S", "Save (keeps a revision)"], ["Ctrl+O", "Layouts"],
-	["Ctrl+N", "New layout"], ["Ctrl+E", "Export image"], ["F1", "This help"],
+	["Ctrl+N", "New layout"], ["Ctrl+E", "Export image"], ["Ctrl+Shift+A", "Asset manager (art, anchors, review)"], ["F1", "This help"],
 ]
 
 
@@ -161,9 +161,22 @@ static func settings(parent: Control, on_change: Callable) -> void:
 	m.body.add_child(UI.section("Artwork"))
 	var packs := PackedStringArray()
 	for p in App.assets.pack_list():
-		packs.append("%s (%d sprites, %s)" % [p["name"], (p["sprites"] as Dictionary).size(), p["license"]])
+		packs.append("%s%s (%s sprites, %s)" % [p["name"], (" v" + str(p["version"])) if not str(p["version"]).is_empty() else "",
+			UI.fmt_int((p["sprites"] as Dictionary).size()), p["license"]])
 	m.body.add_child(UI.label("Loaded packs: " + "; ".join(packs), "Faint", true))
-	var art_row := UI.hbox(8)
+	var art_row := HFlowContainer.new()
+	art_row.add_theme_constant_override("h_separation", 8)
+	art_row.add_theme_constant_override("v_separation", 8)
+	var am := UI.button("Asset manager…", "image", "Review art, fine-tune anchors and scale, assign images (Ctrl+Shift+A)")
+	am.pressed.connect(func():
+		m.close()
+		on_change.call("asset_manager"))
+	art_row.add_child(am)
+	var inst := UI.button("Install asset pack (.zip)…", "package-open", "Install a prepared asset pack (pack.json + images) into your private data folder")
+	inst.pressed.connect(func():
+		m.close()
+		on_change.call("install_pack"))
+	art_row.add_child(inst)
 	var imp := UI.button("Import artwork…", "upload", "Import your own images for items (stored privately in your data folder)")
 	imp.pressed.connect(func():
 		m.close()

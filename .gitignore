@@ -38,3 +38,21 @@ csv_logic/
 
 # Tooling scratch (browser automation logs etc.)
 .playwright-mcp/
+
+# ---------------------------------------------------------------------------
+# PRIVATE ORIGINAL ART (personal use only, never redistributed): the private
+# storage root, installed/built packs and pack zips never belong in git.
+# Enforced by tools/ci/check_private_leaks.py (CI + pre-commit/pre-push hooks,
+# install with tools/ci/install_git_hooks.sh). See docs/PRIVATE_ASSETS.md.
+# ---------------------------------------------------------------------------
+hayday-sandbox-private-assets/
+asset_packs/
+hayday_original/
+*.hdpack.zip
+*.xapk
+*.apks
+*.apkm
+*.aab
+*.pck
+private/
+.leakcheck/

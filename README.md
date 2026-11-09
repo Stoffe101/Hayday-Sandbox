@@ -55,6 +55,11 @@ artifacts) or build it yourself (below), unzip anywhere and run `HaydaySandbox.e
 templates if needed, exports `build/windows/HaydaySandbox.exe` and zips a portable bundle. See
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
+**Private original-art pack (optional, personal use only):** if you are allowed to use original Hay Day art
+privately, `tools\private_assets\acquire_windows.bat` (or installing a pack zip from Settings) builds and installs
+it into your user folder. It is never part of this repository, CI or releases. See
+[docs/PRIVATE_ASSETS.md](docs/PRIVATE_ASSETS.md). Contributors: run `tools/ci/install_git_hooks.sh` once per clone.
+
 ## Quick tour
 
 | | |
@@ -70,7 +75,7 @@ eyedropper · **M** land · **N** notes · **R** rotate · **Ctrl+Z / Ctrl+Shift
 
 * [Product vision](docs/PRODUCT_VISION.md) · [Features](docs/FEATURES.md) · [Roadmap](docs/ROADMAP.md) · [Known issues](docs/KNOWN_ISSUES.md)
 * [Architecture](docs/ARCHITECTURE.md) · [Development & builds](docs/DEVELOPMENT.md) · [Testing](docs/TESTING.md)
-* [Asset pipeline](docs/ASSET_PIPELINE.md) · [Item database](docs/ITEM_DATABASE.md) · [Catalogue coverage](docs/CATALOG_COVERAGE.md)
+* [Asset pipeline](docs/ASSET_PIPELINE.md) · [Private original-art pack](docs/PRIVATE_ASSETS.md) · [Item database](docs/ITEM_DATABASE.md) · [Catalogue coverage](docs/CATALOG_COVERAGE.md)
 * Research: [legal & licensing](docs/research/LEGAL_AND_LICENSING.md) · [asset sources](docs/research/ASSET_SOURCES.md) ·
   [asset formats](docs/research/ASSET_FORMATS.md) · [placement](docs/research/PLACEMENT_RESEARCH.md) ·
   [Hay Day reference](docs/research/HAYDAY_REFERENCE.md) · [item data](docs/research/ITEM_DATA_RESEARCH.md) ·

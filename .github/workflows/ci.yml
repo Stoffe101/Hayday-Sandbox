@@ -15,11 +15,37 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the private-art leak guard also checks every commit of the push / pull request
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Validate manifests, maps, asset pack, samples; enforce art guard
         run: python3 tools/ci/validate_data.py
+      # Private-art leak guard (docs/PRIVATE_ASSETS.md). CI never has the private storage, so the hash comparison
+      # is skipped here; every other rule runs. The same checker runs locally as pre-commit / pre-push hook.
+      - name: Leak guard self-tests
+        run: |
+          python3 tools/ci/check_private_leaks.py --self-test
+          python3 tools/ci/check_export_contents.py --self-test
+      - name: Leak guard - whole tracked tree
+        run: python3 tools/ci/check_private_leaks.py
+      - name: Leak guard - every commit in this push / pull request
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [ -n "$PR_BASE" ]; then
+            range="$PR_BASE..$HEAD_SHA"
+          elif [ -n "$BEFORE" ] && [ -n "${BEFORE//0/}" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            range="$BEFORE..$HEAD_SHA"
+          else
+            range="$HEAD_SHA"   # new branch or manual run: the whole history
+          fi
+          echo "checking commits: $range"
+          python3 tools/ci/check_private_leaks.py --range "$range"
       - name: Catalogue coverage is up to date
         run: |
           python3 tools/catalog/coverage_report.py
@@ -49,11 +75,12 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-results   # text logs only
           path: |
             unit-tests.xml
             selftest.log
             perf.log
+          if-no-files-found: ignore
 
   visual:
     name: Visual screenshots (Xvfb, software GL)
@@ -66,14 +93,28 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1 libegl1 mesa-utils > /dev/null
           curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
           unzip -q godot.zip && sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+      - name: Assert a placeholder-only environment (no private art can be rendered or packaged)
+        run: |
+          extra="$(find assets/original -type f ! -name README.md ! -name .gdignore 2>/dev/null | head -n 5)"
+          if [ -n "$extra" ]; then echo "::error::assets/original must be empty in CI: $extra"; exit 1; fi
+          packs="${XDG_DATA_HOME:-$HOME/.local/share}/HaydaySandbox/asset_packs"
+          if [ -d "$packs" ] && [ -n "$(ls -A "$packs")" ]; then echo "::error::user asset packs present: $packs"; exit 1; fi
+          if find . -path ./.git -prune -o \( -type d -iname asset_packs -o -iname '*hayday_original*' -o -iname '*private-assets*' \) -print | grep -q .; then
+            echo "::error::private pack paths in the checkout"; exit 1
+          fi
       - run: godot --headless --path . --import || true
       - name: Capture screenshots (1080p, 1440p@125%, ultrawide, 4K@200%)
-        run: tools/ci/visual_tests.sh all
+        run: tools/ci/visual_tests.sh all   # isolated, empty user-data folder -> built-in placeholders only
+      - name: Leak guard - screenshots about to be uploaded
+        if: always()
+        run: python3 tools/ci/check_private_leaks.py --paths artifacts/screens --artifact
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: screenshots
-          path: artifacts/screens
+          name: screenshots   # only artifacts/screens (placeholder-art screenshots of this app)
+          path: artifacts/screens/
+          if-no-files-found: warn
+          retention-days: 30
 
   windows-build:
     name: Windows build
@@ -89,9 +130,31 @@ jobs:
         with:
           path: ~/.local/share/godot/export_templates
           key: godot-templates-${{ env.GODOT_VERSION }}
+      - name: Assert a placeholder-only environment (no private art can be rendered or packaged)
+        run: |
+          extra="$(find assets/original -type f ! -name README.md ! -name .gdignore 2>/dev/null | head -n 5)"
+          if [ -n "$extra" ]; then echo "::error::assets/original must be empty in CI: $extra"; exit 1; fi
+          packs="${XDG_DATA_HOME:-$HOME/.local/share}/HaydaySandbox/asset_packs"
+          if [ -d "$packs" ] && [ -n "$(ls -A "$packs")" ]; then echo "::error::user asset packs present: $packs"; exit 1; fi
+          if find . -path ./.git -prune -o \( -type d -iname asset_packs -o -iname '*hayday_original*' -o -iname '*private-assets*' \) -print | grep -q .; then
+            echo "::error::private pack paths in the checkout"; exit 1
+          fi
       - name: Export Windows (+ Linux verification build) and self-test the export
         run: tools/build/build.sh release
+      - name: Leak guard - exported packages contain public data only
+        run: |
+          # 1) read the PCK file lists (embedded in the .exe / Linux binary) and the bundle zip
+          python3 tools/ci/check_export_contents.py build/windows/HaydaySandbox.exe build/linux/HaydaySandbox.x86_64 \
+            build/HaydaySandbox-windows-x86_64.zip build/windows
+          # 2) belt and braces: no private names anywhere in build/ or in the zip listing
+          if find build \( -ipath '*/asset_packs/*' -o -iname '*hayday_original*' -o -iname '*private-assets*' \) | grep -q .; then
+            echo "::error::private pack files in build/"; exit 1
+          fi
+          if unzip -Z1 build/HaydaySandbox-windows-x86_64.zip | grep -Ei '(^|/)asset_packs/|hayday_original|private-assets|\.(sc|sctx|ktx|zktx|apk|xapk|obb)$'; then
+            echo "::error::private files in the Windows bundle"; exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
-          name: HaydaySandbox-windows-x86_64
+          name: HaydaySandbox-windows-x86_64   # only the verified portable bundle
           path: build/HaydaySandbox-windows-x86_64.zip
+          if-no-files-found: error

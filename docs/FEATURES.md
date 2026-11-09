@@ -15,7 +15,7 @@ Status: ✅ implemented & tested · 🟡 implemented, partially verified · ⬜ 
 * ✅ Favourites (right-click), recently placed, sort by relevance/name/level/size
 * ✅ Filters: fits my level, trusted sizes only, hide reference-only, only items with their own art
 * ✅ Thumbnail grid with progressive loading, detail card with size/level/price/status badges
-* ⬜ Variation picker UI (data model + asset packs support `variants`; no catalogued variants yet)
+* ✅ Variant picker for placed objects whose art has variants (inspector, undoable); art badges + variant counts
 
 ## Editing tools
 * ✅ Select, box select (marquee), Shift/Ctrl add, double-click selects all of a type, select all
@@ -54,8 +54,10 @@ Status: ✅ implemented & tested · 🟡 implemented, partially verified · ⬜ 
 ## Art & data
 * ✅ Original CC0 placeholder art for all items (474 dedicated + shared generic), 16 connection shapes for fences/paths
 * ✅ In-app art importer (folders, sprite sheets, manifests, trimming, hashing, report) into private packs
-* ✅ Layered asset packs, hot reload after import
-* ⬜ In-app anchor/scale editor for imported sprites (edit `pack.json` for now)
+* ✅ Layered asset packs, hot reload after import; `.zip` pack install (Settings or `-- --install-pack=`)
+* ✅ Asset Manager (Ctrl+Shift+A): footprint preview with original/placeholder/onion skin, drag/arrow anchor
+  editing, scale (per item or whole category), verify / reject, variants, review queue, pack overview — all saved
+  to per-pack `overrides.json`
 
 ## App
 * ✅ Dark/light themes, UI scale auto/100–300 %, collapsible panels, Tab = full canvas, toasts, welcome onboarding

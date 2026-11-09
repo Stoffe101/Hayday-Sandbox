@@ -39,6 +39,8 @@ var _last_title := ""
 func _ready() -> void:
 	get_tree().root.min_size = Vector2i(1024, 640)
 	get_tree().set_auto_accept_quit(false)
+	if not _handle_install_args():
+		return
 	var capture := OS.get_cmdline_user_args().has("--capture")
 	if capture:
 		# Deterministic state for visual tests (never persisted).
@@ -55,7 +57,9 @@ func _ready() -> void:
 	App.session_changed.connect(_on_session_changed)
 	App.assets_reloaded.connect(func():
 		renderer.refresh_all_art()
+		overlay.refresh()
 		catalog.refresh())
+	App.art_changed.connect(_on_art_changed)
 	App.settings.changed.connect(_on_setting_changed)
 	_open_initial()
 	get_tree().root.size_changed.connect(_update_view_rect)
@@ -77,6 +81,34 @@ func _ready() -> void:
 			else:
 				print("SELFTEST UNAVAILABLE (tests not packaged)")
 				get_tree().quit(3)
+
+
+func _handle_install_args() -> bool:
+	## `-- --install-pack=<zip>` installs an asset pack at startup and prints the
+	## result; with `--quit-after-install` the app exits (status 0 = installed).
+	## Returns false when the app is quitting.
+	var args := OS.get_cmdline_user_args()
+	var any := false
+	var all_ok := true
+	for a in args:
+		if a.begins_with("--install-pack="):
+			any = true
+			var r := App.install_pack(a.substr(15))
+			print("INSTALL-PACK %s" % r.summary())
+			if r.ok:
+				print("INSTALL-PACK DIR %s" % r.dir)
+			all_ok = all_ok and r.ok
+	if any and args.has("--quit-after-install"):
+		get_tree().quit(0 if all_ok else 1)
+		return false
+	return true
+
+
+func _on_art_changed(keys: Array) -> void:
+	renderer.refresh_art(keys)
+	overlay.refresh()
+	catalog.refresh_art(keys)
+	inspector.queue_rebuild()
 
 
 func _is_automation() -> bool:
@@ -163,6 +195,7 @@ func _build_ui() -> void:
 	catalog.offset_top = 82
 	catalog.offset_bottom = -m
 	catalog.item_chosen.connect(_on_item_chosen)
+	catalog.open_assets.connect(_open_asset_manager)
 	root.add_child(catalog)
 	inspector = InspectorPanel.new()
 	inspector.anchor_left = 1
@@ -519,6 +552,7 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_E when ctrl: _export_dialog()
 		KEY_F when ctrl: catalog.focus_search()
 		KEY_M when ctrl: _toggle_mode()
+		KEY_A when ctrl and k.shift_pressed: _open_asset_manager(_asset_focus_item())
 		KEY_A when ctrl: s.select_all()
 		KEY_C when ctrl: _copy(false)
 		KEY_X when ctrl: _copy(true)
@@ -688,6 +722,7 @@ func _on_top_action(a: String) -> void:
 		"gallery": _gallery()
 		"export": _export_dialog()
 		"settings": Dialogs.settings(modal_layer, _on_settings_dialog)
+		"assets": _open_asset_manager(_asset_focus_item())
 		"help": Dialogs.help(modal_layer)
 		"rename":
 			Modal.prompt(modal_layer, "Rename layout", App.session.layout.name, func(t):
@@ -762,6 +797,8 @@ func _on_inspector_action(a: String, arg: Variant) -> void:
 			var uids := s.selection.duplicate()
 			if uids.size() == 1:
 				s.execute(EditCommands.SetProperty.new(uids, "note", [str(arg)], "Edit note"))
+		"variant":
+			set_variant(s.selection.duplicate(), str(arg))
 		"toggle_mode": _toggle_mode()
 		"tool": s.set_tool(arg)
 		"land_all":
@@ -835,6 +872,60 @@ func _on_settings_dialog(what: String) -> void:
 			App.toast("New layouts will use “%s”. Open layouts keep their own map." % App.map.name, "info")
 		"import_art":
 			ArtImportDialog.new().show(modal_layer)
+		"install_pack":
+			_install_pack_dialog()
+		"asset_manager":
+			_open_asset_manager(_asset_focus_item())
+
+
+func set_variant(uids: Array, variant: String) -> void:
+	## Variant switch for placed objects: one undoable command.
+	var s := App.session
+	var targets: Array = []
+	for u in uids:
+		var o := s.layout.get_obj(u)
+		if o and o.variant != variant:
+			targets.append(u)
+	if targets.is_empty():
+		return
+	var vals: Array = []
+	vals.resize(targets.size())
+	vals.fill(variant)
+	s.execute(EditCommands.SetProperty.new(targets, "variant", vals, "Change variant"))
+
+
+func _asset_focus_item() -> String:
+	## Item the Asset Manager opens on: the selected object's, else the active one.
+	var s := App.session
+	if s == null:
+		return ""
+	for o: PlacedObject in s.selected_objects():
+		return o.item_id
+	return s.active_item
+
+
+func _open_asset_manager(item_id: String = "") -> AssetManager:
+	for c in modal_layer.get_children():
+		if c is Modal and c.has_meta("asset_manager"):
+			return c.get_meta("asset_manager")
+	var am := AssetManager.open(modal_layer, item_id)
+	am.install_requested.connect(_install_pack_dialog)
+	return am
+
+
+func _install_pack_dialog() -> void:
+	var fd := FileDialog.new()
+	fd.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	fd.access = FileDialog.ACCESS_FILESYSTEM
+	fd.use_native_dialog = true
+	fd.title = "Install asset pack (.zip)"
+	fd.filters = PackedStringArray(["*.zip ; Asset pack (.zip)"])
+	fd.file_selected.connect(func(p):
+		App.toast("Installing asset pack…", "info")
+		var r := App.install_pack(p)
+		App.toast("Asset pack %s" % r.summary(), "success" if r.ok else "error"))
+	root.add_child(fd)
+	fd.popup_centered_ratio(0.6)
 
 
 # ---------------------------------------------------------------------------

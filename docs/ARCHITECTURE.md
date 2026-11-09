@@ -25,7 +25,10 @@ src/
     layout_diff.gd         geometric comparison of two layouts
     json_util.gd           JSON + crash-safe atomic writes
   assets/
-    asset_library.gd       layered asset packs → SpriteInfo (texture, anchor, scale, shadow, alpha hit mask)
+    asset_library.gd       layered asset packs → SpriteInfo (texture, anchor, scale, shadow, alpha hit mask),
+                           lazy textures + thumbnails, variants, overrides, review queue, pack stats
+    pack_overrides.gd      pure overrides.json parsing/merging + auto-anchor maths (unit-tested)
+    pack_installer.gd      .zip pack install (validation, zip-slip guard, atomic replace)
     asset_importer.gd      user art import (folders, atlases, manifests, trimming, hashing, report)
   render/                  scene nodes that draw the world
     ground_layer.gd        terrain runs, raised land edge, locked-plot hatching, plot borders/labels
@@ -41,6 +44,7 @@ src/
     editor_session.gd      per-document editing state + high-level operations (shared by UI & keys)
     editor_controller.gd   pointer gestures → tool behaviour → Commands (one gesture = one undo step)
   ui/                      theme (code-built), icons, panels, dialogs — no business logic
+    asset_manager.gd       Asset Manager (Ctrl+Shift+A): footprint preview, anchor/scale edits, review queue, packs
   app/
     app.gd                 autoload service locator: settings, db, maps, assets, library, session
     main.gd                composition root: builds world + UI, wires signals, global shortcuts

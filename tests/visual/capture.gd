@@ -5,15 +5,38 @@ extends Node
 ##   xvfb-run -s "-screen 0 1920x1080x24" godot --path . --rendering-driver opengl3 -- \
 ##     --capture --out=artifacts/screens --scale=1 --scenarios=all
 ## Each scenario prints "SHOT <file>"; failures print "FAIL".
+## Extra options for checking a user's installed (private) pack:
+##   --open=<layout>   open that layout instead of the showcase (main.gd)
+##   --real-art        asset scenarios use the installed packs, no synthetic pack
+##   scenario at_<x>_<y>_<zoom>   centre on tile (x, y) at that zoom (e.g. at_30_9_2.5)
+##   scenario export2x            full-farm export at 2x
+##   --outline-all                at_* scenarios select every object (footprint outlines)
+##   --dump-objects               write <shot>.objects.json (screen footprints/bounds, no pixels)
+##   --hide-panels                hide the top bar and side panels
+##   scenario export_objects      export of the objects' bounding box at 1x
+##   --select-items=a+b+c         items the "selection" scenario selects (default field+apple_tree)
+## Screens of a private pack must go to the private root (--out=...), never artifacts/.
 
 const ALL := ["overview", "place_valid", "place_invalid", "selection", "search", "realistic", "land", "zoomed",
-	"gallery", "help", "settings", "welcome", "reference", "compare", "export", "light"]
+	"gallery", "help", "settings", "welcome", "reference", "compare", "export", "light",
+	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty"]
+## Not part of "all": only meaningful with a real pack / --open layout.
+const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>"]
+## Asset scenarios install a synthetic pack generated from the built-in
+## placeholders (never real artwork); it is removed again before the next scenario.
+const SyntheticPack := preload("res://tests/fixtures/synthetic_pack.gd")
 
 var out_dir := "res://artifacts/screens"
 var scale := 1.0
 var scenarios: Array = []
 var main: Node
 var tag := ""
+var _pack_installed := false
+var real_art := false
+var outline_all := false   ## at_* scenarios select everything, so every footprint is outlined
+var hide_panels := false   ## hide top bar + side panels (Tab) for unobstructed QA shots
+var dump_objects := false  ## write <shot>.objects.json: id, footprint corners + sprite bounds in screen px
+var select_items: Array = ["field", "apple_tree"]   ## "selection" scenario (--select-items=a+b)
 
 
 func _ready() -> void:
@@ -27,6 +50,16 @@ func _ready() -> void:
 			scenarios = ALL.duplicate() if s == "all" else Array(s.split(","))
 		elif a.begins_with("--tag="):
 			tag = a.substr(6)
+		elif a == "--real-art":
+			real_art = true
+		elif a == "--outline-all":
+			outline_all = true
+		elif a == "--dump-objects":
+			dump_objects = true
+		elif a == "--hide-panels":
+			hide_panels = true
+		elif a.begins_with("--select-items="):
+			select_items = Array(a.substr(15).split("+"))
 	if scenarios.is_empty():
 		scenarios = ["overview"]
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir) if out_dir.begins_with("res://") else out_dir)
@@ -54,6 +87,8 @@ func _run() -> void:
 		var img := get_viewport().get_texture().get_image()
 		var path := out_dir.path_join(name)
 		img.save_png(path)
+		if dump_objects:
+			_dump_objects(path.get_basename() + ".objects.json", Vector2(img.get_size()) / size)
 		print(("SHOT " if ok else "FAIL ") + path + " logical=" + str(size))
 	get_tree().quit(0)
 
@@ -61,6 +96,10 @@ func _run() -> void:
 func _reset() -> void:
 	for c in main.modal_layer.get_children():
 		c.queue_free()
+	if _pack_installed:
+		PackInstaller.uninstall(SyntheticPack.PACK_ID)
+		_app().reload_assets()
+		_pack_installed = false
 	var s = _app().session
 	if s:
 		s.set_mode(FarmLayout.MODE_CREATIVE)
@@ -74,11 +113,49 @@ func _reset() -> void:
 		main.controller.cancel()
 		s.clear_selection()
 		s.set_tool("select")
+	if hide_panels and not main._panels_hidden:
+		main._panels_hidden = true
+		main._update_view_rect()
 	await _frames(3)
 
 
 func _session():
 	return _app().session
+
+
+func _dump_objects(path: String, px_per_logical: Vector2, export_rect := Rect2(), export_scale := 0.0) -> void:
+	## Image geometry of every object in view (for annotating QA screenshots
+	## outside the app: footprint diamonds, anchors, labels). No image data.
+	## With export_rect/export_scale the coordinates are those of an export image.
+	var s = _session()
+	var exporting := export_scale > 0.0
+	var view: Rect2 = Rect2(Vector2.ZERO, export_rect.size * export_scale) if exporting else get_viewport().get_visible_rect()
+	var xf := func(w: Vector2) -> Vector2:
+		return (w - export_rect.position) * export_scale if exporting else main.camera.world_to_screen(w) * px_per_logical
+	var out: Array = []
+	for o: PlacedObject in s.layout.objects.values():
+		var poly := Iso.footprint_polygon(o.origin, o.size)
+		var pts: Array = []
+		var inside := false
+		for w in poly:
+			var p: Vector2 = xf.call(w)
+			pts.append([snappedf(p.x, 0.1), snappedf(p.y, 0.1)])
+			inside = inside or view.grow(200).has_point(p if exporting else p / px_per_logical)
+		if not inside:
+			continue
+		var c: Vector2 = xf.call(Iso.footprint_center(o.origin, o.size))
+		var b: Rect2 = main.renderer.bounds_of(o.uid)
+		var b0: Vector2 = xf.call(b.position)
+		var b1: Vector2 = xf.call(b.end)
+		var spr: AssetLibrary.SpriteInfo = main.renderer.sprite_of(o.uid)
+		out.append({"uid": o.uid, "item": o.item_id, "origin": [o.origin.x, o.origin.y], "size": [o.size.x, o.size.y],
+			"variant": o.variant, "planned": o.planned, "flipped": o.flipped, "footprint": pts, "center": [snappedf(c.x, 0.1), snappedf(c.y, 0.1)],
+			"bounds": [snappedf(b0.x, 0.1), snappedf(b0.y, 0.1), snappedf(b1.x, 0.1), snappedf(b1.y, 0.1)],
+			"pack": spr.pack_id if spr else "", "file": spr.path if spr else "", "order": main.renderer.order_of(o.uid)})
+	var meta := {"zoom": export_scale if exporting else main.camera.zoom.x, "objects": out}
+	if exporting:
+		meta["export_rect"] = [export_rect.position.x, export_rect.position.y, export_rect.size.x, export_rect.size.y]
+	JsonUtil.write_atomic(path, JsonUtil.stringify(meta, true), false)
 
 
 func _find_free(item_id: String, near: Vector2i) -> Vector2i:
@@ -105,9 +182,99 @@ func _ghost_at(item_id: String, origin: Vector2i) -> void:
 	main.overlay.refresh()
 
 
+func _install_synthetic_pack() -> bool:
+	if real_art:
+		return true   # use whatever packs the user has installed
+	var zip := "user://capture_assets/synthetic_pack.zip"
+	var b: Dictionary = SyntheticPack.build_zip(zip, _app().assets, _app().db)
+	if not b["ok"]:
+		print("FAIL synthetic pack: ", b["error"])
+		return false
+	var r = _app().install_pack(ProjectSettings.globalize_path(zip))
+	print("INSTALL ", r.summary())
+	_pack_installed = r.ok
+	return r.ok
+
+
+func _asset_manager(item_id: String, tab: int) -> bool:
+	if not _install_synthetic_pack():
+		return false
+	main._fit()
+	var am = main._open_asset_manager(item_id)
+	await _frames(8)
+	if tab == 0:
+		am.set_filter("original")
+		am.select_item(item_id)
+		am.set_view_mode("original" if real_art else "onion")
+	else:
+		am.show_tab(tab)
+	await _frames(20)
+	return true
+
+
+func _focus(sc: String) -> bool:
+	## at_<x>_<y>_<zoom>: centre the camera on a tile at a zoom level.
+	var parts := sc.split("_")
+	if parts.size() != 4 or not parts[1].is_valid_int() or not parts[2].is_valid_int() or not parts[3].is_valid_float():
+		return false
+	var z := float(parts[3])
+	main.camera.smooth = false
+	main.camera.set_zoom_level(z)
+	main.camera.zoom = Vector2(z, z)
+	main.camera.target_zoom = z
+	main.camera.center_on(Iso.tile_center(Vector2i(int(parts[1]), int(parts[2]))))
+	return true
+
+
 func _scenario(sc: String) -> bool:
 	var s = _session()
+	if sc.begins_with("at_"):
+		if not _focus(sc):
+			return false
+		if outline_all:
+			s.select(s.layout.objects.keys(), false, false)
+		await _frames(25)
+		return true
 	match sc:
+		"asset_manager":
+			var ok_0: bool = await _asset_manager("bakery", 0)
+			if not ok_0:
+				return false
+		"asset_review":
+			var ok_1: bool = await _asset_manager("bakery", 1)
+			if not ok_1:
+				return false
+		"asset_packs":
+			var ok_2: bool = await _asset_manager("bakery", 2)
+			if not ok_2:
+				return false
+		"asset_empty":
+			# What a user sees before installing any pack.
+			main._fit()
+			main._open_asset_manager("bakery")
+		"original_art":
+			if not _install_synthetic_pack():
+				return false
+			var target: PlacedObject = null
+			for o: PlacedObject in s.layout.objects.values():
+				if o.item_id == "bakery" and target == null:
+					target = o
+			if target == null:
+				var it: ItemDef = s.db.get_item("bakery")
+				var po := PlacedObject.new()
+				po.item_id = "bakery"
+				po.origin = _find_free("bakery", Vector2i(24, 24))
+				po.size = it.footprint
+				s.execute(EditCommands.AddObjects.new([po]))
+				target = s.layout.get_obj(s.layout.objects.keys().max())
+			main.set_variant([target.uid], "winter")
+			s.select([target.uid], false, false)
+			main.inspector.show_tab(0)
+			main.camera.set_zoom_level(1.3)
+			main.camera.smooth = false
+			main.camera.zoom = Vector2(1.3, 1.3)
+			main.camera.target_zoom = 1.3
+			main.camera.center_on(Iso.footprint_center(target.origin, target.size))
 		"overview":
 			main._fit()
 		"place_valid":
@@ -123,7 +290,7 @@ func _scenario(sc: String) -> bool:
 		"selection":
 			var uids: Array = []
 			for o: PlacedObject in s.layout.objects.values():
-				if o.item_id == "field" or o.item_id == "apple_tree":
+				if o.item_id in select_items:
 					uids.append(o.uid)
 			s.select(uids, false, false)
 			main.camera.set_zoom_level(1.0)
@@ -199,8 +366,33 @@ func _scenario(sc: String) -> bool:
 			var img2: Image = await main.exporter.capture(r2, 1.0, false)
 			if img2 == null:
 				return false
-			img2.save_png(out_dir.path_join("%sexport_full_farm_%dx%d.png" % [tag, img2.get_width(), img2.get_height()]))
+			var p2 := out_dir.path_join("%sexport_full_farm_%dx%d.png" % [tag, img2.get_width(), img2.get_height()])
+			img2.save_png(p2)
+			if dump_objects:
+				_dump_objects(p2.get_basename() + ".objects.json", Vector2.ONE, r2, 1.0)
 			print("EXPORT %dx%d" % [img2.get_width(), img2.get_height()])
+			main._fit()
+		"export2x":
+			var r3: Rect2 = Exporter.farm_world_rect(s.map, s.layout, "land")
+			var img3: Image = await main.exporter.capture(r3, 2.0, false)
+			if img3 == null:
+				return false
+			var p3 := out_dir.path_join("%sexport_full_farm_2x_%dx%d.png" % [tag, img3.get_width(), img3.get_height()])
+			img3.save_png(p3)
+			if dump_objects:
+				_dump_objects(p3.get_basename() + ".objects.json", Vector2.ONE, r3, 2.0)
+			print("EXPORT %dx%d" % [img3.get_width(), img3.get_height()])
+		"export_objects":
+			# Bounding box of the layout's objects at 1x (QA galleries).
+			var r4: Rect2 = Exporter.farm_world_rect(s.map, s.layout, "objects")
+			var img4: Image = await main.exporter.capture(r4, 1.0, false)
+			if img4 == null:
+				return false
+			var p4 := out_dir.path_join("%sexport_objects_%dx%d.png" % [tag, img4.get_width(), img4.get_height()])
+			img4.save_png(p4)
+			if dump_objects:
+				_dump_objects(p4.get_basename() + ".objects.json", Vector2.ONE, r4, 1.0)
+			print("EXPORT %dx%d" % [img4.get_width(), img4.get_height()])
 			main._fit()
 		"light":
 			_app().settings.set_v("theme", "light", false)

@@ -129,6 +129,14 @@ static func status_text(status: String) -> String:
 	return status.capitalize()
 
 
+static func art_badge(status: String) -> PanelContainer:
+	## "Original art" (from an installed pack) / "Placeholder art" / "No art".
+	match status:
+		"original": return badge("Original art", UiTheme.c("accent"))
+		"placeholder": return badge("Placeholder art", UiTheme.c("text_faint"))
+	return badge("No art", UiTheme.c("warn"))
+
+
 static func preview_mask(it: ItemDef) -> int:
 	## Connection shape used for thumbnails: a straight run reads better
 	## than an isolated post (fences) or a bordered tile (paths).

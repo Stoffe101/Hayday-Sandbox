@@ -7,6 +7,7 @@ signal session_changed            ## a different layout is now open
 signal notify(text: String, kind: String)
 signal saved
 signal assets_reloaded
+signal art_changed(art_keys: Array)   ## overrides edited (anchor/scale/verified/rejected/assign)
 signal map_changed
 
 const VERSION := "0.1.0"
@@ -31,7 +32,7 @@ func _ready() -> void:
 	db.load_default()
 	_load_maps()
 	assets = AssetLibrary.new()
-	assets.load_all()
+	assets.load_all(db)
 	library = LayoutLibrary.new(db)
 	boot_ms = (Time.get_ticks_usec() - t0) / 1000.0
 	_autosave_timer = Timer.new()
@@ -62,8 +63,21 @@ func map_for(id: String) -> FarmMap:
 
 
 func reload_assets() -> void:
-	assets.load_all()
+	assets.load_all(db)
 	assets_reloaded.emit()
+
+
+func notify_art_changed(art_keys: Array) -> void:
+	## Cheap refresh after an override edit: only these art keys are redrawn.
+	art_changed.emit(art_keys)
+
+
+func install_pack(zip_path: String) -> PackInstaller.Result:
+	## Installs an asset pack .zip into user://asset_packs/<id>/ and reloads art.
+	var r := PackInstaller.install_zip(zip_path)
+	if r.ok:
+		reload_assets()
+	return r
 
 
 # --- documents ---------------------------------------------------------------

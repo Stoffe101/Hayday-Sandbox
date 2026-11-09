@@ -278,10 +278,32 @@ func _refresh_neighbours(rects: Array, skip: Array) -> void:
 
 func refresh_all_art() -> void:
 	## After asset packs change.
+	if layout == null:
+		return
 	for u in _vis:
 		var o := layout.get_obj(u)
 		if o:
 			_draw_vis(_vis[u], o, db.get_item(o.item_id))
+
+
+func refresh_art(art_keys: Array) -> int:
+	## After an override edit: redraw only objects using these art keys.
+	## Returns how many objects were redrawn.
+	if layout == null:
+		return 0
+	var ks := {}
+	for k in art_keys:
+		ks[str(k)] = true
+	var n := 0
+	for u in _vis:
+		var o := layout.get_obj(u)
+		if o == null:
+			continue
+		var it := db.get_item(o.item_id)
+		if ks.has(it.art_key if it else o.item_id):
+			_draw_vis(_vis[u], o, it)
+			n += 1
+	return n
 
 
 func set_hidden(uids: Array) -> void:

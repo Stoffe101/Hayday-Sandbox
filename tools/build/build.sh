@@ -27,6 +27,15 @@ cp assets/ui/LUCIDE_LICENSE.txt build/windows/licenses/Lucide-ISC.txt
 cp LICENSE build/windows/licenses/HaydaySandbox-LICENSE.txt 2>/dev/null || true
 cp docs/THIRD_PARTY_NOTICES.md build/windows/licenses/ 2>/dev/null || true
 (cd build && rm -f HaydaySandbox-windows-x86_64.zip && zip -qr HaydaySandbox-windows-x86_64.zip windows)
+# Leak guard (docs/PRIVATE_ASSETS.md): exported packages and the bundle may contain public data only. Same check as
+# CI; on a machine with the private storage it also compares raw images by hash. A failing check deletes the zip.
+PY="$(command -v python3 || command -v python || true)"
+if [ -z "$PY" ] || ! "$PY" tools/ci/check_export_contents.py build/windows/HaydaySandbox.exe \
+    build/linux/HaydaySandbox.x86_64 build/HaydaySandbox-windows-x86_64.zip build/windows; then
+  rm -f build/HaydaySandbox-windows-x86_64.zip
+  echo "build.sh: export leak check failed (or Python 3 missing); deleted the bundle zip. See docs/PRIVATE_ASSETS.md." >&2
+  exit 1
+fi
 file build/windows/HaydaySandbox.exe
 ls -la build/windows build/*.zip
 echo "Verifying exported Linux build with the in-app self-test…"

@@ -1,0 +1,7 @@
+# Line endings that must survive Windows checkouts (core.autocrlf=true):
+# hooks and shell scripts run in sh/bash and break with CRLF; batch/PowerShell files are Windows-native.
+*.sh               text eol=lf
+tools/git-hooks/*  text eol=lf
+*.bat              text eol=crlf
+*.cmd              text eol=crlf
+*.ps1              text eol=crlf

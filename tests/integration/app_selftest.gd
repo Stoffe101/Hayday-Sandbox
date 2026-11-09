@@ -4,6 +4,9 @@ extends Node
 ## editor with synthetic input events.
 ##   godot --headless --path . -- --selftest          (integration)
 ##   godot --headless --path . -- --selftest=perf     (benchmarks)
+##   godot --path . -- --selftest=artcheck [--artcheck-pack=<id>] [--artcheck-out=<json>]
+##       (counts which catalogue items resolve to an installed pack and load; memory;
+##        writes counts only — never images — to the private root or user://)
 ##   ./HaydaySandbox.x86_64 --headless -- --selftest  (verifies an exported build)
 ## Prints "SELFTEST PASS"/"SELFTEST FAIL" and exits 0/1.
 
@@ -37,6 +40,10 @@ func _run() -> void:
 	await _frames(5)
 	if mode == "perf":
 		await _perf()
+	elif mode == "artcheck":
+		await _artcheck()
+	elif mode == "artflow":
+		await _artflow()
 	else:
 		await _integration()
 	print("\n%d checks, %d failed" % [checks, fails.size()])
@@ -113,6 +120,19 @@ func _free_origin(item: ItemDef, near: Vector2i, flipped: bool = false) -> Vecto
 	return near
 
 
+func _grab_tile(o: PlacedObject) -> Vector2i:
+	## A footprint tile whose centre picks `o` (centre tile first).
+	var c := o.origin + Vector2i((o.size.x - 1) / 2, (o.size.y - 1) / 2)
+	if main.renderer.pick(Iso.tile_center(c)) == o.uid:
+		return c
+	for y in o.size.y:
+		for x in o.size.x:
+			var t := o.origin + Vector2i(x, y)
+			if main.renderer.pick(Iso.tile_center(t)) == o.uid:
+				return t
+	return c
+
+
 # --- integration ---------------------------------------------------------------
 
 func _integration() -> void:
@@ -184,9 +204,13 @@ func _integration() -> void:
 	main.camera.center_on(Iso.tile_center(at))
 	await _frames(2)
 	var steps := s.stack.size()
-	_drag_tiles(at + Vector2i(1, 1), target + Vector2i(1, 1))
+	# Grab the bakery where it is visible: with tall original art an object in
+	# front may cover its centre, exactly as a user would see it.
+	var grab := _grab_tile(placed)
+	var grab_obj := s.layout.get_obj(main.renderer.pick(Iso.tile_center(grab)))
+	_drag_tiles(grab, target + (grab - at))
 	var moved := s.layout.object_at(target + Vector2i(1, 1))
-	check(moved != null and moved.uid == placed.uid, "dragging moves the bakery (one gesture)")
+	check(moved != null and moved.uid == placed.uid, "dragging moves the bakery (one gesture; grabbed %s at tile %s)" % [grab_obj.item_id if grab_obj else "nothing", str(grab)])
 	check(s.stack.size() == steps + 1, "a drag-move is a single undo step")
 	check(s.layout.object_at(at + Vector2i(1, 1)) == null or s.layout.object_at(at + Vector2i(1, 1)).uid != placed.uid, "old tiles were freed")
 	# Invalid drop snaps back.
@@ -294,6 +318,8 @@ func _integration() -> void:
 	check(App.library.history(s.layout.id).size() >= 1, "save created a revision snapshot")
 	# Asset importer on a generated folder (no proprietary art involved).
 	_importer_check()
+	# Asset packs: zip install, thumbnails, variants, overrides, Asset Manager.
+	await _asset_pack_check()
 	App.library.delete(s.layout.id)
 
 
@@ -314,6 +340,148 @@ func _importer_check() -> void:
 	check(rep.trimmed_px > 0, "importer trimmed transparent padding")
 	var pack: Variant = JsonUtil.read_json("user://selftest_packs/selftest_pack/pack.json")
 	check(pack is Dictionary and pack["sprites"].has("bakery"), "importer wrote a valid pack.json")
+
+
+const SyntheticPack := preload("res://tests/fixtures/synthetic_pack.gd")
+
+
+func _asset_pack_check() -> void:
+	print("Asset packs")
+	var lib := App.assets
+	PackInstaller.uninstall(SyntheticPack.PACK_ID)   # leftovers of an aborted run
+	App.reload_assets()
+	var zip := "user://selftest_assets/synthetic_pack.zip"
+	var built: Dictionary = SyntheticPack.build_zip(zip, lib, App.db)
+	check(built["ok"], "built a synthetic pack zip from placeholder PNGs (%d files) %s" % [built["files"], built["error"]])
+	var r: PackInstaller.Result = App.install_pack(ProjectSettings.globalize_path(zip))
+	check(r.ok and r.pack_id == SyntheticPack.PACK_ID, "zip with pack.json one folder deep installs: %s" % r.summary())
+	var dir := ProjectSettings.globalize_path(AssetLibrary.USER_PACKS.path_join(r.pack_id))
+	check(FileAccess.file_exists(dir.path_join("pack.json")) and FileAccess.file_exists(dir.path_join("items/bakery.png")), "pack extracted to user://asset_packs/%s" % r.pack_id)
+	var root_dir := DirAccess.open(AssetLibrary.USER_PACKS)
+	root_dir.include_hidden = true
+	var hidden := Array(root_dir.get_directories()).filter(func(d): return str(d).begins_with("."))
+	check(hidden.is_empty(), "atomic install leaves no temp folders")
+	var pid := r.pack_id
+	var pk := lib.pack_by_id(pid)
+	check(not pk.is_empty() and pk["version"] == "1.0-test" and str(pk["provenance"].get("generator", "")).ends_with("synthetic_pack.gd"), "pack version + provenance exposed in pack_list()")
+	check(lib.art_source("bakery") == pid and lib.art_status("bakery") == "original", "installed pack wins over the placeholders")
+	check(lib.art_source("barn") != pid and lib.has_art("barn"), "items the pack lacks keep their previous art")
+	var tl := lib.texture_loads
+	var thl := lib.thumb_loads
+	var th := lib.get_thumbnail("bakery")
+	check(th != null and th.get_width() == 64 and lib.texture_loads == tl and lib.thumb_loads == thl + 1, "catalogue thumbnail comes from the thumb file without loading the full texture")
+	check(lib.variants_of("bakery") == ["winter"], "variants_of lists the pack's variants")
+	check(lib.missing_files(pid) == ["items/popcorn_pot.png"], "missing image detected: %s" % str(lib.missing_files(pid)))
+	check(lib.get_sprite("popcorn_pot") != null and lib.get_sprite("popcorn_pot").pack_id != pid, "missing image falls back to the next pack")
+	check(lib.needs_review("feed_mill") and lib.entry_of("feed_mill").get("auto_anchor", false), "auto-anchored art is flagged for review")
+	# The farm renders the pack: place a bakery and switch its variant.
+	var s := _s()
+	var bakery := App.db.get_item("bakery")
+	var at := _free_origin(bakery, Vector2i(22, 22))
+	var po := PlacedObject.new()
+	po.item_id = "bakery"
+	po.origin = at
+	po.size = bakery.footprint
+	var add := EditCommands.AddObjects.new([po])
+	s.execute(add)
+	var uid: int = add.added_uids()[0]
+	var obj := s.layout.get_obj(uid)
+	await _frames(2)
+	var spr: AssetLibrary.SpriteInfo = main.renderer.sprite_of(uid)
+	check(spr != null and spr.pack_id == pid, "renderer draws the placed bakery with pack art")
+	s.select([uid])
+	main.inspector.show_tab(0)
+	main.inspector.rebuild()
+	check(main.inspector.variant_option != null and main.inspector.variant_option.item_count == 2, "inspector offers a variant picker for art with variants")
+	var steps := s.stack.size()
+	main._on_inspector_action("variant", "winter")
+	check(obj.variant == "winter" and s.stack.size() == steps + 1, "choosing a variant is one undoable command")
+	check(main.renderer.sprite_of(uid).path.ends_with("bakery__winter.png"), "renderer switched to the variant image")
+	_key(KEY_Z, true)
+	check(obj.variant == "" and main.renderer.sprite_of(uid).path == "items/bakery.png", "Ctrl+Z restores the base image")
+	_key(KEY_Z, true, true)
+	check(obj.variant == "winter", "Ctrl+Shift+Z re-applies the variant")
+	var save_rep := LayoutIO.LoadReport.new()
+	var round_trip := LayoutIO.from_dict(LayoutIO.to_dict(s.layout), App.db, save_rep)
+	check(round_trip.get_obj(uid) != null and round_trip.get_obj(uid).variant == "winter", "variant is saved with the layout")
+	# Asset Manager: Ctrl+Shift+A, anchor edit -> overrides.json -> renderer.
+	s.select([uid])
+	_key(KEY_A, true, true)
+	await _frames(3)
+	var am: AssetManager = null
+	for c in main.modal_layer.get_children():
+		if c is Modal and c.has_meta("asset_manager"):
+			am = c.get_meta("asset_manager")
+	check(am != null and am.selected_id == "bakery", "Ctrl+Shift+A opens the Asset Manager on the selected item")
+	if am == null:
+		return
+	await _frames(3)
+	check(am.preview.layers.size() == 1 and am.preview.editable, "preview shows the editable original on its footprint")
+	am.set_view_mode("onion")
+	check(am.preview.layers.size() == 2, "onion skin shows placeholder + original")
+	var a0: Vector2 = lib.get_sprite("bakery", AssetLibrary.BASE_VARIANT).anchor
+	am.set_variant(AssetLibrary.BASE_VARIANT)
+	am.nudge(Vector2(3, 0))
+	am.nudge(Vector2(0, -2))
+	am.flush()
+	var ov: Dictionary = lib.overrides_of(pid, "bakery")
+	check(ov.get("anchor", []) == [a0.x - 3.0, a0.y + 2.0], "arrow nudges saved to overrides.json as one anchor (%s)" % str(ov.get("anchor")))
+	check(FileAccess.file_exists(dir.path_join("overrides.json")), "overrides.json written in the pack folder")
+	s.layout.set_property([uid], "variant", [""])
+	await _frames(1)
+	check(main.renderer.sprite_of(uid).anchor == Vector2(a0.x - 3.0, a0.y + 2.0), "renderer picked up the new anchor")
+	# Mouse drag on the preview moves the art (anchor moves the other way).
+	var pv := am.preview
+	var drag_scale: float = float(pv._active()["scale"]) * pv.zoom
+	var p0 := pv.size * 0.5
+	var down := InputEventMouseButton.new()
+	down.button_index = MOUSE_BUTTON_LEFT
+	down.pressed = true
+	down.position = p0
+	pv._gui_input(down)
+	var mv := InputEventMouseMotion.new()
+	mv.position = p0 + Vector2(40, 0)
+	pv._gui_input(mv)
+	var up := InputEventMouseButton.new()
+	up.button_index = MOUSE_BUTTON_LEFT
+	up.pressed = false
+	up.position = mv.position
+	pv._gui_input(up)
+	am.flush()
+	var dragged: Array = lib.overrides_of(pid, "bakery").get("anchor", [])
+	var want_x := snappedf(a0.x - 3.0 - 40.0 / drag_scale, 0.5)
+	check(dragged.size() == 2 and absf(float(dragged[0]) - want_x) <= 0.5 and float(dragged[1]) == a0.y + 2.0, "dragging the art 40 px saved anchor x %.1f (expected %.1f)" % [float(dragged[0]) if dragged.size() == 2 else -1.0, want_x])
+	am.mark_verified(true)
+	check(lib.is_verified("bakery") and not lib.needs_review("bakery"), "Mark verified persists")
+	am.select_item("silo")
+	am.reject()
+	check(lib.art_source("silo") != pid and lib.has_art("silo") and lib.is_rejected("silo"), "Wrong match → silo falls back to the next pack (%s)" % lib.art_source("silo"))
+	am.select_item("bakery")
+	am._spin["scale"].value = 1.1
+	am.flush()
+	var n := am.apply_scale_to_category(false)
+	check(n >= 3 and absf(float(lib.overrides_of(pid, "dairy").get("scale", 0.0)) - 1.1) < 0.001, "scale applied to %d production sprites of the pack" % n)
+	am.show_tab(1)
+	await _frames(2)
+	check(am._review_items.size() == 1 and am._review_results.item_count >= 3, "review queue lists the image with its suggestions")
+	am.assign_review_to("sugar_mill")
+	check(lib.art_source("sugar_mill") == pid and lib.review_queue(pid)[0]["assigned"] == "sugar_mill", "review image assigned to an item via overrides")
+	am.show_tab(2)
+	await _frames(2)
+	check(am._packs_box.get_child_count() >= 3, "packs tab lists every pack")
+	am.modal.close()
+	await _frames(2)
+	# Everything survives a full reload.
+	App.reload_assets()
+	check(lib.overrides_of(pid, "bakery").get("anchor", []) == dragged and lib.is_verified("bakery") and lib.is_rejected("silo") and lib.art_source("sugar_mill") == pid, "overrides re-applied after reload")
+	# Re-installing (pack update) keeps the user's overrides.
+	var r2: PackInstaller.Result = App.install_pack(ProjectSettings.globalize_path(zip))
+	check(r2.ok and r2.replaced and r2.kept_overrides and lib.is_verified("bakery"), "updating the pack keeps overrides")
+	# Clean up: uninstall and the placeholders return.
+	s.execute(EditCommands.RemoveObjects.new([uid]))
+	check(PackInstaller.uninstall(pid) == OK, "pack uninstalled")
+	App.reload_assets()
+	check(lib.art_source("bakery") != pid and lib.pack_by_id(pid).is_empty(), "previous art back after uninstall")
 
 
 # --- performance -----------------------------------------------------------------
@@ -431,3 +599,310 @@ func _bench(label: String, n: int, map: FarmMap) -> Dictionary:
 		"edit_resort_ms": snappedf(edit_ms, 0.1), "save_ms": snappedf(save_ms, 0.1), "load_ms": snappedf(load_ms, 0.1),
 		"analyze_ms": snappedf(analyze_ms, 0.1), "file_kb": text.length() / 1024, "loaded": back.count() if back else -1,
 		"frame_ms": snappedf(frame_ms, 0.01), "mem_mb": snappedf(OS.get_static_memory_usage() / 1048576.0, 0.1)}
+
+
+# --- art check (installed private/user packs) --------------------------------------
+
+func _artcheck() -> void:
+	## Per catalogue item: does App.assets resolve it to the pack and does the
+	## texture really load (non-null, size > 0)? Plus variants, connection
+	## pieces, thumbnails, implausible world sizes and memory. Counts only.
+	var pack_id := "hayday_original"
+	var out_path := ""
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--artcheck-pack="):
+			pack_id = a.substr(16)
+		elif a.begins_with("--artcheck-out="):
+			out_path = a.substr(15)
+	if out_path.is_empty():
+		out_path = _private_root().path_join("mapping/godot_artcheck.json") if not _private_root().is_empty() else "user://artcheck.json"
+	var lib := App.assets
+	var pk := lib.pack_by_id(pack_id)
+	check(not pk.is_empty(), "pack %s installed (%s)" % [pack_id, str(pk.get("version", "-"))])
+	if pk.is_empty():
+		return
+	var tex_mon := Performance.RENDER_TEXTURE_MEM_USED
+	var mem0 := {"static_mb": OS.get_static_memory_usage() / 1048576.0, "texture_mb": Performance.get_monitor(tex_mon) / 1048576.0}
+	var by_cat := {}
+	var rendered: Array = []
+	var not_in_pack: Array = []
+	var load_failed: Array = []
+	var odd: Array = []
+	# 1) thumbnails only (what the catalogue shows)
+	var t0 := Time.get_ticks_usec()
+	var thumbs_ok := 0
+	var thumb_from_file := 0
+	var tl0 := lib.texture_loads
+	for it: ItemDef in App.db.ordered:
+		if lib.art_source(it.art_key) != pack_id:
+			continue
+		var th := lib.get_thumbnail(it.art_key)
+		if th != null and th.get_width() > 0:
+			thumbs_ok += 1
+		if not str(lib.entry_of(it.art_key).get("thumb", "")).is_empty():
+			thumb_from_file += 1
+	var thumbs_ms := (Time.get_ticks_usec() - t0) / 1000.0
+	var full_loads_during_thumbs := lib.texture_loads - tl0
+	await _frames(3)
+	var mem_thumbs := {"static_mb": OS.get_static_memory_usage() / 1048576.0, "texture_mb": Performance.get_monitor(tex_mon) / 1048576.0}
+	# 2) full sprites
+	t0 = Time.get_ticks_usec()
+	var var_ok := 0
+	var var_total := 0
+	var var_bad: Array = []
+	var conn_ok := 0
+	var conn_total := 0
+	var conn_bad: Array = []
+	for it: ItemDef in App.db.ordered:
+		var c: Dictionary = by_cat.get(it.category, {"items": 0, "in_pack": 0, "rendered": 0, "variants": 0, "variants_ok": 0})
+		c["items"] += 1
+		var src := lib.art_source(it.art_key)
+		if src != pack_id:
+			not_in_pack.append(it.id)
+			by_cat[it.category] = c
+			continue
+		c["in_pack"] += 1
+		var spr := lib.get_sprite(it.art_key, AssetLibrary.BASE_VARIANT)
+		var ok := spr != null and spr.pack_id == pack_id and spr.texture != null and spr.texture.get_width() > 0 and spr.texture.get_height() > 0
+		if ok:
+			c["rendered"] += 1
+			rendered.append(it.id)
+			var wsz := spr.texture.get_size() * spr.scale
+			var fp := it.footprint
+			var diamond_w := float(fp.x + fp.y) * Iso.HALF_W
+			var ratio := wsz.x / diamond_w
+			var a_in := spr.anchor.x >= -1.0 and spr.anchor.y >= -1.0 and spr.anchor.x <= spr.texture.get_width() + 1 and spr.anchor.y <= spr.texture.get_height() + 1
+			if ratio < 0.45 or ratio > 2.2 or not a_in:
+				odd.append({"id": it.id, "category": it.category, "fp": [fp.x, fp.y], "world_w": snappedf(wsz.x, 0.1), "world_h": snappedf(wsz.y, 0.1), "w_over_diamond": snappedf(ratio, 0.01), "anchor_inside": a_in, "auto_anchor": bool(lib.entry_of(it.art_key).get("auto_anchor", false))})
+		else:
+			load_failed.append(it.id)
+		for v in lib.variants_of(it.art_key):
+			var_total += 1
+			c["variants"] += 1
+			var vs := lib.get_sprite(it.art_key, v)
+			if vs != null and vs.pack_id == pack_id and vs.variant == v and vs.texture != null and vs.texture.get_width() > 0:
+				var_ok += 1
+				c["variants_ok"] += 1
+			else:
+				var_bad.append("%s:%s" % [it.id, v])
+		if not it.connect_group.is_empty():
+			var masks := lib.connection_masks(it.art_key)
+			for m in 16:
+				if masks.is_empty():
+					break
+				conn_total += 1
+				var cs := lib.get_sprite(it.art_key, "", m)
+				if cs != null and cs.pack_id == pack_id and cs.texture != null and cs.texture.get_width() > 0:
+					conn_ok += 1
+				else:
+					conn_bad.append("%s:%d" % [it.id, m])
+		by_cat[it.category] = c
+	var full_ms := (Time.get_ticks_usec() - t0) / 1000.0
+	await _frames(3)
+	var mem_full := {"static_mb": OS.get_static_memory_usage() / 1048576.0, "texture_mb": Performance.get_monitor(tex_mon) / 1048576.0}
+	for d in [mem0, mem_thumbs, mem_full]:
+		for k in d:
+			d[k] = snappedf(d[k], 0.1)
+	var n_items := App.db.count()
+	var res := {"pack": pack_id, "version": pk.get("version", ""), "renderer": RenderingServer.get_current_rendering_driver_name(),
+		"display": DisplayServer.get_name(), "items": n_items, "in_pack": n_items - not_in_pack.size(), "rendered": rendered.size(),
+		"load_failed": load_failed, "not_in_pack": not_in_pack, "by_category": by_cat,
+		"variants_total": var_total, "variants_ok": var_ok, "variants_bad": var_bad,
+		"connection_pieces_total": conn_total, "connection_pieces_ok": conn_ok, "connection_bad": conn_bad,
+		"thumbnails_ok": thumbs_ok, "thumbnails_from_thumb_file": thumb_from_file, "full_loads_during_thumbs": full_loads_during_thumbs,
+		"thumbs_ms": snappedf(thumbs_ms, 0.1), "full_ms": snappedf(full_ms, 0.1), "texture_loads": lib.texture_loads, "thumb_loads": lib.thumb_loads,
+		"memory_start": mem0, "memory_after_thumbnails": mem_thumbs, "memory_after_full_sprites": mem_full,
+		"odd_world_size": odd, "lib_errors": Array(lib.errors).slice(0, 20), "lib_errors_total": lib.errors.size(),
+		"time": Time.get_datetime_string_from_system(true)}
+	if out_path.begins_with("user://") or out_path.begins_with("/"):
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_path.get_base_dir()) if out_path.begins_with("user://") else out_path.get_base_dir())
+	JsonUtil.write_atomic(out_path, JsonUtil.stringify(res, true), false)
+	var cats: Array = by_cat.keys()
+	cats.sort()
+	for k in cats:
+		var c: Dictionary = by_cat[k]
+		print("ARTCHECK CAT %-14s items %4d  in_pack %4d  rendered %4d  variants %3d/%3d" % [k, c["items"], c["in_pack"], c["rendered"], c["variants_ok"], c["variants"]])
+	print("ARTCHECK items %d in_pack %d rendered %d load_failed %d variants %d/%d connections %d/%d thumbs %d (full loads during thumbs %d) odd %d" % [n_items, res["in_pack"], rendered.size(), load_failed.size(), var_ok, var_total, conn_ok, conn_total, thumbs_ok, full_loads_during_thumbs, odd.size()])
+	print("ARTCHECK MEM start %s | thumbs %s (%.0f ms) | full %s (%.0f ms)" % [str(mem0), str(mem_thumbs), thumbs_ms, str(mem_full), full_ms])
+	print("ARTCHECK OUT ", ProjectSettings.globalize_path(out_path))
+	check(load_failed.is_empty(), "every item resolved to %s loads its texture (%d failed)" % [pack_id, load_failed.size()])
+	check(var_bad.is_empty(), "all %d variants load" % var_total)
+	check(conn_bad.is_empty(), "all %d connection pieces load" % conn_total)
+	check(full_loads_during_thumbs == 0, "catalogue thumbnails never decode full sprites")
+
+
+static func _private_root() -> String:
+	## Private storage root for files about the user's private pack (never the repo).
+	var env := OS.get_environment("HAYDAY_PRIVATE_ASSETS")
+	if not env.is_empty():
+		return env
+	var home := OS.get_environment("USERPROFILE") if OS.has_feature("windows") else OS.get_environment("HOME")
+	for c in [home.path_join("hayday-sandbox-private-assets"), "/root/hayday-sandbox-private-assets"]:
+		if DirAccess.dir_exists_absolute(c):
+			return c
+	return ""
+
+
+# --- editor workflows with an installed pack ------------------------------------------
+
+func _ms(t0: int) -> float:
+	return snappedf((Time.get_ticks_usec() - t0) / 1000.0, 0.1)
+
+
+func _artflow() -> void:
+	var pack_id := "hayday_original"
+	var lay_path := ""
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--artflow-layout="):
+			lay_path = a.substr(17)
+		elif a.begins_with("--artflow-pack="):
+			pack_id = a.substr(15)   # e.g. builtin_placeholders for a baseline run
+	if lay_path.is_empty() and not _private_root().is_empty():
+		lay_path = _private_root().path_join("layouts/real_art_test.hdlayout")
+	var lib := App.assets
+	var T := {}
+	check(not lib.pack_by_id(pack_id).is_empty(), "pack %s installed" % pack_id)
+	if lib.pack_by_id(pack_id).is_empty():
+		return
+	var tex_mon := Performance.RENDER_TEXTURE_MEM_USED
+	var mem := {"start_static_mb": snappedf(OS.get_static_memory_usage() / 1048576.0, 0.1), "start_texture_mb": snappedf(Performance.get_monitor(tex_mon) / 1048576.0, 0.1)}
+	# 1) open the private QA layout and render it
+	if not lay_path.is_empty() and FileAccess.file_exists(lay_path):
+		var tl := lib.texture_loads
+		var t0 := Time.get_ticks_usec()
+		var rep := LayoutIO.LoadReport.new()
+		var l := App.library.load_path(lay_path, rep)
+		T["load_layout_ms"] = _ms(t0)
+		t0 = Time.get_ticks_usec()
+		App.open_layout(l, rep)
+		T["open_layout_ms"] = _ms(t0)
+		t0 = Time.get_ticks_usec()
+		main.renderer.ensure_sorted()
+		T["first_sort_ms"] = _ms(t0)
+		main.camera.smooth = false
+		main._fit()
+		t0 = Time.get_ticks_usec()
+		await _frames(1)
+		T["first_frame_ms"] = _ms(t0)
+		var n_orig := 0
+		for o: PlacedObject in _s().layout.objects.values():
+			var spr: AssetLibrary.SpriteInfo = main.renderer.sprite_of(o.uid)
+			if spr and spr.pack_id == pack_id:
+				n_orig += 1
+		T["layout_objects"] = _s().layout.count()
+		T["layout_textures_loaded"] = lib.texture_loads - tl
+		check(n_orig == _s().layout.count(), "QA layout: %d/%d objects drawn with %s art" % [n_orig, _s().layout.count(), pack_id])
+		mem["after_layout_static_mb"] = snappedf(OS.get_static_memory_usage() / 1048576.0, 0.1)
+		mem["after_layout_texture_mb"] = snappedf(Performance.get_monitor(tex_mon) / 1048576.0, 0.1)
+		if DisplayServer.get_name() != "headless":
+			for z in [0.3, 1.0, 2.0]:
+				main.camera.set_zoom_level(z)
+				main.camera.zoom = Vector2(z, z)
+				main.camera.target_zoom = z
+				main.camera.center_on(Iso.tile_center(Vector2i(30, 18)))
+				await _frames(10)
+				var f0 := Time.get_ticks_usec()
+				for i in 60:
+					main.camera.pan_screen(Vector2(4, 2))
+					await get_tree().process_frame
+				T["pan_frame_ms_zoom_%s" % str(z)] = snappedf((Time.get_ticks_usec() - f0) / 1000.0 / 60.0, 0.01)
+			mem["after_pan_texture_mb"] = snappedf(Performance.get_monitor(tex_mon) / 1048576.0, 0.1)
+	else:
+		print("  (no QA layout at %s - skipped)" % lay_path)
+	# 2) catalogue thumbnails (all items, progressive loader drained)
+	main.catalog._search.text = ""
+	main.catalog.refresh()
+	var tl2 := lib.texture_loads
+	var t1 := Time.get_ticks_usec()
+	while not main.catalog._icon_queue.is_empty():
+		main.catalog._process(0.0)
+	T["catalogue_all_thumbs_ms"] = _ms(t1)
+	var icons_pack := 0
+	for i in main.catalog._ids.size():
+		var id: String = main.catalog._ids[i]
+		if id.is_empty():
+			continue
+		var it := App.db.get_item(id)
+		if lib.art_source(it.art_key) == pack_id and main.catalog._list.get_item_icon(i) != null and main.catalog._list.get_item_icon(i) == lib.get_thumbnail(it.art_key, "", UI.preview_mask(it)):
+			icons_pack += 1
+	check(icons_pack >= 1900, "catalogue shows %d thumbnails from %s" % [icons_pack, pack_id])
+	check(lib.texture_loads == tl2, "catalogue thumbnails decoded %d full-size sprites (expected 0)" % (lib.texture_loads - tl2))
+	# 3) editing on a fresh farm
+	App.open_layout(App.new_layout("Artflow farm", "starter"))
+	main._fit_or_restore()
+	main.camera.smooth = false
+	main.camera.zoom = Vector2(1.5, 1.5)
+	main.camera.target_zoom = 1.5
+	await _frames(3)
+	var s := _s()
+	var bakery := App.db.get_item("bakery")
+	var at := _free_origin(bakery, Vector2i(26, 10))
+	main.camera.center_on(Iso.tile_center(at))
+	await _frames(2)
+	var t2 := Time.get_ticks_usec()
+	main._on_item_chosen("bakery")
+	_click_tile(at + Vector2i(1, 1))
+	T["place_ms"] = _ms(t2)
+	var placed := s.layout.object_at(at + Vector2i(1, 1))
+	check(placed != null and placed.item_id == "bakery", "placed a bakery")
+	if placed == null:
+		return
+	await _frames(1)
+	var spr0: AssetLibrary.SpriteInfo = main.renderer.sprite_of(placed.uid)
+	check(spr0 != null and spr0.pack_id == pack_id, "placed bakery drawn with %s art" % pack_id)
+	_key(KEY_ESCAPE)
+	var target := _free_origin(bakery, at + Vector2i(0, 5))
+	var grab := _grab_tile(placed)
+	t2 = Time.get_ticks_usec()
+	_drag_tiles(grab, target + (grab - at))
+	T["drag_move_ms"] = _ms(t2)
+	check(placed.origin == target, "drag-moved the bakery onto %s (grab %s)" % [str(target), str(grab)])
+	t2 = Time.get_ticks_usec()
+	_key(KEY_Z, true)
+	T["undo_ms"] = _ms(t2)
+	check(placed.origin == at, "undo restores the position")
+	_key(KEY_Z, true, true)
+	check(placed.origin == target, "redo moves it again")
+	# fence line with connection pieces from the pack
+	var fa := _free_origin(App.db.get_item("plan_reserve_4x4"), Vector2i(30, 24))
+	main.camera.center_on(Iso.tile_center(fa))
+	await _frames(2)
+	main._on_item_chosen("fence")
+	t2 = Time.get_ticks_usec()
+	_drag_tiles(fa, fa + Vector2i(4, 0), true)
+	T["fence_line_ms"] = _ms(t2)
+	_key(KEY_ESCAPE)
+	await _frames(1)
+	var mid := s.layout.object_at(fa + Vector2i(2, 0))
+	var mspr: AssetLibrary.SpriteInfo = main.renderer.sprite_of(mid.uid) if mid else null
+	check(mspr != null and mspr.pack_id == pack_id and mspr.path != lib.entry_of("fence").get("file", ""), "fence line uses a connection piece from the pack (%s)" % (mspr.path if mspr else "-"))
+	# variant via the inspector (one undoable command)
+	s.select([placed.uid])
+	main.inspector.show_tab(0)
+	main.inspector.rebuild()
+	var vars := lib.variants_of("bakery")
+	if not vars.is_empty():
+		var steps := s.stack.size()
+		main._on_inspector_action("variant", vars[0])
+		await _frames(1)
+		check(placed.variant == vars[0] and s.stack.size() == steps + 1 and main.renderer.sprite_of(placed.uid).variant == vars[0], "variant %s applied as one command and drawn" % vars[0])
+	# save + load round trip
+	t2 = Time.get_ticks_usec()
+	var err := App.save_current(true)
+	T["save_ms"] = _ms(t2)
+	t2 = Time.get_ticks_usec()
+	var rep2 := LayoutIO.LoadReport.new()
+	var back := App.library.load_layout(s.layout.id, rep2)
+	T["reload_ms"] = _ms(t2)
+	var same := err == OK and back != null and back.count() == s.layout.count()
+	if same:
+		for o: PlacedObject in s.layout.objects.values():
+			var b := back.get_obj(o.uid)
+			if b == null or b.origin != o.origin or b.variant != o.variant:
+				same = false
+	check(same, "save/reload keeps %d objects incl. the variant" % s.layout.count())
+	App.library.delete(s.layout.id)
+	mem["end_static_mb"] = snappedf(OS.get_static_memory_usage() / 1048576.0, 0.1)
+	mem["end_texture_mb"] = snappedf(Performance.get_monitor(tex_mon) / 1048576.0, 0.1)
+	print("ARTFLOW TIMES ", JSON.stringify(T))
+	print("ARTFLOW MEM ", JSON.stringify(mem))

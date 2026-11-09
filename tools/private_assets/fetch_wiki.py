@@ -2,8 +2,13 @@
 """Fetch original-resolution object images from the Hay Day Wiki (Fandom) into PRIVATE storage.
 
 Only the public MediaWiki API (``https://hayday.fandom.com[/ru]/api.php``) and the wiki's static image CDN
-(``static.wikia.nocookie.net``) are used. Every file URL gets ``format=original`` so the CDN returns the uploaded
-file byte-for-byte instead of an on-the-fly WebP re-encode; the bytes are checked against the API's SHA-1.
+(``static.wikia.nocookie.net``) are used. Every file URL gets ``format=original``, otherwise the CDN serves an
+on-the-fly WebP re-encode. The bytes are checked against the API's SHA-1. Measured caveat: even with
+``format=original`` the CDN rewrites file metadata (XMP/ICC/text removed, sometimes a small eXIf/iCCP/tEXt
+written), so uploads that carried metadata (most Photoshop exports) come back with a slightly different size and
+SHA-1, while uploads without metadata come back byte-identical. Such a mismatch is accepted only when it is
+explained (decodes; same format, dimensions, PNG colour type and bit depth as the API, see
+``explain_sha1_mismatch``) and is recorded as ``verification: cdn_metadata_rewritten``; anything else fails.
 
 Discovery routes (recorded per file in ``matched_by``):
 
@@ -12,7 +17,8 @@ Discovery routes (recorded per file in ``matched_by``):
                   file-holding category whose name looks object-related (``list=allcategories``). Files from
                   clearly non-object categories (UI, badges, products, NPCs, ...) are discovered but skipped.
   catalog_lookup  ``File:<catalog item name>.png`` for every item in data/items/*.json (several capitalisation
-                  variants; on the ru wiki also the ru page titles the catalog cites), batches of 50 titles.
+                  variants -> ``catalog_ids``) and ``File:<cited page title>.png`` (en page titles; ru page titles
+                  and ru interlanguage links on the ru wiki -> ``catalog_ids_page_title``), batches of 50 titles.
   catalog_page    images shown on the wiki pages the catalog cites (lead image via ``prop=pageimages`` plus
                   ``prop=images``); a page image is kept only if it is the page's lead image or sits in an
                   object category.
@@ -128,7 +134,6 @@ EXCLUDED_CATEGORIES = {
 	"Videos": "video embeds",
 	"Audio": "audio",
 	"Concept Art": "external concept art, not in-game renders",
-	"Image Achievements ": "achievement badges (UI)",
 	"Картинки продуктов": "product icons",
 	"Иконки": "UI icons",
 	"Картинки головных уборов": "avatar headwear icons",
@@ -197,14 +202,6 @@ def atomic_write_json(path: Path, data) -> None:
 	tmp = path.with_suffix(path.suffix + ".tmp")
 	tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
 	os.replace(tmp, path)
-
-
-def sha1_file(path: Path) -> str:
-	h = hashlib.sha1()
-	with open(path, "rb") as fh:
-		for chunk in iter(lambda: fh.read(1 << 20), b""):
-			h.update(chunk)
-	return h.hexdigest()
 
 
 def chunks(seq, n):
@@ -347,8 +344,23 @@ class Wiki:
 			cont = c
 
 
-IMAGE_PROPS = {"prop": "imageinfo|categories", "iiprop": "url|size|sha1|mime|timestamp", "iilimit": "1",
-	"cllimit": "max"}
+IMAGE_PROPS = {"prop": "imageinfo|categories", "iiprop": "url|size|sha1|mime|timestamp|bitdepth|metadata",
+	"iilimit": "1", "cllimit": "max"}
+INFO_KEYS = ("url", "descriptionurl", "size", "width", "height", "sha1", "mime", "timestamp", "bitdepth")
+
+
+def compact_info(ii: dict) -> dict:
+	"""Keep the useful imageinfo fields; reduce the (large) metadata to what verification needs."""
+	out = {k: ii[k] for k in INFO_KEYS if k in ii}
+	md = {m.get("name"): m.get("value") for m in (ii.get("metadata") or []) if isinstance(m, dict)}
+	text = md.get("metadata")
+	out["api_meta"] = {
+		"colorType": md.get("colorType"), "bitDepth": md.get("bitDepth"), "frameCount": md.get("frameCount"),
+		"text_keys": sorted({m.get("name") for m in text if isinstance(m, dict)} - {"_MW_PNG_VERSION"})
+		if isinstance(text, list) else sorted(k for k in md if k not in ("colorType", "bitDepth", "frameCount",
+			"loopCount", "duration", "metadata", "_MW_PNG_VERSION", "MEDIAWIKI_EXIF_VERSION")),
+	}
+	return out
 
 
 class Store:
@@ -361,7 +373,8 @@ class Store:
 		r = self.recs.get(title)
 		if r is None:
 			r = self.recs[title] = {"title": title, "info": None, "categories": set(), "matched_by": set(),
-				"catalog_ids": set(), "used_on": set(), "lead_image_of": set(), "found_in_categories": set(),
+				"catalog_ids": set(), "catalog_ids_page_title": set(), "page_catalog_ids": set(), "used_on": set(),
+				"lead_image_of": set(), "found_in_categories": set(),
 				"exists": None}
 		return r
 
@@ -376,7 +389,7 @@ class Store:
 			r = self.rec(p["title"])
 			r["exists"] = True
 			if ii and r["info"] is None:
-				r["info"] = ii[0]
+				r["info"] = compact_info(ii[0])
 			for c in p.get("categories", []):
 				r["categories"].add(c["title"].split(":", 1)[1])
 			if route:
@@ -483,22 +496,26 @@ def name_variants(name: str) -> list[str]:
 
 
 def catalog_lookup(wiki: Wiki, en_wiki: Wiki, store: Store, items: list[dict], lang: str) -> dict:
-	want: dict[str, set[str]] = {}  # requested File: title -> catalog ids
+	# requested File: title -> {catalog id -> how: "name" (item name variant) | "page_title" (title of the wiki
+	# page the catalog cites, or its ru interlanguage link; weaker: e.g. obstacles cite the clearing tool's page)}
+	want: dict[str, dict[str, str]] = {}
 
-	def add(title_base: str, item_id: str):
-		want.setdefault(f"File:{title_base}.png", set()).add(item_id)
+	def add(title_base: str, item_id: str, how: str):
+		slot = want.setdefault(f"File:{title_base}.png", {})
+		if slot.get(item_id) != "name":
+			slot[item_id] = how
 
 	en_pages: dict[str, set[str]] = {}
 	for it in items:
 		if it.get("category") == "planning":
 			continue
 		for v in name_variants(it["name"]):
-			add(v, it["id"])
+			add(v, it["id"], "name")
 		for s in it.get("sources", []):
 			t = page_title_from_url(s, lang)
 			if t and "/" not in t:
 				for v in ([t] if lang == "ru" else name_variants(t)):
-					add(v, it["id"])
+					add(v, it["id"], "page_title")
 			te = page_title_from_url(s, "en")
 			if lang == "ru" and te and "/" not in te:
 				en_pages.setdefault(te, set()).add(it["id"])
@@ -515,10 +532,11 @@ def catalog_lookup(wiki: Wiki, en_wiki: Wiki, store: Store, items: list[dict], l
 					for ll in p.get("langlinks", []):
 						for src in back.get(p["title"], []):
 							for iid in en_pages[src]:
-								add(ll["title"], iid)
+								add(ll["title"], iid, "page_title")
 								langlinked += 1
 	log(f"  catalog_lookup: {len(want)} candidate titles for {len(items)} items (langlink titles: {langlinked})")
 	matched_items: dict[str, set[str]] = {}
+	by_how: dict[str, set[str]] = {"name": set(), "page_title": set()}
 	for batch in chunks(sorted(want), 50):
 		for d in wiki.query_all({"titles": "|".join(batch), "redirects": "1", **IMAGE_PROPS}):
 			rm = resolve_map(d)
@@ -527,11 +545,14 @@ def catalog_lookup(wiki: Wiki, en_wiki: Wiki, store: Store, items: list[dict], l
 				final = rm.get(t, t)
 				if final in found:
 					r = store.recs[final]
-					r["catalog_ids"] |= want[t]
-					for iid in want[t]:
+					for iid, how in want[t].items():
+						r["catalog_ids" if how == "name" else "catalog_ids_page_title"].add(iid)
 						matched_items.setdefault(iid, set()).add(final)
+						by_how[how].add(iid)
 	n_items = sum(1 for it in items if it.get("category") != "planning")
 	return {"items_considered": n_items, "candidate_titles": len(want), "items_matched": len(matched_items),
+		"items_matched_by_name": len(by_how["name"]),
+		"items_matched_only_by_page_title": len(by_how["page_title"] - by_how["name"]),
 		"files_matched": len({t for s in matched_items.values() for t in s}),
 		"unmatched_item_ids": sorted(it["id"] for it in items
 			if it.get("category") != "planning" and it["id"] not in matched_items),
@@ -563,7 +584,7 @@ def catalog_pages(wiki: Wiki, store: Store, items: list[dict], lang: str) -> dic
 					for s in srcs:
 						lead[s] = "File:" + p["pageimage"].replace("_", " ")
 	all_files = {t for v in page_images.values() for t in v} | set(lead.values())
-	log(f"  catalog_page: {len(pages)} cited pages -> {len(all_files)} distinct images ({len(lead)} lead images)")
+	log(f"  catalog_page: {len(pages)} cited pages -> {len(all_files)} image titles ({len(lead)} lead images)")
 	used_on: dict[str, set[str]] = {}
 	for page, ims in page_images.items():
 		for t in ims:
@@ -585,8 +606,8 @@ def catalog_pages(wiki: Wiki, store: Store, items: list[dict], lang: str) -> dic
 					r["used_on"] |= used_on.get(t, set())
 					for page in lead_of.get(t, ()):
 						r["lead_image_of"].add(page)
-						r["catalog_ids"] |= pages[page]
-	return {"cited_pages": len(pages), "pages_with_lead_image": len(lead), "distinct_page_images": len(all_files),
+						r["page_catalog_ids"] |= pages[page]
+	return {"cited_pages": len(pages), "pages_with_lead_image": len(lead), "image_titles_requested": len(all_files),
 		"files_resolved": len(got)}
 
 
@@ -625,6 +646,9 @@ def skip_reason(r: dict, strict_page_images: bool) -> str | None:
 		return "gif_ui_or_uncategorised"
 	if w > 1600 and mime == "image/jpeg":
 		return "screenshot_no_alpha (jpeg wider than 1600px)"
+	if w > 1600 and mime == "image/png" and (info.get("api_meta") or {}).get("colorType") in ("truecolour",
+			"greyscale"):
+		return "screenshot_no_alpha (png without alpha channel per API, wider than 1600px)"
 	return None
 
 
@@ -664,6 +688,59 @@ def analyse(data: bytes) -> dict:
 	return out
 
 
+PNG_COLOR_TYPES = {0: "greyscale", 2: "truecolour", 3: "index-coloured", 4: "greyscale-alpha",
+	6: "truecolour-alpha"}
+
+
+def png_chunks(data: bytes) -> list[tuple[bytes, int]]:
+	out, i = [], 8
+	while i + 8 <= len(data):
+		n = int.from_bytes(data[i:i + 4], "big")
+		out.append((data[i + 4:i + 8], n))
+		i += 12 + n
+	return out
+
+
+def explain_sha1_mismatch(data: bytes, info: dict, meta: dict) -> str | None:
+	"""Explain a SHA-1 mismatch between the served file and the upload, or return None.
+
+	Measured behaviour of Fandom's CDN with ``format=original``: files without metadata come back byte-identical;
+	files with metadata come back with it rewritten (XMP/ICC/C2PA/text removed, sometimes a small eXIf/iCCP/tEXt
+	written instead). The size deltas repeat exactly across unrelated uploads (e.g. -12, -805, -3614, ~-14.4 KiB,
+	~-15.3 KiB), and the served IDAT streams keep their encoder-specific segmentation and zlib headers (8 KiB vs
+	64 KiB vs single IDAT; 78da vs 789c), i.e. the compressed pixel stream is passed through, not re-encoded.
+	Metadata can be large (C2PA manifests, Photoshop document history), so no size limit is applied. Accepted when
+	the file decodes, the format matches the API MIME type, the pixel size equals the API's, and (PNG) colour type
+	and bit depth equal the API's. Pixels cannot be byte-verified against the upload; the index says so and flags
+	|delta| > 64 KiB as ``large_delta``."""
+	if (meta["decoded_width"], meta["decoded_height"]) != (info.get("width"), info.get("height")):
+		return None
+	api_size = int(info.get("size") or 0)
+	if not api_size:
+		return None
+	fmt_mime = {"PNG": "image/png", "JPEG": "image/jpeg", "GIF": "image/gif", "WEBP": "image/webp"}
+	if fmt_mime.get(meta.get("format")) != info.get("mime"):
+		return None
+	delta = len(data) - api_size
+	am = info.get("api_meta") or {}
+	chunks_note = ""
+	if data[:8] == b"\x89PNG\r\n\x1a\n":
+		ch = png_chunks(data)
+		if not ch or ch[0][0] != b"IHDR":
+			return None
+		bit_depth, color_type = data[24], data[25]
+		if am.get("bitDepth") not in (None, bit_depth) or am.get("colorType") not in (None,
+				PNG_COLOR_TYPES.get(color_type)):
+			return None
+		anc = sorted({t.decode("latin1") if t.isalpha() else "<unparsed>" for t, _ in ch
+			if t not in (b"IHDR", b"PLTE", b"IDAT", b"IEND")})
+		chunks_note = f"; served ancillary chunks: {','.join(anc) or 'none'}"
+	had = ", ".join(am.get("text_keys", [])[:5]) or "none reported by API"
+	flag = "large_delta; " if abs(delta) > 65536 else ""
+	return (f"cdn_metadata_rewritten: {flag}served file {delta:+d} bytes vs upload; upload metadata: {had}"
+		f"{chunks_note}; format/size/colour type/bit depth match API; pixels not byte-verifiable")
+
+
 def original_url(url: str) -> str:
 	return url + ("&" if "?" in url else "?") + "format=original"
 
@@ -673,11 +750,16 @@ def fetch_one(http: Http, r: dict, resume: bool) -> dict:
 	info = r["info"]
 	path: Path = r["path"]
 	want_sha = info.get("sha1", "")
-	if resume and path.exists() and want_sha and sha1_file(path) == want_sha:
+	if resume and path.exists():
+		data = path.read_bytes()
+		got = hashlib.sha1(data).hexdigest()
 		try:
-			meta = analyse(path.read_bytes())
-			return {"status": "present", "meta": meta, "bytes": path.stat().st_size}
-		except Exception as e:  # corrupt despite sha1? re-download
+			meta = analyse(data)
+			note = "sha1_exact" if got == want_sha else explain_sha1_mismatch(data, info, meta)
+			if note:
+				return {"status": "present", "meta": meta, "bytes": len(data), "sha1_local": got,
+					"verification": note}
+		except Exception as e:  # corrupt -> re-download
 			log(f"  existing file failed to decode, re-downloading {path.name}: {e}")
 	part = path.with_name(path.name + ".part")
 	url = original_url(info["url"])
@@ -717,22 +799,26 @@ def fetch_one(http: Http, r: dict, resume: bool) -> dict:
 			continue
 		finally:
 			resp.close()
-		got_sha = sha1_file(part)
-		if want_sha and got_sha != want_sha:
-			last_err = f"sha1 mismatch (api {want_sha}, got {got_sha}, {part.stat().st_size} bytes)"
-			part.unlink(missing_ok=True)
-			continue
 		data = part.read_bytes()
+		got_sha = hashlib.sha1(data).hexdigest()
 		try:
 			meta = analyse(data)
 		except Exception as e:
-			last_err = f"undecodable: {type(e).__name__}: {e}"[:300]
+			last_err = f"undecodable: {type(e).__name__}: {e} (sha1 {got_sha}, {len(data)} bytes)"[:300]
 			part.unlink(missing_ok=True)
 			continue
-		if info.get("size") and len(data) != int(info["size"]):
-			meta["size_mismatch_vs_api"] = [len(data), int(info["size"])]
+		if got_sha == want_sha:
+			note = "sha1_exact"
+		else:
+			note = explain_sha1_mismatch(data, info, meta)
+			if note is None:
+				last_err = (f"sha1 mismatch not explained by CDN metadata rewriting (api {want_sha} {info.get('size')} "
+					f"bytes, got {got_sha} {len(data)} bytes)")
+				part.unlink(missing_ok=True)
+				continue
 		os.replace(part, path)
-		return {"status": "downloaded", "meta": meta, "bytes": len(data), "sha1_verified": bool(want_sha)}
+		return {"status": "downloaded", "meta": meta, "bytes": len(data), "sha1_local": got_sha,
+			"verification": note}
 	if not resume:
 		part.unlink(missing_ok=True)
 	return {"status": "failed", "error": last_err}
@@ -886,16 +972,20 @@ def main() -> int:
 			"title": r["title"], "categories": sorted(r["categories"]),
 			"width": info.get("width"), "height": info.get("height"), "mime": info.get("mime"),
 			"sha1": info.get("sha1"), "size_bytes": info.get("size"), "timestamp": info.get("timestamp"),
+			"sha1_local": res.get("sha1_local"), "local_bytes": res.get("bytes"),
+			"verification": "sha1_exact" if res.get("verification") == "sha1_exact" else "cdn_metadata_rewritten",
+			"verification_note": res.get("verification"),
+			"large_delta": "large_delta" in (res.get("verification") or ""),
 			"local_path": str(r["path"]), "rel_path": str(r["path"].relative_to(out)),
 			"url": info.get("url"), "download_url": original_url(info["url"]),
 			"description_url": info.get("descriptionurl"),
 			"matched_by": "|".join(sorted(r["matched_by"])), "matched_by_list": sorted(r["matched_by"]),
-			"catalog_ids": sorted(r["catalog_ids"]), "used_on": sorted(r["used_on"]),
+			"catalog_ids": sorted(r["catalog_ids"]), "catalog_ids_page_title": sorted(r["catalog_ids_page_title"]),
+			"page_catalog_ids": sorted(r["page_catalog_ids"]), "used_on": sorted(r["used_on"]),
 			"lead_image_of": sorted(r["lead_image_of"]), "duplicate_of": r.get("duplicate_of"),
 			"status": res["status"], "has_alpha_channel": meta["has_alpha_channel"], "alpha": meta["alpha_used"],
 			"visible_fraction": meta["visible_fraction"], "alpha_bbox": meta["alpha_bbox"],
 			"frames": meta["frames"], "format": meta["format"], "mode": meta["mode"],
-			**({"size_mismatch_vs_api": meta["size_mismatch_vs_api"]} if "size_mismatch_vs_api" in meta else {}),
 		})
 	not_attempted = [r["title"] for r in kept if r["title"] not in results]
 
@@ -921,11 +1011,14 @@ def main() -> int:
 		"stored_by_status": status_counts,
 		"failed": len(failed),
 		"not_attempted": len(not_attempted),
+		"verification": {v: sum(1 for f in files_out if f["verification"] == v)
+			for v in ("sha1_exact", "cdn_metadata_rewritten")},
+		"large_delta_vs_upload": sum(1 for f in files_out if f["large_delta"]),
 		"with_alpha": sum(1 for f in files_out if f["alpha"]),
 		"with_alpha_channel": sum(1 for f in files_out if f["has_alpha_channel"]),
 		"without_alpha": sum(1 for f in files_out if not f["alpha"]),
 		"size_distribution_max_side": dict(sorted(sizes.items())),
-		"stored_bytes_unique": sum(int(f["size_bytes"] or 0) for f in files_out if not f["duplicate_of"]),
+		"stored_bytes_unique": sum(int(f["local_bytes"] or 0) for f in files_out if not f["duplicate_of"]),
 		"by_matched_by": {},
 		"http": dict(http.counts),
 		"blocked_hosts": dict(http.blocked),
@@ -938,6 +1031,15 @@ def main() -> int:
 		"wiki": args.wiki, "api": cfg["api"], "fetched_at": now_iso(),
 		"tool": "tools/private_assets/fetch_wiki.py", "root": str(out),
 		"private_use_only": "Proprietary Supercell art. Never commit, publish or redistribute.",
+		"verification_note": ("sha1 = API sha1 of the uploaded file. verification=sha1_exact: local bytes identical. "
+			"verification=cdn_metadata_rewritten: the CDN (even with format=original) rewrote file metadata; "
+			"format/dimensions/colour type/bit depth match the API, but pixels could not be byte-verified against "
+			"the upload (large_delta: |size difference| > 64 KiB). sha1_local is the hash of the stored file."),
+		"fields_note": ("catalog_ids: catalog items whose NAME (capitalisation variants) equals the file name. "
+			"catalog_ids_page_title: items whose cited wiki page title (or its ru interlanguage link) equals the "
+			"file name - weaker (obstacles cite the clearing tool's page). page_catalog_ids: the file is the lead "
+			"image of a page those items cite - weakest. used_on: cited pages showing the image. local_path is "
+			"absolute, rel_path is relative to root."),
 		"params": {"routes": routes, "max_depth": args.max_depth, "resume": args.resume,
 			"discover_only": args.discover_only, "limit": args.limit},
 		"stats": stats,
@@ -945,6 +1047,7 @@ def main() -> int:
 		"files": files_out,
 		"skipped": [{"title": r["title"], "reason": why, "categories": sorted(r["categories"]),
 			"matched_by": "|".join(sorted(r["matched_by"])), "catalog_ids": sorted(r["catalog_ids"]),
+			"catalog_ids_page_title": sorted(r["catalog_ids_page_title"]),
 			"width": (r["info"] or {}).get("width"), "height": (r["info"] or {}).get("height"),
 			"mime": (r["info"] or {}).get("mime"), "sha1": (r["info"] or {}).get("sha1"),
 			"url": (r["info"] or {}).get("url"), "description_url": (r["info"] or {}).get("descriptionurl")}

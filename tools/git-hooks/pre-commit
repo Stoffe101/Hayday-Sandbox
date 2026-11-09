@@ -1,0 +1,16 @@
+#!/bin/sh
+# Hayday Sandbox pre-commit hook: blocks a commit that would add proprietary (original Hay Day) art, private
+# indexes, archives or Fan Kit tokens. Checks only what is STAGED (the blobs that would be committed).
+# Install: tools/ci/install_git_hooks.sh   (sets git config core.hooksPath tools/git-hooks)
+# Details: docs/PRIVATE_ASSETS.md
+HOOK_NAME=pre-commit
+. "$(dirname "$0")/lib.sh"
+leak_checker || exit 1
+# shellcheck disable=SC2086
+$PY "$CHECKER" --staged --quiet
+rc=$?
+if [ $rc -ne 0 ]; then
+	echo "pre-commit: commit blocked by the private-art leak check (exit $rc)." >&2
+	exit 1
+fi
+exit 0

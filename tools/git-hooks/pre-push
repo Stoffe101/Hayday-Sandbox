@@ -1,0 +1,22 @@
+#!/bin/sh
+# Hayday Sandbox pre-push hook: re-checks every file version in the commits being pushed (catches commits made
+# with --no-verify or in a clone without hooks). Uses the same checker as CI and the pre-commit hook.
+# Git passes "<remote name> <url>" as arguments and "<local ref> <local sha> <remote ref> <remote sha>" lines on stdin.
+HOOK_NAME=pre-push
+. "$(dirname "$0")/lib.sh"
+leak_checker || exit 1
+remote="$1"
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+	case "$local_sha" in *[!0]*) ;; *) continue ;; esac          # deleting a remote branch: nothing to check
+	range="$local_sha --not --remotes=$remote"                     # new branch: commits no remote ref has yet
+	case "$remote_sha" in
+		*[!0]*) if git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then range="$remote_sha..$local_sha"; fi ;;
+	esac
+	# shellcheck disable=SC2086
+	if ! $PY "$CHECKER" --range "$range" --quiet; then
+		echo "pre-push: refusing to push $local_ref -> $remote_ref: private-art leak check failed." >&2
+		status=1
+	fi
+done
+exit $status

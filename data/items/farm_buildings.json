@@ -1,0 +1,435 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "barn",
+   "name": "Barn",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    4,
+    4
+   ],
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Barn"
+   ],
+   "notes": "Footprint not stated by any consulted source; provisional planning size. | pre-placed; repaired in tutorial; storage capacity upgrades with supplies; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "derby_stand",
+   "name": "Derby stand",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 18,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Derby"
+   ],
+   "notes": "Fixed scenery in town; listed for reference only. | derbies from L18; unlocks with the neighborhood house; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "event_board",
+   "name": "Event board",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 9,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Events"
+   ],
+   "notes": "Fixed scenery; listed for reference only. | events unlocked L9; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "farmhouse",
+   "name": "Farmhouse",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    4,
+    4
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "movable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Farmhouse"
+   ],
+   "notes": "Footprint not stated by any consulted source; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm. | pre-placed at game start; achievements from L6; customization from L31; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "fishing_boat",
+   "name": "Fishing boat",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 27,
+   "cost": {
+    "coins": 10000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Fishing_Lake"
+   ],
+   "notes": "Fishing area scenery; listed for reference only. | repair 10,000 coins, 5 min; 47 XP; gateway to the Fishing Lake; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "helpers_house",
+   "name": "Helpers' House",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    3,
+    3
+   ],
+   "unlock_level": 33,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Helpers'_House"
+   ],
+   "notes": "unlocked L33; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "leaderboard",
+   "name": "Leaderboard",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Leaderboard"
+   ],
+   "notes": "Fixed scenery; listed for reference only. | boat leaderboard sign on the farm; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "mailbox",
+   "name": "Mailbox",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 7,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "movable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Mailbox"
+   ],
+   "notes": "Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm. | newspaper mailbox L7, neighborhood mailbox L10, letter mailbox L15; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "neighborhood_house",
+   "name": "Neighborhood house",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 10,
+   "cost": {
+    "coins": 200,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Neighborhood"
+   ],
+   "notes": "Fixed scenery; listed for reference only. | repair 200 coins, 1 min (or 10 diamonds); unlocked L10; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "newspaper_daily_dirt",
+   "name": "Newspaper (Daily Dirt)",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 7,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Daily_Dirt"
+   ],
+   "notes": "Part of the mailbox / fixed UI scenery; listed for reference only. | read via the newspaper mailbox; unlocked L7; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "riverboat_dock",
+   "name": "Riverboat dock",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 17,
+   "cost": {
+    "coins": 7000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Boat"
+   ],
+   "notes": "Fixed scenery; listed for reference only. | repair 7,000 coins, 2 min; 27 XP; unlocked L17; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "roadside_shop",
+   "name": "Roadside Shop",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    3,
+    3
+   ],
+   "unlock_level": 7,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "movable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Roadside_Shop"
+   ],
+   "notes": "Footprint not stated; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm. | unlocked L7; does not need to be repaired or bought; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "silo",
+   "name": "Silo",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    3,
+    3
+   ],
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Silo"
+   ],
+   "notes": "Footprint not stated by any consulted source; provisional planning size. | pre-placed; repaired in tutorial; crop storage; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "tackle_box",
+   "name": "Tackle Box",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 27,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Tackle_Box"
+   ],
+   "notes": "Fishing area scenery; listed for reference only. | Fishing Lake storage; already standing, no repair; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "train_station_farm",
+   "name": "Train station (farm)",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 34,
+   "cost": {
+    "coins": 20000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Train_Station"
+   ],
+   "notes": "Fixed scenery; listed for reference only. | repair 20,000 coins, 5 min; 39 XP; gateway to the town; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "truck_and_order_board",
+   "name": "Truck and order board",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    4,
+    3
+   ],
+   "unlock_level": 3,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "movable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Truck"
+   ],
+   "notes": "Footprint not stated; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm. | truck parked next to the order board near the farmhouse; unlocked L3; footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "valley_board",
+   "name": "Valley board",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 25,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Valley"
+   ],
+   "notes": "Fixed scenery; listed for reference only. | valley unlocked L25 (no coin cost); footprint not stated by any source; movability not documented"
+  },
+  {
+   "id": "wheel_of_fortune_truck",
+   "name": "Wheel of Fortune truck",
+   "category": "farm_building",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 8,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "placeable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Wheel_of_Fortune"
+   ],
+   "notes": "Fixed scenery outside the buildable farm; listed for reference only. | unlocked L8; footprint not stated by any source; movability not documented"
+  }
+ ]
+}

@@ -1,0 +1,2465 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "autumn_leaf_path",
+   "name": "Autumn leaf path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "autumn_leaf_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%BB%D0%B8%D1%81%D1%82%D1%8C%D0%B5%D0%B2"
+   ],
+   "notes": "game_id=Leafpile path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event, themed box; added: Summer update 2024"
+  },
+  {
+   "id": "autumn_path",
+   "name": "Autumn path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "autumn_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D1%8F%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Autumn_path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Farm Pass; added: Autumn update 2023"
+  },
+  {
+   "id": "bavarian_path",
+   "name": "Bavarian path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "bavarian_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D0%B2%D0%B0%D1%80%D1%81%D0%BA%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Bavarian_path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, task event, Farm Pass; added: Autumn update 2023"
+  },
+  {
+   "id": "blue_flower_path",
+   "name": "Blue flower path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "blue_flower_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D1%81%D0%B8%D0%BD%D0%B8%D1%85_%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Flower path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: catalogue, Wheel of Fortune, Farm Pass; added: Spring update 2018; en list: Catalogue"
+  },
+  {
+   "id": "brick_path",
+   "name": "Brick path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "brick_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D1%80%D0%BF%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Brick path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: decoration set, currency-shop offer, movie night (ads); added: Spring update 2022; en list: Packages"
+  },
+  {
+   "id": "bright_path",
+   "name": "Bright path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 8,
+    "other": null
+   },
+   "flippable": false,
+   "connect": {
+    "group": "bright_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_2"
+   ],
+   "notes": "game_id=DarkGrassTile; connectable piece (auto-joins neighbours); obtained via: catalogue, shop, Wheel of Fortune; en list: Fences & Paths L1 cost '8 [dia]'"
+  },
+  {
+   "id": "bronze_gravel_path",
+   "name": "Bronze gravel path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "bronze_gravel_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D1%80%D0%BE%D0%BD%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F_%D0%B3%D1%80%D0%B0%D0%B2%D0%B8%D0%B9%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Gravel path brown; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2023"
+  },
+  {
+   "id": "brown_path",
+   "name": "Brown path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 8,
+    "other": null
+   },
+   "flippable": false,
+   "connect": {
+    "group": "brown_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D1%80%D0%B8%D1%87%D0%BD%D0%B5%D0%B2%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=DarkLowTile; connectable piece (auto-joins neighbours); obtained via: movie night (ads), catalogue, shop, Wheel of Fortune; en list: Fences & Paths L1 cost '8 [dia]'"
+  },
+  {
+   "id": "brown_sunflower_path",
+   "name": "Brown sunflower path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "brown_sunflower_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D1%80%D0%B8%D1%87%D0%BD%D0%B5%D0%B2%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D1%81_%D0%BF%D0%BE%D0%B4%D1%81%D0%BE%D0%BB%D0%BD%D1%83%D1%85%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Brown sunflower path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer; added: Summer update 2023"
+  },
+  {
+   "id": "cheesy_moon_path",
+   "name": "Cheesy moon path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "cheesy_moon_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D1%83%D0%BD%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Cheesemoon path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Farm Pass, task event; added: Autumn update 2023"
+  },
+  {
+   "id": "chocolate_tile",
+   "name": "Chocolate tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "chocolate_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%BE%D0%BA%D0%BE%D0%BB%D0%B0%D0%B4%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Winter update 2025"
+  },
+  {
+   "id": "classical_path",
+   "name": "Classical path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "classical_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%BB%D0%B8%D0%BC%D0%BF%D0%B8%D0%B9%D1%81%D0%BA%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Olympic Path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event, movie night (ads), Farm Pass; added: Winter update 2021"
+  },
+  {
+   "id": "cleared_snow_path",
+   "name": "Cleared snow path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "cleared_snow_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D1%81%D1%87%D0%B8%D1%89%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D1%81%D0%BD%D0%B5%D0%B6%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Cleared snow path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event, Farm Pass; added: Winter update 2023"
+  },
+  {
+   "id": "cobblestone_path",
+   "name": "Cobblestone Path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 46,
+   "cost": {
+    "coins": 60,
+    "diamonds": null,
+    "other": "+5 coins per additional purchase"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "cobblestone_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%BE%D1%89%D1%91%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Cobblestone Path; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths L46 cost '60 [coin] +5 per purchase'"
+  },
+  {
+   "id": "colorful_path",
+   "name": "Colorful path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "colorful_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B7%D0%BD%D0%BE%D1%86%D0%B2%D0%B5%D1%82%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Colorful Path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Spring update 2022"
+  },
+  {
+   "id": "creepy_path",
+   "name": "Creepy path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "creepy_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%88%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Cheepy path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; added: Autumn update 2025"
+  },
+  {
+   "id": "crescent_tile",
+   "name": "Crescent tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "crescent_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%B0%D0%B1%D1%81%D0%BA%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Crescent tile; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event, currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "dark_grass_tile",
+   "name": "Dark grass tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "dark_grass_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%91%D0%BC%D0%BD%D0%BE-%D0%B7%D0%B5%D0%BB%D1%91%D0%BD%D0%B0%D1%8F_%D1%82%D1%80%D0%B0%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=Dark grass tile; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "dinosaur_footprint_path",
+   "name": "Dinosaur footprint path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "dinosaur_footprint_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D1%81%D0%BE_%D1%81%D0%BB%D0%B5%D0%B4%D0%B0%D0%BC%D0%B8_%D0%B4%D0%B8%D0%BD%D0%BE%D0%B7%D0%B0%D0%B2%D1%80%D0%B0"
+   ],
+   "notes": "game_id=Dinosaur footprint path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Autumn update 2024"
+  },
+  {
+   "id": "disco_tile",
+   "name": "Disco tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "disco_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B8%D1%81%D0%BA%D0%BE-%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, other; added: Winter update 2025"
+  },
+  {
+   "id": "easter_tile",
+   "name": "Easter tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "easter_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Easter tile; level 1 = no level gate recorded (non-shop item); seasonal=Easter; connectable piece (auto-joins neighbours); obtained via: special-currency event, Farm Pass, currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "farm_path",
+   "name": "Farm path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 16,
+   "cost": {
+    "coins": null,
+    "diamonds": 8,
+    "other": null
+   },
+   "flippable": false,
+   "connect": {
+    "group": "farm_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B5%D1%80%D0%BC%D0%B5%D1%80%D1%81%D0%BA%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "obtained via: shop, gift, currency-shop offer; added: Winter update 2025"
+  },
+  {
+   "id": "festival_floor_tile",
+   "name": "Festival floor tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "festival_floor_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B5%D1%81%D1%82%D0%B8%D0%B2%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B5_%D0%BF%D0%BE%D0%BA%D1%80%D1%8B%D1%82%D0%B8%D0%B5"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Spring update 2026"
+  },
+  {
+   "id": "fieldstone_path",
+   "name": "Fieldstone path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "fieldstone_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%BF%D1%80%D0%B8%D1%80%D0%BE%D0%B4%D0%BD%D0%BE%D0%B3%D0%BE_%D0%BA%D0%B0%D0%BC%D0%BD%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, currency-shop offer; added: Summer update 2026"
+  },
+  {
+   "id": "fish_tile",
+   "name": "Fish tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "fish_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D0%B8%D1%82%D0%BA%D0%B0_%D1%81_%D0%BA%D0%B0%D1%80%D0%BF%D0%B0%D0%BC%D0%B8_%D0%BA%D0%BE%D0%B8"
+   ],
+   "notes": "game_id=Fish path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Summer update 2024"
+  },
+  {
+   "id": "flower_log_path",
+   "name": "Flower log path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "flower_log_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%B1%D1%80%D1%91%D0%B2%D0%B5%D0%BD_%D1%81_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Flower log path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: catalogue, Wheel of Fortune; added: Spring update 2018; en list: Catalogue"
+  },
+  {
+   "id": "flower_path",
+   "name": "Flower path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "flower_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Rainbow flower path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: catalogue, Wheel of Fortune; added: Spring update 2018; en list: Catalogue"
+  },
+  {
+   "id": "flower_tile",
+   "name": "Flower tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "flower_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Flower tile; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Spring update 2023"
+  },
+  {
+   "id": "gingerbread_path",
+   "name": "Gingerbread path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "gingerbread_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D1%8F%D0%BD%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Gingerbread path; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; connectable piece (auto-joins neighbours); obtained via: special-currency event, task event; added: Autumn update 2024"
+  },
+  {
+   "id": "golden_path",
+   "name": "Golden Path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 50,
+   "cost": {
+    "coins": 5000,
+    "diamonds": null,
+    "other": "+250 coins per additional purchase"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "golden_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Golden Path; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths L50 cost '5,000 [coin] +250 per purchase'"
+  },
+  {
+   "id": "gravel_path",
+   "name": "Gravel Path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 41,
+   "cost": {
+    "coins": 40,
+    "diamonds": null,
+    "other": "+5 coins per additional purchase"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "gravel_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D1%80%D0%B0%D0%B2%D0%B8%D0%B9%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Gravel Path; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths L40 cost '40 [coin] +5 per purchase'; unlock level differs: ru=41 en=40"
+  },
+  {
+   "id": "gray_gravel_path",
+   "name": "Gray gravel path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "gray_gravel_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B5%D1%80%D0%B0%D1%8F_%D0%B3%D1%80%D0%B0%D0%B2%D0%B8%D0%B9%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Gravel path grey; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2023"
+  },
+  {
+   "id": "halloween_path",
+   "name": "Halloween path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "halloween_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D0%B5%D0%BB%D0%BB%D0%BE%D1%83%D0%B8%D0%BD%D1%81%D0%BA%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Halloween path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: Farm Pass; added: Autumn update 2022"
+  },
+  {
+   "id": "hanami_path",
+   "name": "Hanami path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "hanami_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_(%D0%BB%D0%B5%D0%BF%D0%B5%D1%81%D1%82%D0%BA%D0%B8_%D1%81%D0%B0%D0%BA%D1%83%D1%80%D1%8B)"
+   ],
+   "notes": "game_id=Hanami path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Winter update 2021"
+  },
+  {
+   "id": "heart_confetti",
+   "name": "Heart confetti",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "heart_confetti",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%BD%D1%84%D0%B5%D1%82%D1%82%D0%B8-%D1%81%D0%B5%D1%80%D0%B4%D0%B5%D1%87%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Heart confetti; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "heart_tile",
+   "name": "Heart tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "heart_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D0%B8%D1%82%D0%BA%D0%B0_%D1%81_%D1%81%D0%B5%D1%80%D0%B4%D0%B5%D1%87%D0%BA%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Heart tile; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; connectable piece (auto-joins neighbours); obtained via: task event; added: Winter update 2024"
+  },
+  {
+   "id": "honeycomb_tile",
+   "name": "Honeycomb tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "honeycomb_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B5%D0%B4%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Honeycomb path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass; added: Summer update 2024"
+  },
+  {
+   "id": "ice_path",
+   "name": "Ice path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "ice_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B5%D0%B4%D1%8F%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Autumn update 2025"
+  },
+  {
+   "id": "jade_path",
+   "name": "Jade path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "jade_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B5%D1%84%D1%80%D0%B8%D1%82%D0%BE%D0%B2%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Jade path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2022"
+  },
+  {
+   "id": "jolly_path",
+   "name": "Jolly path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "jolly_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Jolly path; level 1 = no level gate recorded (non-shop item); seasonal=Winter; connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Autumn update 2024"
+  },
+  {
+   "id": "large_slates",
+   "name": "Large slates",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "large_slates",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%B1%D1%83%D0%BB%D1%8B%D0%B6%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Large slates; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: currency-shop offer; added: Summer update 2025"
+  },
+  {
+   "id": "lemon_tile",
+   "name": "Lemon tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "lemon_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B8%D0%BC%D0%BE%D0%BD%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Lemon path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass; added: Summer update 2024"
+  },
+  {
+   "id": "light_grass_tile",
+   "name": "Light grass tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "light_grass_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B5%D1%82%D0%BB%D0%BE-%D0%B7%D0%B5%D0%BB%D1%91%D0%BD%D0%B0%D1%8F_%D1%82%D1%80%D0%B0%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=Light grass tile; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "limestone_road",
+   "name": "Limestone Road",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 34,
+   "cost": {
+    "coins": 100,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "limestone_road",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%B7%D0%B2%D0%B5%D1%81%D1%82%D0%BD%D1%8F%D0%BA%D0%BE%D0%B2%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B3%D0%B0"
+   ],
+   "notes": "game_id=TownRoad01; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths L34 cost '100 [coin] +10 per purchase'"
+  },
+  {
+   "id": "log_path",
+   "name": "Log path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "log_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%B1%D1%80%D1%91%D0%B2%D0%B5%D0%BD"
+   ],
+   "notes": "game_id=Log path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: movie night (ads), catalogue, Wheel of Fortune, Farm Pass; added: Spring update 2018; en list: Catalogue"
+  },
+  {
+   "id": "marble_leaf",
+   "name": "Marble leaf",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "marble_leaf",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D1%80%D0%B0%D0%BC%D0%BE%D1%80%D0%BD%D1%8B%D0%B9_%D0%BB%D0%B8%D1%81%D1%82"
+   ],
+   "notes": "game_id=Marble leaf path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "masonry_tile",
+   "name": "Masonry tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "masonry_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D0%BC%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Stonemasons path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass; added: Summer update 2024"
+  },
+  {
+   "id": "mediterranean_tile",
+   "name": "Mediterranean tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "mediterranean_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%80%D0%B5%D0%B4%D0%B8%D0%B7%D0%B5%D0%BC%D0%BD%D0%BE%D0%BC%D0%BE%D1%80%D1%81%D0%BA%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Mediterranean path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: catalogue, Wheel of Fortune; added: Summer update 2024"
+  },
+  {
+   "id": "mint_sunflower_path",
+   "name": "Mint sunflower path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "mint_sunflower_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B8%D1%80%D1%8E%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D1%81_%D0%BF%D0%BE%D0%B4%D1%81%D0%BE%D0%BB%D0%BD%D1%83%D1%85%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Mint sunflower path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer; added: Summer update 2023"
+  },
+  {
+   "id": "mooncake_tile",
+   "name": "Mooncake tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "mooncake_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D1%82%D0%B0%D0%B9%D1%81%D0%BA%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Mooncake_tile; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: task event; added: Autumn update 2023"
+  },
+  {
+   "id": "mosaic_path",
+   "name": "Mosaic path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "mosaic_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%BE%D0%B7%D0%B0%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Mosaic Path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Spring update 2022"
+  },
+  {
+   "id": "muddy_trail",
+   "name": "Muddy trail",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "muddy_trail",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D0%BE%D0%BF%D0%B8%D0%BD%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%B3%D1%80%D1%8F%D0%B7%D0%B8"
+   ],
+   "notes": "game_id=Muddy trail; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, themed box; added: Winter update 2024"
+  },
+  {
+   "id": "mushroom_path",
+   "name": "Mushroom path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "mushroom_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D1%80%D0%B8%D0%B1%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Mushroom path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Summer update 2018; en list: Packages"
+  },
+  {
+   "id": "park_path",
+   "name": "Park path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "park_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%80%D0%BA%D0%BE%D0%B2%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Park path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event, currency-shop offer; added: Spring update 2023"
+  },
+  {
+   "id": "pastel_gravel_path",
+   "name": "Pastel gravel path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "pastel_gravel_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D0%B3%D1%80%D0%B0%D0%B2%D0%B8%D0%B9%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Gravel path pastel; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2023"
+  },
+  {
+   "id": "path_of_harmony",
+   "name": "Path of harmony",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "path_of_harmony",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B1%D0%B5%D0%B7%D0%BC%D1%8F%D1%82%D0%B5%D0%B6%D0%BD%D0%BE%D1%81%D1%82%D0%B8"
+   ],
+   "notes": "game_id=Path of harmony; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "pattern_gravel_path",
+   "name": "Pattern gravel path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "pattern_gravel_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D0%B7%D0%BE%D1%80%D1%87%D0%B0%D1%82%D0%B0%D1%8F_%D0%B3%D1%80%D0%B0%D0%B2%D0%B8%D0%B9%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Gravel path pattern; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2023"
+  },
+  {
+   "id": "paw_prints",
+   "name": "Paw prints",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "paw_prints",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BB%D0%B5%D0%B4%D1%8B_%D0%BB%D0%B0%D0%BF"
+   ],
+   "notes": "game_id=Paw prints; level 1 = no level gate recorded (non-shop item); seasonal=Easter; connectable piece (auto-joins neighbours); obtained via: special-currency event, other; added: Winter update 2024"
+  },
+  {
+   "id": "peacock_path",
+   "name": "Peacock path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "peacock_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D0%B2%D0%BB%D0%B8%D0%BD%D1%8C%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; added: Autumn update 2025"
+  },
+  {
+   "id": "pebble_road",
+   "name": "Pebble Road",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 45,
+   "cost": {
+    "coins": 150,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "pebble_road",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%BE%D1%89%D1%91%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B3%D0%B0"
+   ],
+   "notes": "game_id=TownRoad03; connectable piece (auto-joins neighbours); obtained via: movie night (ads), shop; en list: Fences & Paths L45 cost '150 [coin] +10 per purchase'"
+  },
+  {
+   "id": "poisonous_path",
+   "name": "Poisonous path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "poisonous_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D0%B4%D0%BE%D0%B2%D0%B8%D1%82%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Poisonous mushroom path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: currency-shop offer, movie night (ads), Farm Pass; added: Autumn update 2019"
+  },
+  {
+   "id": "poolside_tile",
+   "name": "Poolside tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "poolside_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D0%B8%D1%82%D0%BA%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%B1%D0%B0%D1%81%D1%81%D0%B5%D0%B9%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Pooltile path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Summer update 2024"
+  },
+  {
+   "id": "puddle_path",
+   "name": "Puddle path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "puddle_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D1%81_%D0%BB%D1%83%D0%B6%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, other; added: Summer update 2026"
+  },
+  {
+   "id": "rainbow_path",
+   "name": "Rainbow path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "rainbow_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B4%D1%83%D0%B6%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Rainbow path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, global event, task event; added: Winter update 2022"
+  },
+  {
+   "id": "rose_petal_path",
+   "name": "Rose petal path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "rose_petal_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_(%D0%BB%D0%B5%D0%BF%D0%B5%D1%81%D1%82%D0%BA%D0%B8_%D1%80%D0%BE%D0%B7%D1%8B)"
+   ],
+   "notes": "game_id=Rosepetal path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: special-currency event, Farm Pass, currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "round_stone_path",
+   "name": "Round stone path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "round_stone_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D1%83%D0%B3%D0%BB%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%BA%D0%B0%D0%BC%D0%BD%D0%B5%D0%B9"
+   ],
+   "notes": "game_id=Round_stone_path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Autumn update 2023"
+  },
+  {
+   "id": "rustic_walkway",
+   "name": "Rustic walkway",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "rustic_walkway",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B5%D0%BB%D1%8C%D1%81%D0%BA%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B3%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Summer update 2026"
+  },
+  {
+   "id": "sand_path",
+   "name": "Sand path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "sand_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B5%D1%81%D1%87%D0%B0%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Sandpath; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Farm Pass; added: Summer update 2018; en list: Packages"
+  },
+  {
+   "id": "shamrock_path",
+   "name": "Shamrock path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "shamrock_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%BA%D0%BB%D0%B5%D0%B2%D0%B5%D1%80%D0%B0"
+   ],
+   "notes": "game_id=Shamrock path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: movie night (ads), Farm Pass; added: Spring update 2024"
+  },
+  {
+   "id": "ski_tracks",
+   "name": "Ski tracks",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "ski_tracks",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D1%8B%D0%B6%D0%BD%D1%8F"
+   ],
+   "notes": "game_id=Ski tracks; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "slat_fence",
+   "name": "Slat fence",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "slat_fence",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%89%D0%B0%D1%82%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "English name unavailable; using internal game id; game_id=Slat fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass; added: Summer update 2024"
+  },
+  {
+   "id": "snake_tile",
+   "name": "Snake tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "snake_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%BC%D0%B5%D0%B8%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Snake path; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "snowflake_tile",
+   "name": "Snowflake tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "snowflake_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D0%B8%D1%82%D0%BA%D0%B0_%D1%81%D0%BE_%D1%81%D0%BD%D0%B5%D0%B6%D0%B8%D0%BD%D0%BA%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Snowflake_tile; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2024"
+  },
+  {
+   "id": "snowy_tile",
+   "name": "Snowy tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "snowy_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B6%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; added: Autumn update 2025"
+  },
+  {
+   "id": "spring_flower_tile",
+   "name": "Spring flower tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "spring_flower_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%81%D0%B5%D0%BD%D0%BD%D1%8F%D1%8F_%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Spring flower tile; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "star_tile",
+   "name": "Star tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "star_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B2%D1%91%D0%B7%D0%B4%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Star path; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; connectable piece (auto-joins neighbours); reward/special decoration; obtained via: decoration set, currency-shop offer, Farm Pass; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "stone_path",
+   "name": "Stone Path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 11,
+   "cost": {
+    "coins": 25,
+    "diamonds": null,
+    "other": "+5 coins per additional purchase"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "stone_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Stone Path; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths L11 cost '25 [coin] +5 per purchase'"
+  },
+  {
+   "id": "stone_road",
+   "name": "Stone Road",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 40,
+   "cost": {
+    "coins": 50,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "stone_road",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D0%BC%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B3%D0%B0"
+   ],
+   "notes": "game_id=TownRoad02; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths L40 cost '50 [coin] +10 per purchase'"
+  },
+  {
+   "id": "straw_path",
+   "name": "Straw path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "straw_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BE%D0%BB%D0%BE%D0%BC%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Straw path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Summer update 2024"
+  },
+  {
+   "id": "succulent_path",
+   "name": "Succulent path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "succulent_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D1%81_%D1%81%D1%83%D0%BA%D0%BA%D1%83%D0%BB%D0%B5%D0%BD%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Succulent path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; added: Spring update 2022"
+  },
+  {
+   "id": "sugar_skulls_path",
+   "name": "Sugar skulls path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "sugar_skulls_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D1%81%D0%B0%D1%85%D0%B0%D1%80%D0%BD%D1%8B%D1%85_%D1%87%D0%B5%D1%80%D0%B5%D0%BF%D0%BE%D0%B2"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; added: Autumn update 2025"
+  },
+  {
+   "id": "summer_games_track",
+   "name": "Summer games track",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "summer_games_track",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%BB%D0%B8%D0%BC%D0%BF%D0%B8%D0%B9%D1%81%D0%BA%D0%B0%D1%8F_%D0%B1%D0%B5%D0%B3%D0%BE%D0%B2%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Summer games track; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Summer update 2024"
+  },
+  {
+   "id": "thanksgiving_path",
+   "name": "Thanksgiving path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "thanksgiving_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%BA%D0%BE_%D0%94%D0%BD%D1%8E_%D0%B1%D0%BB%D0%B0%D0%B3%D0%BE%D0%B4%D0%B0%D1%80%D0%B5%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Thanksgiving path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Autumn update 2024"
+  },
+  {
+   "id": "trail",
+   "name": "Trail",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 16,
+   "cost": {
+    "coins": null,
+    "diamonds": 8,
+    "other": null
+   },
+   "flippable": false,
+   "connect": {
+    "group": "trail",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D0%BE%D0%BF%D0%B8%D0%BD%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Trail; connectable piece (auto-joins neighbours); obtained via: movie night (ads), shop, Wheel of Fortune; en list: Fences & Paths/Nature L16 cost '8 [dia]'"
+  },
+  {
+   "id": "trail_path",
+   "name": "Trail Path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 23,
+   "cost": {
+    "coins": 20,
+    "diamonds": null,
+    "other": "+2 coins per additional purchase"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "trail_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%BE%D1%82%D0%BE%D0%BF%D1%82%D0%B0%D0%BD%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Sand Path; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths/Nature L23 cost '20 [coin] +2 per purchase'"
+  },
+  {
+   "id": "train_track",
+   "name": "Train track",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "train_track",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B5%D0%BB%D1%8C%D1%81%D1%8B"
+   ],
+   "notes": "game_id=Traintrack; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune, currency-shop offer; added: Summer update 2021"
+  },
+  {
+   "id": "tropical_tile",
+   "name": "Tropical tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "tropical_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D0%BE%D0%BF%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Large slates; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: currency-shop offer, special-currency event; added: Summer update 2025"
+  },
+  {
+   "id": "turtle_tile",
+   "name": "Turtle tile",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "turtle_tile",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A7%D0%B5%D1%80%D0%B5%D0%BF%D0%B0%D1%88%D1%8C%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Stone turtle path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2025"
+  },
+  {
+   "id": "white_gravel_path",
+   "name": "White gravel path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "white_gravel_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D0%BB%D0%B0%D1%8F_%D0%B3%D1%80%D0%B0%D0%B2%D0%B8%D0%B9%D0%BD%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Gravel path white; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: decoration set; added: Spring update 2023"
+  },
+  {
+   "id": "white_path",
+   "name": "White path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 8,
+    "other": null
+   },
+   "flippable": false,
+   "connect": {
+    "group": "white_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D0%BB%D0%B0%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=LightLowTile; connectable piece (auto-joins neighbours); obtained via: catalogue, shop, Wheel of Fortune; en list: Fences & Paths L1 cost '8 [dia]'"
+  },
+  {
+   "id": "winter_log_path",
+   "name": "Winter log path",
+   "category": "path",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": false,
+   "connect": {
+    "group": "winter_log_path",
+    "style": "path"
+   },
+   "layer": "ground",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%B1%D1%80%D1%91%D0%B2%D0%B5%D0%BD"
+   ],
+   "notes": "game_id=Winter log path; level 1 = no level gate recorded (non-shop item); seasonal=Winter; connectable piece (auto-joins neighbours); added: Winter update 2024"
+  }
+ ]
+}

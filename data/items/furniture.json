@@ -1,0 +1,2559 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "acorn_lamp",
+   "name": "Acorn lamp",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D1%8C-%D0%B6%D1%91%D0%BB%D1%83%D0%B4%D1%8C"
+   ],
+   "notes": "game_id=Acorn lamp; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Spring update 2022; en list: Packages"
+  },
+  {
+   "id": "apple_crates",
+   "name": "Apple crates",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D1%89%D0%B8%D0%BA%D0%B8_%D1%81_%D1%8F%D0%B1%D0%BB%D0%BE%D0%BA%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Summer update 2025"
+  },
+  {
+   "id": "apple_sign",
+   "name": "Apple sign",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D0%BA%D0%B0%D0%B7%D0%B0%D1%82%D0%B5%D0%BB%D1%8C_%D0%B2_%D1%84%D0%BE%D1%80%D0%BC%D0%B5_%D1%8F%D0%B1%D0%BB%D0%BE%D0%BA%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Summer update 2025"
+  },
+  {
+   "id": "autumn_harvest_cart",
+   "name": "Autumn harvest cart",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B0_%D1%81_%D0%BE%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%BC_%D1%83%D1%80%D0%BE%D0%B6%D0%B0%D0%B5%D0%BC"
+   ],
+   "notes": "game_id=Autumn veggie cart; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Autumn update 2024"
+  },
+  {
+   "id": "autumn_umbrella",
+   "name": "Autumn umbrella",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D0%B7%D0%BE%D0%BD%D1%82%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Autumn umbrella; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Summer update 2023"
+  },
+  {
+   "id": "balloon_bench",
+   "name": "Balloon bench",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0-%D1%88%D0%B0%D1%80%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Balloon_Bench; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: movie night (ads), expansion plot; added: Spring update 2017; en list: Expansion"
+  },
+  {
+   "id": "barrel_cactus",
+   "name": "Barrel cactus",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D1%87%D0%BA%D0%BE%D0%B2%D0%B8%D0%B4%D0%BD%D1%8B%D0%B9_%D0%BA%D0%B0%D0%BA%D1%82%D1%83%D1%81"
+   ],
+   "notes": "game_id=BarrelCactus; unlocked by sanctuary animal: Brown hippo calf; sanctuary tab; obtained via: shop; added: Winter update 2017; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "barrel_horse",
+   "name": "Barrel horse",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%BE%D1%88%D0%B0%D0%B4%D0%BA%D0%B0-%D0%B1%D0%BE%D1%87%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Barrel Horse; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: derby; added: Spring update 2021; en list: Derby"
+  },
+  {
+   "id": "barrel_table",
+   "name": "Barrel table",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%BE%D0%BB-%D0%B1%D0%BE%D1%87%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Barrel_Table; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot; added: Spring update 2017; en list: Expansion"
+  },
+  {
+   "id": "barrels",
+   "name": "Barrels",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 17,
+   "cost": {
+    "coins": 200,
+    "diamonds": null,
+    "other": "+100 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D1%87%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Barrel_2; obtained via: shop; en list: Farming L17 cost '200 [coin]'"
+  },
+  {
+   "id": "beach_chair_ocean",
+   "name": "Beach Chair: Ocean",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": 2000,
+    "diamonds": null,
+    "other": "+200 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B5%D0%B7%D0%BB%D0%BE%D0%BD%D0%B3_(%D0%BE%D0%BA%D0%B5%D0%B0%D0%BD)"
+   ],
+   "notes": "game_id=Beachchair1; ru level=0 (town decoration / no farm level gate); requires reputation level 13; town decoration; obtained via: shop; en list: Ornaments L34 cost '2,000 [coin]'; unlock level differs: ru=0 en=34"
+  },
+  {
+   "id": "beach_chair_summer",
+   "name": "Beach Chair: Summer",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": 2000,
+    "diamonds": null,
+    "other": "+200 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B5%D0%B7%D0%BB%D0%BE%D0%BD%D0%B3_(%D0%BB%D0%B5%D1%82%D0%BE)"
+   ],
+   "notes": "game_id=Beachchair2; ru level=0 (town decoration / no farm level gate); requires reputation level 14; town decoration; obtained via: shop; en list: Ornaments L34 cost '2,000 [coin]'; unlock level differs: ru=0 en=34"
+  },
+  {
+   "id": "beach_hammock",
+   "name": "Beach hammock",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D1%8F%D0%B6%D0%BD%D1%8B%D0%B9_%D0%B3%D0%B0%D0%BC%D0%B0%D0%BA"
+   ],
+   "notes": "game_id=Beach Hammock; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Spring update 2022; en list: Packages"
+  },
+  {
+   "id": "beach_sign",
+   "name": "Beach sign",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D0%BA%D0%B0%D0%B7%D0%B0%D1%82%D0%B5%D0%BB%D1%8C_%D0%BF%D0%BB%D1%8F%D0%B6%D0%B0"
+   ],
+   "notes": "game_id=BeachSign; level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Summer update 2018"
+  },
+  {
+   "id": "beachside_table",
+   "name": "Beachside table",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D1%8F%D0%B6%D0%BD%D1%8B%D0%B9_%D1%81%D1%82%D0%BE%D0%BB%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Poolside table; level 1 = no level gate recorded (non-shop item); added: Summer update 2024"
+  },
+  {
+   "id": "bee_lights",
+   "name": "Bee lights",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D0%B8%D0%BA%D0%B8-%D0%BF%D1%87%D1%91%D0%BB%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Bee Lights; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, movie night (ads); added: Spring update 2021; en list: Packages; en wiki spells it 'Bee Lighting'"
+  },
+  {
+   "id": "bench",
+   "name": "Bench",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 20,
+   "cost": {
+    "coins": 350,
+    "diamonds": null,
+    "other": "+50 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Bench_1; obtained via: catalogue, shop; en list: Farming L20 cost '350 [coin]'"
+  },
+  {
+   "id": "bench_press",
+   "name": "Bench press",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D1%8C%D1%8F_%D1%81%D0%BE_%D1%88%D1%82%D0%B0%D0%BD%D0%B3%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=Pumping iron; level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Spring update 2024"
+  },
+  {
+   "id": "birthday_bench",
+   "name": "Birthday bench",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Birthday Bench; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: global event; added: Summer update 2020; en list: Events"
+  },
+  {
+   "id": "camp_grill",
+   "name": "Camp grill",
+   "category": "furniture",
+   "footprint": [
+    3,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D1%85%D0%BE%D0%B4%D0%BD%D1%8B%D0%B9_%D0%B3%D1%80%D0%B8%D0%BB%D1%8C"
+   ],
+   "notes": "game_id=Camp grill; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "camp_signpost",
+   "name": "Camp signpost",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D0%BA%D0%B0%D0%B7%D0%B0%D1%82%D0%B5%D0%BB%D1%8C_%D0%B4%D0%BB%D1%8F_%D0%BF%D1%83%D1%82%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Camp signpost; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "campfire",
+   "name": "Campfire",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 31,
+   "cost": {
+    "coins": 1000,
+    "diamonds": null,
+    "other": "+75 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D1%81%D1%82%D1%91%D1%80"
+   ],
+   "notes": "game_id=Bonfire; obtained via: shop; en list: Farming L31 cost '1,000 [coin]'"
+  },
+  {
+   "id": "carnival_lamp_post",
+   "name": "Carnival lamp post",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%80%D0%BD%D0%B0%D0%B2%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D1%8C"
+   ],
+   "notes": "game_id=Carnival lamp post; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, special-currency event, Wheel of Fortune; added: Spring update 2023"
+  },
+  {
+   "id": "carrot_bench",
+   "name": "Carrot bench",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0-%D0%BC%D0%BE%D1%80%D0%BA%D0%BE%D0%B2%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Carrot bench; level 1 = no level gate recorded (non-shop item); added: Spring update 2024"
+  },
+  {
+   "id": "carrot_cart",
+   "name": "Carrot cart",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%BE%D0%BB%D0%B8%D1%87%D1%8C%D1%8F_%D1%82%D0%B0%D1%87%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Carrot cart; level 1 = no level gate recorded (non-shop item); added: Spring update 2024"
+  },
+  {
+   "id": "cart_delivery",
+   "name": "Cart Delivery",
+   "category": "furniture",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "300 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%81%D1%82%D0%B0%D0%B2%D0%BA%D0%B0_%D0%BD%D0%B0_%D1%82%D0%B0%D1%87%D0%BA%D0%B5"
+   ],
+   "notes": "obtained via: design contest; added: Winter update 2025"
+  },
+  {
+   "id": "clockworks",
+   "name": "Clockworks",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B5%D0%BC%D0%BE%D0%BD%D1%82_%D1%87%D0%B0%D1%81%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Clockworks; level 1 = no level gate recorded (non-shop item); obtained via: valley; added: Spring update 2024; en list: Valley"
+  },
+  {
+   "id": "cotton_candy_cart",
+   "name": "Cotton candy cart",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B0_%D1%81_%D1%81%D0%B0%D1%85%D0%B0%D1%80%D0%BD%D0%BE%D0%B9_%D0%B2%D0%B0%D1%82%D0%BE%D0%B9"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, other; added: Winter update 2025"
+  },
+  {
+   "id": "crescent_lantern",
+   "name": "Crescent Lantern",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D1%8C_%D1%81_%D0%BF%D0%BE%D0%BB%D1%83%D0%BC%D0%B5%D1%81%D1%8F%D1%86%D0%B5%D0%BC"
+   ],
+   "notes": "game_id=Crescent Lantern; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: special-currency event, currency-shop offer; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "desert_table",
+   "name": "Desert table",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%BE%D0%BB%D0%B8%D0%BA_%D0%B2_%D0%BF%D1%83%D1%81%D1%82%D1%8B%D0%BD%D0%B5"
+   ],
+   "notes": "game_id=Ramadan Table; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, global event, other; added: Summer update 2019; en list: Events"
+  },
+  {
+   "id": "fall_table",
+   "name": "Fall table",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D1%81%D1%82%D0%BE%D0%BB"
+   ],
+   "notes": "game_id=Pumpkin Carving Table; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Autumn update 2020"
+  },
+  {
+   "id": "feast_of_light",
+   "name": "Feast of light",
+   "category": "furniture",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D0%BA_%D0%BE%D0%B3%D0%BD%D0%B5%D0%B9"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Autumn update 2025"
+  },
+  {
+   "id": "fireworks_cart",
+   "name": "Fireworks cart",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B0_%D1%81_%D1%84%D0%B5%D0%B9%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BA%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Fireworks cart; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, global event, special-currency event; added: Winter update 2018; en list: Events"
+  },
+  {
+   "id": "flower_cart",
+   "name": "Flower cart",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B0_%D1%81_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D0%BC%D0%B8_(%D1%81%D0%BA%D0%B0%D1%87%D0%BA%D0%B8)"
+   ],
+   "notes": "game_id=Trolley; level 1 = no level gate recorded (non-shop item); obtained via: derby; added: Autumn update 2019; en list: Derby; en wiki spells it 'Trolley'"
+  },
+  {
+   "id": "flowery_crate",
+   "name": "Flowery crate",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D1%8F%D1%89%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Flowery crate; level 1 = no level gate recorded (non-shop item); added: Summer update 2024"
+  },
+  {
+   "id": "frozen_lamp",
+   "name": "Frozen lamp",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%BC%D1%91%D1%80%D0%B7%D1%88%D0%B8%D0%B9_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D1%8C"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Autumn update 2025"
+  },
+  {
+   "id": "frozen_treats_cart",
+   "name": "Frozen treats cart",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B0_%D1%81_%D0%BC%D0%BE%D1%80%D0%BE%D0%B6%D0%B5%D0%BD%D1%8B%D0%BC"
+   ],
+   "notes": "game_id=Frozen treats cart; level 1 = no level gate recorded (non-shop item); added: Summer update 2025"
+  },
+  {
+   "id": "garden_bench",
+   "name": "Garden Bench",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 23,
+   "cost": {
+    "coins": null,
+    "diamonds": 20,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B4%D0%BE%D0%B2%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Bench_2; obtained via: shop; en list: Farming L23 cost '20 [dia]'"
+  },
+  {
+   "id": "garden_cart",
+   "name": "Garden cart",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B4_%D0%BD%D0%B0_%D1%82%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B5"
+   ],
+   "notes": "game_id=Garden cart; level 1 = no level gate recorded (non-shop item); obtained via: task event; added: Winter update 2024"
+  },
+  {
+   "id": "garden_lantern",
+   "name": "Garden Lantern",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B4%D0%BE%D0%B2%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D1%8C"
+   ],
+   "notes": "game_id=Garden lantern; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Spring update 2020; en list: Packages"
+  },
+  {
+   "id": "garden_swing",
+   "name": "Garden Swing",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 33,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "2 gold voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B4%D0%BE%D0%B2%D1%8B%D0%B5_%D0%BA%D0%B0%D1%87%D0%B5%D0%BB%D0%B8"
+   ],
+   "notes": "game_id=Swingset; obtained via: shop; en list: Ornaments L33 cost '2 [goldv]'"
+  },
+  {
+   "id": "gardening_table",
+   "name": "Gardening table",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B4%D0%BE%D0%B2%D1%8B%D0%B9_%D1%81%D1%82%D0%BE%D0%BB%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Potting Table; level 1 = no level gate recorded (non-shop item); obtained via: movie night (ads), derby; added: Autumn update 2019; en list: Derby; en wiki spells it 'Potting Table'"
+  },
+  {
+   "id": "giant_panda_lantern",
+   "name": "Giant panda lantern",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D1%8C_%D1%81_%D0%B3%D0%B8%D0%B3%D0%B0%D0%BD%D1%82%D1%81%D0%BA%D0%BE%D0%B9_%D0%BF%D0%B0%D0%BD%D0%B4%D0%BE%D0%B9"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Summer update 2026"
+  },
+  {
+   "id": "girly_bike",
+   "name": "Girly Bike",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 250,
+    "diamonds": null,
+    "other": "+25 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B0%D0%BC%D1%81%D0%BA%D0%B8%D0%B9_%D0%B2%D0%B5%D0%BB%D0%BE%D1%81%D0%B8%D0%BF%D0%B5%D0%B4"
+   ],
+   "notes": "game_id=BikeBasket; obtained via: shop; en list: Ornaments L1 cost '250 [coin]'"
+  },
+  {
+   "id": "gold_barrel",
+   "name": "Gold barrel",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D1%87%D0%BA%D0%B0_%D1%81_%D0%B7%D0%BE%D0%BB%D0%BE%D1%82%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Gold barrel; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "golden_swing",
+   "name": "Golden Swing",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 35,
+   "cost": {
+    "coins": null,
+    "diamonds": 69,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D1%8B%D0%B5_%D0%BA%D0%B0%D1%87%D0%B5%D0%BB%D0%B8"
+   ],
+   "notes": "game_id=GoldenSwingset; obtained via: shop; en list: Ornaments L35 cost '69 [dia]'"
+  },
+  {
+   "id": "groovy_bike",
+   "name": "Groovy bike",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D0%B2%D0%B5%D0%BB%D0%BE%D1%81%D0%B8%D0%BF%D0%B5%D0%B4"
+   ],
+   "notes": "game_id=Flower bike; level 1 = no level gate recorded (non-shop item); added: Spring update 2025",
+   "tags": [
+    "Flower bike"
+   ]
+  },
+  {
+   "id": "groovy_bike_furniture",
+   "name": "Groovy bike",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D0%B8%D0%BF%D0%BF%D0%B8-%D0%B2%D0%B5%D0%BB%D0%BE%D1%81%D0%B8%D0%BF%D0%B5%D0%B4"
+   ],
+   "notes": "game_id=Groovy bike; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "groovy_side_table",
+   "name": "Groovy side table",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B8%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D1%82%D1%83%D0%BC%D0%B1%D0%BE%D1%87%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Groovy side table; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "hammock",
+   "name": "Hammock",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%B0%D0%BC%D0%B0%D0%BA"
+   ],
+   "notes": "game_id=Hammock; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot, currency-shop offer, Farm Pass; added: Summer update 2020"
+  },
+  {
+   "id": "hanami_bench",
+   "name": "Hanami bench",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0_%D0%BF%D0%BE%D0%B4_%D1%81%D0%B0%D0%BA%D1%83%D1%80%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=Hanami Bench; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Winter update 2021"
+  },
+  {
+   "id": "hay_bench",
+   "name": "Hay bench",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0_%D0%B8%D0%B7_%D1%81%D0%B5%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Haybale Bench; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "hay_cart",
+   "name": "Hay Cart",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 15,
+   "cost": {
+    "coins": 300,
+    "diamonds": null,
+    "other": "+100 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B0_%D1%81_%D1%81%D0%B5%D0%BD%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Haycart; obtained via: catalogue, shop; en list: Farming L15 cost '300 [coin]'"
+  },
+  {
+   "id": "her_swing",
+   "name": "Her swing",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%87%D0%B5%D0%BB%D0%B8_%D0%B2_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D1%85"
+   ],
+   "notes": "game_id=Her swing; level 1 = no level gate recorded (non-shop item); obtained via: task event, gift, special-currency event; added: Winter update 2024"
+  },
+  {
+   "id": "horseshoe_bench",
+   "name": "Horseshoe bench",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0-%D0%BF%D0%BE%D0%B4%D0%BA%D0%BE%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=Horseshoe bench; level 1 = no level gate recorded (non-shop item); obtained via: derby, themed box; added: Spring update 2024"
+  },
+  {
+   "id": "hydrant",
+   "name": "Hydrant",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": 7,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%B8%D0%B4%D1%80%D0%B0%D0%BD%D1%82"
+   ],
+   "notes": "game_id=Hydrant; ru level=0 (town decoration / no farm level gate); requires reputation level 7; town decoration; obtained via: shop; en list: Ornaments L34 cost '7 [dia]'; unlock level differs: ru=0 en=34"
+  },
+  {
+   "id": "kegs",
+   "name": "Kegs",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 8,
+   "cost": {
+    "coins": 99,
+    "diamonds": null,
+    "other": "+50 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D1%87%D0%BE%D0%BD%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Barrel_1; obtained via: shop; en list: Farming L8 cost '99 [coin]'"
+  },
+  {
+   "id": "lantern",
+   "name": "Lantern",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 12,
+   "cost": {
+    "coins": 175,
+    "diamonds": null,
+    "other": "+50 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D1%8C"
+   ],
+   "notes": "game_id=Lantern; obtained via: catalogue, shop; en list: Farming L12 cost '175 [coin] +50 per purchase'"
+  },
+  {
+   "id": "lantern_procession",
+   "name": "Lantern Procession",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B5%D1%81%D1%82%D0%B2%D0%B8%D0%B5_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D0%B5%D0%B9"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: task event; added: Spring update 2026"
+  },
+  {
+   "id": "light_tech",
+   "name": "Light tech",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B2%D1%86%D0%B0-%D0%BE%D1%81%D0%B2%D0%B5%D1%82%D0%B8%D1%82%D0%B5%D0%BB%D1%8C"
+   ],
+   "notes": "game_id=Gaffer sheep; level 1 = no level gate recorded (non-shop item); reward/special decoration; added: Summer update 2024"
+  },
+  {
+   "id": "log_bench",
+   "name": "Log bench",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0-%D0%B1%D1%80%D0%B5%D0%B2%D0%BD%D0%BE"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Autumn update 2025"
+  },
+  {
+   "id": "luggage_cart",
+   "name": "Luggage cart",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%B1%D0%B0%D0%B3%D0%B0%D0%B6%D0%B0"
+   ],
+   "notes": "game_id=Luggage Cart; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot; added: Summer update 2021"
+  },
+  {
+   "id": "lunar_swing",
+   "name": "Lunar swing",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D1%80%D0%B8%D0%B8_%D1%81_%D0%BA%D0%B0%D1%87%D0%B5%D0%BB%D1%8F%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Lunar swing; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Winter update 2022"
+  },
+  {
+   "id": "meteor_crater",
+   "name": "Meteor crater",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D0%BF%D0%B0%D0%B2%D1%88%D0%B8%D0%B9_%D0%BC%D0%B5%D1%82%D0%B5%D0%BE%D1%80%D0%B8%D1%82"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: county fair, currency-shop offer; added: Autumn update 2025"
+  },
+  {
+   "id": "midnight_clock",
+   "name": "Midnight Clock",
+   "category": "furniture",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Decorations/Events"
+   ],
+   "notes": "not found in ru-wiki decoration module; footprint unknown; en list: Events / Event decorations"
+  },
+  {
+   "id": "miner_s_bench",
+   "name": "Miner's bench",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%85%D1%82%D1%91%D1%80%D1%81%D0%BA%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Miners Bench; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: movie night (ads), Wheel of Fortune; added: Winter update 2021"
+  },
+  {
+   "id": "minigolf_sign",
+   "name": "Minigolf sign",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B5%D0%BA%D0%BB%D0%B0%D0%BC%D0%B0_%D0%B3%D0%BE%D0%BB%D1%8C%D1%84%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other; added: Summer update 2026"
+  },
+  {
+   "id": "moon_bench",
+   "name": "Moon bench",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0_%D1%81_%D0%BB%D1%83%D0%BD%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Moon bench; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "moon_lamp",
+   "name": "Moon lamp",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B5%D1%82%D0%B8%D0%BB%D1%8C%D0%BD%D0%B8%D0%BA-%D0%BB%D1%83%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Moon lamp; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "moon_lanterns",
+   "name": "Moon lanterns",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D1%83%D0%BD%D0%BD%D1%8B%D0%B5_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D0%B8"
+   ],
+   "notes": "game_id=Moon lanterns; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, global event, other, special-currency event; added: Winter update 2021"
+  },
+  {
+   "id": "mooncake_table",
+   "name": "Mooncake table",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%BE%D0%BB%D0%B8%D0%BA_%D1%81_%D0%BA%D0%B8%D1%82%D0%B0%D0%B9%D1%81%D0%BA%D0%B8%D0%BC%D0%B8_%D0%BF%D1%80%D1%8F%D0%BD%D0%B8%D0%BA%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Mooncake_table; level 1 = no level gate recorded (non-shop item); requires reputation level 1; obtained via: currency-shop offer, task event; added: Autumn update 2023"
+  },
+  {
+   "id": "moonfish_lantern",
+   "name": "Moonfish lantern",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D1%8C-%D1%80%D1%8B%D0%B1%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Moonfish lantern; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Autumn update 2023"
+  },
+  {
+   "id": "mushroom_bench",
+   "name": "Mushroom bench",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D1%83%D1%85%D0%BE%D0%BC%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Mushroom_bench; level 1 = no level gate recorded (non-shop item); obtained via: global event, Farm Pass; added: Autumn update 2023"
+  },
+  {
+   "id": "mushroom_table",
+   "name": "Mushroom table",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%BE%D0%BB-%D0%B3%D1%80%D0%B8%D0%B1"
+   ],
+   "notes": "game_id=Mushroom table; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Summer update 2023"
+  },
+  {
+   "id": "no_fire_sign",
+   "name": "No fire sign",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B5_%D0%B6%D0%B5%D1%87%D1%8C_%D0%BA%D0%BE%D1%81%D1%82%D1%80%D1%8B%21"
+   ],
+   "notes": "game_id=No fire sign; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "oak_tree_swing",
+   "name": "Oak Tree Swing",
+   "category": "furniture",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Decorations/Expansion"
+   ],
+   "notes": "not found in ru-wiki decoration module; footprint unknown; en list: Expansion / Expansion decorations"
+  },
+  {
+   "id": "oktoberfest_table",
+   "name": "Oktoberfest table",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B8%D1%80_%D0%B2_%D1%87%D0%B5%D1%81%D1%82%D1%8C_%D0%9E%D0%BA%D1%82%D0%BE%D0%B1%D0%B5%D1%80%D1%84%D0%B5%D1%81%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Octoberfest_table; level 1 = no level gate recorded (non-shop item); requires reputation level 1; obtained via: task event; added: Autumn update 2023"
+  },
+  {
+   "id": "park_bench",
+   "name": "Park bench",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%80%D0%BA%D0%BE%D0%B2%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Park bench; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: special-currency event, currency-shop offer; added: Spring update 2023"
+  },
+  {
+   "id": "peaceful_bench",
+   "name": "Peaceful Bench",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A7%D1%83%D0%B4%D0%B5%D1%81%D0%BD%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, other; added: Spring update 2026"
+  },
+  {
+   "id": "picnic_table",
+   "name": "Picnic Table",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 38,
+   "cost": {
+    "coins": 3500,
+    "diamonds": null,
+    "other": "+50 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%BE%D0%BB_%D0%B4%D0%BB%D1%8F_%D0%BF%D0%B8%D0%BA%D0%BD%D0%B8%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=PicnicTable; obtained via: shop; en list: Ornaments L38 cost '3,500 [coin]'"
+  },
+  {
+   "id": "pig_sign",
+   "name": "Pig sign",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B0%D0%B1%D0%BB%D0%B8%D1%87%D0%BA%D0%B0_%D1%81%D0%BE_%D1%81%D0%B2%D0%B8%D0%BD%D1%8C%D1%91%D0%B9"
+   ],
+   "notes": "game_id=Flower Carriage; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Spring update 2021"
+  },
+  {
+   "id": "produce_crates",
+   "name": "Produce crates",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%B2%D0%BE%D0%B4%D1%81%D0%BA%D0%B8%D0%B5_%D1%8F%D1%89%D0%B8%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=CropsCrate; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Summer update 2018; en list: Derby"
+  },
+  {
+   "id": "purple_tree_with_lights",
+   "name": "Purple Tree with Lights",
+   "category": "furniture",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Decorations/Expansion"
+   ],
+   "notes": "not found in ru-wiki decoration module; footprint unknown; en list: Expansion / Expansion decorations"
+  },
+  {
+   "id": "rainbow_lights",
+   "name": "Rainbow lights",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B4%D1%83%D0%B6%D0%BD%D1%8B%D0%B5_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D0%B8%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Rainbow lights; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, special-currency event, task event; added: Winter update 2022"
+  },
+  {
+   "id": "rainbow_umbrellas",
+   "name": "Rainbow umbrellas",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B4%D1%83%D0%B6%D0%BD%D1%8B%D0%B5_%D0%B7%D0%BE%D0%BD%D1%82%D0%B8%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Rainbow umbrellas; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, special-currency event, task event; added: Winter update 2022"
+  },
+  {
+   "id": "rattan_table",
+   "name": "Rattan table",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%BE%D1%82%D0%B0%D0%BD%D0%B3%D0%BE%D0%B2%D1%8B%D0%B9_%D1%81%D1%82%D0%BE%D0%BB"
+   ],
+   "notes": "game_id=Rattan table; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Summer update 2023"
+  },
+  {
+   "id": "red_bike",
+   "name": "Red Bike",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 250,
+    "diamonds": null,
+    "other": "+25 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%B2%D0%B5%D0%BB%D0%BE%D1%81%D0%B8%D0%BF%D0%B5%D0%B4"
+   ],
+   "notes": "game_id=MaleBike; obtained via: shop; en list: Ornaments L1 cost '250 [coin]'"
+  },
+  {
+   "id": "rocking_chair",
+   "name": "Rocking chair",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%B5%D1%81%D0%BB%D0%BE-%D0%BA%D0%B0%D1%87%D0%B0%D0%BB%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Autumn Rocking Chair; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, global event, Farm Pass; added: Autumn update 2020"
+  },
+  {
+   "id": "sauerkraut_barrel",
+   "name": "Sauerkraut barrel",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D1%87%D0%BA%D0%B0_%D1%81_%D0%BA%D0%B2%D0%B0%D1%88%D0%B5%D0%BD%D0%BE%D0%B9_%D0%BA%D0%B0%D0%BF%D1%83%D1%81%D1%82%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=Sauerkraut barrel; level 1 = no level gate recorded (non-shop item); added: Summer update 2024"
+  },
+  {
+   "id": "sausage_grill",
+   "name": "Sausage grill",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BE%D1%81%D0%B8%D1%81%D0%BA%D0%B8_%D0%BD%D0%B0_%D0%B3%D1%80%D0%B8%D0%BB%D0%B5"
+   ],
+   "notes": "game_id=Sausage grill; level 1 = no level gate recorded (non-shop item); obtained via: collection; added: Summer update 2024"
+  },
+  {
+   "id": "shamrock_chair",
+   "name": "Shamrock chair",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BB%D0%B5%D0%B2%D0%B5%D1%80%D0%BD%D1%8B%D0%B9_%D1%81%D1%82%D1%83%D0%BB"
+   ],
+   "notes": "game_id=Shamrock chair; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "siesta_stool",
+   "name": "Siesta stool",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B0%D0%B1%D1%83%D1%80%D0%B5%D1%82_%D0%B4%D0%BB%D1%8F_%D1%81%D0%B8%D0%B5%D1%81%D1%82%D1%8B"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Summer update 2026"
+  },
+  {
+   "id": "snack_cart",
+   "name": "Snack cart",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B5%D1%80%D0%B5%D0%BA%D1%83%D1%81_%D0%BD%D0%B0_%D0%BA%D0%BE%D0%BB%D1%91%D1%81%D0%B0%D1%85"
+   ],
+   "notes": "game_id=Snacks cart; level 1 = no level gate recorded (non-shop item); obtained via: derby; added: Spring update 2024"
+  },
+  {
+   "id": "spa_sign",
+   "name": "Spa sign",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D1%8B%D0%B2%D0%B5%D1%81%D0%BA%D0%B0_%D1%81%D0%BF%D0%B0-%D1%81%D0%B0%D0%BB%D0%BE%D0%BD%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Winter update 2025"
+  },
+  {
+   "id": "spring_bench",
+   "name": "Spring bench",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%81%D0%B5%D0%BD%D0%BD%D1%8F%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Spring bench; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Spring update 2023"
+  },
+  {
+   "id": "spring_lounge_chair",
+   "name": "Spring lounge chair",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D1%88%D0%B5%D0%B7%D0%BB%D0%BE%D0%BD%D0%B3"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, other; added: Winter update 2025"
+  },
+  {
+   "id": "stalk_lantern",
+   "name": "Stalk lantern",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D1%8C_%D0%BD%D0%B0_%D1%81%D1%82%D0%B5%D0%B1%D0%BB%D0%B5"
+   ],
+   "notes": "game_id=Stalk Lantern; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Autumn update 2022"
+  },
+  {
+   "id": "stone_lantern",
+   "name": "Stone lantern",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "15 green voucher + 2 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D1%8C"
+   ],
+   "notes": "game_id=StoneLantern; ru level=0 (town decoration / no farm level gate); requires reputation level 3; town decoration; obtained via: shop; added: Spring update 2016; en list: Ornaments L34 cost '2 [purplev] 15 [greenv]'; unlock level differs: ru=0 en=34"
+  },
+  {
+   "id": "sugar_skull_lantern",
+   "name": "Sugar skull lantern",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D1%8C_%D1%81_%D0%BA%D0%B0%D0%BB%D0%B0%D0%B2%D0%B5%D1%80%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Autumn update 2025"
+  },
+  {
+   "id": "summer_games_table_tennis",
+   "name": "Summer games table tennis",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%BB%D0%B8%D0%BC%D0%BF%D0%B8%D0%B9%D1%81%D0%BA%D0%B8%D0%B9_%D0%BD%D0%B0%D1%81%D1%82%D0%BE%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D1%82%D0%B5%D0%BD%D0%BD%D0%B8%D1%81"
+   ],
+   "notes": "game_id=Summer games pingpong; level 1 = no level gate recorded (non-shop item); obtained via: task event; added: Summer update 2024"
+  },
+  {
+   "id": "swing_tree",
+   "name": "Swing tree",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_%D1%81_%D0%BA%D0%B0%D1%87%D0%B5%D0%BB%D1%8F%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Swing_Tree; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot; added: Spring update 2017"
+  },
+  {
+   "id": "thanksgiving_table",
+   "name": "Thanksgiving table",
+   "category": "furniture",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B8%D1%80_%D0%B2_%D1%87%D0%B5%D1%81%D1%82%D1%8C_%D0%94%D0%BD%D1%8F_%D0%B1%D0%BB%D0%B0%D0%B3%D0%BE%D0%B4%D0%B0%D1%80%D0%B5%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Thanksgiving table; level 1 = no level gate recorded (non-shop item); requires reputation level 1; reward/special decoration; obtained via: task event, special-currency event, currency-shop offer; added: Autumn update 2023"
+  },
+  {
+   "id": "the_bike_ride",
+   "name": "The Bike Ride",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 43,
+   "cost": {
+    "coins": 1000000,
+    "diamonds": null,
+    "other": "+250000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%C2%AB%D0%9D%D0%B0_%D0%B2%D0%B5%D0%BB%D0%BE%D1%81%D0%B8%D0%BF%D0%B5%D0%B4%D0%B5%C2%BB"
+   ],
+   "notes": "game_id=StatueET; obtained via: shop; en list: Ornaments L43 cost '1,000,000 [coin]'"
+  },
+  {
+   "id": "tropical_bench",
+   "name": "Tropical bench",
+   "category": "furniture",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D0%BE%D0%BF%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Tropical bench; level 1 = no level gate recorded (non-shop item); reward/special decoration; added: Spring update 2023"
+  },
+  {
+   "id": "tropical_paper_lantern",
+   "name": "Tropical paper lantern",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D0%BE%D0%BF%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D1%8C"
+   ],
+   "notes": "game_id=Tropical paperlantern; level 1 = no level gate recorded (non-shop item); reward/special decoration; added: Spring update 2023"
+  },
+  {
+   "id": "venue_sign",
+   "name": "Venue sign",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%84%D0%B8%D1%88%D0%B0"
+   ],
+   "notes": "game_id=Billboard; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: special-currency event; added: Summer update 2024"
+  },
+  {
+   "id": "vintage_bike",
+   "name": "Vintage Bike",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 26,
+   "cost": {
+    "coins": null,
+    "diamonds": 35,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B0%D1%80%D0%B8%D0%BD%D0%BD%D1%8B%D0%B9_%D0%B2%D0%B5%D0%BB%D0%BE%D1%81%D0%B8%D0%BF%D0%B5%D0%B4"
+   ],
+   "notes": "game_id=OldBikeShop; obtained via: shop; en list: Ornaments L26 cost '35 [dia]'",
+   "tags": [
+    "OldBikeShop"
+   ]
+  },
+  {
+   "id": "vintage_bike_collection_prize",
+   "name": "Vintage Bike (collection prize)",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "no price in source (reward/prize item)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B0%D1%80%D0%B8%D0%BD%D0%BD%D1%8B%D0%B9_%D0%B2%D0%B5%D0%BB%D0%BE%D1%81%D0%B8%D0%BF%D0%B5%D0%B4_(%D0%BF%D1%80%D0%B8%D0%B7)"
+   ],
+   "notes": "collection-prize variant; game_id=OldBike; level 1 = no level gate recorded (non-shop item)"
+  },
+  {
+   "id": "wedding_bench",
+   "name": "Wedding bench",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B0%D0%B4%D0%B5%D0%B1%D0%BD%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Wedding bench; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "wedding_table",
+   "name": "Wedding table",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B0%D0%B4%D0%B5%D0%B1%D0%BD%D1%8B%D0%B9_%D1%81%D1%82%D0%BE%D0%BB"
+   ],
+   "notes": "game_id=Wedding table; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Spring update 2025"
+  },
+  {
+   "id": "western_table",
+   "name": "Western table",
+   "category": "furniture",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%BE%D0%BB_%D0%B8%D0%B7_%D1%81%D0%B0%D0%BB%D1%83%D0%BD%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other, themed box; added: Summer update 2026"
+  },
+  {
+   "id": "wheelbarrow",
+   "name": "Wheelbarrow",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 12,
+   "cost": {
+    "coins": null,
+    "diamonds": 16,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B0%D1%87%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Wheebarrow; obtained via: shop; en list: Farming L12 cost '16 [dia]'"
+  },
+  {
+   "id": "white_chair",
+   "name": "White chair",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 5000,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D0%BB%D1%8B%D0%B9_%D1%81%D1%82%D1%83%D0%BB"
+   ],
+   "notes": "game_id=White_Chair; reward/special decoration; obtained via: movie night (ads), shop; added: Spring update 2017; en list: Ornaments L1 cost '5,000 [coin]'"
+  },
+  {
+   "id": "wooden_sign",
+   "name": "Wooden sign",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B5%D1%80%D0%B5%D0%B2%D1%8F%D0%BD%D0%BD%D1%8B%D0%B9_%D0%B7%D0%BD%D0%B0%D0%BA"
+   ],
+   "notes": "game_id=Wooden_Placard; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot; added: Spring update 2017; en list: Expansion; en wiki spells it 'Wooden Placard'"
+  },
+  {
+   "id": "workshop_sign",
+   "name": "Workshop sign",
+   "category": "furniture",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D0%BA%D0%B0%D0%B7%D0%B0%D1%82%D0%B5%D0%BB%D1%8C_%D0%BC%D0%B0%D1%81%D1%82%D0%B5%D1%80%D1%81%D0%BA%D0%B8%D1%85"
+   ],
+   "notes": "game_id=Egg workshop sign; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Spring update 2024"
+  },
+  {
+   "id": "yard_swing",
+   "name": "Yard swing",
+   "category": "furniture",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B2%D0%BE%D1%80%D0%BE%D0%B2%D1%8B%D0%B5_%D0%BA%D0%B0%D1%87%D0%B5%D0%BB%D0%B8"
+   ],
+   "notes": "game_id=Yard swing; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Spring update 2023"
+  }
+ ]
+}

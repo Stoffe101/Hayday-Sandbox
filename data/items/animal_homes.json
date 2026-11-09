@@ -1,0 +1,422 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "alpaca_house",
+   "name": "Alpaca House",
+   "category": "animal_home",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "unlock_level": 34,
+   "cost": {
+    "coins": 25000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Alpaca_House"
+   ],
+   "notes": "en Animal Shelters: 2 houses unlocked at level 34; unlock levels differ: infobox [34, 44] vs shelter table [34]; one more house unlocks at each level 34, 44; capacity=4 animals; footprint not stated by any source; no size in en or ru wiki; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "beehive_tree",
+   "name": "Beehive Tree",
+   "category": "animal_home",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 39,
+   "cost": {
+    "coins": 4000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Beehive_Tree"
+   ],
+   "notes": "en Animal Shelters: Unlocked at level 39, can be mastered; capacity=12 animals; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "bird_house",
+   "name": "Bird House",
+   "category": "animal_home",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 20,
+   "cost": {
+    "coins": 10000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Bird_House"
+   ],
+   "notes": "en Animal Shelters: 1 house unlocked at level 20; footprint not stated by any source; no size in en or ru wiki; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "bunny_house",
+   "name": "Bunny House",
+   "category": "animal_home",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "unlock_level": 31,
+   "cost": {
+    "coins": 20000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Bunny_House"
+   ],
+   "notes": "en Animal Shelters: 2 houses unlocked at level 31,41; one more house unlocks at each level 31, 41; capacity=2 animals; footprint not stated by any source; no size in en or ru wiki; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "cat_house",
+   "name": "Cat House",
+   "category": "animal_home",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "unlock_level": 21,
+   "cost": {
+    "coins": 500,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Cat_House"
+   ],
+   "notes": "en Animal Shelters: 2 houses unlocked at level 21,29; one more house unlocks at each level 21, 29; capacity=3 animals; footprint not stated by any source; no size in en or ru wiki; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "chicken_coop",
+   "name": "Chicken Coop",
+   "category": "animal_home",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 5,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 3,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Chicken_Coop"
+   ],
+   "notes": "en Animal Shelters: 3 houses unlocked at level 1,12,23; one more house unlocks at each level 1, 12, 23; capacity=6 animals; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "cow_pasture",
+   "name": "Cow Pasture",
+   "category": "animal_home",
+   "footprint": [
+    4,
+    4
+   ],
+   "footprint_status": "community",
+   "unlock_level": 6,
+   "cost": {
+    "coins": 20,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 3,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Cow_Pasture"
+   ],
+   "notes": "en Animal Shelters: 3 houses unlocked at level 6,15,27; one more house unlocks at each level 6, 15, 27; capacity=5 animals; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "dog_house",
+   "name": "Dog House",
+   "category": "animal_home",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "unlock_level": 20,
+   "cost": {
+    "coins": 1000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Dog_House"
+   ],
+   "notes": "en Animal Shelters: 2 houses unlocked at level 20,28; one more house unlocks at each level 20, 28; capacity=3 animals; footprint not stated by any source; no size in en or ru wiki; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "donkey_stable",
+   "name": "Donkey Stable",
+   "category": "animal_home",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "unlock_level": 43,
+   "cost": {
+    "coins": 25000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Donkey_Stable"
+   ],
+   "notes": "en Animal Shelters: 2 houses unlocked at level 43,55; one more house unlocks at each level 43, 55; capacity=3 animals; footprint not stated by any source; no size in en or ru wiki; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "goat_yard",
+   "name": "Goat Yard",
+   "category": "animal_home",
+   "footprint": [
+    4,
+    4
+   ],
+   "footprint_status": "community",
+   "unlock_level": 32,
+   "cost": {
+    "coins": 1000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 3,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Goat_Yard"
+   ],
+   "notes": "en Animal Shelters: 3 houses unlocked at level 32,37,50; one more house unlocks at each level 32, 37, 50; capacity=4 animals; coin cost differs: en=1000, ru=20; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "guinea_pig_house",
+   "name": "Guinea Pig House",
+   "category": "animal_home",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "unlock_level": 60,
+   "cost": {
+    "coins": 25000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Guinea_Pig_House"
+   ],
+   "notes": "en Animal Shelters: 2 houses unlocked at level 60,64; unlock levels differ: infobox [60] vs shelter table [60, 64]; capacity=2 animals; footprint not stated by any source; no size in en or ru wiki; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "horse_stable",
+   "name": "Horse Stable",
+   "category": "animal_home",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "unlock_level": 27,
+   "cost": {
+    "coins": 10000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 4,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Horse_Stable"
+   ],
+   "notes": "en Animal Shelters: 4 houses unlocked at level 27,37,40,47; one more house unlocks at each level 27, 37, 40, 47; capacity=3 animals; footprint not stated by any source; no size in en or ru wiki; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "kitten_house",
+   "name": "Kitten House",
+   "category": "animal_home",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "unlock_level": 49,
+   "cost": {
+    "coins": 35000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Kitten_House"
+   ],
+   "notes": "en Animal Shelters: 2 houses unlocked at level 49,58; one more house unlocks at each level 49, 58; capacity=3 animals; footprint not stated by any source; no size in en or ru wiki; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "lamb_pasture",
+   "name": "Lamb Pasture",
+   "category": "animal_home",
+   "footprint": [
+    4,
+    4
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 500,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Lamb_Pasture"
+   ],
+   "notes": "en Animal Shelters: 2 houses unlocked at level 25,30; one more house unlocks at each level 25, 30; capacity=5 animals; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "pig_pen",
+   "name": "Pig Pen",
+   "category": "animal_home",
+   "footprint": [
+    4,
+    4
+   ],
+   "footprint_status": "community",
+   "unlock_level": 10,
+   "cost": {
+    "coins": 150,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 3,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Pig_Pen"
+   ],
+   "notes": "en Animal Shelters: 3 houses unlocked at level 10,18,32; one more house unlocks at each level 10, 18, 32; capacity=5 animals; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "puppy_house",
+   "name": "Puppy House",
+   "category": "animal_home",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "unlock_level": 35,
+   "cost": {
+    "coins": 23000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Puppy_House"
+   ],
+   "notes": "en Animal Shelters: 2 houses unlocked at level 35,50; one more house unlocks at each level 35, 50; capacity=3 animals; footprint not stated by any source; no size in en or ru wiki; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "sheep_pasture",
+   "name": "Sheep Pasture",
+   "category": "animal_home",
+   "footprint": [
+    4,
+    4
+   ],
+   "footprint_status": "community",
+   "unlock_level": 16,
+   "cost": {
+    "coins": 300,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 3,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Sheep_Pasture"
+   ],
+   "notes": "en Animal Shelters: 3 houses unlocked at level 16,26,42; one more house unlocks at each level 16, 26, 42; capacity=5 animals; coin cost differs: en=300, ru=150; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  },
+  {
+   "id": "squirrel_house",
+   "name": "Squirrel House",
+   "category": "animal_home",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 62,
+   "cost": {
+    "coins": 45000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Squirrel_House"
+   ],
+   "notes": "en Animal Shelters: Unlocked at level 62, can be mastered; capacity=8 animals; rotatable: en Decorations page says most buildings and animal shelters can be moved/stored/rotated"
+  }
+ ]
+}

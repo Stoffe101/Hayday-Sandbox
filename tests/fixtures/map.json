@@ -1,0 +1,8 @@
+{"format": "hayday-sandbox-map", "schema_version": 1, "id": "test_map", "name": "Test map", "size": [20, 20],
+ "regions": [
+  {"id": "start", "kind": "buildable", "rects": [[0, 0, 10, 20]]},
+  {"id": "road", "kind": "road", "rects": [[10, 0, 2, 20]]},
+  {"id": "plot_a", "kind": "plot", "name": "Plot A", "number": 1, "rects": [[12, 0, 8, 10]], "cost": {"land_deed": 3}},
+  {"id": "plot_b", "kind": "plot", "name": "Plot B", "number": 2, "rects": [[12, 10, 8, 10]]},
+  {"id": "pond", "kind": "water", "rects": [[0, 15, 3, 3]]}
+ ]}

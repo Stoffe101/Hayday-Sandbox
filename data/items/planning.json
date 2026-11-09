@@ -1,0 +1,89 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "plan_reserve_1x1",
+   "name": "Reserved space 1×1",
+   "category": "planning",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "original",
+   "data_status": "original",
+   "notes": "Editor-only planning marker: reserve tiles for something you will build later. Not a game item.",
+   "tags": [
+    "editor",
+    "reserve"
+   ]
+  },
+  {
+   "id": "plan_reserve_2x2",
+   "name": "Reserved space 2×2",
+   "category": "planning",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "original",
+   "data_status": "original",
+   "notes": "Editor-only planning marker (e.g. a future 2×2 production building). Not a game item.",
+   "tags": [
+    "editor",
+    "reserve"
+   ]
+  },
+  {
+   "id": "plan_reserve_3x2",
+   "name": "Reserved space 3×2",
+   "category": "planning",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "original",
+   "data_status": "original",
+   "flippable": true,
+   "notes": "Editor-only planning marker. Not a game item.",
+   "tags": [
+    "editor",
+    "reserve"
+   ]
+  },
+  {
+   "id": "plan_reserve_3x3",
+   "name": "Reserved space 3×3",
+   "category": "planning",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "original",
+   "data_status": "original",
+   "notes": "Editor-only planning marker (e.g. a future 3×3 production building). Not a game item.",
+   "tags": [
+    "editor",
+    "reserve"
+   ]
+  },
+  {
+   "id": "plan_reserve_4x4",
+   "name": "Reserved space 4×4",
+   "category": "planning",
+   "footprint": [
+    4,
+    4
+   ],
+   "footprint_status": "original",
+   "data_status": "original",
+   "notes": "Editor-only planning marker (e.g. a future animal pen). Not a game item.",
+   "tags": [
+    "editor",
+    "reserve"
+   ]
+  }
+ ]
+}

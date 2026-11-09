@@ -1,0 +1,448 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "blackberry_bush",
+   "name": "Blackberry Bush",
+   "category": "bush",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 26,
+   "cost": {
+    "coins": 530,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Blackberry_Bush"
+   ],
+   "notes": "harvest_interval=every 1 d 7 h; ru: type=bush, interval=1920 min, game_id=BlackberryBush; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "blueberry_bush",
+   "name": "Blueberry Bush",
+   "category": "bush",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 30,
+   "cost": {
+    "coins": 550,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Blueberry_Bush"
+   ],
+   "notes": "harvest_interval=1d 10h; ru: type=bush, interval=2100 min, game_id=BlueberryBush; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "coffee_bush",
+   "name": "Coffee Bush",
+   "category": "bush",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 42,
+   "cost": {
+    "coins": 375,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Coffee_Bush"
+   ],
+   "notes": "harvest_interval=every 1 d 1 h; ru: type=bush, interval=1500 min, game_id=CoffeeBush; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "nectar_bush",
+   "name": "Nectar Bush",
+   "category": "bush",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 39,
+   "cost": {
+    "coins": 120,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Nectar_Bush"
+   ],
+   "notes": "harvest_interval=every ?; footprint not stated by any source; feeds bees/squirrels (Beehive Tree); rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "peanut_bush",
+   "name": "Peanut Bush",
+   "category": "bush",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 62,
+   "cost": {
+    "coins": 1200,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Peanut_Bush"
+   ],
+   "notes": "harvest_interval=every ?; footprint not stated by any source; feeds bees/squirrels (Squirrel House); rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "raspberry_bush",
+   "name": "Raspberry Bush",
+   "category": "bush",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 19,
+   "cost": {
+    "coins": 220,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Raspberry_Bush"
+   ],
+   "notes": "harvest_interval=every 18 h; ru: type=bush, interval=1080 min, game_id=RaspberryBush; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "field",
+   "name": "Field",
+   "category": "field",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "unverified",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 1,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Farm"
+   ],
+   "notes": "No wiki states the field size; 2013 client data cited in PLACEMENT_RESEARCH.md places one field per tile (1x1). Unverified against the current game. | footprint not stated by en/ru/de wiki (ru wiki gives trees 1x1 and fences/paths 1x1 in the same unit, but no source states a field's size); cost 1 coin each per de wiki (https://hayday.fandom.com/de/wiki/Feld); count is level-gated: 6 at start, +3 every 2nd level until L49, +2 until L99, then +1 (ru wiki: from L701 every 4 levels, from L801 every 10; max 473 at L1000); en Farm page: 'Both [fields and trees/bushes] can be rotated'; no limit on fields owned beyond level gate"
+  },
+  {
+   "id": "apple_tree",
+   "name": "Apple Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 15,
+   "cost": {
+    "coins": 160,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Apple_Tree"
+   ],
+   "notes": "harvest_interval=every 16 h; ru: type=tree, interval=960 min, game_id=AppleTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "banana_tree",
+   "name": "Banana Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 88,
+   "cost": {
+    "coins": 800,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Banana_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 4 h; ru: type=palm, interval=1680 min, game_id=BananaTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "cacao_tree",
+   "name": "Cacao Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 36,
+   "cost": {
+    "coins": 550,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Cacao_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 10 h; ru: type=tree, interval=2100 min, game_id=CacaoTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "cherry_tree",
+   "name": "Cherry Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 22,
+   "cost": {
+    "coins": 410,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Cherry_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 3 h; ru: type=tree, interval=1680 min, game_id=CherryTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "coconut_tree",
+   "name": "Coconut Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 101,
+   "cost": {
+    "coins": 810,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Coconut_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 12 h; ru: type=palm, interval=2160 min, game_id=CoconutTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "guava_tree",
+   "name": "Guava Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 104,
+   "cost": {
+    "coins": 860,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Guava_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 10 h; ru: type=tree, interval=2040 min, game_id=GuavaTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "lemon_tree",
+   "name": "Lemon Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 66,
+   "cost": {
+    "coins": 670,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Lemon_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 5 h; ru: type=tree, interval=1800 min, game_id=LemonTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "mango_tree",
+   "name": "Mango Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 97,
+   "cost": {
+    "coins": 770,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Mango_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 8 h; ru: type=tree, interval=1920 min, game_id=MangoTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "olive_tree",
+   "name": "Olive Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 57,
+   "cost": {
+    "coins": 620,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Olive_Tree"
+   ],
+   "notes": "harvest_interval=every 24 h; ru: type=tree, interval=1440 min, game_id=OliveTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "orange_tree",
+   "name": "Orange Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 71,
+   "cost": {
+    "coins": 720,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Orange_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 7 h; ru: type=tree, interval=1860 min, game_id=OrangeTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "peach_tree",
+   "name": "Peach Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 76,
+   "cost": {
+    "coins": 750,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Peach_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 5 h; ru: type=tree, interval=1800 min, game_id=PeachTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "plum_tree",
+   "name": "Plum Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 94,
+   "cost": {
+    "coins": 600,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Plum_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 1 h; ru: type=tree, interval=1500 min, game_id=PlumTree; rotatable: App Store release notes + en Farm page"
+  },
+  {
+   "id": "pomegranate_tree",
+   "name": "Pomegranate Tree",
+   "category": "fruit_tree",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 107,
+   "cost": {
+    "coins": 910,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Pomegranate_Tree"
+   ],
+   "notes": "harvest_interval=every 1 d 3 h; ru: type=tree, interval=1620 min, game_id=PomegranateTree; rotatable: App Store release notes + en Farm page"
+  }
+ ]
+}

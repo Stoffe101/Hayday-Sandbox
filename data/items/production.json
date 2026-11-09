@@ -1,0 +1,1389 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "bakery",
+   "name": "Bakery",
+   "category": "production",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 4,
+   "cost": {
+    "coins": 20,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Bakery"
+   ],
+   "notes": "build_time=10 s; build_xp=3; start_slots=2; unlock level differs: en infobox=4, en list=4, ru=4, shootingspeed=2; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "bath_kiosk",
+   "name": "Bath Kiosk",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 84,
+   "cost": {
+    "coins": 850000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Bath_Kiosk"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2; skip_build_diamonds=88; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "bbq_grill",
+   "name": "BBQ Grill",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 9,
+   "cost": {
+    "coins": 730,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/BBQ_Grill"
+   ],
+   "notes": "build_time=8 h; build_xp=14; start_slots=2; skip_build_diamonds=29; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "birthday_balloon_maker",
+   "name": "Birthday Balloon Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 17,
+   "cost": {
+    "coins": 0,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Birthday_Balloon_Maker"
+   ],
+   "notes": "temporary/seasonal event machine (en Production Buildings: Temporary buildings); start_slots=2; en infobox: size not stated; en list: size not stated; shootingspeed: size not stated; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "cake_oven",
+   "name": "Cake Oven",
+   "category": "production",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 21,
+   "cost": {
+    "coins": 12100,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Cake_Oven"
+   ],
+   "notes": "build_time=1 d; build_xp=24; start_slots=2; skip_build_diamonds=47; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "candle_maker",
+   "name": "Candle Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 48,
+   "cost": {
+    "coins": 118000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Candle_Maker"
+   ],
+   "notes": "build_time=1 d 14 h; build_xp=24; start_slots=2; skip_build_diamonds=58; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "candy_machine",
+   "name": "Candy Machine",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 51,
+   "cost": {
+    "coins": 120000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Candy_Machine"
+   ],
+   "notes": "build_time=1 d 8 h; build_xp=27; start_slots=2; skip_build_diamonds=71; build time (seconds) differs: en infobox=115200, en list=86400, ru=86400, shootingspeed=86400; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "coffee_kiosk",
+   "name": "Coffee Kiosk",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 42,
+   "cost": {
+    "coins": 75000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Coffee_Kiosk"
+   ],
+   "notes": "build_time=1 d 12 h; build_xp=35; start_slots=2; skip_build_diamonds=57; build time (seconds) differs: en infobox=129600, en list=126000, ru=126000, shootingspeed=126000; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "cupcake_maker",
+   "name": "Cupcake Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 109,
+   "cost": {
+    "coins": 1200000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Cupcake_Maker"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2; skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "dairy",
+   "name": "Dairy",
+   "category": "production",
+   "footprint": [
+    4,
+    4
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 6,
+   "cost": {
+    "coins": 50,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Dairy"
+   ],
+   "notes": "build_time=30 s; build_xp=8; start_slots=2; skip_build_diamonds=1; build time (seconds) differs: en infobox=30, en list=7200, ru=30, shootingspeed=7200; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "deep_fryer",
+   "name": "Deep Fryer",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 87,
+   "cost": {
+    "coins": 900000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Deep_Fryer"
+   ],
+   "notes": "build_time=3 d 23 h; build_xp=44; start_slots=2; skip_build_diamonds=89; build time (seconds) differs: en infobox=342000, en list=342000, ru=345600, shootingspeed=342000; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "donut_maker",
+   "name": "Donut Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 76,
+   "cost": {
+    "coins": 680000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Donut_Maker"
+   ],
+   "notes": "build_time=3 d 18 h; build_xp=42; start_slots=2; skip_build_diamonds=86; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "duck_salon",
+   "name": "Duck Salon",
+   "category": "production",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 50,
+   "cost": {
+    "coins": 90000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Duck_Salon"
+   ],
+   "notes": "located at the Fishing Lake, not on the farm grid; en wiki: cannot be moved or rotated (fixed position); build_time=2 d 5 h; build_xp=34; footprint not stated by any source; no ru-wiki infobox found"
+  },
+  {
+   "id": "doner_kebab_stand",
+   "name": "Döner Kebab Stand",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 32,
+   "cost": {
+    "coins": 22000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/D%C3%B6ner_Kebab_Stand"
+   ],
+   "notes": "build_time=1 d; build_xp=44; start_slots=2; skip_build_diamonds=47; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "easter_egg_maker",
+   "name": "Easter Egg Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 17,
+   "cost": {
+    "coins": 0,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Easter_Egg_Maker"
+   ],
+   "notes": "temporary/seasonal event machine (en Production Buildings: Temporary buildings); start_slots=2; en infobox: size not stated; en list: size not stated; shootingspeed: size not stated; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "enchanted_workshop",
+   "name": "Enchanted Workshop",
+   "category": "production",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "unlock_level": 17,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Enchanted_Workshop"
+   ],
+   "notes": "temporary/seasonal event machine (en Production Buildings: Temporary buildings); start_slots=2; footprint not stated by any source; no ru-wiki infobox found; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "essential_oils_lab",
+   "name": "Essential Oils Lab",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 68,
+   "cost": {
+    "coins": 85000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Essential_Oils_Lab"
+   ],
+   "notes": "build_time=3 d 7 h; build_xp=44; en infobox: size not stated; build time (seconds) differs: en list=284400, ru=288000, shootingspeed=284400; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "feed_mill",
+   "name": "Feed Mill",
+   "category": "production",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 2,
+   "cost": {
+    "coins": 5,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Feed_Mill"
+   ],
+   "notes": "instances: #1: L2, 5 coins, #2: L12, 3200 coins; build_time=40 s; build_xp=4; start_slots=3; skip_build_diamonds=1; unlock level differs: en infobox=2, en list=2, ru=2, shootingspeed=3; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "flower_shop",
+   "name": "Flower Shop",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 49,
+   "cost": {
+    "coins": 120000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Flower_Shop"
+   ],
+   "notes": "build_time=1 d 16 h; build_xp=30; start_slots=2; skip_build_diamonds=60; build time (seconds) differs: en infobox=144000, en list=140400, ru=144000, shootingspeed=140400; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "fondue_pot",
+   "name": "Fondue Pot",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 81,
+   "cost": {
+    "coins": 800000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Fondue_Pot"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2; skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "fudge_shop",
+   "name": "Fudge Shop",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 99,
+   "cost": {
+    "coins": 1050000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Fudge_Shop"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2; skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "gift_wrapping_station",
+   "name": "Gift Wrapping Station",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 17,
+   "cost": {
+    "coins": 0,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Gift_Wrapping_Station"
+   ],
+   "notes": "temporary/seasonal event machine (en Production Buildings: Temporary buildings); start_slots=2; en infobox: size not stated; en list: size not stated; shootingspeed: size not stated; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "halloween_treats_maker",
+   "name": "Halloween Treats Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 17,
+   "cost": {
+    "coins": 0,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Halloween_Treats_Maker"
+   ],
+   "notes": "temporary/seasonal event machine (en Production Buildings: Temporary buildings); start_slots=2; en infobox: size not stated; en list: size not stated; shootingspeed: size not stated; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "hat_maker",
+   "name": "Hat Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 70,
+   "cost": {
+    "coins": 260000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Hat_Maker"
+   ],
+   "notes": "build_time=3 d 4 h; build_xp=40; start_slots=2; skip_build_diamonds=80; build time (seconds) differs: en infobox=273600, en list=270000, ru=273600, shootingspeed=270000; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "honey_extractor",
+   "name": "Honey Extractor",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 39,
+   "cost": {
+    "coins": 35000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Honey_Extractor"
+   ],
+   "notes": "build_time=1 d; build_xp=24; start_slots=2; skip_build_diamonds=47; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "hot_dog_stand",
+   "name": "Hot Dog Stand",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 75,
+   "cost": {
+    "coins": 650000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Hot_Dog_Stand"
+   ],
+   "notes": "build_time=3 d 16 h; build_xp=41; start_slots=2; skip_build_diamonds=85; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "ice_cream_maker",
+   "name": "Ice Cream Maker",
+   "category": "production",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 29,
+   "cost": {
+    "coins": 38000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Ice_Cream_Maker"
+   ],
+   "notes": "build_time=1 d 8 h; build_xp=27; start_slots=2; skip_build_diamonds=54; ru infobox gives 2x3 (same footprint, other orientation); build time (seconds) differs: en infobox=115200, en list=111600, ru=115200, shootingspeed=111600; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "jam_maker",
+   "name": "Jam Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 35,
+   "cost": {
+    "coins": 59000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Jam_Maker"
+   ],
+   "notes": "build_time=1 d 12 h; build_xp=28; start_slots=2; skip_build_diamonds=57; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "jeweler",
+   "name": "Jeweler",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 38,
+   "cost": {
+    "coins": 68000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Jeweler"
+   ],
+   "notes": "build_time=1 d 12 h; build_xp=28; start_slots=2; skip_build_diamonds=57; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "juice_press",
+   "name": "Juice Press",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 26,
+   "cost": {
+    "coins": 31000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Juice_Press"
+   ],
+   "notes": "build_time=1 d 8 h; build_xp=27; start_slots=2; skip_build_diamonds=54; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "lobster_pool",
+   "name": "Lobster Pool",
+   "category": "production",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 44,
+   "cost": {
+    "coins": 80000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Lobster_Pool"
+   ],
+   "notes": "located at the Fishing Lake, not on the farm grid; en wiki: cannot be moved or rotated (fixed position); build_time=2 d; build_xp=32; en infobox: size not stated; en list: size not stated; shootingspeed: size not stated; build time (seconds) differs: en infobox=172800, en list=172800, ru=72000, shootingspeed=172800"
+  },
+  {
+   "id": "loom",
+   "name": "Loom",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 17,
+   "cost": {
+    "coins": 3200,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Loom"
+   ],
+   "notes": "build_time=1 d; build_xp=19; start_slots=2; skip_build_diamonds=47; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "lure_workbench",
+   "name": "Lure Workbench",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 27,
+   "cost": {
+    "coins": 0,
+    "diamonds": null,
+    "other": "free"
+   },
+   "max_count": 1,
+   "flippable": false,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Lure_Workbench"
+   ],
+   "notes": "located at the Fishing Lake, not on the farm grid; en wiki: cannot be moved or rotated (fixed position); build_time=N/A; start_slots=2; en infobox: size not stated; en list: size not stated; shootingspeed: size not stated"
+  },
+  {
+   "id": "milkshake_bar",
+   "name": "Milkshake Bar",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 124,
+   "cost": {
+    "coins": 1350000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Milkshake_Bar"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2; skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "mine",
+   "name": "Mine",
+   "category": "production",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 24,
+   "cost": {
+    "coins": 21000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "movable": false,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Mine"
+   ],
+   "notes": "The Mine sits on the cliff and cannot be moved or rotated (PLACEMENT_RESEARCH.md). | en wiki: cannot be moved or rotated (fixed position); build_time=1 d 11 h; build_xp=28; en infobox: size not stated; en list: size not stated; shootingspeed: size not stated; build time (seconds) differs: en infobox=126000, en list=126000, ru=129600, shootingspeed=126000"
+  },
+  {
+   "id": "net_maker",
+   "name": "Net Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 30,
+   "cost": {
+    "coins": 28000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": false,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Net_Maker"
+   ],
+   "notes": "located at the Fishing Lake, not on the farm grid; en wiki: cannot be moved or rotated (fixed position); build_time=2 d; build_xp=32; start_slots=2; en infobox: size not stated; en list: size not stated; shootingspeed: size not stated"
+  },
+  {
+   "id": "omelet_station",
+   "name": "Omelet Station",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 77,
+   "cost": {
+    "coins": 600000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Omelet_Station"
+   ],
+   "notes": "build_time=3 d 8 h; build_xp=41; start_slots=2; skip_build_diamonds=82; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "pasta_kitchen",
+   "name": "Pasta Kitchen",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 72,
+   "cost": {
+    "coins": 550000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Pasta_Kitchen"
+   ],
+   "notes": "build_time=3 d 12 h; build_xp=42; start_slots=2; skip_build_diamonds=86; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "pasta_maker",
+   "name": "Pasta Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 67,
+   "cost": {
+    "coins": 400000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Pasta_Maker"
+   ],
+   "notes": "build_time=3 d 8 h; build_xp=43; start_slots=2; skip_build_diamonds=81; coin cost differs: en infobox=400000, en list=410000, ru=400000, shootingspeed=410000; build time (seconds) differs: en infobox=288000, en list=284400, ru=284400, shootingspeed=284400; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "perfumerie",
+   "name": "Perfumerie",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 110,
+   "cost": {
+    "coins": 1000000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Perfumerie"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2; skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "pie_oven",
+   "name": "Pie Oven",
+   "category": "production",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 14,
+   "cost": {
+    "coins": 2200,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Pie_Oven"
+   ],
+   "notes": "build_time=12 h; build_xp=17; start_slots=2; skip_build_diamonds=35; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "popcorn_pot",
+   "name": "Popcorn Pot",
+   "category": "production",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 8,
+   "cost": {
+    "coins": 650,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Popcorn_Pot"
+   ],
+   "notes": "build_time=8 h; build_xp=14; start_slots=2; skip_build_diamonds=29; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "porridge_bar",
+   "name": "Porridge Bar",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 119,
+   "cost": {
+    "coins": 1300000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Porridge_Bar"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2; skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "pottery_studio",
+   "name": "Pottery Studio",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 94,
+   "cost": {
+    "coins": 1000000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Pottery_Studio"
+   ],
+   "notes": "build_time=4 d; build_xp=46; start_slots=2; skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "preservation_station",
+   "name": "Preservation Station",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 91,
+   "cost": {
+    "coins": 950000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Preservation_Station"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2 slot(s); skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "salad_bar",
+   "name": "Salad Bar",
+   "category": "production",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 58,
+   "cost": {
+    "coins": 165000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Salad_Bar"
+   ],
+   "notes": "build_time=2 d; build_xp=32; start_slots=2; skip_build_diamonds=65; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "sandwich_bar",
+   "name": "Sandwich Bar",
+   "category": "production",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 61,
+   "cost": {
+    "coins": 180000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Sandwich_Bar"
+   ],
+   "notes": "build_time=2 d 4 h; build_xp=34; start_slots=2; skip_build_diamonds=67; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "sauce_maker",
+   "name": "Sauce Maker",
+   "category": "production",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 54,
+   "cost": {
+    "coins": 135000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Sauce_Maker"
+   ],
+   "notes": "build_time=1 d 16 h; build_xp=30; start_slots=2; skip_build_diamonds=59; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "sewing_machine",
+   "name": "Sewing Machine",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 19,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Sewing_Machine"
+   ],
+   "notes": "build_time=20 h; build_xp=19; start_slots=2; skip_build_diamonds=44; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "smelter",
+   "name": "Smelter",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 24,
+   "cost": {
+    "coins": 12500,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 5,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Smelter"
+   ],
+   "notes": "instances: #1: L24, 12500 coins, #2: L24, 22000 coins, #3: L24, 31500 coins, #4: L24, 41000 coins, #5: L24, 50500 coins; build_time=18 h; build_xp=21; start_slots=1; skip_build_diamonds=42; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "smoothie_mixer",
+   "name": "Smoothie Mixer",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 64,
+   "cost": {
+    "coins": 220000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Smoothie_Mixer"
+   ],
+   "notes": "build_time=3 d; build_xp=39; start_slots=2; skip_build_diamonds=80; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "soup_kitchen",
+   "name": "Soup Kitchen",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 46,
+   "cost": {
+    "coins": 115000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Soup_Kitchen"
+   ],
+   "notes": "build_time=1 d 12 h; build_xp=28; start_slots=2; skip_build_diamonds=57; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "stew_pot",
+   "name": "Stew Pot",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 106,
+   "cost": {
+    "coins": 1150000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Stew_Pot"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2; skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "sugar_mill",
+   "name": "Sugar Mill",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 7,
+   "cost": {
+    "coins": 350,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 2,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Sugar_Mill"
+   ],
+   "notes": "instances: #1: L7, 350 coins, #2: L76, 200000 coins; build_time=6 h; build_xp=13; start_slots=2; skip_build_diamonds=25; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "sushi_bar",
+   "name": "Sushi Bar",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 56,
+   "cost": {
+    "coins": 150000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Sushi_Bar"
+   ],
+   "notes": "build_time=1 d 20 h; build_xp=38; start_slots=2; skip_build_diamonds=61; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "taco_kitchen",
+   "name": "Taco Kitchen",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 77,
+   "cost": {
+    "coins": 700000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Taco_Kitchen"
+   ],
+   "notes": "build_time=3 d 18 h; build_xp=43; start_slots=2; skip_build_diamonds=86; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "tea_stand",
+   "name": "Tea Stand",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 80,
+   "cost": {
+    "coins": 750000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Tea_Stand"
+   ],
+   "notes": "build_time=3 d 23 h; build_xp=44; start_slots=2; skip_build_diamonds=88; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "waffle_maker",
+   "name": "Waffle Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 114,
+   "cost": {
+    "coins": 1250000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Waffle_Maker"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2; skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "wok_kitchen",
+   "name": "Wok Kitchen",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 69,
+   "cost": {
+    "coins": 350000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Wok_Kitchen"
+   ],
+   "notes": "build_time=3 d 8 h; build_xp=41; start_slots=2; skip_build_diamonds=82; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  },
+  {
+   "id": "yogurt_maker",
+   "name": "Yogurt Maker",
+   "category": "production",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 103,
+   "cost": {
+    "coins": 1100000,
+    "diamonds": null,
+    "other": null
+   },
+   "max_count": 1,
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Yogurt_Maker"
+   ],
+   "notes": "build_time=4 d; build_xp=44; start_slots=2; skip_build_diamonds=89; rotatable: en Decorations page says most buildings can be moved/stored/rotated"
+  }
+ ]
+}

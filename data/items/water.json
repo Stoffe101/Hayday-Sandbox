@@ -1,0 +1,1590 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "alpine_pond",
+   "name": "Alpine pond",
+   "category": "water",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D0%BB%D1%8C%D0%BF%D0%B8%D0%B9%D1%81%D0%BA%D0%B8%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=Alpine River; unlocked by sanctuary animal: Gray reindeer calf; sanctuary tab; obtained via: shop; added: Summer update 2021; en list: Sanctuary cost '?'"
+  },
+  {
+   "id": "aquarium",
+   "name": "Aquarium",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D1%80%D0%BE%D0%B2%D0%B0_%D0%B2_%D0%B0%D0%BA%D0%B2%D0%B0%D1%80%D0%B8%D1%83%D0%BC%D0%B5"
+   ],
+   "notes": "game_id=Aquarium; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, county fair; added: Summer update 2024"
+  },
+  {
+   "id": "autumn_pond",
+   "name": "Autumn pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=Autumn bird pond; level 1 = no level gate recorded (non-shop item); added: Autumn update 2024"
+  },
+  {
+   "id": "baby_chick_pool",
+   "name": "Baby chick pool",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D1%81%D1%81%D0%B5%D0%B9%D0%BD_%D0%B4%D0%BB%D1%8F_%D1%86%D1%8B%D0%BF%D0%BB%D1%8F%D1%82"
+   ],
+   "notes": "game_id=Chick Pool; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "bamboo_fountain",
+   "name": "Bamboo fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": 25,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D0%BC%D0%B1%D1%83%D0%BA%D0%BE%D0%B2%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=BambooFountain; ru level=0 (town decoration / no farm level gate); requires reputation level 3; town decoration; obtained via: shop; added: Spring update 2016; en list: Ornaments L34 cost '25 [dia]'; unlock level differs: ru=0 en=34"
+  },
+  {
+   "id": "big_frozen_pond",
+   "name": "Big Frozen Pond",
+   "category": "water",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 14,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%BE%D0%B9_%D0%B7%D0%B0%D0%BC%D1%91%D1%80%D0%B7%D1%88%D0%B8%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=FrozenPond_2; seasonal=Christmas; obtained via: movie night (ads), shop; en list: Seasonal cost '14 [dia]'"
+  },
+  {
+   "id": "bird_bath",
+   "name": "Bird Bath",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 31,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "1 green voucher + 1 gold voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%83%D0%BF%D0%B5%D0%BB%D1%8C_%D0%B4%D0%BB%D1%8F_%D0%BF%D1%82%D0%B8%D1%86"
+   ],
+   "notes": "game_id=BirdBath; obtained via: shop; en list: Farming L31 cost '1 [goldv] 1 [greenv]'"
+  },
+  {
+   "id": "bubble_bath",
+   "name": "Bubble bath",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D1%80%D0%BE%D0%B2%D0%B0_%D0%B2_%D0%B2%D0%B0%D0%BD%D0%BD%D0%B5"
+   ],
+   "notes": "game_id=Bubble bath; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "bunny_bath",
+   "name": "Bunny bath",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%BE%D0%BB%D0%B8%D1%87%D1%8C%D1%8F_%D0%B2%D0%B0%D0%BD%D0%BD%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: task event; added: Summer update 2026"
+  },
+  {
+   "id": "bunny_pond",
+   "name": "Bunny pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%BE%D0%BB%D0%B8%D1%87%D0%B8%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Winter update 2025"
+  },
+  {
+   "id": "butterfly_pond",
+   "name": "Butterfly pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D1%83%D0%B4_%D1%81_%D0%B1%D0%B0%D0%B1%D0%BE%D1%87%D0%BA%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=Butterfly Statue; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot, Farm Pass; added: Summer update 2021"
+  },
+  {
+   "id": "candy_pool",
+   "name": "Candy pool",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%80%D0%B0%D0%BC%D0%B5%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=Footprint Present; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Summer update 2021"
+  },
+  {
+   "id": "chocolate_fountain",
+   "name": "Chocolate fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%BE%D0%BA%D0%BE%D0%BB%D0%B0%D0%B4%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=ChocoFountain; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: global event; added: Summer update 2016; en list: Events"
+  },
+  {
+   "id": "covered_hot_spring",
+   "name": "Covered hot spring",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D1%8B%D1%82%D1%8B%D0%B9_%D0%B3%D0%BE%D1%80%D1%8F%D1%87%D0%B8%D0%B9_%D0%B8%D1%81%D1%82%D0%BE%D1%87%D0%BD%D0%B8%D0%BA"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Winter update 2025"
+  },
+  {
+   "id": "creek",
+   "name": "Creek",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 11,
+   "cost": {
+    "coins": null,
+    "diamonds": 8,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D1%83%D1%87%D0%B5%D0%B9"
+   ],
+   "notes": "connectable piece (auto-joins neighbours); obtained via: shop, Wheel of Fortune, currency-shop offer, gift, other, themed box; added: Spring update 2026"
+  },
+  {
+   "id": "crescent_fountain",
+   "name": "Crescent Fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D1%82%D0%B0%D0%BD_%D1%81_%D0%BF%D0%BE%D0%BB%D1%83%D0%BC%D0%B5%D1%81%D1%8F%D1%86%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Crescent Fountain; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: global event, currency-shop offer, other, special-currency event; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "desert_fountain",
+   "name": "Desert fountain",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D1%82%D0%B0%D0%BD_%D0%B2_%D0%BF%D1%83%D1%81%D1%82%D1%8B%D0%BD%D0%B5"
+   ],
+   "notes": "game_id=Ramadan Fountain; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, Farm Pass; added: Summer update 2019; en list: Packages"
+  },
+  {
+   "id": "ditch",
+   "name": "Ditch",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 14,
+   "cost": {
+    "coins": null,
+    "diamonds": 8,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Ditch; connectable piece (auto-joins neighbours); obtained via: movie night (ads), shop, Wheel of Fortune; en list: Fences & Paths/Nature L14 cost '8 [dia]'"
+  },
+  {
+   "id": "dog_pool",
+   "name": "Dog pool",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BE%D0%B1%D0%B0%D1%87%D0%B8%D0%B9_%D0%B1%D0%B0%D1%81%D1%81%D0%B5%D0%B9%D0%BD"
+   ],
+   "notes": "game_id=Dog pool; level 1 = no level gate recorded (non-shop item); obtained via: derby; added: Spring update 2018; en list: Derby"
+  },
+  {
+   "id": "dragon_paddling_pool",
+   "name": "Dragon paddling pool",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D1%80%D0%B0%D0%BA%D0%BE%D0%BD%D0%B8%D0%B9_%D0%B1%D0%B0%D1%81%D1%81%D0%B5%D0%B9%D0%BD"
+   ],
+   "notes": "game_id=Dragon paddling pool; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: currency-shop offer, other, special-currency event; added: Winter update 2023"
+  },
+  {
+   "id": "duck_pond",
+   "name": "Duck pond",
+   "category": "water",
+   "footprint": [
+    4,
+    4
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D1%82%D0%B8%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=Duck pond; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Spring update 2023"
+  },
+  {
+   "id": "easter_pond",
+   "name": "Easter pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 5000,
+    "diamonds": null,
+    "other": "+750 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=EasterPond; seasonal=Easter; obtained via: movie night (ads), shop; added: Winter update 2017; en list: Seasonal cost '5,000 [coin]'"
+  },
+  {
+   "id": "egg_fountain",
+   "name": "Egg fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D1%82%D0%B0%D0%BD-%D1%8F%D0%B9%D1%86%D0%BE"
+   ],
+   "notes": "game_id=Easter fountain; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Winter update 2021"
+  },
+  {
+   "id": "empty_well",
+   "name": "Empty well",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%83%D1%81%D1%82%D0%BE%D0%B9_%D0%BA%D0%BE%D0%BB%D0%BE%D0%B4%D0%B5%D1%86"
+   ],
+   "notes": "game_id=Empty Well; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: movie night (ads), catalogue; added: Autumn update 2021"
+  },
+  {
+   "id": "fall_fountain",
+   "name": "Fall fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=Fall Fountain; level 1 = no level gate recorded (non-shop item); seasonal=Autumn; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Autumn update 2021"
+  },
+  {
+   "id": "fancy_fountain",
+   "name": "Fancy fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%BE%D0%B4%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=Roman fountain; level 1 = no level gate recorded (non-shop item); obtained via: expansion plot, derby; added: Autumn update 2019; en list: Expansion; en wiki spells it 'Roman Fountain'"
+  },
+  {
+   "id": "festive_fountain",
+   "name": "Festive fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=Festive fountain; level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Autumn update 2025"
+  },
+  {
+   "id": "fish_fountain",
+   "name": "Fish fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D1%82%D0%B0%D0%BD_%D1%81_%D1%80%D1%8B%D0%B1%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=China Fishfountain; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: global event; added: Winter update 2019"
+  },
+  {
+   "id": "fountain",
+   "name": "Fountain",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 36,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "2 blue voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=Fountain; obtained via: shop; en list: Ornaments L36 cost '1 [purplev] 2 [bluev]'"
+  },
+  {
+   "id": "frozen_fountain",
+   "name": "Frozen fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%BC%D1%91%D1%80%D0%B7%D1%88%D0%B8%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=Frozen Fountain; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, movie night (ads); added: Winter update 2019; en list: Calendar"
+  },
+  {
+   "id": "golden_duck_fountain",
+   "name": "Golden duck fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D1%82%D0%B0%D0%BD_%C2%AB%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%B0%D1%8F_%D1%83%D1%82%D0%BA%D0%B0%C2%BB"
+   ],
+   "notes": "game_id=LVL 150 Reward; level 1 = no level gate recorded (non-shop item); reward/special decoration; added: Summer update 2019; en list: Rewards"
+  },
+  {
+   "id": "golden_well",
+   "name": "Golden Well",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 29,
+   "cost": {
+    "coins": null,
+    "diamonds": 59,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%BE%D0%B9_%D0%BA%D0%BE%D0%BB%D0%BE%D0%B4%D0%B5%D1%86"
+   ],
+   "notes": "game_id=GoldenWell; obtained via: shop; en list: Farming L29 cost '59 [dia]'"
+  },
+  {
+   "id": "heart_pond",
+   "name": "Heart pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D1%83%D0%B4-%D1%81%D0%B5%D1%80%D0%B4%D1%86%D0%B5"
+   ],
+   "notes": "game_id=Heart Pond; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: special-currency event, currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "heartwarming_fountain",
+   "name": "Heartwarming fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%BE%D0%BA%D0%BE%D0%BB%D0%B0%D0%B4%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD_%D1%81_%D1%81%D0%B5%D1%80%D0%B4%D0%B5%D1%87%D0%BA%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Heartwarming fountain; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; obtained via: special-currency event; added: Winter update 2024"
+  },
+  {
+   "id": "hockey_pond",
+   "name": "Hockey pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D0%BE%D0%BA%D0%BA%D0%B5%D0%B9%D0%BD%D1%8B%D0%B9_%D0%BA%D0%B0%D1%82%D0%BE%D0%BA"
+   ],
+   "notes": "game_id=Hockey Pond; level 1 = no level gate recorded (non-shop item); seasonal=Winter; reward/special decoration; obtained via: currency-shop offer, movie night (ads); added: Winter update 2021; en list: Packages"
+  },
+  {
+   "id": "icy_bath",
+   "name": "Icy bath",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B5%D0%B4%D1%8F%D0%BD%D0%BE%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=Icy Bath; unlocked by sanctuary animal: Brown Walrus; sanctuary tab; obtained via: shop; added: Spring update 2022; en list: Sanctuary cost '?'"
+  },
+  {
+   "id": "icy_fountain",
+   "name": "Icy fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B5%D0%B4%D1%8F%D0%BD%D0%BE%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=Icy fountain; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: county fair; added: Winter update 2024"
+  },
+  {
+   "id": "jolly_well",
+   "name": "Jolly well",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D0%B8%D0%B9_%D0%BA%D0%BE%D0%BB%D0%BE%D0%B4%D0%B5%D1%86"
+   ],
+   "notes": "game_id=Jolly well; level 1 = no level gate recorded (non-shop item); obtained via: county fair; added: Autumn update 2024"
+  },
+  {
+   "id": "large_pond",
+   "name": "Large Pond",
+   "category": "water",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 22,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "3 green voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%BE%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=Pond_2; obtained via: shop; en list: Nature L22 cost '3 [greenv]'"
+  },
+  {
+   "id": "lucky_well",
+   "name": "Lucky well",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%BB%D0%BE%D0%B4%D0%B5%D1%86_%D0%B6%D0%B5%D0%BB%D0%B0%D0%BD%D0%B8%D0%B9"
+   ],
+   "notes": "game_id=Lucky well; level 1 = no level gate recorded (non-shop item); obtained via: county fair; added: Winter update 2024"
+  },
+  {
+   "id": "marble_duck_bath",
+   "name": "Marble duck bath",
+   "category": "water",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D1%80%D0%B0%D0%BC%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D0%B2%D0%B0%D0%BD%D0%BD%D0%B0_%D1%81_%D1%83%D1%82%D0%BE%D1%87%D0%BA%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Marble duck bath; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "mediterranean_fountain",
+   "name": "Mediterranean fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%80%D0%B5%D0%B4%D0%B8%D0%B7%D0%B5%D0%BC%D0%BD%D0%BE%D0%BC%D0%BE%D1%80%D1%81%D0%BA%D0%B8%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=Mediterranean fountain; level 1 = no level gate recorded (non-shop item); obtained via: catalogue; added: Summer update 2024"
+  },
+  {
+   "id": "mediterranean_pond",
+   "name": "Mediterranean pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%80%D0%B5%D0%B4%D0%B8%D0%B7%D0%B5%D0%BC%D0%BD%D0%BE%D0%BC%D0%BE%D1%80%D1%81%D0%BA%D0%B8%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=Mediterranean pond; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "mediterranean_watermill",
+   "name": "Mediterranean watermill",
+   "category": "water",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D0%B4%D1%8F%D0%BD%D0%B0%D1%8F_%D0%BC%D0%B5%D0%BB%D1%8C%D0%BD%D0%B8%D1%86%D0%B0"
+   ],
+   "notes": "game_id=Mediterranean watermill; level 1 = no level gate recorded (non-shop item); obtained via: catalogue; added: Summer update 2024"
+  },
+  {
+   "id": "mediterranean_well",
+   "name": "Mediterranean well",
+   "category": "water",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%80%D0%B5%D0%B4%D0%B8%D0%B7%D0%B5%D0%BC%D0%BD%D0%BE%D0%BC%D0%BE%D1%80%D1%81%D0%BA%D0%B0%D1%8F_%D0%BA%D0%BE%D0%BB%D0%BE%D0%BD%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Mediterranean well; level 1 = no level gate recorded (non-shop item); obtained via: catalogue; added: Summer update 2024"
+  },
+  {
+   "id": "mosaic_fountain",
+   "name": "Mosaic fountain",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%BE%D0%B7%D0%B0%D0%B8%D1%87%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD%D1%87%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Mosaic well; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, Farm Pass; added: Summer update 2024"
+  },
+  {
+   "id": "paper_boat_puddle",
+   "name": "Paper boat puddle",
+   "category": "water",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D1%83%D0%BC%D0%B0%D0%B6%D0%BD%D1%8B%D0%B9_%D0%BA%D0%BE%D1%80%D0%B0%D0%B1%D0%BB%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Paperboat Puddle; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Winter update 2021"
+  },
+  {
+   "id": "park_fountain",
+   "name": "Park fountain",
+   "category": "water",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%80%D0%BA%D0%BE%D0%B2%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=Park fountain; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: special-currency event, currency-shop offer; added: Spring update 2023"
+  },
+  {
+   "id": "peaceful_pond",
+   "name": "Peaceful Pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D0%B7%D0%BC%D1%8F%D1%82%D0%B5%D0%B6%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Spring update 2026"
+  },
+  {
+   "id": "pond_of_harmony",
+   "name": "Pond of harmony",
+   "category": "water",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D1%83%D0%B4_%D0%B3%D0%B0%D1%80%D0%BC%D0%BE%D0%BD%D0%B8%D0%B8"
+   ],
+   "notes": "game_id=Pond of harmony; level 1 = no level gate recorded (non-shop item); obtained via: county fair; added: Winter update 2024"
+  },
+  {
+   "id": "pond_sailing",
+   "name": "Pond sailing",
+   "category": "water",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D1%83%D0%B4_%D1%81_%D0%BF%D1%82%D0%B8%D1%87%D0%BA%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Pond yachting; level 1 = no level gate recorded (non-shop item); added: Autumn update 2024"
+  },
+  {
+   "id": "pool",
+   "name": "Pool",
+   "category": "water",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 30,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "2 blue voucher + 2 gold voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D1%81%D1%81%D0%B5%D0%B9%D0%BD"
+   ],
+   "notes": "game_id=Pool; obtained via: shop; en list: Ornaments L30 cost '2 [goldv] 2 [bluev]'"
+  },
+  {
+   "id": "pool_party",
+   "name": "Pool party",
+   "category": "water",
+   "footprint": [
+    4,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%87%D0%B5%D1%80%D0%B8%D0%BD%D0%BA%D0%B0_%D0%B2_%D0%B1%D0%B0%D1%81%D1%81%D0%B5%D0%B9%D0%BD%D0%B5"
+   ],
+   "notes": "game_id=Pool party; level 1 = no level gate recorded (non-shop item); reward/special decoration; added: Summer update 2023"
+  },
+  {
+   "id": "pool_with_slide",
+   "name": "Pool With Slide",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D1%81%D1%81%D0%B5%D0%B9%D0%BD_%D1%81_%D0%B3%D0%BE%D1%80%D0%BA%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=PoolWithSlide; seasonal=Summer; obtained via: shop; en list: Seasonal cost '6,000 [coin]'"
+  },
+  {
+   "id": "prospector_pond",
+   "name": "Prospector pond",
+   "category": "water",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%85%D1%82%D1%91%D1%80%D1%81%D0%BA%D0%B8%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, themed box; added: Spring update 2026"
+  },
+  {
+   "id": "river_cleanup",
+   "name": "River Cleanup",
+   "category": "water",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%87%D0%B8%D1%81%D1%82%D0%BA%D0%B0_%D1%80%D0%B5%D0%BA%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Spring update 2026"
+  },
+  {
+   "id": "rock_pond",
+   "name": "Rock pond",
+   "category": "water",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "3 blue voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D1%83%D0%B4_%D0%B8%D0%B7_%D0%BA%D0%B0%D0%BC%D0%BD%D0%B5%D0%B9"
+   ],
+   "notes": "game_id=Rock_pond; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Brown hippo; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '1 [purplev] 3 [bluev]'"
+  },
+  {
+   "id": "rose_fountain",
+   "name": "Rose Fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D1%82%D0%B0%D0%BD_%D1%81_%D1%80%D0%BE%D0%B7%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Valentine's Roseplanter; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: special-currency event, currency-shop offer, global event, Farm Pass; added: Spring update 2020"
+  },
+  {
+   "id": "sky_lantern_pond",
+   "name": "Sky lantern pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D1%91%D1%85%D1%8A%D1%8F%D1%80%D1%83%D1%81%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=Sky lantern pond; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "small_frozen_pond",
+   "name": "Small Frozen Pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 10,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B7%D0%B0%D0%BC%D1%91%D1%80%D0%B7%D1%88%D0%B8%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=FrozenPond_1; seasonal=Christmas; obtained via: shop; en list: Seasonal cost '10 [dia]'"
+  },
+  {
+   "id": "small_pond",
+   "name": "Small Pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 22,
+   "cost": {
+    "coins": 2500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%B8%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "game_id=Pond_1; obtained via: shop; en list: Nature L22 cost '2,500 [coin]'"
+  },
+  {
+   "id": "songbird_pond",
+   "name": "Songbird Pond",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "500 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BE%D0%BB%D0%BE%D0%B2%D1%8C%D0%B8%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "obtained via: design contest; added: Spring update 2026"
+  },
+  {
+   "id": "sound_bath",
+   "name": "Sound bath",
+   "category": "water",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D1%8E%D1%89%D0%B0%D1%8F_%D1%87%D0%B0%D1%88%D0%B0"
+   ],
+   "notes": "game_id=Sound bath; level 1 = no level gate recorded (non-shop item); obtained via: other; added: Winter update 2024"
+  },
+  {
+   "id": "star_fountain",
+   "name": "Star fountain",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B2%D1%91%D0%B7%D0%B4%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=Fireworks Podium; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, special-currency event; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "thermal_bath",
+   "name": "Thermal bath",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D1%80%D0%BC%D0%B8%D0%BD%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D0%B1%D0%B0%D1%81%D1%81%D0%B5%D0%B9%D0%BD"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: valley; added: Winter update 2025; en list: Valley"
+  },
+  {
+   "id": "toad_bath",
+   "name": "Toad bath",
+   "category": "water",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%83%D0%BF%D0%B5%D0%BB%D1%8C_%D0%B4%D0%BB%D1%8F_%D0%BB%D1%8F%D0%B3%D1%83%D1%88%D0%B5%D0%BA"
+   ],
+   "notes": "game_id=Toad oasis; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "tranquil_pond",
+   "name": "Tranquil pond",
+   "category": "water",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BF%D0%BE%D0%BA%D0%BE%D0%B9%D0%BD%D1%8B%D0%B9_%D0%BF%D1%80%D1%83%D0%B4"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: task event, currency-shop offer; added: Winter update 2025"
+  },
+  {
+   "id": "venetian_canal",
+   "name": "Venetian canal",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D0%BD%D0%B5%D1%86%D0%B8%D0%B0%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D0%BA%D0%B0%D0%BD%D0%B0%D0%BB"
+   ],
+   "notes": "game_id=Canal; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2022"
+  },
+  {
+   "id": "water_wheel",
+   "name": "Water Wheel",
+   "category": "water",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "250 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D0%B4%D1%8F%D0%BD%D0%BE%D0%B5_%D0%BA%D0%BE%D0%BB%D0%B5%D1%81%D0%BE"
+   ],
+   "notes": "obtained via: design contest; added: Spring update 2026"
+  },
+  {
+   "id": "waterfall",
+   "name": "Waterfall",
+   "category": "water",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 21,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "15 gold voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D0%B4%D0%BE%D0%BF%D0%B0%D0%B4"
+   ],
+   "notes": "game_id=Waterfall; obtained via: shop; en list: Nature L21 cost '15 [goldv]'"
+  },
+  {
+   "id": "watering_hole",
+   "name": "Watering hole",
+   "category": "water",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D0%B4%D0%BE%D0%BF%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=Sanctuary Fountain; unlocked by sanctuary animal: Brown baby zebra; sanctuary tab; obtained via: shop; added: Summer update 2020; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "well",
+   "name": "Well",
+   "category": "water",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 27,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "2 green voucher + 1 blue voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%BB%D0%BE%D0%B4%D0%B5%D1%86"
+   ],
+   "notes": "game_id=Waterwell; obtained via: shop; en list: Farming L27 cost '1 [bluev] 2 [greenv]'"
+  }
+ ]
+}

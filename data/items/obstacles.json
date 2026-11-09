@@ -1,0 +1,113 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "big_decorative_tree_leaf_pine",
+   "name": "Big obstacle tree",
+   "category": "obstacle",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "removal tool: Saw"
+   },
+   "flippable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Saw"
+   ],
+   "notes": "Natural obstacle that is cleared rather than placed. | removed with a saw; pre-placed natural obstacle (cannot be bought back once removed, en Farm page); footprint not stated by any source"
+  },
+  {
+   "id": "pond_natural",
+   "name": "Natural pond",
+   "category": "obstacle",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "removal tool: Shovel"
+   },
+   "flippable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Shovel"
+   ],
+   "notes": "removed with a shovel; pre-placed natural obstacle (cannot be bought back once removed, en Farm page); footprint not stated by any source"
+  },
+  {
+   "id": "rock_cluster",
+   "name": "Rock cluster",
+   "category": "obstacle",
+   "footprint": null,
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "removal tool: TNT Barrel"
+   },
+   "flippable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/TNT_Barrel"
+   ],
+   "notes": "blown up with a TNT barrel; pre-placed natural obstacle (cannot be bought back once removed, en Farm page); footprint not stated by any source"
+  },
+  {
+   "id": "small_decorative_tree_leaf_pine",
+   "name": "Small obstacle tree",
+   "category": "obstacle",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "removal tool: Axe"
+   },
+   "flippable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Axe"
+   ],
+   "notes": "Natural obstacle that is cleared rather than placed. | removed with an axe; also decorative bushes; pre-placed natural obstacle (cannot be bought back once removed, en Farm page); footprint not stated by any source"
+  },
+  {
+   "id": "small_rock",
+   "name": "Small rock",
+   "category": "obstacle",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "removal tool: Dynamite"
+   },
+   "flippable": false,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Dynamite"
+   ],
+   "notes": "blown up with dynamite; pre-placed natural obstacle (cannot be bought back once removed, en Farm page); footprint not stated by any source"
+  }
+ ]
+}

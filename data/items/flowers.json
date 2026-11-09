@@ -1,0 +1,1235 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "african_lily",
+   "name": "African lily",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D0%B3%D0%B0%D0%BF%D0%B0%D0%BD%D1%82%D1%83%D1%81"
+   ],
+   "notes": "game_id=African Lily; unlocked by sanctuary animal: Brown gorilla; sanctuary tab; obtained via: shop; added: Autumn update 2020; en list: Sanctuary cost '5,000 [coin]'; en wiki spells it 'African Lilly'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "african_violet",
+   "name": "African violet",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B5%D0%BD%D0%BF%D0%BE%D0%BB%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Saint Paulia; unlocked by sanctuary animal: Silverback gorilla; sanctuary tab; obtained via: shop; added: Autumn update 2020; en list: Sanctuary cost '5 [greenv] 1 [purplev]'"
+  },
+  {
+   "id": "alpine_blossom",
+   "name": "Alpine blossom",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D0%BB%D1%8C%D0%BF%D0%B8%D0%B9%D1%81%D0%BA%D0%B8%D0%B5_%D1%86%D0%B2%D0%B5%D1%82%D1%8B_(2)"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Summer update 2026"
+  },
+  {
+   "id": "alpine_flowers",
+   "name": "Alpine flowers",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D0%BB%D1%8C%D0%BF%D0%B8%D0%B9%D1%81%D0%BA%D0%B8%D0%B5_%D1%86%D0%B2%D0%B5%D1%82%D1%8B"
+   ],
+   "notes": "game_id=Alpine Flower; unlocked by sanctuary animal: Brown reindeer calf; sanctuary tab; obtained via: shop; added: Summer update 2021; en list: Sanctuary cost '?'"
+  },
+  {
+   "id": "arctic_lupine",
+   "name": "Arctic lupine",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%BA%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D0%BB%D1%8E%D0%BF%D0%B8%D0%BD"
+   ],
+   "notes": "game_id=Arctic Lupine; unlocked by sanctuary animal: White arctic fox; sanctuary tab; obtained via: shop; added: Autumn update 2021; en list: Sanctuary cost '4,500 [coin]'"
+  },
+  {
+   "id": "arctic_poppy",
+   "name": "Arctic poppy",
+   "category": "flowers",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%BB%D1%8F%D1%80%D0%BD%D1%8B%D0%B9_%D0%BC%D0%B0%D0%BA"
+   ],
+   "notes": "game_id=Arctic Poppy; unlocked by sanctuary animal: Brown arctic fox; sanctuary tab; obtained via: shop; added: Autumn update 2021; en list: Sanctuary cost '5 [greenv] 1 [purplev]'"
+  },
+  {
+   "id": "awarded_roses",
+   "name": "Awarded roses",
+   "category": "flowers",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B8%D0%B7%D0%BE%D0%B2%D1%8B%D0%B5_%D1%80%D0%BE%D0%B7%D1%8B"
+   ],
+   "notes": "game_id=Awarded roses; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, movie night (ads); added: Spring update 2023"
+  },
+  {
+   "id": "azalea",
+   "name": "Azalea",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D0%B7%D0%B0%D0%BB%D0%B8%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, other; added: Spring update 2026"
+  },
+  {
+   "id": "azure_wisteria",
+   "name": "Azure wisteria",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B0%D0%B7%D1%83%D1%80%D0%BD%D0%B0%D1%8F_%D0%B3%D0%BB%D0%B8%D1%86%D0%B8%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, themed box; added: Spring update 2026"
+  },
+  {
+   "id": "bee_flowers",
+   "name": "Bee flowers",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D1%8B-%D0%BF%D1%87%D1%91%D0%BB%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Bee Flowers; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Spring update 2021"
+  },
+  {
+   "id": "black_roses",
+   "name": "Black roses",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A7%D1%91%D1%80%D0%BD%D1%8B%D0%B5_%D1%80%D0%BE%D0%B7%D1%8B"
+   ],
+   "notes": "game_id=Black roses; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Autumn update 2024"
+  },
+  {
+   "id": "blue_hydrangeas",
+   "name": "Blue Hydrangeas",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 10,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BE%D0%BB%D1%83%D0%B1%D1%8B%D0%B5_%D0%B3%D0%BE%D1%80%D1%82%D0%B5%D0%BD%D0%B7%D0%B8%D0%B8"
+   ],
+   "notes": "game_id=BlueHydrangeas; obtained via: catalogue, shop; en list: Nature L1 cost '10 [dia]'"
+  },
+  {
+   "id": "bush_lily",
+   "name": "Bush lily",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BB%D0%B8%D0%B2%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Clivia Miniata; unlocked by sanctuary animal: Yellow cheetah cub; sanctuary tab; obtained via: shop; added: Spring update 2022; en list: Sanctuary cost '?'"
+  },
+  {
+   "id": "cherry_blossom",
+   "name": "Cherry blossom",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B0%D0%B7%D0%B0_%D1%81_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D0%BC%D0%B8_%D0%B2%D0%B8%D1%88%D0%BD%D0%B8"
+   ],
+   "notes": "game_id=Cherry blossom; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Winter update 2022"
+  },
+  {
+   "id": "colorful_flowers",
+   "name": "Colorful flowers",
+   "category": "flowers",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B7%D0%BD%D0%BE%D1%86%D0%B2%D0%B5%D1%82%D0%BD%D1%8B%D0%B5_%D1%86%D0%B2%D0%B5%D1%82%D1%8B"
+   ],
+   "notes": "game_id=Spanish Flowers; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot; added: Summer update 2021"
+  },
+  {
+   "id": "daffodils",
+   "name": "Daffodils",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 1500,
+    "diamonds": null,
+    "other": "+150 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B0%D1%80%D1%86%D0%B8%D1%81%D1%81%D1%8B"
+   ],
+   "notes": "game_id=Narcissus; obtained via: currency-shop offer, shop; added: Spring update 2016; en list: Nature L1 cost '1,500 [coin] +150 per purchase'"
+  },
+  {
+   "id": "dahlias",
+   "name": "Dahlias",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 8,
+   "cost": {
+    "coins": 24,
+    "diamonds": null,
+    "other": "+5 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%B5%D0%BE%D1%80%D0%B3%D0%B8%D0%BD%D1%8B"
+   ],
+   "notes": "game_id=Flowerpot; obtained via: shop; en list: Nature L8 cost '24 [coin] +5 per purchase'"
+  },
+  {
+   "id": "daisies",
+   "name": "Daisies",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 9,
+   "cost": {
+    "coins": 49,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D1%80%D0%B3%D0%B0%D1%80%D0%B8%D1%82%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Flowerbed_1; obtained via: catalogue, shop; en list: Nature L9 cost '49 [coin] +10 per purchase'"
+  },
+  {
+   "id": "fieldflower_patch",
+   "name": "Fieldflower patch",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D1%87%D0%B0%D1%81%D1%82%D0%BE%D0%BA_%D1%81_%D0%BB%D1%83%D0%B3%D0%BE%D0%B2%D1%8B%D0%BC%D0%B8_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass, task event; added: Summer update 2026"
+  },
+  {
+   "id": "flower_box",
+   "name": "Flower box",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D1%89%D0%B8%D0%BA_%D1%81_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Flower Box; level 1 = no level gate recorded (non-shop item); obtained via: derby; added: Autumn update 2019; en list: Derby"
+  },
+  {
+   "id": "flower_field",
+   "name": "Flower Field",
+   "category": "flowers",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%BB%D0%B5_%D1%81_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Spring update 2026"
+  },
+  {
+   "id": "hanging_flowers",
+   "name": "Hanging Flowers",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "3 blue voucher + 4 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%88%D0%BF%D0%BE_%D1%81_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=HangingFlowers; ru level=0 (town decoration / no farm level gate); requires reputation level 9; town decoration; obtained via: shop; en list: Nature/Ornaments L34 cost '4 [purplev] 3 [bluev]'; unlock level differs: ru=0 en=34"
+  },
+  {
+   "id": "ice_poppies",
+   "name": "Ice poppies",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BA%D0%B8_%D0%B2%D0%BE_%D0%BB%D1%8C%D0%B4%D1%83"
+   ],
+   "notes": "game_id=Ice poppies; unlocked by sanctuary animal: Gray walrus calf; sanctuary tab; obtained via: shop; added: Winter update 2022; en list: Sanctuary cost '?'"
+  },
+  {
+   "id": "lantern_flowers",
+   "name": "Lantern flowers",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B8%D0%B7%D0%B0%D0%BB%D0%B8%D1%81"
+   ],
+   "notes": "game_id=Chinese lantern flower; unlocked by sanctuary animal: Red meerkat; sanctuary tab; obtained via: shop; added: Spring update 2023; en list: Sanctuary cost '4,500 [coin]'; en wiki spells it 'Chinese Lantern Flowers'"
+  },
+  {
+   "id": "lily_log",
+   "name": "Lily Log",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 13,
+   "cost": {
+    "coins": 99,
+    "diamonds": null,
+    "other": "+5 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D1%80%D0%B5%D0%B2%D0%BD%D0%BE_%D1%81_%D0%BB%D0%B8%D0%BB%D0%B8%D1%8F%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Flowerlog; obtained via: catalogue, shop; en list: Nature L13 cost '99 [coin] +5 per purchase'"
+  },
+  {
+   "id": "lotus_hills",
+   "name": "Lotus Hills",
+   "category": "flowers",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "10 green voucher + 10 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D1%83%D0%B4%D1%8B_%D1%81_%D0%BB%D0%BE%D1%82%D0%BE%D1%81%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Lotus hills; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Детёныш коричневой панды; sanctuary tab; obtained via: shop; added: Summer update 2026; en list: Sanctuary cost '10 [greenv] 10 [purplev]'"
+  },
+  {
+   "id": "lupines",
+   "name": "Lupines",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 14,
+   "cost": {
+    "coins": 69,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D1%8E%D0%BF%D0%B8%D0%BD%D1%8B"
+   ],
+   "notes": "game_id=Flowerbed_2; obtained via: catalogue, shop; en list: Nature L14 cost '69 [coin] +10 per purchase'"
+  },
+  {
+   "id": "medium_thanksgiving_bouquet",
+   "name": "Medium Thanksgiving bouquet",
+   "category": "flowers",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%80%D0%B5%D0%B4%D0%BD%D0%B8%D0%B9_%D0%BE%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D0%B1%D1%83%D0%BA%D0%B5%D1%82"
+   ],
+   "notes": "game_id=Thanksgiving bouque m; level 1 = no level gate recorded (non-shop item); requires reputation level 1; reward/special decoration; obtained via: currency-shop offer, special-currency event; added: Autumn update 2023"
+  },
+  {
+   "id": "mixed_flowerbed",
+   "name": "Mixed flowerbed",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BB%D1%83%D0%BC%D0%B1%D0%B0_%D1%81_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Mixed flowers; level 1 = no level gate recorded (non-shop item); added: Summer update 2024"
+  },
+  {
+   "id": "natural_planter",
+   "name": "Natural planter",
+   "category": "flowers",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%88%D0%BF%D0%BE_%D0%B8%D0%B7_%D0%B1%D1%80%D1%91%D0%B2%D0%B5%D0%BD"
+   ],
+   "notes": "game_id=Natural planter; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "pineapple_lily",
+   "name": "Pineapple lily",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "3 blue voucher + 5 green voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AD%D0%B2%D0%BA%D0%BE%D0%BC%D0%B8%D1%81"
+   ],
+   "notes": "game_id=Pineapple Lilies; unlocked by sanctuary animal: Gray baby zebra; sanctuary tab; obtained via: shop; added: Summer update 2020; en list: Sanctuary cost '?'; en wiki spells it 'Pineapple Lilies'"
+  },
+  {
+   "id": "poolside_planter",
+   "name": "Poolside planter",
+   "category": "flowers",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BB%D1%83%D0%BC%D0%B1%D0%B0_%D1%81_%D1%81%D1%83%D0%BA%D0%BA%D1%83%D0%BB%D0%B5%D0%BD%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Poolside planter; level 1 = no level gate recorded (non-shop item); added: Summer update 2024"
+  },
+  {
+   "id": "poppy_field",
+   "name": "Poppy field",
+   "category": "flowers",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BA%D0%BE%D0%B2%D0%BE%D0%B5_%D0%BF%D0%BE%D0%BB%D0%B5"
+   ],
+   "notes": "game_id=Poppy field; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "purple_hydrangeas",
+   "name": "Purple hydrangeas",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 10,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B8%D1%80%D0%B5%D0%BD%D0%B5%D0%B2%D1%8B%D0%B5_%D0%B3%D0%BE%D1%80%D1%82%D0%B5%D0%BD%D0%B7%D0%B8%D0%B8"
+   ],
+   "notes": "game_id=ColorfulHydrangeas; obtained via: currency-shop offer, catalogue, shop; en list: Nature L1 cost '10 [dia]'"
+  },
+  {
+   "id": "raised_flowerbed",
+   "name": "Raised flowerbed",
+   "category": "flowers",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B8%D0%BF%D0%BE%D0%B4%D0%BD%D1%8F%D1%82%D0%B0%D1%8F_%D0%BA%D0%BB%D1%83%D0%BC%D0%B1%D0%B0"
+   ],
+   "notes": "game_id=Raised flowerbed; level 1 = no level gate recorded (non-shop item); added: Summer update 2025"
+  },
+  {
+   "id": "rose_bouquet",
+   "name": "Rose Bouquet",
+   "category": "flowers",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Decorations/Packages"
+   ],
+   "notes": "not found in ru-wiki decoration module; footprint unknown; en list: Packages / Valentine's 2020"
+  },
+  {
+   "id": "rustic_planter",
+   "name": "Rustic planter",
+   "category": "flowers",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%BE%D1%81%D1%82%D0%BE%D0%B9_%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D0%B3%D0%BE%D1%80%D1%88%D0%BE%D0%BA"
+   ],
+   "notes": "game_id=Rustic Planter; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, special-currency event; added: Spring update 2021"
+  },
+  {
+   "id": "rusty_flower_pot",
+   "name": "Rusty flower pot",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B6%D0%B0%D0%B2%D1%8B%D0%B9_%D0%B2%D0%B0%D0%B7%D0%BE%D0%BD"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, Farm Pass; added: Summer update 2026"
+  },
+  {
+   "id": "rusty_flower_pot_autumn",
+   "name": "Rusty flower pot (autumn)",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B6%D0%B0%D0%B2%D1%8B%D0%B9_%D0%B2%D0%B0%D0%B7%D0%BE%D0%BD_(%D0%BE%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9)"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, Farm Pass; added: Summer update 2026"
+  },
+  {
+   "id": "shamrock_bouquet",
+   "name": "Shamrock bouquet",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D1%83%D0%BA%D0%B5%D1%82_%D1%81_%D0%BA%D0%BB%D0%B5%D0%B2%D0%B5%D1%80%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Drowning the shamrock; level 1 = no level gate recorded (non-shop item); added: Spring update 2024"
+  },
+  {
+   "id": "shore_flowers",
+   "name": "Shore flowers",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 gold voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D1%80%D0%B5%D0%B3%D0%BE%D0%B2%D1%8B%D0%B5_%D1%86%D0%B2%D0%B5%D1%82%D1%8B"
+   ],
+   "notes": "game_id=Shore flowers; requires reputation level 1; unlocked by sanctuary animal: Gray penguin chick; sanctuary tab; obtained via: shop; added: Winter update 2023; en list: Sanctuary cost '5 [greenv] 1 [goldv]'"
+  },
+  {
+   "id": "small_thanksgiving_bouquet",
+   "name": "Small Thanksgiving bouquet",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D1%8B%D0%B9_%D0%BE%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D0%B1%D1%83%D0%BA%D0%B5%D1%82"
+   ],
+   "notes": "game_id=Thanksgiving bouque s; level 1 = no level gate recorded (non-shop item); requires reputation level 1; reward/special decoration; obtained via: task event, special-currency event, currency-shop offer; added: Autumn update 2023"
+  },
+  {
+   "id": "solar_flower",
+   "name": "Solar flower",
+   "category": "flowers",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BE%D0%BB%D0%BD%D0%B5%D1%87%D0%BD%D1%8B%D0%B5_%D1%86%D0%B2%D0%B5%D1%82%D1%8B"
+   ],
+   "notes": "game_id=Solar flowers; level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Spring update 2025"
+  },
+  {
+   "id": "sunny_poppies",
+   "name": "Sunny poppies",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BE%D0%BB%D0%BD%D0%B5%D1%87%D0%BD%D1%8B%D0%B5_%D0%BC%D0%B0%D0%BA%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: valley; added: Winter update 2025; en list: Valley"
+  },
+  {
+   "id": "tallest_sunflower",
+   "name": "Tallest sunflower",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%B8%D0%B3%D0%B0%D0%BD%D1%82%D1%81%D0%BA%D0%B8%D0%B9_%D0%BF%D0%BE%D0%B4%D1%81%D0%BE%D0%BB%D0%BD%D1%83%D1%85"
+   ],
+   "notes": "game_id=Tallest sunflower; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Summer update 2023"
+  },
+  {
+   "id": "thanksgiving_planter",
+   "name": "Thanksgiving planter",
+   "category": "flowers",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D1%8F%D1%8F_%D0%BA%D0%BE%D0%BC%D0%BF%D0%BE%D0%B7%D0%B8%D1%86%D0%B8%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, currency-shop offer; added: Autumn update 2025"
+  },
+  {
+   "id": "timeliness_magnolia",
+   "name": "Timeliness magnolia",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%87%D0%BD%D0%B0%D1%8F_%D0%BC%D0%B0%D0%B3%D0%BD%D0%BE%D0%BB%D0%B8%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, other; added: Summer update 2026"
+  },
+  {
+   "id": "tricolour_flowerbed",
+   "name": "Tricolour flowerbed",
+   "category": "flowers",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D1%80%D0%BB%D0%B0%D0%BD%D0%B4%D1%81%D0%BA%D0%B0%D1%8F_%D0%BA%D0%BB%D1%83%D0%BC%D0%B1%D0%B0"
+   ],
+   "notes": "game_id=Irish flowerbed; level 1 = no level gate recorded (non-shop item); added: Spring update 2024"
+  },
+  {
+   "id": "tulip_patch",
+   "name": "Tulip patch",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B8%D0%BA%D0%B8%D0%B5_%D1%82%D1%8E%D0%BB%D1%8C%D0%BF%D0%B0%D0%BD%D1%8B"
+   ],
+   "notes": "game_id=Tulip patch; level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Summer update 2024"
+  },
+  {
+   "id": "water_hyacinth",
+   "name": "Water Hyacinth",
+   "category": "flowers",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": 5500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D0%B4%D1%8F%D0%BD%D0%BE%D0%B9_%D0%B3%D0%B8%D0%B0%D1%86%D0%B8%D0%BD%D1%82"
+   ],
+   "notes": "English name from en-wiki list (matched by game id); game_id=Water hyacinth; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Детёныш коричневой капибары; sanctuary tab; obtained via: shop; added: Autumn update 2025; en list: Sanctuary cost '5,500 [coin]'"
+  },
+  {
+   "id": "white_ginger_lily",
+   "name": "White Ginger Lily",
+   "category": "flowers",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 purple voucher + 3 blue voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%BC%D0%B1%D0%B8%D1%80%D0%BD%D0%B0%D1%8F_%D0%BB%D0%B8%D0%BB%D0%B8%D1%8F"
+   ],
+   "notes": "English name from en-wiki list (matched by game id); game_id=White ginger lily; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Рыжая капибара; sanctuary tab; obtained via: shop; added: Summer update 2025; en list: Sanctuary cost '5 [purplev] 3 [bluev]'"
+  },
+  {
+   "id": "white_grape_hyacinth",
+   "name": "White grape hyacinth",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D0%BB%D1%8B%D0%B9_%D0%B3%D0%B8%D0%B0%D1%86%D0%B8%D0%BD%D1%82"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, themed box; added: Spring update 2026"
+  },
+  {
+   "id": "wildflower_patch",
+   "name": "Wildflower patch",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D1%87%D0%B0%D1%81%D1%82%D0%BE%D0%BA_%D1%81_%D0%BF%D0%BE%D0%BB%D0%B5%D0%B2%D1%8B%D0%BC%D0%B8_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other, currency-shop offer, themed box; added: Spring update 2026"
+  },
+  {
+   "id": "wildflowers",
+   "name": "Wildflowers",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 49,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%BB%D0%B5%D0%B2%D1%8B%D0%B5_%D1%86%D0%B2%D0%B5%D1%82%D1%8B"
+   ],
+   "notes": "obtained via: shop, monthly decoration; added: Summer update 2025"
+  },
+  {
+   "id": "yellow_camellia",
+   "name": "Yellow camellia",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D1%91%D0%BB%D1%82%D0%B0%D1%8F_%D0%BA%D0%B0%D0%BC%D0%B5%D0%BB%D0%B8%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, other, special-currency event; added: Winter update 2025"
+  },
+  {
+   "id": "zinnia_flowers",
+   "name": "Zinnia flowers",
+   "category": "flowers",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D1%8B_%D1%86%D0%B8%D0%BD%D0%BD%D0%B8%D0%B8"
+   ],
+   "notes": "game_id=Zinnia planter; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  }
+ ]
+}

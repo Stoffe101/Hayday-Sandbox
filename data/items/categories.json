@@ -1,0 +1,22 @@
+{
+ "schema": "hayday-sandbox-categories",
+ "categories": [
+  {"id": "production", "name": "Production", "icon": "factory", "color": "#e0853a", "order": 1, "group": "buildings"},
+  {"id": "farm_building", "name": "Farm buildings", "icon": "house", "color": "#c44f3b", "order": 2, "group": "buildings"},
+  {"id": "animal_home", "name": "Animal homes", "icon": "paw-print", "color": "#b07a45", "order": 3, "group": "buildings"},
+  {"id": "field", "name": "Fields", "icon": "sprout", "color": "#8b5a3a", "order": 4, "group": "crops"},
+  {"id": "fruit_tree", "name": "Fruit trees", "icon": "apple", "color": "#d6403a", "order": 5, "group": "crops"},
+  {"id": "bush", "name": "Bushes", "icon": "cherry", "color": "#a8182a", "order": 6, "group": "crops"},
+  {"id": "fence", "name": "Fences & hedges", "icon": "fence", "color": "#a47148", "order": 7, "group": "decor"},
+  {"id": "path", "name": "Paths", "icon": "footprints", "color": "#b9ab86", "order": 8, "group": "decor"},
+  {"id": "water", "name": "Water", "icon": "droplets", "color": "#3a8fc4", "order": 9, "group": "decor"},
+  {"id": "flowers", "name": "Flowers & gardens", "icon": "flower-2", "color": "#e07aa8", "order": 10, "group": "decor"},
+  {"id": "nature", "name": "Trees & nature", "icon": "trees", "color": "#3f7d35", "order": 11, "group": "decor"},
+  {"id": "furniture", "name": "Furniture & lights", "icon": "lamp", "color": "#8a6bc4", "order": 12, "group": "decor"},
+  {"id": "structures", "name": "Structures", "icon": "landmark", "color": "#5d7fa3", "order": 13, "group": "decor"},
+  {"id": "seasonal", "name": "Seasonal & events", "icon": "snowflake", "color": "#4fa3c7", "order": 14, "group": "decor"},
+  {"id": "decoration", "name": "Other decorations", "icon": "sparkles", "color": "#7fb069", "order": 15, "group": "decor"},
+  {"id": "obstacle", "name": "Obstacles & scenery", "icon": "mountain", "color": "#8e877b", "order": 16, "group": "other"},
+  {"id": "planning", "name": "Planning markers", "icon": "map-pin", "color": "#4b7fc4", "order": 17, "group": "other"}
+ ]
+}

@@ -1,0 +1,40 @@
+# Godot
+.godot/
+.import/
+*.translation
+export_credentials.cfg
+
+# Build output
+build/
+artifacts/
+*.tmp
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# ---------------------------------------------------------------------------
+# PROPRIETARY / PERMISSION-UNCERTAIN ART MUST NEVER BE COMMITTED.
+# Anything a user imports from game files, wikis, screenshots etc. lives in
+# assets/original/ (dev) or the user data directory (app). See
+# docs/research/LEGAL_AND_LICENSING.md and docs/ASSET_PIPELINE.md.
+# ---------------------------------------------------------------------------
+assets/original/*
+!assets/original/README.md
+!assets/original/.gdignore
+*.sc
+*_tex.sc
+*.apk
+*.xapk
+*.obb
+*.ipa
+reference_screenshots/
+*.sctx
+*.ktx
+*.zktx
+csv_client/
+csv_logic/
+
+# Tooling scratch (browser automation logs etc.)
+.playwright-mcp/

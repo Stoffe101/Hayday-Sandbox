@@ -1,0 +1,1596 @@
+{
+ "format": "hayday-sandbox-map",
+ "schema_version": 1,
+ "id": "hayday_farm",
+ "name": "Hay Day farm — 32×32 start (favoured)",
+ "geometry_status": "approximation",
+ "generated_by": "tools/catalog/build_map.py from data/research/expansions_research.json",
+ "license": "Plot cost tables, plot numbering and release dates are adapted from the Hay Day Wiki (Fandom) page 'Expansion/Farm' and related pages (contributors: see each page history), licensed CC BY-SA (https://www.fandom.com/licensing). This file is therefore shared under CC BY-SA 3.0. Tile geometry was derived by us from the wiki map images (images not redistributed).",
+ "size": [
+  95,
+  45
+ ],
+ "origin_note": "Farm grid X along the road (screen down-right), Y forest->road (screen down-left). Starting land at X=5..36, Y=3..34.",
+ "regions": [
+  {
+   "id": "forest",
+   "kind": "scenery",
+   "name": "Forest edge",
+   "rects": [
+    [
+     0,
+     0,
+     95,
+     3
+    ]
+   ]
+  },
+  {
+   "id": "river",
+   "kind": "water",
+   "name": "River",
+   "rects": [
+    [
+     0,
+     0,
+     5,
+     37
+    ]
+   ]
+  },
+  {
+   "id": "start",
+   "kind": "buildable",
+   "name": "Starting land",
+   "status": "approximation",
+   "rects": [
+    [
+     5,
+     3,
+     32,
+     32
+    ]
+   ]
+  },
+  {
+   "id": "far_end",
+   "kind": "scenery",
+   "name": "Farm edge",
+   "rects": [
+    [
+     90,
+     3,
+     5,
+     32
+    ]
+   ]
+  },
+  {
+   "id": "road",
+   "kind": "road",
+   "name": "Main road",
+   "rects": [
+    [
+     0,
+     35,
+     95,
+     2
+    ]
+   ]
+  },
+  {
+   "id": "across_road",
+   "kind": "blocked",
+   "name": "Across-the-road expansions (geometry not mapped yet)",
+   "status": "unverified",
+   "rects": [
+    [
+     0,
+     37,
+     95,
+     8
+    ]
+   ]
+  },
+  {
+   "id": "main_01",
+   "kind": "plot",
+   "section": "main",
+   "number": 1,
+   "name": "Plot 1",
+   "rects": [
+    [
+     37,
+     31,
+     5,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 6,
+    "mallet": 6,
+    "marker_stake": 6
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_02",
+   "kind": "plot",
+   "section": "main",
+   "number": 2,
+   "name": "Plot 2",
+   "rects": [
+    [
+     37,
+     27,
+     4,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 5,
+    "mallet": 5,
+    "marker_stake": 5
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_03",
+   "kind": "plot",
+   "section": "main",
+   "number": 3,
+   "name": "Plot 3",
+   "rects": [
+    [
+     37,
+     24,
+     7,
+     3
+    ],
+    [
+     41,
+     27,
+     3,
+     1
+    ],
+    [
+     41,
+     28,
+     9,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 16,
+    "mallet": 16,
+    "marker_stake": 16
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_04",
+   "kind": "plot",
+   "section": "main",
+   "number": 4,
+   "name": "Plot 4",
+   "rects": [
+    [
+     37,
+     21,
+     7,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 6,
+    "mallet": 6,
+    "marker_stake": 6
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_05",
+   "kind": "plot",
+   "section": "main",
+   "number": 5,
+   "name": "Plot 5",
+   "rects": [
+    [
+     37,
+     18,
+     7,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 6,
+    "mallet": 6,
+    "marker_stake": 6
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_06",
+   "kind": "plot",
+   "section": "main",
+   "number": 6,
+   "name": "Plot 6",
+   "rects": [
+    [
+     37,
+     15,
+     7,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 6,
+    "mallet": 6,
+    "marker_stake": 6
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_07",
+   "kind": "plot",
+   "section": "main",
+   "number": 7,
+   "name": "Plot 7",
+   "rects": [
+    [
+     37,
+     11,
+     4,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 5,
+    "mallet": 5,
+    "marker_stake": 5
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_08",
+   "kind": "plot",
+   "section": "main",
+   "number": 8,
+   "name": "Plot 8",
+   "rects": [
+    [
+     37,
+     8,
+     7,
+     3
+    ],
+    [
+     41,
+     11,
+     3,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 15,
+    "mallet": 15,
+    "marker_stake": 15
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_09",
+   "kind": "plot",
+   "section": "main",
+   "number": 9,
+   "name": "Plot 9",
+   "rects": [
+    [
+     37,
+     3,
+     5,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 7,
+    "mallet": 7,
+    "marker_stake": 7
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_10",
+   "kind": "plot",
+   "section": "main",
+   "number": 10,
+   "name": "Plot 10",
+   "rects": [
+    [
+     42,
+     31,
+     8,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 10,
+    "mallet": 10,
+    "marker_stake": 10
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_11",
+   "kind": "plot",
+   "section": "main",
+   "number": 11,
+   "name": "Plot 11",
+   "rects": [
+    [
+     44,
+     24,
+     6,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 7,
+    "mallet": 7,
+    "marker_stake": 7
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_12",
+   "kind": "plot",
+   "section": "main",
+   "number": 12,
+   "name": "Plot 12",
+   "rects": [
+    [
+     44,
+     15,
+     6,
+     3
+    ],
+    [
+     44,
+     18,
+     3,
+     3
+    ],
+    [
+     44,
+     21,
+     6,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 12,
+    "mallet": 12,
+    "marker_stake": 12
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_13",
+   "kind": "plot",
+   "section": "main",
+   "number": 13,
+   "name": "Plot 13",
+   "rects": [
+    [
+     50,
+     3,
+     3,
+     5
+    ],
+    [
+     44,
+     8,
+     9,
+     3
+    ],
+    [
+     44,
+     11,
+     3,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 15,
+    "mallet": 15,
+    "marker_stake": 15
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_14",
+   "kind": "plot",
+   "section": "main",
+   "number": 14,
+   "name": "Plot 14",
+   "rects": [
+    [
+     42,
+     3,
+     8,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 11,
+    "mallet": 11,
+    "marker_stake": 11
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_15",
+   "kind": "plot",
+   "section": "main",
+   "number": 15,
+   "name": "Plot 15",
+   "rects": [
+    [
+     50,
+     26,
+     3,
+     9
+    ]
+   ],
+   "cost": {
+    "land_deed": 8,
+    "mallet": 8,
+    "marker_stake": 8
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_16",
+   "kind": "plot",
+   "section": "main",
+   "number": 16,
+   "name": "Plot 16",
+   "rects": [
+    [
+     50,
+     14,
+     3,
+     4
+    ],
+    [
+     47,
+     18,
+     6,
+     3
+    ],
+    [
+     50,
+     21,
+     3,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 12,
+    "mallet": 12,
+    "marker_stake": 12
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_17",
+   "kind": "plot",
+   "section": "main",
+   "number": 17,
+   "name": "Plot 17",
+   "rects": [
+    [
+     47,
+     11,
+     6,
+     3
+    ],
+    [
+     47,
+     14,
+     3,
+     1
+    ]
+   ],
+   "cost": {
+    "land_deed": 6,
+    "mallet": 6,
+    "marker_stake": 6
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_18",
+   "kind": "plot",
+   "section": "main",
+   "number": 18,
+   "name": "Plot 18",
+   "rects": [
+    [
+     53,
+     27,
+     5,
+     5
+    ],
+    [
+     53,
+     32,
+     3,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 12,
+    "mallet": 12,
+    "marker_stake": 12
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_19",
+   "kind": "plot",
+   "section": "main",
+   "number": 19,
+   "name": "Plot 19",
+   "rects": [
+    [
+     53,
+     20,
+     4,
+     4
+    ],
+    [
+     53,
+     24,
+     3,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 7,
+    "mallet": 7,
+    "marker_stake": 7
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_20",
+   "kind": "plot",
+   "section": "main",
+   "number": 20,
+   "name": "Plot 20",
+   "rects": [
+    [
+     53,
+     15,
+     8,
+     3
+    ],
+    [
+     53,
+     18,
+     4,
+     2
+    ]
+   ],
+   "cost": {
+    "land_deed": 13,
+    "mallet": 13,
+    "marker_stake": 13
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_21",
+   "kind": "plot",
+   "section": "main",
+   "number": 21,
+   "name": "Plot 21",
+   "rects": [
+    [
+     53,
+     10,
+     5,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 9,
+    "mallet": 9,
+    "marker_stake": 9
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_22",
+   "kind": "plot",
+   "section": "main",
+   "number": 22,
+   "name": "Plot 22",
+   "rects": [
+    [
+     53,
+     3,
+     8,
+     4
+    ],
+    [
+     53,
+     7,
+     3,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 15,
+    "mallet": 15,
+    "marker_stake": 15
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_23",
+   "kind": "plot",
+   "section": "main",
+   "number": 23,
+   "name": "Plot 23",
+   "rects": [
+    [
+     58,
+     28,
+     3,
+     4
+    ],
+    [
+     56,
+     32,
+     5,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 9,
+    "mallet": 9,
+    "marker_stake": 9
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_24",
+   "kind": "plot",
+   "section": "main",
+   "number": 24,
+   "name": "Plot 24",
+   "rects": [
+    [
+     56,
+     24,
+     5,
+     3
+    ],
+    [
+     58,
+     27,
+     3,
+     1
+    ]
+   ],
+   "cost": {
+    "land_deed": 6,
+    "mallet": 6,
+    "marker_stake": 6
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_25",
+   "kind": "plot",
+   "section": "main",
+   "number": 25,
+   "name": "Plot 25",
+   "rects": [
+    [
+     57,
+     18,
+     4,
+     6
+    ]
+   ],
+   "cost": {
+    "land_deed": 8,
+    "mallet": 8,
+    "marker_stake": 8
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_26",
+   "kind": "plot",
+   "section": "main",
+   "number": 26,
+   "name": "Plot 26",
+   "rects": [
+    [
+     56,
+     7,
+     5,
+     3
+    ],
+    [
+     58,
+     10,
+     3,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 10,
+    "mallet": 10,
+    "marker_stake": 10
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_27",
+   "kind": "plot",
+   "section": "main",
+   "number": 27,
+   "name": "Plot 27",
+   "rects": [
+    [
+     61,
+     28,
+     3,
+     4
+    ],
+    [
+     61,
+     32,
+     7,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 15,
+    "mallet": 15,
+    "marker_stake": 15
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_28",
+   "kind": "plot",
+   "section": "main",
+   "number": 28,
+   "name": "Plot 28",
+   "rects": [
+    [
+     61,
+     22,
+     3,
+     1
+    ],
+    [
+     61,
+     23,
+     9,
+     4
+    ],
+    [
+     61,
+     27,
+     4,
+     1
+    ]
+   ],
+   "cost": {
+    "land_deed": 15,
+    "mallet": 15,
+    "marker_stake": 15
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_29",
+   "kind": "plot",
+   "section": "main",
+   "number": 29,
+   "name": "Plot 29",
+   "rects": [
+    [
+     61,
+     13,
+     4,
+     1
+    ],
+    [
+     61,
+     14,
+     7,
+     4
+    ],
+    [
+     61,
+     18,
+     3,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 18,
+    "mallet": 18,
+    "marker_stake": 18
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_30",
+   "kind": "plot",
+   "section": "main",
+   "number": 30,
+   "name": "Plot 30",
+   "rects": [
+    [
+     61,
+     3,
+     7,
+     5
+    ],
+    [
+     61,
+     8,
+     4,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 24,
+    "mallet": 24,
+    "marker_stake": 24
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_31",
+   "kind": "plot",
+   "section": "main",
+   "number": 31,
+   "name": "Plot 31",
+   "rects": [
+    [
+     65,
+     27,
+     5,
+     1
+    ],
+    [
+     64,
+     28,
+     6,
+     4
+    ],
+    [
+     68,
+     32,
+     2,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 15,
+    "mallet": 15,
+    "marker_stake": 15
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_32",
+   "kind": "plot",
+   "section": "main",
+   "number": 32,
+   "name": "Plot 32",
+   "rects": [
+    [
+     64,
+     18,
+     4,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 8,
+    "mallet": 8,
+    "marker_stake": 8
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_33",
+   "kind": "plot",
+   "section": "main",
+   "number": 33,
+   "name": "Plot 33",
+   "rects": [
+    [
+     65,
+     8,
+     5,
+     6
+    ]
+   ],
+   "cost": {
+    "land_deed": 12,
+    "mallet": 12,
+    "marker_stake": 12
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_34",
+   "kind": "plot",
+   "section": "main",
+   "number": 34,
+   "name": "Plot 34",
+   "rects": [
+    [
+     68,
+     3,
+     6,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 12,
+    "mallet": 12,
+    "marker_stake": 12
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_35",
+   "kind": "plot",
+   "section": "main",
+   "number": 35,
+   "name": "Plot 35",
+   "rects": [
+    [
+     70,
+     30,
+     6,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 12,
+    "mallet": 12,
+    "marker_stake": 12
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_36",
+   "kind": "plot",
+   "section": "main",
+   "number": 36,
+   "name": "Plot 36",
+   "rects": [
+    [
+     70,
+     25,
+     6,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 12,
+    "mallet": 12,
+    "marker_stake": 12
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_37",
+   "kind": "plot",
+   "section": "main",
+   "number": 37,
+   "name": "Plot 37",
+   "rects": [
+    [
+     68,
+     17,
+     8,
+     6
+    ],
+    [
+     70,
+     23,
+     6,
+     2
+    ]
+   ],
+   "cost": {
+    "land_deed": 24,
+    "mallet": 24,
+    "marker_stake": 24
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_38",
+   "kind": "plot",
+   "section": "main",
+   "number": 38,
+   "name": "Plot 38",
+   "rects": [
+    [
+     68,
+     14,
+     8,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 10,
+    "mallet": 10,
+    "marker_stake": 10
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_39",
+   "kind": "plot",
+   "section": "main",
+   "number": 39,
+   "name": "Plot 39",
+   "rects": [
+    [
+     74,
+     3,
+     2,
+     5
+    ],
+    [
+     70,
+     8,
+     6,
+     6
+    ]
+   ],
+   "cost": {
+    "land_deed": 19,
+    "mallet": 19,
+    "marker_stake": 19
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_40",
+   "kind": "plot",
+   "section": "main",
+   "number": 40,
+   "name": "Plot 40",
+   "rects": [
+    [
+     76,
+     28,
+     4,
+     3
+    ],
+    [
+     76,
+     31,
+     9,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 39,
+    "mallet": 39,
+    "marker_stake": 39
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_41",
+   "kind": "plot",
+   "section": "main",
+   "number": 41,
+   "name": "Plot 41",
+   "rects": [
+    [
+     76,
+     24,
+     10,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 32,
+    "mallet": 32,
+    "marker_stake": 32
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_42",
+   "kind": "plot",
+   "section": "main",
+   "number": 42,
+   "name": "Plot 42",
+   "rects": [
+    [
+     76,
+     18,
+     3,
+     3
+    ],
+    [
+     76,
+     21,
+     5,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 20,
+    "mallet": 20,
+    "marker_stake": 20
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_43",
+   "kind": "plot",
+   "section": "main",
+   "number": 43,
+   "name": "Plot 43",
+   "rects": [
+    [
+     76,
+     12,
+     6,
+     4
+    ],
+    [
+     76,
+     16,
+     3,
+     2
+    ]
+   ],
+   "cost": {
+    "land_deed": 24,
+    "mallet": 24,
+    "marker_stake": 24
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_44",
+   "kind": "plot",
+   "section": "main",
+   "number": 44,
+   "name": "Plot 44",
+   "rects": [
+    [
+     76,
+     9,
+     8,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 20,
+    "mallet": 20,
+    "marker_stake": 20
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_45",
+   "kind": "plot",
+   "section": "main",
+   "number": 45,
+   "name": "Plot 45",
+   "rects": [
+    [
+     76,
+     3,
+     6,
+     6
+    ]
+   ],
+   "cost": {
+    "land_deed": 29,
+    "mallet": 29,
+    "marker_stake": 29
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_46",
+   "kind": "plot",
+   "section": "main",
+   "number": 46,
+   "name": "Plot 46",
+   "rects": [
+    [
+     80,
+     28,
+     10,
+     3
+    ],
+    [
+     85,
+     31,
+     5,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 40,
+    "mallet": 40,
+    "marker_stake": 40
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_47",
+   "kind": "plot",
+   "section": "main",
+   "number": 47,
+   "name": "Plot 47",
+   "rects": [
+    [
+     81,
+     21,
+     9,
+     3
+    ],
+    [
+     86,
+     24,
+     4,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 35,
+    "mallet": 35,
+    "marker_stake": 35
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_48",
+   "kind": "plot",
+   "section": "main",
+   "number": 48,
+   "name": "Plot 48",
+   "rects": [
+    [
+     82,
+     15,
+     4,
+     1
+    ],
+    [
+     79,
+     16,
+     7,
+     5
+    ]
+   ],
+   "cost": {
+    "land_deed": 32,
+    "mallet": 32,
+    "marker_stake": 32
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_49",
+   "kind": "plot",
+   "section": "main",
+   "number": 49,
+   "name": "Plot 49",
+   "rects": [
+    [
+     84,
+     11,
+     6,
+     1
+    ],
+    [
+     82,
+     12,
+     8,
+     3
+    ]
+   ],
+   "cost": {
+    "land_deed": 24,
+    "mallet": 24,
+    "marker_stake": 24
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_50",
+   "kind": "plot",
+   "section": "main",
+   "number": 50,
+   "name": "Plot 50",
+   "rects": [
+    [
+     82,
+     7,
+     8,
+     2
+    ],
+    [
+     84,
+     9,
+     6,
+     2
+    ]
+   ],
+   "cost": {
+    "land_deed": 23,
+    "mallet": 23,
+    "marker_stake": 23
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_51",
+   "kind": "plot",
+   "section": "main",
+   "number": 51,
+   "name": "Plot 51",
+   "rects": [
+    [
+     82,
+     3,
+     8,
+     4
+    ]
+   ],
+   "cost": {
+    "land_deed": 26,
+    "mallet": 26,
+    "marker_stake": 26
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  },
+  {
+   "id": "main_52",
+   "kind": "plot",
+   "section": "main",
+   "number": 52,
+   "name": "Plot 52",
+   "rects": [
+    [
+     86,
+     15,
+     4,
+     6
+    ]
+   ],
+   "cost": {
+    "land_deed": 20,
+    "mallet": 20,
+    "marker_stake": 20
+   },
+   "min_level": 22,
+   "status": "approximation",
+   "notes": "cost from wiki table (same count of each of the 3 supplies); tiles/bbox/adjacency reconstructed from the wiki map image (approximation)"
+  }
+ ],
+ "unmapped_sections": [
+  {
+   "id": "main_upper_2021",
+   "name": "'Upper plots' (summer 2021, listed under the main section)",
+   "location": "UNVERIFIED. Strip whose long axis runs road->forest (same axis as v); approx 14 x 32 tiles from image proportions. Probably appended at one X-end of the farm (far end of the main section, or the river-side end).",
+   "plots": 13,
+   "land_deeds_each": 448,
+   "expansion_permits": 0
+  },
+  {
+   "id": "across_road_regular_2015",
+   "name": "Second section, regular plots (April 2015)",
+   "location": "across the main road from the farm",
+   "plots": 9,
+   "land_deeds_each": 239,
+   "expansion_permits": 0
+  },
+  {
+   "id": "across_road_regular_2018",
+   "name": "Second section, regular plots (December 2018)",
+   "location": "across the main road, next to the 2015 regular plots (exact placement unverified)",
+   "plots": 9,
+   "land_deeds_each": 355,
+   "expansion_permits": 0
+  },
+  {
+   "id": "special_2017",
+   "name": "Special section (March 2017)",
+   "location": "across the road; each plot holds an exclusive expansion decoration",
+   "plots": 9,
+   "land_deeds_each": 280,
+   "expansion_permits": 59
+  },
+  {
+   "id": "special_2018",
+   "name": "Special section (December 2018)",
+   "location": "across the road; L-shaped area (11-plot block + 4-plot strip) per wiki image",
+   "plots": 15,
+   "land_deeds_each": 609,
+   "expansion_permits": 169
+  },
+  {
+   "id": "special_lower_2019_2021",
+   "name": "'Lower plots' special section (Oct 2019: #1-24, summer 2021: #25-41)",
+   "location": "across the road (bottom of the farm)",
+   "plots": 41,
+   "land_deeds_each": 1973,
+   "expansion_permits": 587
+  },
+  {
+   "id": "special_spring_2023",
+   "name": "Special section (Spring 2023)",
+   "location": "across the road, attached on the left-hand side of the earlier second-section plots (wiki)",
+   "plots": 31,
+   "land_deeds_each": 1865,
+   "expansion_permits": 530
+  }
+ ],
+ "labels": [
+  {
+   "text": "Main road",
+   "at": [
+    47.5,
+    36
+   ]
+  },
+  {
+   "text": "River",
+   "at": [
+    2.5,
+    17.5
+   ]
+  }
+ ],
+ "sources": [
+  "https://hayday.fandom.com/wiki/Expansion/Farm",
+  "https://hayday.fandom.com/wiki/File:Farm_Expansions.png",
+  "https://hayday.fandom.com/wiki/File:Hay_Day_Upper_plots.jpg",
+  "https://hayday.fandom.com/wiki/File:Farm_Expansions_2.png",
+  "https://hayday.fandom.com/wiki/File:Farm_Expansions_3.jpeg",
+  "https://hayday.fandom.com/wiki/File:Farm_Expansions_Special.png",
+  "https://hayday.fandom.com/wiki/File:Permits_vs_Lems.jpg",
+  "https://hayday.fandom.com/wiki/File:Hay_Day_Lower_plots.jpg",
+  "https://hayday.fandom.com/wiki/File:Farm_expansion_Spring_2023_(2).png",
+  "https://hayday.fandom.com/wiki/Expansion_Permit",
+  "https://hayday.fandom.com/wiki/Update",
+  "https://support.supercell.com/hay-day/en/articles/expanding-your-farm.html"
+ ],
+ "notes": [
+  "Starting-land size is unresolved: 32x32 (H2, favoured) vs 48x32 (H1). Both maps ship; choose in Settings.",
+  "Main-section plot shapes are reconstructed from the Hay Day Wiki map image (approximation; subsection widths 16/8/15/14 measured vs 17/8/15/13 in wiki text).",
+  "Upper plots and all across-the-road sections exist in the game but their tile geometry is unknown; they are listed, not drawn.",
+  "Positions of the river, forest edge and road width are schematic."
+ ]
+}

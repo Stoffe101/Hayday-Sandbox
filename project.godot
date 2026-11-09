@@ -1,0 +1,60 @@
+; Engine configuration file.
+; Hayday Sandbox — offline Hay Day farm layout designer (unofficial fan tool).
+
+config_version=5
+
+[application]
+
+config/name="Hayday Sandbox"
+config/description="Offline isometric farm layout designer (unofficial fan tool, not affiliated with Supercell)."
+config/version="0.1.0"
+run/main_scene="res://src/app/main.tscn"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="HaydaySandbox"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+run/low_processor_mode=true
+boot_splash/bg_color=Color(0.141, 0.157, 0.176, 1)
+boot_splash/show_image=false
+config/icon="res://assets/ui/app_icon.png"
+
+[autoload]
+
+App="*res://src/app/app.gd"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/size/mode=2
+window/energy_saving/keep_screen_on=false
+window/subwindows/embed_subwindows=true
+
+[gui]
+
+common/snap_controls_to_pixels=true
+timers/tooltip_delay_sec=0.45
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=false
+
+[physics]
+
+common/physics_ticks_per_second=30
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=3
+2d/snap/snap_2d_transforms_to_pixel=false
+environment/defaults/default_clear_color=Color(0.33, 0.52, 0.30, 1)
+textures/vram_compression/import_etc2_astc=false
+
+[importer_defaults]
+
+texture={
+"compress/mode": 0,
+"mipmaps/generate": true,
+"process/fix_alpha_border": true
+}

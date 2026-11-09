@@ -1,0 +1,9 @@
+{"schema": "hayday-sandbox-items", "schema_version": 1, "items": [
+  {"id": "t_bakery", "name": "Test Bakery", "category": "production", "footprint": [3, 3], "footprint_status": "confirmed", "unlock_level": 2, "cost": {"coins": 50}, "max_count": 1},
+  {"id": "t_long", "name": "Long Hedge", "category": "decoration", "footprint": [1, 4], "footprint_status": "community", "flippable": true, "cost": {"coins": 10}},
+  {"id": "t_lamp", "name": "Lamp", "category": "decoration", "footprint": [1, 1], "footprint_status": "confirmed", "unlock_level": 30, "cost": {"diamonds": 5}},
+  {"id": "t_fence", "name": "Wood Fence", "category": "fence", "footprint": [1, 1], "footprint_status": "confirmed", "connect": {"group": "wood", "style": "fence"}, "aliases": ["old_fence"]},
+  {"id": "t_fence_stone", "name": "Stone Fence", "category": "fence", "footprint": [1, 1], "footprint_status": "confirmed", "connect": {"group": "stone", "style": "fence"}},
+  {"id": "t_path", "name": "Stone Path", "category": "path", "footprint": [1, 1], "footprint_status": "confirmed", "layer": "ground", "connect": {"group": "stone_path", "style": "path"}},
+  {"id": "t_mystery", "name": "Mystery Statue", "category": "decoration", "footprint": null, "provisional_footprint": [2, 2]}
+]}

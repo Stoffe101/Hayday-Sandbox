@@ -1,0 +1,922 @@
+{
+	"format": "hayday-sandbox-layout",
+	"schema_version": 1,
+	"app_version": "sample",
+	"meta": {
+		"id": "",
+		"name": "Symmetrical estate",
+		"description": "Formal, mirrored layout around a central avenue.",
+		"tags": [
+			"sample",
+			"original"
+		],
+		"created": "2026-11-09T00:00:00Z",
+		"modified": "2026-11-09T00:00:00Z",
+		"mode": "creative"
+	},
+	"map": {
+		"id": "hayday_farm",
+		"unlocked_plots": []
+	},
+	"next_uid": 111,
+	"next_group": 1,
+	"objects": [
+		{
+			"uid": 1,
+			"item": "farmhouse",
+			"x": 19,
+			"y": 14,
+			"w": 4,
+			"h": 4,
+			"locked": true
+		},
+		{
+			"uid": 2,
+			"item": "barn",
+			"x": 7,
+			"y": 5,
+			"w": 4,
+			"h": 4,
+			"locked": true
+		},
+		{
+			"uid": 3,
+			"item": "silo",
+			"x": 12,
+			"y": 5,
+			"w": 3,
+			"h": 3,
+			"locked": true
+		},
+		{
+			"uid": 4,
+			"item": "truck_and_order_board",
+			"x": 17,
+			"y": 31,
+			"w": 4,
+			"h": 3,
+			"locked": true
+		},
+		{
+			"uid": 5,
+			"item": "roadside_shop",
+			"x": 22,
+			"y": 31,
+			"w": 3,
+			"h": 3,
+			"locked": true
+		},
+		{
+			"uid": 6,
+			"item": "mailbox",
+			"x": 23,
+			"y": 16,
+			"w": 1,
+			"h": 1,
+			"locked": true
+		},
+		{
+			"uid": 7,
+			"item": "stone_path",
+			"x": 20,
+			"y": 18,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 8,
+			"item": "stone_path",
+			"x": 20,
+			"y": 19,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 9,
+			"item": "stone_path",
+			"x": 20,
+			"y": 20,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 10,
+			"item": "stone_path",
+			"x": 20,
+			"y": 21,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 11,
+			"item": "stone_path",
+			"x": 20,
+			"y": 22,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 12,
+			"item": "stone_path",
+			"x": 20,
+			"y": 23,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 13,
+			"item": "stone_path",
+			"x": 20,
+			"y": 24,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 14,
+			"item": "stone_path",
+			"x": 20,
+			"y": 25,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 15,
+			"item": "stone_path",
+			"x": 20,
+			"y": 26,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 16,
+			"item": "stone_path",
+			"x": 20,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 17,
+			"item": "stone_path",
+			"x": 20,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 18,
+			"item": "stone_path",
+			"x": 20,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 19,
+			"item": "stone_path",
+			"x": 21,
+			"y": 18,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 20,
+			"item": "stone_path",
+			"x": 21,
+			"y": 19,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 21,
+			"item": "stone_path",
+			"x": 21,
+			"y": 20,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 22,
+			"item": "stone_path",
+			"x": 21,
+			"y": 21,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 23,
+			"item": "stone_path",
+			"x": 21,
+			"y": 22,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 24,
+			"item": "stone_path",
+			"x": 21,
+			"y": 23,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 25,
+			"item": "stone_path",
+			"x": 21,
+			"y": 24,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 26,
+			"item": "stone_path",
+			"x": 21,
+			"y": 25,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 27,
+			"item": "stone_path",
+			"x": 21,
+			"y": 26,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 28,
+			"item": "stone_path",
+			"x": 21,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 29,
+			"item": "stone_path",
+			"x": 21,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 30,
+			"item": "stone_path",
+			"x": 21,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 31,
+			"item": "cone_topiary",
+			"x": 18,
+			"y": 19,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 32,
+			"item": "cone_topiary",
+			"x": 23,
+			"y": 19,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 33,
+			"item": "streetlight",
+			"x": 19,
+			"y": 20,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 34,
+			"item": "streetlight",
+			"x": 22,
+			"y": 20,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 35,
+			"item": "cone_topiary",
+			"x": 18,
+			"y": 21,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 36,
+			"item": "cone_topiary",
+			"x": 23,
+			"y": 21,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 37,
+			"item": "streetlight",
+			"x": 19,
+			"y": 22,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 38,
+			"item": "streetlight",
+			"x": 22,
+			"y": 22,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 39,
+			"item": "cone_topiary",
+			"x": 18,
+			"y": 23,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 40,
+			"item": "cone_topiary",
+			"x": 23,
+			"y": 23,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 41,
+			"item": "streetlight",
+			"x": 19,
+			"y": 24,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 42,
+			"item": "streetlight",
+			"x": 22,
+			"y": 24,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 43,
+			"item": "cone_topiary",
+			"x": 18,
+			"y": 25,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 44,
+			"item": "cone_topiary",
+			"x": 23,
+			"y": 25,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 45,
+			"item": "streetlight",
+			"x": 19,
+			"y": 26,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 46,
+			"item": "streetlight",
+			"x": 22,
+			"y": 26,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 47,
+			"item": "cone_topiary",
+			"x": 18,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 48,
+			"item": "cone_topiary",
+			"x": 23,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 49,
+			"item": "streetlight",
+			"x": 19,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 50,
+			"item": "streetlight",
+			"x": 22,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 51,
+			"item": "cone_topiary",
+			"x": 18,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 52,
+			"item": "cone_topiary",
+			"x": 23,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 53,
+			"item": "streetlight",
+			"x": 19,
+			"y": 30,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 54,
+			"item": "streetlight",
+			"x": 22,
+			"y": 30,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 55,
+			"item": "bakery",
+			"x": 7,
+			"y": 18,
+			"w": 3,
+			"h": 3
+		},
+		{
+			"uid": 56,
+			"item": "feed_mill",
+			"x": 11,
+			"y": 18,
+			"w": 3,
+			"h": 3
+		},
+		{
+			"uid": 57,
+			"item": "dairy",
+			"x": 9,
+			"y": 22,
+			"w": 4,
+			"h": 4
+		},
+		{
+			"uid": 58,
+			"item": "field",
+			"x": 7,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 59,
+			"item": "field",
+			"x": 8,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 60,
+			"item": "field",
+			"x": 9,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 61,
+			"item": "field",
+			"x": 10,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 62,
+			"item": "field",
+			"x": 11,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 63,
+			"item": "field",
+			"x": 12,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 64,
+			"item": "field",
+			"x": 13,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 65,
+			"item": "field",
+			"x": 14,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 66,
+			"item": "field",
+			"x": 7,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 67,
+			"item": "field",
+			"x": 8,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 68,
+			"item": "field",
+			"x": 9,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 69,
+			"item": "field",
+			"x": 10,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 70,
+			"item": "field",
+			"x": 11,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 71,
+			"item": "field",
+			"x": 12,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 72,
+			"item": "field",
+			"x": 13,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 73,
+			"item": "field",
+			"x": 14,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 74,
+			"item": "field",
+			"x": 7,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 75,
+			"item": "field",
+			"x": 8,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 76,
+			"item": "field",
+			"x": 9,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 77,
+			"item": "field",
+			"x": 10,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 78,
+			"item": "field",
+			"x": 11,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 79,
+			"item": "field",
+			"x": 12,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 80,
+			"item": "field",
+			"x": 13,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 81,
+			"item": "field",
+			"x": 14,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 82,
+			"item": "bakery",
+			"x": 26,
+			"y": 18,
+			"w": 3,
+			"h": 3
+		},
+		{
+			"uid": 83,
+			"item": "feed_mill",
+			"x": 30,
+			"y": 18,
+			"w": 3,
+			"h": 3
+		},
+		{
+			"uid": 84,
+			"item": "dairy",
+			"x": 28,
+			"y": 22,
+			"w": 4,
+			"h": 4
+		},
+		{
+			"uid": 85,
+			"item": "field",
+			"x": 26,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 86,
+			"item": "field",
+			"x": 27,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 87,
+			"item": "field",
+			"x": 28,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 88,
+			"item": "field",
+			"x": 29,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 89,
+			"item": "field",
+			"x": 30,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 90,
+			"item": "field",
+			"x": 31,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 91,
+			"item": "field",
+			"x": 32,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 92,
+			"item": "field",
+			"x": 33,
+			"y": 27,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 93,
+			"item": "field",
+			"x": 26,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 94,
+			"item": "field",
+			"x": 27,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 95,
+			"item": "field",
+			"x": 28,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 96,
+			"item": "field",
+			"x": 29,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 97,
+			"item": "field",
+			"x": 30,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 98,
+			"item": "field",
+			"x": 31,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 99,
+			"item": "field",
+			"x": 32,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 100,
+			"item": "field",
+			"x": 33,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 101,
+			"item": "field",
+			"x": 26,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 102,
+			"item": "field",
+			"x": 27,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 103,
+			"item": "field",
+			"x": 28,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 104,
+			"item": "field",
+			"x": 29,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 105,
+			"item": "field",
+			"x": 30,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 106,
+			"item": "field",
+			"x": 31,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 107,
+			"item": "field",
+			"x": 32,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 108,
+			"item": "field",
+			"x": 33,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 109,
+			"item": "fountain",
+			"x": 20,
+			"y": 30,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 110,
+			"item": "fountain",
+			"x": 21,
+			"y": 30,
+			"w": 1,
+			"h": 1
+		}
+	],
+	"groups": {},
+	"annotations": [],
+	"profile": {
+		"level": 1,
+		"owned": {},
+		"budget_coins": -1,
+		"budget_diamonds": -1,
+		"treat_unknown_as_owned": true
+	},
+	"reference": {},
+	"camera": {}
+}

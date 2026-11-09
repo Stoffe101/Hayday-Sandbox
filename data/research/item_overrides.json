@@ -1,0 +1,306 @@
+{
+ "about": "Hand-maintained corrections applied by tools/catalog/build_catalog.py on top of items_research.json. 'provisional_footprint' values are PLANNING PLACEHOLDERS chosen by the editor team, not facts; such items stay flagged footprint_status=unknown in the app until a real source is recorded here with 'footprint' + 'footprint_status'.",
+ "items": {
+  "Field": {
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "unverified",
+   "note": "No wiki states the field size; 2013 client data cited in PLACEMENT_RESEARCH.md places one field per tile (1x1). Unverified against the current game."
+  },
+  "Farmhouse": {
+   "provisional_footprint": [
+    4,
+    4
+   ],
+   "note": "Footprint not stated by any consulted source; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm.",
+   "movable": false
+  },
+  "Barn": {
+   "provisional_footprint": [
+    4,
+    4
+   ],
+   "note": "Footprint not stated by any consulted source; provisional planning size."
+  },
+  "Silo": {
+   "provisional_footprint": [
+    3,
+    3
+   ],
+   "note": "Footprint not stated by any consulted source; provisional planning size."
+  },
+  "Truck and order board": {
+   "provisional_footprint": [
+    4,
+    3
+   ],
+   "note": "Footprint not stated; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm.",
+   "movable": false
+  },
+  "Roadside Shop": {
+   "provisional_footprint": [
+    3,
+    3
+   ],
+   "note": "Footprint not stated; provisional planning size. Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm.",
+   "movable": false
+  },
+  "Mailbox (newspaper / neighborhood / letters)": {
+   "name": "Mailbox",
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "movable": false,
+   "note": "Fixed in place in the game (PLACEMENT_RESEARCH.md); unlock it in the editor only to match your farm.",
+   "id": "mailbox"
+  },
+  "Helpers' House": {
+   "provisional_footprint": [
+    3,
+    3
+   ]
+  },
+  "Newspaper (Daily Dirt)": {
+   "placeable": false,
+   "note": "Part of the mailbox / fixed UI scenery; listed for reference only."
+  },
+  "Wheel of Fortune truck": {
+   "placeable": false,
+   "note": "Fixed scenery outside the buildable farm; listed for reference only."
+  },
+  "Event board": {
+   "placeable": false,
+   "note": "Fixed scenery; listed for reference only."
+  },
+  "Neighborhood house": {
+   "placeable": false,
+   "note": "Fixed scenery; listed for reference only."
+  },
+  "Riverboat dock": {
+   "placeable": false,
+   "note": "Fixed scenery; listed for reference only."
+  },
+  "Derby stand": {
+   "placeable": false,
+   "note": "Fixed scenery in town; listed for reference only."
+  },
+  "Valley board": {
+   "placeable": false,
+   "note": "Fixed scenery; listed for reference only."
+  },
+  "Fishing boat": {
+   "placeable": false,
+   "note": "Fishing area scenery; listed for reference only."
+  },
+  "Tackle Box": {
+   "placeable": false,
+   "note": "Fishing area scenery; listed for reference only."
+  },
+  "Train station (farm)": {
+   "placeable": false,
+   "note": "Fixed scenery; listed for reference only."
+  },
+  "Leaderboard": {
+   "placeable": false,
+   "note": "Fixed scenery; listed for reference only."
+  },
+  "Alpaca House": {
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Bird House": {
+   "provisional_footprint": [
+    1,
+    1
+   ]
+  },
+  "Bunny House": {
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Cat House": {
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Dog House": {
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Donkey Stable": {
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Guinea Pig House": {
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Horse Stable": {
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Kitten House": {
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Puppy House": {
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Nectar Bush": {
+   "provisional_footprint": [
+    1,
+    1
+   ]
+  },
+  "Peanut Bush": {
+   "provisional_footprint": [
+    1,
+    1
+   ]
+  },
+  "Small decorative tree (leaf/pine)": {
+   "name": "Small obstacle tree",
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "note": "Natural obstacle that is cleared rather than placed."
+  },
+  "Big decorative tree (leaf/pine)": {
+   "name": "Big obstacle tree",
+   "provisional_footprint": [
+    2,
+    2
+   ],
+   "note": "Natural obstacle that is cleared rather than placed."
+  },
+  "Small rock": {
+   "provisional_footprint": [
+    1,
+    1
+   ]
+  },
+  "Rock cluster": {
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Pond (natural)": {
+   "name": "Natural pond",
+   "provisional_footprint": [
+    2,
+    2
+   ]
+  },
+  "Mine": {
+   "movable": false,
+   "flippable": false,
+   "note": "The Mine sits on the cliff and cannot be moved or rotated (PLACEMENT_RESEARCH.md)."
+  }
+ },
+ "extra_items": [
+  {
+   "id": "plan_reserve_1x1",
+   "name": "Reserved space 1×1",
+   "category": "planning",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "original",
+   "data_status": "original",
+   "notes": "Editor-only planning marker: reserve tiles for something you will build later. Not a game item.",
+   "tags": [
+    "editor",
+    "reserve"
+   ]
+  },
+  {
+   "id": "plan_reserve_2x2",
+   "name": "Reserved space 2×2",
+   "category": "planning",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "original",
+   "data_status": "original",
+   "notes": "Editor-only planning marker (e.g. a future 2×2 production building). Not a game item.",
+   "tags": [
+    "editor",
+    "reserve"
+   ]
+  },
+  {
+   "id": "plan_reserve_3x3",
+   "name": "Reserved space 3×3",
+   "category": "planning",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "original",
+   "data_status": "original",
+   "notes": "Editor-only planning marker (e.g. a future 3×3 production building). Not a game item.",
+   "tags": [
+    "editor",
+    "reserve"
+   ]
+  },
+  {
+   "id": "plan_reserve_4x4",
+   "name": "Reserved space 4×4",
+   "category": "planning",
+   "footprint": [
+    4,
+    4
+   ],
+   "footprint_status": "original",
+   "data_status": "original",
+   "notes": "Editor-only planning marker (e.g. a future animal pen). Not a game item.",
+   "tags": [
+    "editor",
+    "reserve"
+   ]
+  },
+  {
+   "id": "plan_reserve_3x2",
+   "name": "Reserved space 3×2",
+   "category": "planning",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "original",
+   "data_status": "original",
+   "flippable": true,
+   "notes": "Editor-only planning marker. Not a game item.",
+   "tags": [
+    "editor",
+    "reserve"
+   ]
+  }
+ ]
+}

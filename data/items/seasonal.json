@@ -1,0 +1,5666 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "baby_plant",
+   "name": "Baby plant",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D0%B8%D1%89%D0%BD%D0%BE%D0%B5_%D1%80%D0%B0%D1%81%D1%82%D0%B5%D0%BD%D0%B8%D0%B5"
+   ],
+   "notes": "game_id=Baby plant; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; added: Autumn update 2025"
+  },
+  {
+   "id": "balcony_serenade",
+   "name": "Balcony serenade",
+   "category": "seasonal",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B5%D1%80%D0%B5%D0%BD%D0%B0%D0%B4%D0%B0_%D0%BF%D0%BE%D0%B4_%D0%B1%D0%B0%D0%BB%D0%BA%D0%BE%D0%BD%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Balcony serenade; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; added: Winter update 2024"
+  },
+  {
+   "id": "bamboo_patch",
+   "name": "Bamboo patch",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D0%BC%D0%B1%D1%83%D0%BA"
+   ],
+   "notes": "game_id=China Bamboo; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: Farm Pass; added: Winter update 2019; en list: Calendar"
+  },
+  {
+   "id": "bamboo_pavilion",
+   "name": "Bamboo pavilion",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D0%BC%D0%B1%D1%83%D0%BA%D0%BE%D0%B2%D1%8B%D0%B9_%D0%BF%D0%B0%D0%B2%D0%B8%D0%BB%D1%8C%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=China Pavilion; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer, Farm Pass; added: Winter update 2019; en list: Packages"
+  },
+  {
+   "id": "barrel_organ",
+   "name": "Barrel organ",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%80%D0%BC%D0%B0%D0%BD%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Organ Grinder; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: global event, Farm Pass; added: Winter update 2019; en list: Events"
+  },
+  {
+   "id": "beach_board",
+   "name": "Beach board",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%81%D0%BA%D0%B0_%D0%B4%D0%BB%D1%8F_%D1%81%D1%91%D1%80%D1%84%D0%B8%D0%BD%D0%B3%D0%B0"
+   ],
+   "notes": "game_id=Beach Board; level 1 = no level gate recorded (non-shop item); seasonal=Summer; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Summer update 2021"
+  },
+  {
+   "id": "beach_corals",
+   "name": "Beach corals",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D1%8F%D0%B6%D0%BD%D1%8B%D0%B5_%D0%BA%D0%BE%D1%80%D0%B0%D0%BB%D0%BB%D1%8B"
+   ],
+   "notes": "game_id=Beach corals; level 1 = no level gate recorded (non-shop item); seasonal=Summer; reward/special decoration; obtained via: global event, special-currency event, other; added: Summer update 2023"
+  },
+  {
+   "id": "beach_kites",
+   "name": "Beach kites",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D1%8F%D0%B6%D0%BD%D1%8B%D0%B5_%D0%B7%D0%BC%D0%B5%D0%B8"
+   ],
+   "notes": "game_id=Beach Kites; level 1 = no level gate recorded (non-shop item); seasonal=Summer; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Summer update 2021"
+  },
+  {
+   "id": "bouquet_stand",
+   "name": "Bouquet stand",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "320 film (event currency)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D0%BA%D0%B8%D0%BE%D1%81%D0%BA"
+   ],
+   "notes": "game_id=Heartwarming bouquets; seasonal=Valentine's Day; obtained via: design contest; added: Winter update 2024"
+  },
+  {
+   "id": "broomsticks",
+   "name": "Broomsticks",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D1%91%D1%82%D0%BB%D1%8B"
+   ],
+   "notes": "game_id=Broomsticks; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: global event, currency-shop offer; added: Autumn update 2020"
+  },
+  {
+   "id": "bubbling_cauldron",
+   "name": "Bubbling cauldron",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D0%BF%D1%8F%D1%89%D0%B8%D0%B9_%D0%BA%D0%BE%D1%82%D1%91%D0%BB"
+   ],
+   "notes": "game_id=Cauldron; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Autumn update 2020; en list: Pass Road; en wiki spells it 'Bubbling Caldron'"
+  },
+  {
+   "id": "bunny_flowerpot",
+   "name": "Bunny flowerpot",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 45,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B0%D0%B7%D0%BE%D0%BD_%D1%81_%D0%BA%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Easter_flowers; seasonal=Easter; reward/special decoration; obtained via: currency-shop offer, global event, shop; added: Spring update 2017; en list: Seasonal cost '45 [dia]'"
+  },
+  {
+   "id": "bunny_gnome",
+   "name": "Bunny gnome",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BD%D0%BE%D0%BC_%D1%81_%D0%BA%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Bunny Gnome; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Spring update 2020; en list: Packages"
+  },
+  {
+   "id": "bunny_guardians",
+   "name": "Bunny guardians",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%D0%B8_%D0%BD%D0%B0_%D1%83%D0%B4%D0%B0%D1%87%D1%83"
+   ],
+   "notes": "game_id=Bunny guardians; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: currency-shop offer, task event; added: Winter update 2022"
+  },
+  {
+   "id": "bunny_scroll",
+   "name": "Bunny scroll",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B8%D1%82%D0%BE%D0%BA_%D1%81_%D0%BA%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Bunny scroll; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; added: Winter update 2022"
+  },
+  {
+   "id": "calming_tea",
+   "name": "Calming tea",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A7%D0%B0%D0%B9%D0%BD%D0%B0%D1%8F_%D1%86%D0%B5%D1%80%D0%B5%D0%BC%D0%BE%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=CNY Teaparty; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: global event; added: Winter update 2021"
+  },
+  {
+   "id": "campfire_kettle",
+   "name": "Campfire kettle",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A7%D0%B0%D0%B9%D0%BD%D0%B8%D0%BA_%D0%B4%D0%BB%D1%8F_%D0%BA%D0%BE%D1%81%D1%82%D1%80%D0%B0"
+   ],
+   "notes": "game_id=CampKettle; level 1 = no level gate recorded (non-shop item); seasonal=Autumn; obtained via: currency-shop offer, movie night (ads), Farm Pass; added: Autumn update 2017; en list: Packages"
+  },
+  {
+   "id": "candy_cane_bench",
+   "name": "Candy cane bench",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 20,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "30 green voucher + 2 purple voucher"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B5%D0%B4%D0%B5%D0%BD%D1%86%D0%BE%D0%B2%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Candycane Bench; seasonal=Christmas; obtained via: shop; added: Winter update 2016; en list: Seasonal cost '2 [purplev] 30 [greenv]'"
+  },
+  {
+   "id": "candy_cauldron",
+   "name": "Candy Cauldron",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 15,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D1%82%D1%91%D0%BB_%D1%81%D0%BE_%D1%81%D0%BB%D0%B0%D0%B4%D0%BE%D1%81%D1%82%D1%8F%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=HalloweenCauldron; seasonal=Halloween; obtained via: shop; en list: Seasonal cost '15 [dia]'"
+  },
+  {
+   "id": "candy_pole",
+   "name": "Candy Pole",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 1000,
+    "diamonds": null,
+    "other": "+200 coins per additional purchase"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%80%D0%B0%D0%BC%D0%B5%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D1%82%D1%80%D0%BE%D1%81%D1%82%D1%8C"
+   ],
+   "notes": "game_id=CandyPole; seasonal=Christmas; obtained via: shop; en list: Seasonal cost '1,000 [coin] +200 per purchase'"
+  },
+  {
+   "id": "canvas_tent",
+   "name": "Canvas tent",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D1%80%D0%B5%D0%B7%D0%B5%D0%BD%D1%82%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BF%D0%B0%D0%BB%D0%B0%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=CampTent; level 1 = no level gate recorded (non-shop item); seasonal=Autumn; obtained via: currency-shop offer, movie night (ads); added: Autumn update 2017; en list: Packages"
+  },
+  {
+   "id": "carved_dragon",
+   "name": "Carved dragon",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B5%D0%B7%D0%BD%D0%BE%D0%B9_%D0%B4%D1%80%D0%B0%D0%BA%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=Carved dragon; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; added: Spring update 2024"
+  },
+  {
+   "id": "carved_pumpkin",
+   "name": "Carved pumpkin",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D1%8C_%D0%B8%D0%B7_%D1%82%D1%8B%D0%BA%D0%B2%D1%8B"
+   ],
+   "notes": "game_id=Carved pumpkin; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer; added: Autumn update 2022; en list: Packages"
+  },
+  {
+   "id": "cemetery_gate",
+   "name": "Cemetery gate",
+   "category": "seasonal",
+   "footprint": [
+    3,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 30,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BB%D0%B0%D0%B4%D0%B1%D0%B8%D1%89%D0%B5%D0%BD%D1%81%D0%BA%D0%B8%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=HalloweenGate; seasonal=Halloween; obtained via: currency-shop offer, special-currency event, shop; added: Autumn update 2017; en list: Seasonal cost '30 [dia]'"
+  },
+  {
+   "id": "cemetery_lamp",
+   "name": "Cemetery lamp",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 2500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BB%D0%B0%D0%B4%D0%B1%D0%B8%D1%89%D0%B5%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D1%8C"
+   ],
+   "notes": "game_id=HalloweenLantern; seasonal=Halloween; obtained via: special-currency event, shop; added: Autumn update 2017; en list: Seasonal cost '2,500 [coin] +250 per purchase'"
+  },
+  {
+   "id": "chick_nest",
+   "name": "Chick nest",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 35,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%83%D1%80%D0%B8%D0%BD%D0%BE%D0%B5_%D0%B3%D0%BD%D1%91%D0%B7%D0%B4%D1%8B%D1%88%D0%BA%D0%BE"
+   ],
+   "notes": "game_id=ChickNest; seasonal=Easter; obtained via: currency-shop offer, shop; added: Spring update 2016; en list: Seasonal cost '35 [dia]'"
+  },
+  {
+   "id": "chicken_balloon",
+   "name": "Chicken Balloon",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 12,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%80%D0%B8%D0%BA-%D0%BA%D1%83%D1%80%D0%B8%D1%86%D0%B0"
+   ],
+   "notes": "game_id=BalloonChicken; seasonal=New Year; obtained via: shop; en list: Seasonal cost '12 [dia]'"
+  },
+  {
+   "id": "chinese_gate",
+   "name": "Chinese gate",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D1%82%D0%B0%D0%B9%D1%81%D0%BA%D0%B8%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=CNYGate; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: currency-shop offer; added: Spring update 2017; en list: Packages"
+  },
+  {
+   "id": "chocolate_bunny",
+   "name": "Chocolate bunny",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%BE%D0%BA%D0%BE%D0%BB%D0%B0%D0%B4%D0%BD%D1%8B%D0%B9_%D0%BA%D1%80%D0%BE%D0%BB%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=ChocoBunny; seasonal=Easter; obtained via: currency-shop offer, global event, shop; added: Spring update 2016; en list: Seasonal cost '90 [dia]'"
+  },
+  {
+   "id": "classical_medalists",
+   "name": "Classical medalists",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%BB%D0%B8%D0%BC%D0%BF%D0%B8%D0%B9%D1%81%D0%BA%D0%B8%D0%B5_%D0%BC%D0%B5%D0%B4%D0%B0%D0%BB%D0%B8%D1%81%D1%82%D1%8B"
+   ],
+   "notes": "game_id=Olympic metalists; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "colorful_fans",
+   "name": "Colorful fans",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B7%D0%BD%D0%BE%D1%86%D0%B2%D0%B5%D1%82%D0%BD%D1%8B%D0%B5_%D0%B2%D0%B5%D0%B5%D1%80%D1%8B"
+   ],
+   "notes": "game_id=CNY Fans; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "cow_balloon",
+   "name": "Cow Balloon",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 12,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%80%D0%B8%D0%BA-%D0%BA%D0%BE%D1%80%D0%BE%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=BalloonCow; seasonal=New Year; obtained via: shop; en list: Seasonal cost '12 [dia]'"
+  },
+  {
+   "id": "cozy_fireplace",
+   "name": "Cozy fireplace",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D1%8E%D1%82%D0%BD%D1%8B%D0%B9_%D0%BA%D0%B0%D0%BC%D0%B8%D0%BD"
+   ],
+   "notes": "game_id=Fireplace; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: currency-shop offer, global event, special-currency event, Farm Pass; added: Winter update 2019; en list: Packages"
+  },
+  {
+   "id": "crab_hideout",
+   "name": "Crab hideout",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D0%BA%D1%80%D1%8B%D1%82%D0%B8%D0%B5_%D0%BA%D1%80%D0%B0%D0%B1%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Crab hideout; level 1 = no level gate recorded (non-shop item); seasonal=Summer; reward/special decoration; obtained via: global event, currency-shop offer; added: Summer update 2023"
+  },
+  {
+   "id": "creepy_bed",
+   "name": "Creepy bed",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%88%D0%BD%D0%B0%D1%8F_%D0%BA%D1%80%D0%BE%D0%B2%D0%B0%D1%82%D1%8C"
+   ],
+   "notes": "game_id=Creepy bed; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; added: Autumn update 2025"
+  },
+  {
+   "id": "creepy_cave",
+   "name": "Creepy cave",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "400 film (event currency)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%88%D0%BD%D0%B0%D1%8F_%D0%BF%D0%B5%D1%89%D0%B5%D1%80%D0%B0"
+   ],
+   "notes": "game_id=Creepy cave; seasonal=Halloween; obtained via: design contest; added: Autumn update 2025"
+  },
+  {
+   "id": "creepy_clock",
+   "name": "Creepy clock",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%88%D0%BD%D1%8B%D0%B5_%D1%87%D0%B0%D1%81%D1%8B"
+   ],
+   "notes": "game_id=Creppy clock; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; added: Autumn update 2025"
+  },
+  {
+   "id": "creepy_mirror",
+   "name": "Creepy mirror",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%88%D0%BD%D0%BE%D0%B5_%D0%B7%D0%B5%D1%80%D0%BA%D0%B0%D0%BB%D0%BE"
+   ],
+   "notes": "game_id=Creepy mirror; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; obtained via: Farm Pass; added: Autumn update 2025"
+  },
+  {
+   "id": "crescent_swing",
+   "name": "Crescent swing",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%87%D0%B5%D0%BB%D0%B8_%D1%81_%D0%BF%D0%BE%D0%BB%D1%83%D0%BC%D0%B5%D1%81%D1%8F%D1%86%D0%B5%D0%BC"
+   ],
+   "notes": "game_id=Crescent swing; level 1 = no level gate recorded (non-shop item); seasonal=Ramadan; reward/special decoration; obtained via: currency-shop offer, other, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "crescent_tent",
+   "name": "Crescent tent",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%82%D1%91%D1%80_%D1%81_%D0%BF%D0%BE%D0%BB%D1%83%D0%BC%D0%B5%D1%81%D1%8F%D1%86%D0%B5%D0%BC"
+   ],
+   "notes": "game_id=Crescent tent; level 1 = no level gate recorded (non-shop item); seasonal=Ramadan; reward/special decoration; obtained via: currency-shop offer, other, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "cuckoo_clock",
+   "name": "Cuckoo clock",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A7%D0%B0%D1%81%D1%8B_%D1%81_%D0%BA%D1%83%D0%BA%D1%83%D1%88%D0%BA%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=Cuckoo clock; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2023"
+  },
+  {
+   "id": "cupid_statue",
+   "name": "Cupid Statue",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%83%D0%BF%D0%B8%D0%B4%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=ValentinesCupidStatue; seasonal=Valentine's Day; obtained via: currency-shop offer, global event, shop; en list: Ornaments L1 cost '90 [dia]'"
+  },
+  {
+   "id": "cupid_s_bench",
+   "name": "Cupid's bench",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "200 film (event currency)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0_%D0%9A%D1%83%D0%BF%D0%B8%D0%B4%D0%BE%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Cupid's bench; seasonal=Valentine's Day; obtained via: design contest; added: Winter update 2024"
+  },
+  {
+   "id": "cupid_s_cannon",
+   "name": "Cupid's cannon",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%83%D1%88%D0%BA%D0%B0_%D1%81_%D1%81%D0%B5%D1%80%D0%B4%D0%B5%D1%87%D0%BA%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Cupid's cannon; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; added: Winter update 2024"
+  },
+  {
+   "id": "curling_ring",
+   "name": "Curling ring",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D0%BE%D1%89%D0%B0%D0%B4%D0%BA%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%BA%D1%91%D1%80%D0%BB%D0%B8%D0%BD%D0%B3%D0%B0"
+   ],
+   "notes": "game_id=Curling rink; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Winter update 2022"
+  },
+  {
+   "id": "dance_floor",
+   "name": "Dance floor",
+   "category": "seasonal",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B0%D0%BD%D1%86%D0%BF%D0%BB%D0%BE%D1%89%D0%B0%D0%B4%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Dance floor; level 1 = no level gate recorded (non-shop item); seasonal=New Year; added: Winter update 2024"
+  },
+  {
+   "id": "delivish_magician",
+   "name": "Delivish magician",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%B2%D0%B0%D1%80%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BA%D1%83%D1%81%D0%BD%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Devilish megician; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; added: Autumn update 2025"
+  },
+  {
+   "id": "delivish_stilt_walker",
+   "name": "Delivish stilt walker",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D1%8C%D1%8F%D0%B2%D0%BE%D0%BB%D1%8C%D1%81%D0%BA%D0%B8%D0%B5_%D1%85%D0%BE%D0%B4%D1%83%D0%BB%D0%B8"
+   ],
+   "notes": "game_id=Devilish stilt walker; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; added: Autumn update 2025"
+  },
+  {
+   "id": "devilish_target_practice",
+   "name": "Devilish target practice",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 399,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D1%8C%D1%8F%D0%B2%D0%BE%D0%BB%D1%8C%D1%81%D0%BA%D0%B8%D0%B9_%D1%82%D0%B8%D1%80"
+   ],
+   "notes": "seasonal=Halloween; obtained via: shop, monthly decoration; added: Autumn update 2025"
+  },
+  {
+   "id": "disco_ball",
+   "name": "Disco ball",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B8%D1%81%D0%BA%D0%BE-%D1%88%D0%B0%D1%80"
+   ],
+   "notes": "game_id=Disco chicken; level 1 = no level gate recorded (non-shop item); seasonal=New Year; added: Winter update 2024"
+  },
+  {
+   "id": "dog_statue",
+   "name": "Dog statue",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B0%D1%82%D1%83%D1%8F_%D1%81%D0%BE%D0%B1%D0%B0%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=CNYGDogStatue; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer, Farm Pass; added: Winter update 2017; en list: Packages"
+  },
+  {
+   "id": "dragon_chase",
+   "name": "Dragon chase",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%85%D0%BE%D1%82%D0%B0_%D0%BD%D0%B0_%D0%B4%D1%80%D0%B0%D0%BA%D0%BE%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Dragon chase; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; added: Winter update 2023"
+  },
+  {
+   "id": "dragon_dance",
+   "name": "Dragon dance",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B0%D0%BD%D0%B5%D1%86_%D0%B4%D1%80%D0%B0%D0%BA%D0%BE%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Dragon dance; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; added: Winter update 2023"
+  },
+  {
+   "id": "dragon_swing",
+   "name": "Dragon swing",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%87%D0%B5%D0%BB%D0%B8-%D0%B4%D1%80%D0%B0%D0%BA%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=Dragon swing; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; added: Winter update 2023"
+  },
+  {
+   "id": "drummer_boys",
+   "name": "Drummer boys",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D1%80%D0%B0%D0%B1%D0%B0%D0%BD%D1%89%D0%B8%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Drummer boys; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, themed box; added: Winter update 2022"
+  },
+  {
+   "id": "easter_arch",
+   "name": "Easter arch",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D0%B0%D1%80%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Easter arch; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; added: Winter update 2022"
+  },
+  {
+   "id": "easter_balloon",
+   "name": "Easter balloon",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D1%88%D0%B0%D1%80"
+   ],
+   "notes": "game_id=Easter balloon; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: special-currency event, currency-shop offer, Farm Pass; added: Winter update 2022"
+  },
+  {
+   "id": "easter_basket",
+   "name": "Easter Basket",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 45,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D0%BA%D0%BE%D1%80%D0%B7%D0%B8%D0%BD%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=EasterBasket; seasonal=Easter; obtained via: special-currency event, global event, shop; en list: Seasonal cost '45 [dia]'"
+  },
+  {
+   "id": "easter_egg",
+   "name": "Easter egg",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 30,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B5_%D1%8F%D0%B9%D1%86%D0%BE"
+   ],
+   "notes": "game_id=EasterBigEgg; seasonal=Easter; obtained via: currency-shop offer, shop; added: Winter update 2017; en list: Seasonal cost '30 [dia]'"
+  },
+  {
+   "id": "easter_gate",
+   "name": "Easter gate",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=EasterGate; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: special-currency event, Farm Pass, currency-shop offer, global event; added: Winter update 2017; en list: Events"
+  },
+  {
+   "id": "easter_gnome",
+   "name": "Easter gnome",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D0%B3%D0%BD%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=EasterGnome; level 1 = no level gate recorded (non-shop item); seasonal=Easter; obtained via: currency-shop offer, Farm Pass; added: Winter update 2017; en list: Packages"
+  },
+  {
+   "id": "easter_planter",
+   "name": "Easter planter",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D1%80%D0%B7%D0%B8%D0%BD%D0%B0_%D1%81_%D0%BF%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%BC%D0%B8_%D1%8F%D0%B9%D1%86%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Easter planter; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "easter_surprise",
+   "name": "Easter surprise",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D1%81%D1%8E%D1%80%D0%BF%D1%80%D0%B8%D0%B7"
+   ],
+   "notes": "game_id=Easter Surprise; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: global event; added: Spring update 2020"
+  },
+  {
+   "id": "easter_topiary",
+   "name": "Easter topiary",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D1%82%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9"
+   ],
+   "notes": "game_id=Bunny Topiary; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Spring update 2020; en list: Packages"
+  },
+  {
+   "id": "easter_tree",
+   "name": "Easter Tree",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 45,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%81%D1%85%D0%B0%D0%BB%D1%8C%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=EasterTree; seasonal=Easter; obtained via: global event, shop; en list: Packages/Seasonal cost '45 [dia]'"
+  },
+  {
+   "id": "egg_carriage",
+   "name": "Egg carriage",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "320 film (event currency)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D0%BA%D0%B0%D1%80%D0%B5%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Easter carriage; seasonal=Easter; obtained via: design contest; added: Winter update 2024"
+  },
+  {
+   "id": "egg_cutout",
+   "name": "Egg cutout",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%D0%B8_%D0%B8_%D1%8F%D0%B9%D1%86%D0%B0"
+   ],
+   "notes": "game_id=Easter cutout; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "egg_lantern",
+   "name": "Egg lantern",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D1%8C-%D1%8F%D0%B9%D1%86%D0%BE"
+   ],
+   "notes": "game_id=Easter egglamp; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: special-currency event, currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "egg_painting",
+   "name": "Egg painting",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A3%D0%BA%D1%80%D0%B0%D1%88%D0%B5%D0%BD%D0%B8%D0%B5_%D1%8F%D0%B8%D1%86"
+   ],
+   "notes": "game_id=Easter eggpainting; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Winter update 2021"
+  },
+  {
+   "id": "egg_tree",
+   "name": "Egg tree",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_%D1%81_%D1%8F%D0%B9%D1%86%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=EasterEggTree; level 1 = no level gate recorded (non-shop item); seasonal=Easter; obtained via: special-currency event, currency-shop offer; added: Winter update 2017"
+  },
+  {
+   "id": "fall_weathervane",
+   "name": "Fall weathervane",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D1%84%D0%BB%D1%8E%D0%B3%D0%B5%D1%80"
+   ],
+   "notes": "game_id=Fall Weathervane; level 1 = no level gate recorded (non-shop item); seasonal=Autumn; reward/special decoration; obtained via: currency-shop offer; added: Autumn update 2021"
+  },
+  {
+   "id": "festive_swing",
+   "name": "Festive swing",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D1%8B%D0%B5_%D0%BA%D0%B0%D1%87%D0%B5%D0%BB%D0%B8"
+   ],
+   "notes": "game_id=XmasSwing; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: special-currency event; added: Winter update 2017; en list: Events"
+  },
+  {
+   "id": "figure_skater_gnome",
+   "name": "Figure skater gnome",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BD%D0%BE%D0%BC_%D0%BD%D0%B0_%D0%BA%D0%BE%D0%BD%D1%8C%D0%BA%D0%B0%D1%85"
+   ],
+   "notes": "game_id=Figureskater gnome; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: Farm Pass, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "fireworks",
+   "name": "Fireworks",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B5%D0%B9%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Fireworks; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: currency-shop offer, global event, special-currency event; added: Winter update 2016; en list: Seasonal cost '90 [dia]'"
+  },
+  {
+   "id": "flying_witch_gnome",
+   "name": "Flying witch gnome",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BD%D0%BE%D0%BC-%D0%B2%D0%B5%D0%B4%D1%8C%D0%BC%D0%B0_%D0%BD%D0%B0_%D0%BC%D0%B5%D1%82%D0%BB%D0%B5"
+   ],
+   "notes": "game_id=Flying_gnome_witch; level 1 = no level gate recorded (non-shop item); requires reputation level 1; seasonal=Halloween; obtained via: currency-shop offer, task event; added: Autumn update 2023"
+  },
+  {
+   "id": "frankenstraw",
+   "name": "Frankenstraw",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D0%BA%D1%82%D0%BE%D1%80_%D0%A4%D1%80%D0%B0%D0%BD%D0%BA%D0%B5%D0%BD%D1%81%D0%B2%D0%B8%D0%BD"
+   ],
+   "notes": "game_id=Frankenstraw; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; obtained via: county fair; added: Autumn update 2025"
+  },
+  {
+   "id": "gargoyle",
+   "name": "Gargoyle",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%B0%D1%80%D0%B3%D1%83%D0%BB%D1%8C%D1%8F"
+   ],
+   "notes": "game_id=HalloweenGargoyle; seasonal=Halloween; obtained via: currency-shop offer, global event, shop; en list: Seasonal cost '90 [dia]'"
+  },
+  {
+   "id": "ghostly_stove",
+   "name": "Ghostly stove",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D1%83%D1%82%D0%BA%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Ghostly stove; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; obtained via: other; added: Autumn update 2025"
+  },
+  {
+   "id": "ghostly_theater",
+   "name": "Ghostly theater",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B8%D0%B7%D1%80%D0%B0%D1%87%D0%BD%D1%8B%D0%B9_%D1%82%D0%B5%D0%B0%D1%82%D1%80"
+   ],
+   "notes": "game_id=Ghostly theater; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; added: Autumn update 2025"
+  },
+  {
+   "id": "gift_arch",
+   "name": "Gift arch",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%BF%D0%BE%D0%B4%D0%B0%D1%80%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Gift arch; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; added: Winter update 2023"
+  },
+  {
+   "id": "gift_lamp",
+   "name": "Gift lamp",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BE%D0%BD%D0%B0%D1%80%D1%8C_%D0%B8%D0%B7_%D0%BF%D0%BE%D0%B4%D0%B0%D1%80%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Gift lamp; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; added: Winter update 2023"
+  },
+  {
+   "id": "gift_station",
+   "name": "Gift station",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%BE%D0%BB_%D0%B4%D0%BB%D1%8F_%D1%83%D0%BF%D0%B0%D0%BA%D0%BE%D0%B2%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Winter Wrappingstation; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: decoration set, global event; added: Winter update 2021"
+  },
+  {
+   "id": "gift_tree",
+   "name": "Gift tree",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BE%D1%80%D0%B0_%D0%BF%D0%BE%D0%B4%D0%B0%D1%80%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Gift tree; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: global event, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "gingerbread_house",
+   "name": "Gingerbread house",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D1%8F%D0%BD%D0%B8%D1%87%D0%BD%D1%8B%D0%B9_%D0%B4%D0%BE%D0%BC%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Gingerbread House; seasonal=Christmas; reward/special decoration; obtained via: global event, shop; added: Winter update 2016; en list: Seasonal cost '90 [dia]'"
+  },
+  {
+   "id": "gingerbread_man",
+   "name": "Gingerbread man",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 10,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D1%8F%D0%BD%D0%B8%D1%87%D0%BD%D1%8B%D0%B9_%D0%BC%D0%B0%D0%BB%D1%8C%D1%87%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Gingerbread Man; seasonal=Christmas; obtained via: shop; added: Winter update 2016; en list: Seasonal cost '10 [dia]'"
+  },
+  {
+   "id": "gingerbread_woman",
+   "name": "Gingerbread woman",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 10,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D1%8F%D0%BD%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D0%B4%D0%B5%D0%B2%D0%BE%D1%87%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Gingerbread Lady; seasonal=Christmas; obtained via: shop; added: Winter update 2016; en list: Seasonal cost '10 [dia]'"
+  },
+  {
+   "id": "gnome_house",
+   "name": "Gnome house",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D0%BC%D0%B8%D0%BA_%D0%B3%D0%BD%D0%BE%D0%BC%D0%B0"
+   ],
+   "notes": "game_id=GnomeHouse1; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; obtained via: currency-shop offer; added: Autumn update 2017; en list: Packages"
+  },
+  {
+   "id": "gnome_witch",
+   "name": "Gnome witch",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BD%D0%BE%D0%BC-%D0%B2%D0%B5%D0%B4%D1%8C%D0%BC%D0%B0"
+   ],
+   "notes": "game_id=GnomeWitch; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; obtained via: currency-shop offer, Farm Pass; added: Autumn update 2017; en list: Packages"
+  },
+  {
+   "id": "gold_vase",
+   "name": "Gold vase",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%B0%D1%8F_%D0%B2%D0%B0%D0%B7%D0%B0"
+   ],
+   "notes": "game_id=China Flowerpot; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer, Farm Pass; added: Winter update 2019; en list: Packages"
+  },
+  {
+   "id": "golden_telescope",
+   "name": "Golden Telescope",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%BE%D0%B9_%D1%82%D0%B5%D0%BB%D0%B5%D1%81%D0%BA%D0%BE%D0%BF"
+   ],
+   "notes": "game_id=NewYearTelescope; seasonal=New Year; obtained via: global event, shop, gift; en list: Seasonal cost '90 [dia]'"
+  },
+  {
+   "id": "gramophone",
+   "name": "Gramophone",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D1%80%D0%B0%D0%BC%D0%BC%D0%BE%D1%84%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=Gramophone; seasonal=New Year; obtained via: global event, movie night (ads), shop; en list: Ornaments L1 cost '90 [dia]'"
+  },
+  {
+   "id": "grandfather_clock",
+   "name": "Grandfather clock",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B0%D1%80%D0%B8%D0%BD%D0%BD%D1%8B%D0%B5_%D1%87%D0%B0%D1%81%D1%8B"
+   ],
+   "notes": "game_id=NYEClock; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: currency-shop offer, global event; added: Winter update 2017"
+  },
+  {
+   "id": "grandma_plant",
+   "name": "Grandma plant",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D0%BE%D0%BA-%D0%B1%D0%B0%D0%B1%D1%83%D1%88%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Grandma_plant; level 1 = no level gate recorded (non-shop item); requires reputation level 1; seasonal=Halloween; obtained via: currency-shop offer, task event; added: Autumn update 2023"
+  },
+  {
+   "id": "group_of_hearts",
+   "name": "Group of hearts",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B5%D1%80%D0%B4%D0%B5%D1%87%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Group of hearts; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; obtained via: task event, Farm Pass; added: Spring update 2024"
+  },
+  {
+   "id": "halloween_altar",
+   "name": "Halloween altar",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D0%B5%D0%BB%D0%BB%D0%BE%D1%83%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D0%B0%D0%BB%D1%82%D0%B0%D1%80%D1%8C"
+   ],
+   "notes": "game_id=Altar; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Autumn update 2020; en list: Pass Road; en wiki spells it 'Halloween Alter'"
+  },
+  {
+   "id": "halloween_grave",
+   "name": "Halloween grave",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D0%B5%D0%BB%D0%BB%D0%BE%D1%83%D0%B8%D0%BD%D1%81%D0%BA%D0%B0%D1%8F_%D0%BC%D0%BE%D0%B3%D0%B8%D0%BB%D0%B0"
+   ],
+   "notes": "game_id=HalloweenGrave; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer, task event; added: Autumn update 2019; en list: Calendar"
+  },
+  {
+   "id": "harvest_lanterns",
+   "name": "Harvest lanterns",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B5_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D0%B8"
+   ],
+   "notes": "game_id=Autumn Lanterns; level 1 = no level gate recorded (non-shop item); seasonal=Autumn; reward/special decoration; obtained via: currency-shop offer; added: Autumn update 2021"
+  },
+  {
+   "id": "harvest_vase",
+   "name": "Harvest vase",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D1%8F%D1%8F_%D0%B2%D0%B0%D0%B7%D0%B0"
+   ],
+   "notes": "game_id=Autumn Vase; level 1 = no level gate recorded (non-shop item); seasonal=Autumn; reward/special decoration; obtained via: currency-shop offer; added: Autumn update 2021"
+  },
+  {
+   "id": "harvest_wheelbarrow",
+   "name": "Harvest wheelbarrow",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B0%D1%87%D0%BA%D0%B0_%D1%81_%D1%83%D1%80%D0%BE%D0%B6%D0%B0%D0%B5%D0%BC"
+   ],
+   "notes": "game_id=Autumn Wheelbarrow; level 1 = no level gate recorded (non-shop item); seasonal=Autumn; reward/special decoration; obtained via: currency-shop offer, movie night (ads); added: Autumn update 2021"
+  },
+  {
+   "id": "haunted_birdhouse",
+   "name": "Haunted Birdhouse",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 20,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D0%BC%D0%B8%D0%BA_%D1%81_%D0%BF%D1%80%D0%B8%D0%B2%D0%B8%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=HalloweenBirdhouse; seasonal=Halloween; obtained via: currency-shop offer, shop; en list: Seasonal cost '20 [dia]'"
+  },
+  {
+   "id": "heart_balloon",
+   "name": "Heart balloon",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D0%B7%D0%B4%D1%83%D1%88%D0%BD%D1%8B%D0%B9_%D1%88%D0%B0%D1%80-%D1%81%D0%B5%D1%80%D0%B4%D1%86%D0%B5"
+   ],
+   "notes": "game_id=Heart balloon; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; added: Winter update 2024"
+  },
+  {
+   "id": "heart_bench",
+   "name": "Heart Bench",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0_%D1%81_%D1%81%D0%B5%D1%80%D0%B4%D1%86%D0%B5%D0%BC"
+   ],
+   "notes": "game_id=Valentine's Gardenbench; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: Farm Pass, global event; added: Spring update 2020; en list: Events"
+  },
+  {
+   "id": "heart_gate",
+   "name": "Heart gate",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D1%80%D0%BE%D1%82%D0%B0_%D0%B2_%D1%84%D0%BE%D1%80%D0%BC%D0%B5_%D1%81%D0%B5%D1%80%D0%B4%D1%86%D0%B0"
+   ],
+   "notes": "game_id=ValentinesGate; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: currency-shop offer, global event; added: Winter update 2017; en list: Events"
+  },
+  {
+   "id": "heartwarming_gift",
+   "name": "Heartwarming gift",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%B4%D0%B0%D1%80%D0%BE%D0%BA_%D0%B2_%D1%84%D0%BE%D1%80%D0%BC%D0%B5_%D1%81%D0%B5%D1%80%D0%B4%D1%86%D0%B0"
+   ],
+   "notes": "game_id=Heartwarming gift; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; added: Winter update 2024"
+  },
+  {
+   "id": "hidden_eggs",
+   "name": "Hidden eggs",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BF%D1%80%D1%8F%D1%82%D0%B0%D0%BD%D0%BD%D1%8B%D0%B5_%D1%8F%D0%B9%D1%86%D0%B0"
+   ],
+   "notes": "game_id=EasterGrass; level 1 = no level gate recorded (non-shop item); seasonal=Easter; obtained via: currency-shop offer, global event; added: Winter update 2017; en list: Packages"
+  },
+  {
+   "id": "hide_and_seek",
+   "name": "Hide and seek",
+   "category": "seasonal",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%B3%D1%80%D0%B0_%D0%B2_%D0%BF%D1%80%D1%8F%D1%82%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Hide and seek; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; obtained via: Farm Pass; added: Autumn update 2025"
+  },
+  {
+   "id": "hiding_dragon",
+   "name": "Hiding dragon",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D1%82%D0%B0%D0%B8%D0%B2%D1%88%D0%B8%D0%B9%D1%81%D1%8F_%D0%B4%D1%80%D0%B0%D0%BA%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=Drain dragon; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; added: Winter update 2023"
+  },
+  {
+   "id": "holiday_bell",
+   "name": "Holiday Bell",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%BB%D0%BE%D0%BA%D0%BE%D0%BB%D1%8C%D1%87%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=ChristmasBell; seasonal=Christmas; obtained via: global event, shop; en list: Seasonal cost '90 [dia]'"
+  },
+  {
+   "id": "holiday_carols",
+   "name": "Holiday carols",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%BB%D1%8F%D0%B4%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Holiday carols; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: special-currency event; added: Winter update 2023"
+  },
+  {
+   "id": "holiday_flower",
+   "name": "Holiday Flower",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 300,
+    "diamonds": null,
+    "other": "+100 coins per additional purchase"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D1%8B%D0%B9_%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D0%BA"
+   ],
+   "notes": "game_id=HolidayFlower; seasonal=Christmas; obtained via: decoration set, shop; en list: Seasonal cost '300 [coin] +100 per purchase'"
+  },
+  {
+   "id": "holiday_gifts",
+   "name": "Holiday Gifts",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 2500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%B4%D0%B0%D1%80%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Gifts; seasonal=Christmas; obtained via: shop; en list: Seasonal cost '2,500 [coin] +500 per purchase'"
+  },
+  {
+   "id": "holiday_reindeer",
+   "name": "Holiday reindeer",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 70,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D1%8B%D0%B9_%D0%BE%D0%BB%D0%B5%D0%BD%D1%8C"
+   ],
+   "notes": "game_id=ShinyReindeer; seasonal=Christmas; obtained via: movie night (ads), shop; en list: Seasonal cost '70 [dia]'"
+  },
+  {
+   "id": "holiday_stocking",
+   "name": "Holiday stocking",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%B4%D0%B0%D1%80%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D0%BD%D0%BE%D1%81%D0%BE%D0%BA"
+   ],
+   "notes": "game_id=Holiday stocking; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; added: Winter update 2023"
+  },
+  {
+   "id": "holiday_tree",
+   "name": "Holiday Tree",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 30,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%BE%D0%B2%D0%BE%D0%B3%D0%BE%D0%B4%D0%BD%D1%8F%D1%8F_%D1%91%D0%BB%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=HolidayTree; seasonal=Christmas; obtained via: shop; en list: Seasonal cost '30 [dia]'"
+  },
+  {
+   "id": "hot_chestnut_booth",
+   "name": "Hot chestnut booth",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D0%BE%D1%81%D0%BA_%D1%81_%D0%BF%D0%B5%D1%87%D1%91%D0%BD%D1%8B%D0%BC%D0%B8_%D0%BA%D0%B0%D1%88%D1%82%D0%B0%D0%BD%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Chestnut booth; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2023"
+  },
+  {
+   "id": "hot_chocolate_booth",
+   "name": "Hot chocolate booth",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D0%BE%D1%81%D0%BA_%D1%81_%D0%B3%D0%BE%D1%80%D1%8F%D1%87%D0%B8%D0%BC_%D1%88%D0%BE%D0%BA%D0%BE%D0%BB%D0%B0%D0%B4%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Hot chocolate booth; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: special-currency event; added: Winter update 2023"
+  },
+  {
+   "id": "hour_glass",
+   "name": "Hour glass",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B5%D1%81%D0%BE%D1%87%D0%BD%D1%8B%D0%B5_%D1%87%D0%B0%D1%81%D1%8B"
+   ],
+   "notes": "game_id=Hour glass; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: gift; added: Winter update 2023"
+  },
+  {
+   "id": "ice_pig",
+   "name": "Ice pig",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B5%D0%B4%D1%8F%D0%BD%D0%B0%D1%8F_%D1%81%D0%B2%D0%B8%D0%BD%D1%8C%D1%8F"
+   ],
+   "notes": "game_id=Ice pig; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: special-currency event; added: Winter update 2024"
+  },
+  {
+   "id": "icy_snowflake",
+   "name": "Icy snowflake",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B5%D0%B4%D1%8F%D0%BD%D0%B0%D1%8F_%D1%81%D0%BD%D0%B5%D0%B6%D0%B8%D0%BD%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Icy snowflake; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, movie night (ads), Farm Pass; added: Winter update 2022"
+  },
+  {
+   "id": "igloo",
+   "name": "Igloo",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%B3%D0%BB%D1%83"
+   ],
+   "notes": "game_id=XmasIgloo; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: decoration set, currency-shop offer; added: Winter update 2017; en list: Packages"
+  },
+  {
+   "id": "incense_burner",
+   "name": "Incense burner",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BB%D0%B0%D0%B3%D0%BE%D0%B2%D0%BE%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=China Incenseburner; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2019"
+  },
+  {
+   "id": "jack_o_lantern",
+   "name": "Jack o Lantern",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 2000,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D0%B5%D0%BB%D0%BB%D0%BE%D1%83%D0%B8%D0%BD%D1%81%D0%BA%D0%B0%D1%8F_%D1%82%D1%8B%D0%BA%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=HalloweenPumpkinLantern; seasonal=Halloween; obtained via: shop, Farm Pass; en list: Seasonal cost '2,000 [coin]'"
+  },
+  {
+   "id": "jade_bench",
+   "name": "Jade bench",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B5%D1%84%D1%80%D0%B8%D1%82%D0%BE%D0%B2%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=China Jadebench; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: Farm Pass; added: Winter update 2019"
+  },
+  {
+   "id": "jade_cart",
+   "name": "Jade cart",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B5%D1%84%D1%80%D0%B8%D1%82%D0%BE%D0%B2%D0%B0%D1%8F_%D1%82%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=China Cart; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer; added: Winter update 2019; en list: Packages"
+  },
+  {
+   "id": "jade_dragon",
+   "name": "Jade dragon",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B5%D1%84%D1%80%D0%B8%D1%82%D0%BE%D0%B2%D1%8B%D0%B9_%D0%B4%D1%80%D0%B0%D0%BA%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=China DragonBell; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer, Farm Pass; added: Winter update 2019; en list: Packages"
+  },
+  {
+   "id": "jade_lion",
+   "name": "Jade lion",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B5%D1%84%D1%80%D0%B8%D1%82%D0%BE%D0%B2%D1%8B%D0%B9_%D0%BB%D0%B5%D0%B2"
+   ],
+   "notes": "game_id=China JadeLion; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer; added: Winter update 2019; en list: Packages"
+  },
+  {
+   "id": "jade_talisman",
+   "name": "Jade talisman",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B5%D1%84%D1%80%D0%B8%D1%82%D0%BE%D0%B2%D1%8B%D0%B9_%D1%82%D0%B0%D0%BB%D0%B8%D1%81%D0%BC%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=China Jadetalisman; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer; added: Winter update 2019; en list: Packages"
+  },
+  {
+   "id": "jolly_clothes",
+   "name": "Jolly clothes",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D1%8B%D0%B9_%D0%BA%D0%BE%D1%81%D1%82%D1%8E%D0%BC"
+   ],
+   "notes": "game_id=Santas Clothes; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, special-currency event, Farm Pass; added: Winter update 2020; en list: Packages"
+  },
+  {
+   "id": "jolly_corner",
+   "name": "Jolly corner",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D1%8B%D0%B9_%D1%83%D0%B3%D0%BE%D0%BB%D0%BE%D0%BA"
+   ],
+   "notes": "game_id=Santas Greeting Point; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: decoration set, currency-shop offer, special-currency event, Farm Pass; added: Winter update 2020; en list: Packages"
+  },
+  {
+   "id": "jumping_bunny",
+   "name": "Jumping bunny",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D1%87%D1%83%D1%89%D0%B8%D0%B9_%D0%BA%D1%80%D0%BE%D0%BB%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Bunny Trampoline; level 1 = no level gate recorded (non-shop item); seasonal=Easter; reward/special decoration; obtained via: currency-shop offer, Farm Pass, special-currency event; added: Spring update 2020; en list: Packages"
+  },
+  {
+   "id": "little_tiger_statue",
+   "name": "Little tiger statue",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B0%D1%82%D1%83%D1%8F_%D1%82%D0%B8%D0%B3%D1%80%D1%91%D0%BD%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=CNYLittleTiger; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer, Farm Pass; added: Winter update 2017; en list: Packages"
+  },
+  {
+   "id": "lovely_bench",
+   "name": "Lovely bench",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B8%D0%BB%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Valentines Wheelbench; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: currency-shop offer, global event, Farm Pass; added: Winter update 2018; en list: Events"
+  },
+  {
+   "id": "lovely_bridge",
+   "name": "Lovely bridge",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B8%D0%BB%D1%8B%D0%B9_%D0%BC%D0%BE%D1%81%D1%82%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Valentines Bridge; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: currency-shop offer, global event; added: Winter update 2018; en list: Packages"
+  },
+  {
+   "id": "loving_flamingos",
+   "name": "Loving Flamingos",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%80%D0%B0_%D1%84%D0%BB%D0%B0%D0%BC%D0%B8%D0%BD%D0%B3%D0%BE"
+   ],
+   "notes": "game_id=Valentine's Flamingos; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Spring update 2020"
+  },
+  {
+   "id": "magical_sleigh",
+   "name": "Magical sleigh",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D0%BB%D1%88%D0%B5%D0%B1%D0%BD%D1%8B%D0%B5_%D1%81%D0%B0%D0%BD%D0%B8"
+   ],
+   "notes": "game_id=Sleigh; seasonal=Christmas; obtained via: global event, movie night (ads), shop; en list: Seasonal cost '90 [dia]'"
+  },
+  {
+   "id": "market_cart",
+   "name": "Market cart",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D1%80%D0%BC%D0%B0%D1%80%D0%BE%D1%87%D0%BD%D0%B0%D1%8F_%D1%82%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Market cart; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: Farm Pass; added: Winter update 2023"
+  },
+  {
+   "id": "market_feast",
+   "name": "Market feast",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D1%80%D0%BC%D0%B0%D1%80%D0%BE%D1%87%D0%BD%D0%BE%D0%B5_%D1%83%D0%B3%D0%BE%D1%89%D0%B5%D0%BD%D0%B8%D0%B5"
+   ],
+   "notes": "game_id=Market feast; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; added: Winter update 2023"
+  },
+  {
+   "id": "market_game",
+   "name": "Market game",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D1%80%D0%BC%D0%B0%D1%80%D0%BE%D1%87%D0%BD%D0%B0%D1%8F_%D0%B8%D0%B3%D1%80%D0%B0"
+   ],
+   "notes": "game_id=Market game; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: task event; added: Winter update 2023"
+  },
+  {
+   "id": "market_gate",
+   "name": "Market gate",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D1%80%D0%BC%D0%B0%D1%80%D0%BE%D1%87%D0%BD%D1%8B%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Market gate; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2023"
+  },
+  {
+   "id": "market_table",
+   "name": "Market table",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D1%80%D0%BC%D0%B0%D1%80%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D1%81%D1%82%D0%BE%D0%BB"
+   ],
+   "notes": "game_id=Market table; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: special-currency event, task event; added: Winter update 2023"
+  },
+  {
+   "id": "mausoleum",
+   "name": "Mausoleum",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%B2%D0%B7%D0%BE%D0%BB%D0%B5%D0%B9"
+   ],
+   "notes": "game_id=Mausoleum; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer, global event, task event; added: Autumn update 2017; en list: Events/Packages"
+  },
+  {
+   "id": "movie_bench",
+   "name": "Movie bench",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%BA%D0%B8%D0%BD%D0%BE%D1%82%D0%B5%D0%B0%D1%82%D1%80%D0%B0"
+   ],
+   "notes": "game_id=Movie Theaterbench; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: decoration set, currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "movie_night",
+   "name": "Movie night",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B0%D0%B1%D0%BE%D1%80_%D0%B4%D0%BB%D1%8F_%D0%BA%D0%B8%D0%BD%D0%BE%D1%81%D0%B5%D0%B0%D0%BD%D1%81%D0%B0"
+   ],
+   "notes": "game_id=Movie Night; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "movie_props",
+   "name": "Movie props",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%8A%D1%91%D0%BC%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D1%80%D0%B5%D0%BA%D0%B2%D0%B8%D0%B7%D0%B8%D1%82"
+   ],
+   "notes": "game_id=Movie Props; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "movie_stars",
+   "name": "Movie stars",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D0%BD%D0%BE%D0%B7%D0%B2%D1%91%D0%B7%D0%B4%D1%8B"
+   ],
+   "notes": "game_id=Movie Stars; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: decoration set, currency-shop offer, global event; added: Winter update 2021; en list: Events"
+  },
+  {
+   "id": "mr_plant",
+   "name": "Mr. Plant",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 50,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B8%D1%81%D1%82%D0%B5%D1%80_%D0%A0%D0%BE%D1%81%D1%82%D0%BE%D0%BA"
+   ],
+   "notes": "game_id=MrPlant; seasonal=Halloween; obtained via: currency-shop offer, shop; added: Autumn update 2017; en list: Seasonal cost '50 [dia]'"
+  },
+  {
+   "id": "mr_snow",
+   "name": "Mr. Snow",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 25,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B8%D1%81%D1%82%D0%B5%D1%80_%D0%A1%D0%BD%D0%B5%D0%B3%D0%BE%D0%B2%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Snowman; seasonal=Christmas; obtained via: shop; en list: Seasonal cost '25 [dia]'"
+  },
+  {
+   "id": "ms_snow",
+   "name": "Ms. Snow",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 25,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B8%D1%81%D1%81_%D0%A1%D0%BD%D0%B5%D0%B3%D0%BE%D0%B2%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Snowgirl; seasonal=Christmas; obtained via: shop; en list: Seasonal cost '25 [dia]'"
+  },
+  {
+   "id": "mummy_pig",
+   "name": "Mummy pig",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B8%D0%BD%D1%8C%D1%8F-%D0%BC%D1%83%D0%BC%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Mummy pig; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer, global event, special-currency event; added: Autumn update 2022"
+  },
+  {
+   "id": "music_box",
+   "name": "Music box",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D1%83%D0%B7%D1%8B%D0%BA%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D1%88%D0%BA%D0%B0%D1%82%D1%83%D0%BB%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Music Box; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: currency-shop offer, Farm Pass; added: Winter update 2019; en list: Packages"
+  },
+  {
+   "id": "mystic_fontain",
+   "name": "Mystic fontain",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "400 film (event currency)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B0%D0%B8%D0%BD%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "game_id=Mystic fontain; seasonal=Halloween; obtained via: design contest; added: Autumn update 2025"
+  },
+  {
+   "id": "needle_pad_chicken",
+   "name": "Needle pad chicken",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%83%D1%80%D0%B8%D1%86%D0%B0-%D0%B8%D0%B3%D0%BE%D0%BB%D1%8C%D0%BD%D0%B8%D1%86%D0%B0"
+   ],
+   "notes": "game_id=Needlepad_chicken; level 1 = no level gate recorded (non-shop item); requires reputation level 1; seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer; added: Autumn update 2023"
+  },
+  {
+   "id": "neon_light",
+   "name": "Neon light",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B5%D0%BE%D0%BD%D0%BE%D0%B2%D0%B0%D1%8F_%D0%B8%D0%BB%D0%BB%D1%8E%D0%BC%D0%B8%D0%BD%D0%B0%D1%86%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Neon light; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; added: Winter update 2023"
+  },
+  {
+   "id": "ornament_tower",
+   "name": "Ornament tower",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B5%D0%BA%D0%BE%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%B0%D1%8F_%D0%B1%D0%B0%D1%88%D0%BD%D1%8F"
+   ],
+   "notes": "game_id=Ornament tower; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "party_balloons",
+   "name": "Party balloons",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%80%D0%B8%D0%BA%D0%B8_%D0%B4%D0%BB%D1%8F_%D0%B2%D0%B5%D1%87%D0%B5%D1%80%D0%B8%D0%BD%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Party balloons; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: decoration set, currency-shop offer, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "party_music",
+   "name": "Party music",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D1%83%D0%B7%D1%8B%D0%BA%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82"
+   ],
+   "notes": "game_id=Party music; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: decoration set, currency-shop offer, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "party_pottery",
+   "name": "Party pottery",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B8%D1%81%D0%BA%D0%BE-%D0%B3%D0%BE%D1%80%D1%88%D0%BE%D0%BA"
+   ],
+   "notes": "game_id=Party pot; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: global event, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "party_statue",
+   "name": "Party statue",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B8%D1%81%D0%BA%D0%BE-%D1%81%D0%B2%D0%B8%D0%BD%D1%8C%D1%8F"
+   ],
+   "notes": "game_id=Party statue; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; obtained via: currency-shop offer, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "picnic_mat",
+   "name": "Picnic Mat",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 7,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%B4%D1%81%D1%82%D0%B8%D0%BB%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=PicnicMat; seasonal=Summer; obtained via: shop; en list: Seasonal cost '7 [dia]'"
+  },
+  {
+   "id": "pig_balloon",
+   "name": "Pig Balloon",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 12,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%80%D0%B8%D0%BA-%D1%81%D0%B2%D0%B8%D0%BD%D1%8C%D1%8F"
+   ],
+   "notes": "game_id=NewYearBalloonPig; seasonal=New Year; obtained via: shop; en list: Seasonal cost '12 [dia]'"
+  },
+  {
+   "id": "potted_pine",
+   "name": "Potted pine",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 5000,
+    "diamonds": null,
+    "other": "+750 coins per additional purchase"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BE%D1%80%D1%88%D0%BE%D0%BA_%D1%81_%D1%81%D0%BE%D1%81%D0%BD%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=XmasPine; seasonal=Christmas; obtained via: shop; added: Winter update 2017; en list: Seasonal cost '5,000 [coin]'"
+  },
+  {
+   "id": "pumpkin_pedestal",
+   "name": "Pumpkin Pedestal",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 5000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%8C%D0%B5%D0%B4%D0%B5%D1%81%D1%82%D0%B0%D0%BB_%D1%81_%D1%82%D1%8B%D0%BA%D0%B2%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=HalloweenPumpkintotem; seasonal=Halloween; obtained via: shop; en list: Seasonal cost '5,000 [coin]'"
+  },
+  {
+   "id": "pumpkin_scarecrow",
+   "name": "Pumpkin scarecrow",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%8B%D0%BA%D0%B2%D0%B5%D0%BD%D0%BD%D0%BE%D0%B5_%D0%BF%D1%83%D0%B3%D0%B0%D0%BB%D0%BE"
+   ],
+   "notes": "game_id=Fall Pumpkinman; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: global event; added: Autumn update 2021; en list: Events"
+  },
+  {
+   "id": "rattan_bench",
+   "name": "Rattan bench",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%BE%D1%82%D0%B0%D0%BD%D0%B3%D0%BE%D0%B2%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Wicker_bench; level 1 = no level gate recorded (non-shop item); seasonal=Summer; reward/special decoration; added: Autumn update 2023"
+  },
+  {
+   "id": "ravens",
+   "name": "Ravens",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D1%80%D0%BE%D0%BD%D1%8B"
+   ],
+   "notes": "game_id=Ravens; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer; added: Autumn update 2022; en list: Packages"
+  },
+  {
+   "id": "red_dragon",
+   "name": "Red dragon",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%B4%D1%80%D0%B0%D0%BA%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=CNY Dragon; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "red_envelope_shrub",
+   "name": "Red envelope shrub",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%83%D1%81%D1%82_%D1%81_%D0%BA%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%BC%D0%B8_%D0%BA%D0%BE%D0%BD%D0%B2%D0%B5%D1%80%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=CNY Envelopes; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "red_lilies",
+   "name": "Red lilies",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 5,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B5_%D0%BB%D0%B8%D0%BB%D0%B8%D0%B8"
+   ],
+   "notes": "game_id=Red_CallaLily; seasonal=Halloween; obtained via: shop, Farm Pass, expansion plot; added: Autumn update 2017; en list: Expansion/Seasonal cost '5 [dia]'"
+  },
+  {
+   "id": "reindeer",
+   "name": "Reindeer",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 50,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B5%D0%B2%D0%B5%D1%80%D0%BD%D1%8B%D0%B9_%D0%BE%D0%BB%D0%B5%D0%BD%D1%8C"
+   ],
+   "notes": "game_id=Reindeer1; seasonal=Christmas; obtained via: shop; en list: Seasonal cost '50 [dia]'"
+  },
+  {
+   "id": "reindeer_ride",
+   "name": "Reindeer ride",
+   "category": "seasonal",
+   "footprint": [
+    3,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%BD%D0%B8_%D1%81_%D0%BE%D0%BB%D0%B5%D0%BD%D1%8F%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Reindeer ride; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; added: Winter update 2024"
+  },
+  {
+   "id": "rescue_patrol",
+   "name": "Rescue patrol",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BF%D0%B0%D1%81%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D0%BF%D0%B0%D1%82%D1%80%D1%83%D0%BB%D1%8C"
+   ],
+   "notes": "game_id=Rescue patrol; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; added: Winter update 2024"
+  },
+  {
+   "id": "rooster_statue",
+   "name": "Rooster statue",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B0%D1%82%D1%83%D1%8F_%D0%BF%D0%B5%D1%82%D1%83%D1%85%D0%B0"
+   ],
+   "notes": "game_id=CNYRooster; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; reward/special decoration; obtained via: currency-shop offer; added: Spring update 2017; en list: Packages"
+  },
+  {
+   "id": "rose_heart",
+   "name": "Rose heart",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B5%D1%80%D0%B4%D1%86%D0%B5_%D0%B8%D0%B7_%D1%80%D0%BE%D0%B7"
+   ],
+   "notes": "game_id=Valentine's Rose tree; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: Farm Pass, currency-shop offer; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "sand_bed",
+   "name": "Sand bed",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B5%D1%81%D1%87%D0%B0%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BE%D1%81%D1%82%D0%B5%D0%BB%D1%8C"
+   ],
+   "notes": "game_id=Sand Bed; level 1 = no level gate recorded (non-shop item); seasonal=Summer; reward/special decoration; obtained via: currency-shop offer; added: Summer update 2021"
+  },
+  {
+   "id": "sand_swing",
+   "name": "Sand swing",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%87%D0%B5%D0%BB%D0%B8_%D0%BD%D0%B0_%D0%BF%D0%B5%D1%81%D0%BA%D0%B5"
+   ],
+   "notes": "game_id=Sand Swing; level 1 = no level gate recorded (non-shop item); seasonal=Summer; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Summer update 2021"
+  },
+  {
+   "id": "sand_toys",
+   "name": "Sand toys",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%B3%D1%80%D1%83%D1%88%D0%BA%D0%B8_%D0%BD%D0%B0_%D0%BF%D0%B5%D1%81%D0%BA%D0%B5"
+   ],
+   "notes": "game_id=Sand Toys; level 1 = no level gate recorded (non-shop item); seasonal=Summer; reward/special decoration; obtained via: currency-shop offer; added: Summer update 2021"
+  },
+  {
+   "id": "santa_s_workbench",
+   "name": "Santa's workbench",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D1%81%D1%82%D0%B5%D1%80%D1%81%D0%BA%D0%B0%D1%8F_%D0%A1%D0%B0%D0%BD%D1%82%D1%8B"
+   ],
+   "notes": "game_id=Santa's workbench; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "santa_s_gifts",
+   "name": "Santa´s gifts",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "160 film (event currency)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%B4%D0%B0%D1%80%D0%BA%D0%B8_%D0%A1%D0%B0%D0%BD%D1%82%D1%8B"
+   ],
+   "notes": "game_id=Santa’s gifts; seasonal=Christmas; reward/special decoration; obtained via: decoration set, special-currency event, design contest; added: Winter update 2022"
+  },
+  {
+   "id": "secret_coffin",
+   "name": "Secret Coffin",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B0%D0%B9%D0%BD%D1%8B%D0%B9_%D0%B3%D1%80%D0%BE%D0%B1"
+   ],
+   "notes": "game_id=HalloweenCoffin; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; obtained via: currency-shop offer, Farm Pass"
+  },
+  {
+   "id": "shovel_stand",
+   "name": "Shovel stand",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%BE%D0%B9%D0%BA%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%BB%D0%BE%D0%BF%D0%B0%D1%82"
+   ],
+   "notes": "game_id=Winter Shovelstand; level 1 = no level gate recorded (non-shop item); seasonal=Winter; reward/special decoration; obtained via: currency-shop offer, movie night (ads); added: Autumn update 2021; en list: Calendar"
+  },
+  {
+   "id": "ski_jumper",
+   "name": "Ski jumper",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D1%8B%D0%B6%D0%BD%D1%8B%D0%B9_%D1%82%D1%80%D0%B0%D0%BC%D0%BF%D0%BB%D0%B8%D0%BD"
+   ],
+   "notes": "game_id=Ski Jumper; level 1 = no level gate recorded (non-shop item); seasonal=Winter; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2021; en list: Packages"
+  },
+  {
+   "id": "skullbird_swing",
+   "name": "Skullbird swing",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%87%D0%B5%D0%BB%D0%B8_%D1%81_%D0%BF%D1%82%D0%B8%D1%87%D1%8C%D0%B8%D0%BC_%D1%81%D0%BA%D0%B5%D0%BB%D0%B5%D1%82%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Skullbird _swing; level 1 = no level gate recorded (non-shop item); requires reputation level 1; seasonal=Halloween; obtained via: task event; added: Autumn update 2023"
+  },
+  {
+   "id": "smashed_pumpkins",
+   "name": "Smashed pumpkins",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B7%D0%B1%D0%B8%D1%82%D1%8B%D0%B5_%D1%82%D1%8B%D0%BA%D0%B2%D1%8B"
+   ],
+   "notes": "game_id=Smashed pumpkins; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; added: Autumn update 2025"
+  },
+  {
+   "id": "snow_bunny",
+   "name": "Snow bunny",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B6%D0%BD%D1%8B%D0%B9_%D0%BA%D1%80%D0%BE%D0%BB%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Snow Bunny; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, movie night (ads); added: Winter update 2020"
+  },
+  {
+   "id": "snow_cannon",
+   "name": "Snow cannon",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B6%D0%BD%D0%B0%D1%8F_%D0%BF%D1%83%D1%88%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Snowcannon; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, movie night (ads), Farm Pass; added: Winter update 2021"
+  },
+  {
+   "id": "snow_castle",
+   "name": "Snow castle",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B6%D0%BD%D1%8B%D0%B9_%D0%B7%D0%B0%D0%BC%D0%BE%D0%BA"
+   ],
+   "notes": "game_id=Snowcastle; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, movie night (ads), Farm Pass; added: Winter update 2021; en list: Packages"
+  },
+  {
+   "id": "snow_chicken",
+   "name": "Snow chicken",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B6%D0%BD%D0%B0%D1%8F_%D0%BA%D1%83%D1%80%D0%B8%D1%86%D0%B0"
+   ],
+   "notes": "game_id=Snow Chicken; level 1 = no level gate recorded (non-shop item); seasonal=Winter; reward/special decoration; obtained via: currency-shop offer, movie night (ads); added: Winter update 2021; en list: Packages"
+  },
+  {
+   "id": "snow_royalty",
+   "name": "Snow royalty",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B6%D0%BD%D1%8B%D0%B9_%D0%BA%D0%BE%D1%80%D0%BE%D0%BB%D1%8C"
+   ],
+   "notes": "game_id=XmasSnowman; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: currency-shop offer; added: Winter update 2017; en list: Packages; en wiki spells it 'Snow Loyalty'"
+  },
+  {
+   "id": "snow_sledge",
+   "name": "Snow Sledge",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%BD%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=ChristmasSledge; seasonal=Christmas; obtained via: global event, shop; en list: Seasonal cost '90 [dia]'"
+  },
+  {
+   "id": "snowball_lantern",
+   "name": "Snowball Lantern",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 5,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B6%D0%BD%D1%8B%D0%B9_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=ChristmasLantern; seasonal=Christmas; obtained via: movie night (ads), shop; en list: Seasonal cost '5 [dia]'"
+  },
+  {
+   "id": "snowfight",
+   "name": "Snowfight",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B6%D0%BD%D0%BE%D0%B5_%D1%81%D1%80%D0%B0%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5"
+   ],
+   "notes": "game_id=Snowfight; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: Farm Pass, special-currency event; added: Winter update 2023"
+  },
+  {
+   "id": "snowglobe",
+   "name": "Snowglobe",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 110,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B6%D0%BD%D1%8B%D0%B9_%D1%88%D0%B0%D1%80"
+   ],
+   "notes": "game_id=ChristmasSnowglobe; seasonal=Christmas; obtained via: shop; en list: Seasonal cost '110 [dia]'"
+  },
+  {
+   "id": "snowman_balloon",
+   "name": "Snowman balloon",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%80-%D1%81%D0%BD%D0%B5%D0%B3%D0%BE%D0%B2%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Snowman balloon; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: task event; added: Winter update 2024"
+  },
+  {
+   "id": "snowmobile",
+   "name": "Snowmobile",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B3%D0%BE%D1%85%D0%BE%D0%B4"
+   ],
+   "notes": "game_id=Snowmobile; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: task event; added: Winter update 2023"
+  },
+  {
+   "id": "spider_den",
+   "name": "Spider den",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%83%D1%87%D1%8C%D0%B5_%D0%BB%D0%BE%D0%B3%D0%BE%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=Spider_den; level 1 = no level gate recorded (non-shop item); requires reputation level 1; seasonal=Halloween; obtained via: currency-shop offer; added: Autumn update 2023"
+  },
+  {
+   "id": "spider_tree",
+   "name": "Spider Tree",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 40,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_%D1%81_%D0%BF%D0%B0%D1%83%D0%BA%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=HalloweenDeadTree; seasonal=Halloween; obtained via: currency-shop offer, shop; en list: Seasonal cost '40 [dia]'"
+  },
+  {
+   "id": "spooky_grave",
+   "name": "Spooky Grave",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D1%83%D1%82%D0%BA%D0%BE%D0%B5_%D0%BD%D0%B0%D0%B4%D0%B3%D1%80%D0%BE%D0%B1%D0%B8%D0%B5"
+   ],
+   "notes": "game_id=OpenGrave; seasonal=Halloween; obtained via: currency-shop offer, global event, shop; en list: Packages/Seasonal cost '90 [dia]'"
+  },
+  {
+   "id": "spooky_plant",
+   "name": "Spooky Plant",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 50,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D1%83%D1%82%D0%BA%D0%BE%D0%B5_%D1%80%D0%B0%D1%81%D1%82%D0%B5%D0%BD%D0%B8%D0%B5"
+   ],
+   "notes": "game_id=SpookyPlant; seasonal=Halloween; obtained via: currency-shop offer, shop; en list: Seasonal cost '50 [dia]'"
+  },
+  {
+   "id": "spooky_pumpkin",
+   "name": "Spooky Pumpkin",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 25,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D1%83%D1%82%D0%BA%D0%B0%D1%8F_%D1%82%D1%8B%D0%BA%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=SpookyPumpkin; seasonal=Halloween; obtained via: currency-shop offer, shop; en list: Seasonal cost '25 [dia]'"
+  },
+  {
+   "id": "spooky_scarecrow",
+   "name": "Spooky scarecrow",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%88%D0%BD%D0%BE%D0%B5_%D0%BF%D1%83%D0%B3%D0%B0%D0%BB%D0%BE"
+   ],
+   "notes": "game_id=Pumpkin scarecrow; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer, global event, Farm Pass; added: Autumn update 2019; en list: Events"
+  },
+  {
+   "id": "spring_banquet",
+   "name": "Spring banquet",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D0%B1%D0%B0%D0%BD%D0%BA%D0%B5%D1%82"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); seasonal=Easter; obtained via: county fair; added: Winter update 2024"
+  },
+  {
+   "id": "spring_parade",
+   "name": "Spring parade",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "240 film (event currency)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D0%BF%D0%B0%D1%80%D0%B0%D0%B4"
+   ],
+   "notes": "game_id=Easter parade; seasonal=Easter; obtained via: design contest; added: Winter update 2024"
+  },
+  {
+   "id": "spring_parade_arch",
+   "name": "Spring parade arch",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%BA%D0%B0_%D0%BA_%D0%B2%D0%B5%D1%81%D0%B5%D0%BD%D0%BD%D0%B5%D0%BC%D1%83_%D0%BF%D0%B0%D1%80%D0%B0%D0%B4%D1%83"
+   ],
+   "notes": "game_id=Easter parade arch; level 1 = no level gate recorded (non-shop item); seasonal=Easter; obtained via: task event; added: Winter update 2024"
+  },
+  {
+   "id": "spring_stand",
+   "name": "Spring stand",
+   "category": "seasonal",
+   "footprint": [
+    3,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D0%BA%D0%B8%D0%BE%D1%81%D0%BA"
+   ],
+   "notes": "game_id=Spring stand; level 1 = no level gate recorded (non-shop item); seasonal=Easter; obtained via: special-currency event, other; added: Winter update 2024"
+  },
+  {
+   "id": "star_bench",
+   "name": "Star bench",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B2%D1%91%D0%B7%D0%B4%D0%BD%D0%B0%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Star Bench and Lamp; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "star_table",
+   "name": "Star table",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B2%D1%91%D0%B7%D0%B4%D0%BD%D1%8B%D0%B9_%D1%81%D1%82%D0%BE%D0%BB"
+   ],
+   "notes": "game_id=Star Table; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: decoration set, special-currency event, global event; added: Spring update 2021"
+  },
+  {
+   "id": "stocking_stand",
+   "name": "Stocking stand",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%BE%D1%81%D0%BA%D0%B8_%D0%B4%D0%BB%D1%8F_%D0%BF%D0%BE%D0%B4%D0%B0%D1%80%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Winter Socks; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Winter update 2021"
+  },
+  {
+   "id": "sugar_skull_altar",
+   "name": "Sugar skull altar",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D0%BB%D1%82%D0%B0%D1%80%D1%8C_%D1%81_%D0%BA%D0%B0%D0%BB%D0%B0%D0%B2%D0%B5%D1%80%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Sugarskull Altar; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer; added: Autumn update 2021; en list: Packages; en wiki spells it 'Sugar Skull Alter'"
+  },
+  {
+   "id": "sugar_skull_tomb",
+   "name": "Sugar skull tomb",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D1%80%D0%BE%D0%B1%D0%BD%D0%B8%D1%86%D0%B0_%D1%81_%D0%BA%D0%B0%D0%BB%D0%B0%D0%B2%D0%B5%D1%80%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Sugarskull Tomb; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Autumn update 2021; en list: Packages"
+  },
+  {
+   "id": "surf_rental_stand",
+   "name": "Surf rental stand",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B0%D1%80%D1%8F%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5_%D0%B4%D0%BB%D1%8F_%D1%81%D1%91%D1%80%D1%84%D0%B8%D0%BD%D0%B3%D0%B0"
+   ],
+   "notes": "game_id=Surf_rental_stand; level 1 = no level gate recorded (non-shop item); seasonal=Summer; reward/special decoration; added: Autumn update 2023"
+  },
+  {
+   "id": "surprise_eggs",
+   "name": "Surprise eggs",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D0%B9%D1%86%D0%B0_%D1%81_%D1%81%D1%8E%D1%80%D0%BF%D1%80%D0%B8%D0%B7%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Surprise eggs; level 1 = no level gate recorded (non-shop item); seasonal=Easter; obtained via: special-currency event; added: Winter update 2024"
+  },
+  {
+   "id": "sweets_booth",
+   "name": "Sweets booth",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D0%BE%D1%81%D0%BA_%D1%81%D0%BE_%D1%81%D0%BB%D0%B0%D0%B4%D0%BE%D1%81%D1%82%D1%8F%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Sweet booth; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: special-currency event; added: Winter update 2023"
+  },
+  {
+   "id": "tea_party",
+   "name": "Tea party",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A7%D0%B0%D0%B5%D0%BF%D0%B8%D1%82%D0%B8%D0%B5"
+   ],
+   "notes": "game_id=Tea party; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; obtained via: collection; added: Winter update 2024"
+  },
+  {
+   "id": "tombstone",
+   "name": "Tombstone",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 10,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B0%D0%B4%D0%B3%D1%80%D0%BE%D0%B1%D0%B8%D0%B5"
+   ],
+   "notes": "game_id=HalloweenTombstone; seasonal=Halloween; obtained via: currency-shop offer, special-currency event, shop; en list: Seasonal cost '10 [dia]'"
+  },
+  {
+   "id": "toy_soldier",
+   "name": "Toy Soldier",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 2,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%B3%D1%80%D1%83%D1%88%D0%B5%D1%87%D0%BD%D1%8B%D0%B9_%D1%81%D0%BE%D0%BB%D0%B4%D0%B0%D1%82"
+   ],
+   "notes": "game_id=ToySoldier; seasonal=Christmas; obtained via: shop; en list: Seasonal cost '2 [dia]'"
+  },
+  {
+   "id": "tree_delivery",
+   "name": "Tree delivery",
+   "category": "seasonal",
+   "footprint": [
+    3,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%81%D0%BB%D0%BA%D0%B0_%D0%BD%D0%B0_%D1%81%D0%B0%D0%BD%D0%BA%D0%B0%D1%85"
+   ],
+   "notes": "game_id=Tree delivery; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: special-currency event, task event; added: Winter update 2023"
+  },
+  {
+   "id": "tree_market",
+   "name": "Tree market",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "240 film (event currency)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%81%D0%BB%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D1%80%D1%8B%D0%BD%D0%BE%D0%BA"
+   ],
+   "notes": "game_id=Tree market; seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, special-currency event, design contest; added: Winter update 2022"
+  },
+  {
+   "id": "trick_tree",
+   "name": "Trick tree",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B5%D1%80%D0%B5%D0%B2%D0%BE-%D0%BC%D1%83%D0%BC%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Trick tree; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer, special-currency event; added: Autumn update 2022; en list: Packages"
+  },
+  {
+   "id": "typewriter",
+   "name": "Typewriter",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B5%D1%87%D0%B0%D1%82%D0%BD%D0%B0%D1%8F_%D0%BC%D0%B0%D1%88%D0%B8%D0%BD%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Typewriter; seasonal=New Year; obtained via: global event, shop; en list: Seasonal cost '90 [dia]'"
+  },
+  {
+   "id": "valentine_s_swing",
+   "name": "Valentine's swing",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%87%D0%B5%D0%BB%D0%B8_%D0%B4%D0%BB%D1%8F_%D0%B2%D0%BB%D1%8E%D0%B1%D0%BB%D1%91%D0%BD%D0%BD%D1%8B%D1%85"
+   ],
+   "notes": "game_id=Valentine's swing; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; obtained via: special-currency event, global event; added: Spring update 2024"
+  },
+  {
+   "id": "valentine_s_wagon",
+   "name": "Valentine's wagon",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D0%BB%D0%B5%D0%B6%D0%BA%D0%B0_%D0%92%D0%B0%D0%BB%D0%B5%D0%BD%D1%82%D0%B8%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=ValentinesBalloons; seasonal=Valentine's Day; obtained via: currency-shop offer, global event, shop, valley; en list: Events"
+  },
+  {
+   "id": "venetian_bridge",
+   "name": "Venetian bridge",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D0%BD%D0%B5%D1%86%D0%B8%D0%B0%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D0%BC%D0%BE%D1%81%D1%82%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Venetian bridge; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "venetian_gnome",
+   "name": "Venetian gnome",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D0%BD%D0%B5%D1%86%D0%B8%D0%B0%D0%BD%D1%81%D0%BA%D0%B8%D0%B9_%D0%B3%D0%BD%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Venetian gnome; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "venetian_masks",
+   "name": "Venetian masks",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D0%BD%D0%B5%D1%86%D0%B8%D0%B0%D0%BD%D1%81%D0%BA%D0%B8%D0%B5_%D0%BC%D0%B0%D1%81%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Venetian masks; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: global event; added: Winter update 2022"
+  },
+  {
+   "id": "venetian_ride",
+   "name": "Venetian ride",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BE%D0%BD%D0%B4%D0%BE%D0%BB%D0%B0-%D0%BB%D0%B5%D0%B1%D0%B5%D0%B4%D1%8C"
+   ],
+   "notes": "game_id=Venetian ride; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; reward/special decoration; obtained via: currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "voodoo_shrine",
+   "name": "Voodoo shrine",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D1%83%D0%B4%D1%83%D0%B8%D1%81%D1%82%D1%81%D0%BA%D0%B8%D0%B9_%D0%B0%D0%BB%D1%82%D0%B0%D1%80%D1%8C"
+   ],
+   "notes": "game_id=Voodoo_shrine; level 1 = no level gate recorded (non-shop item); requires reputation level 1; seasonal=Halloween; obtained via: currency-shop offer; added: Autumn update 2023"
+  },
+  {
+   "id": "warm_fondue",
+   "name": "Warm fondue",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BE%D1%80%D1%8F%D1%87%D0%B5%D0%B5_%D1%84%D0%BE%D0%BD%D0%B4%D1%8E"
+   ],
+   "notes": "game_id=Warm fondue; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; added: Winter update 2024"
+  },
+  {
+   "id": "weather_house",
+   "name": "Weather house",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D0%BC%D0%B8%D0%BA_%D1%81_%D0%B3%D1%80%D0%B0%D0%B4%D1%83%D1%81%D0%BD%D0%B8%D0%BA%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Weather house; level 1 = no level gate recorded (non-shop item); seasonal=New Year; reward/special decoration; added: Winter update 2023"
+  },
+  {
+   "id": "white_lilies",
+   "name": "White lilies",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 20,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "4 purple voucher + 2 gold voucher"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D0%BB%D1%8B%D0%B5_%D0%BB%D0%B8%D0%BB%D0%B8%D0%B8"
+   ],
+   "notes": "game_id=CallaLily; seasonal=Halloween; obtained via: expansion plot, shop; added: Autumn update 2017; en list: Expansion/Seasonal cost '2 [goldv] 4 [purplev]'"
+  },
+  {
+   "id": "winter_arch",
+   "name": "Winter arch",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 20,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "15 blue voucher + 2 gold voucher"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D0%B0%D1%80%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Winter Arch; seasonal=Christmas; obtained via: shop; added: Winter update 2016; en list: Seasonal cost '2 [goldv] 15 [bluev]'"
+  },
+  {
+   "id": "winter_bench",
+   "name": "Winter bench",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D1%81%D0%BA%D0%B0%D0%BC%D0%B5%D0%B9%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Winter bench; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: special-currency event; added: Winter update 2024"
+  },
+  {
+   "id": "winter_boot",
+   "name": "Winter boot",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D0%B8%D0%B9_%D1%81%D0%B0%D0%BF%D0%BE%D0%B3"
+   ],
+   "notes": "game_id=Wintersock; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: Farm Pass; added: Winter update 2019; en list: Calendar"
+  },
+  {
+   "id": "winter_carousel",
+   "name": "Winter Carousel",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 120,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D0%BA%D0%B0%D1%80%D1%83%D1%81%D0%B5%D0%BB%D1%8C"
+   ],
+   "notes": "game_id=ChristmasCarousel; seasonal=Christmas; obtained via: movie night (ads), shop; en list: Seasonal cost '120 [dia]'"
+  },
+  {
+   "id": "winter_centerpiece",
+   "name": "Winter centerpiece",
+   "category": "seasonal",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D1%81%D0%BA%D1%83%D0%BB%D1%8C%D0%BF%D1%82%D1%83%D1%80%D0%B0"
+   ],
+   "notes": "game_id=Winter centerpiece; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: collection; added: Winter update 2024"
+  },
+  {
+   "id": "winter_cow_topiary",
+   "name": "Winter cow topiary",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%B7%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D0%BA%D0%BE%D1%80%D0%BE%D0%B2%D0%B0)"
+   ],
+   "notes": "game_id=Cow topiary; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Winter update 2021; en list: Packages"
+  },
+  {
+   "id": "winter_gate",
+   "name": "Winter gate",
+   "category": "seasonal",
+   "footprint": [
+    3,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D0%B8%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Winter gate; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; added: Winter update 2024"
+  },
+  {
+   "id": "winter_gazebo",
+   "name": "Winter gazebo",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D0%B1%D0%B5%D1%81%D0%B5%D0%B4%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Winter Gazebo; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Winter update 2021"
+  },
+  {
+   "id": "winter_lantern",
+   "name": "Winter lantern",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 2500,
+    "diamonds": null,
+    "other": "+250 coins per additional purchase"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D0%B8%D0%B9_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Winter Lantern; seasonal=Christmas; obtained via: movie night (ads), shop; added: Winter update 2016; en list: Seasonal cost '2,500 [coin] +250 per purchase'"
+  },
+  {
+   "id": "winter_ornaments",
+   "name": "Winter ornaments",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%81%D0%BB%D0%BE%D1%87%D0%BD%D1%8B%D0%B5_%D0%B8%D0%B3%D1%80%D1%83%D1%88%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Winter ornaments; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: currency-shop offer, special-currency event; added: Winter update 2020; en list: Packages"
+  },
+  {
+   "id": "winter_park",
+   "name": "Winter park",
+   "category": "seasonal",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D0%B8%D0%B9_%D0%BF%D0%B0%D1%80%D0%BA"
+   ],
+   "notes": "game_id=Winter park; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; added: Winter update 2024"
+  },
+  {
+   "id": "winter_photo_op",
+   "name": "Winter photo op",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D1%84%D0%BE%D1%82%D0%BE%D1%81%D1%8A%D1%91%D0%BC%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Winter photo op; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: task event; added: Winter update 2024"
+  },
+  {
+   "id": "winter_reindeer",
+   "name": "Winter reindeer",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 50,
+    "other": null
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D0%B8%D0%B9_%D0%BE%D0%BB%D0%B5%D0%BD%D1%8C"
+   ],
+   "notes": "game_id=Reindeer2; seasonal=Christmas; obtained via: decoration set, movie night (ads), shop; en list: Seasonal cost '50 [dia]'"
+  },
+  {
+   "id": "winter_table",
+   "name": "Winter table",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D0%B8%D0%B9_%D1%81%D1%82%D0%BE%D0%BB"
+   ],
+   "notes": "game_id=Winter Table; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; obtained via: currency-shop offer, special-currency event, Farm Pass; added: Winter update 2019; en list: Packages"
+  },
+  {
+   "id": "wool_busters",
+   "name": "Wool busters",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%85%D0%BE%D1%82%D0%BD%D0%B8%D1%86%D0%B0_%D0%B7%D0%B0_%D0%BF%D1%80%D0%B8%D0%B2%D0%B8%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Wool busters; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; added: Autumn update 2025"
+  },
+  {
+   "id": "wrapping_booth",
+   "name": "Wrapping booth",
+   "category": "seasonal",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D0%BE%D1%81%D0%BA_%D0%B4%D0%BB%D1%8F_%D1%83%D0%BF%D0%B0%D0%BA%D0%BE%D0%B2%D0%BA%D0%B8_%D0%BF%D0%BE%D0%B4%D0%B0%D1%80%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Wrapping booth; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: special-currency event; added: Winter update 2023"
+  },
+  {
+   "id": "yule_goat",
+   "name": "Yule goat",
+   "category": "seasonal",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "season": "",
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%99%D0%BE%D0%BB%D1%8C%D1%81%D0%BA%D0%B8%D0%B9_%D0%BA%D0%BE%D0%B7%D1%91%D0%BB"
+   ],
+   "notes": "game_id=Yule goat; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; reward/special decoration; obtained via: special-currency event; added: Winter update 2023"
+  }
+ ]
+}

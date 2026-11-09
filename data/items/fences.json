@@ -1,0 +1,3202 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "10th_birthday_flag_fence",
+   "name": "10th Birthday flag fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "10th_birthday_flag_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%BA_10-%D0%BB%D0%B5%D1%82%D0%B8%D1%8E"
+   ],
+   "notes": "game_id=Flag fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: global event, Wheel of Fortune, Farm Pass; added: Spring update 2022"
+  },
+  {
+   "id": "animal_paper_fence",
+   "name": "Animal paper fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "animal_paper_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%B1%D0%BE%D1%80_%D0%B8%D0%B7_%D0%B1%D1%83%D0%BC%D0%B0%D0%B6%D0%BD%D1%8B%D1%85_%D0%B7%D0%B2%D0%B5%D1%80%D0%B5%D0%B9"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, other; added: Winter update 2025"
+  },
+  {
+   "id": "bamboo_fence",
+   "name": "Bamboo fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "bamboo_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D0%BC%D0%B1%D1%83%D0%BA%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Bamboo fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2022"
+  },
+  {
+   "id": "barrel_fence",
+   "name": "Barrel fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "barrel_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D0%B1%D0%BE%D1%87%D0%B5%D0%BA"
+   ],
+   "notes": "game_id=Barrel fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer; added: Summer update 2023"
+  },
+  {
+   "id": "beach_fence",
+   "name": "Beach fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "beach_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D1%8F%D0%B6%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Beach Fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Farm Pass; added: Summer update 2021"
+  },
+  {
+   "id": "birch_fence",
+   "name": "Birch fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "birch_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D1%80%D1%91%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Barricade fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Summer update 2024"
+  },
+  {
+   "id": "birdhouse_fence",
+   "name": "Birdhouse fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "birdhouse_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B4%D0%BE%D0%BC%D0%B8%D0%BA%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%BF%D1%82%D0%B8%D1%86"
+   ],
+   "notes": "game_id=Birdhouse fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Spring update 2022"
+  },
+  {
+   "id": "black_cat_fence",
+   "name": "Black cat fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "black_cat_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D1%87%D1%91%D1%80%D0%BD%D1%8B%D1%85_%D0%BA%D0%BE%D1%88%D0%B5%D0%BA"
+   ],
+   "notes": "game_id=Cat fence; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Autumn update 2024"
+  },
+  {
+   "id": "blue_fence",
+   "name": "Blue fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "blue_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BE%D0%BB%D1%83%D0%B1%D0%BE%D0%B9_%D0%B7%D0%B0%D0%B1%D0%BE%D1%80"
+   ],
+   "notes": "game_id=BlueFence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Farm Pass; added: Summer update 2016; en list: Packages"
+  },
+  {
+   "id": "bones_fence",
+   "name": "Bones fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "bones_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D1%81%D1%82%D1%8F%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Bones_fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Autumn update 2023"
+  },
+  {
+   "id": "brick_wall",
+   "name": "Brick Wall",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 30,
+   "cost": {
+    "coins": 90,
+    "diamonds": null,
+    "other": "+15 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "brick_wall",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D1%80%D0%BF%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D0%B5%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Brick Fence; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths L30 cost '90 [coin] +15 per purchase'"
+  },
+  {
+   "id": "bunny_hedge",
+   "name": "Bunny hedge",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "bunny_hedge",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%B7%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D1%8C_%D0%B2_%D1%84%D0%BE%D1%80%D0%BC%D0%B5_%D0%BA%D1%80%D0%BE%D0%BB%D0%B8%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Bunny hedge; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer; added: Winter update 2022"
+  },
+  {
+   "id": "calluna_patch",
+   "name": "Calluna patch",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "calluna_patch",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%80%D0%B5%D1%81%D0%BA"
+   ],
+   "notes": "game_id=Calluna_patch; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Autumn update 2023"
+  },
+  {
+   "id": "candle_fence",
+   "name": "Candle fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "candle_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B5%D1%87%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Electric candles fence; level 1 = no level gate recorded (non-shop item); seasonal=Winter; connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Autumn update 2024"
+  },
+  {
+   "id": "carp_stream_fence",
+   "name": "Carp Stream Fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "carp_stream_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D0%BA%D0%B0%D1%80%D0%BF%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Spring update 2026"
+  },
+  {
+   "id": "carrot_fence",
+   "name": "Carrot fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "carrot_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%BE%D1%80%D0%BA%D0%BE%D0%B2%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Carrot fence; level 1 = no level gate recorded (non-shop item); seasonal=Easter; connectable piece (auto-joins neighbours); obtained via: Farm Pass; added: Spring update 2024"
+  },
+  {
+   "id": "carved_mushroom_fence",
+   "name": "Carved mushroom fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "carved_mushroom_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D1%8F%D0%BD%D0%BD%D1%8B%D1%85_%D0%B3%D1%80%D0%B8%D0%B1%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Wooden mushroom fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Autumn update 2024"
+  },
+  {
+   "id": "cemetery_fence",
+   "name": "Cemetery Fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 5,
+    "other": null
+   },
+   "flippable": true,
+   "connect": {
+    "group": "cemetery_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%BA%D0%BB%D0%B0%D0%B4%D0%B1%D0%B8%D1%89%D0%B0"
+   ],
+   "notes": "game_id=CemetaryFence; seasonal=Halloween; obtained via: currency-shop offer, special-currency event, shop; en list: Packages/Seasonal cost '5 [dia]'"
+  },
+  {
+   "id": "centipede_fence",
+   "name": "Centipede fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "centipede_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0-%D1%81%D0%BE%D1%80%D0%BE%D0%BA%D0%BE%D0%BD%D0%BE%D0%B6%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Centipede fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Autumn update 2024"
+  },
+  {
+   "id": "chamomile_fence",
+   "name": "Chamomile fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "chamomile_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%BE%D0%BC%D0%B0%D1%88%D0%BA%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Chamomile fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2025"
+  },
+  {
+   "id": "checkered_tile",
+   "name": "Checkered tile",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "checkered_tile",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%85%D0%BC%D0%B0%D1%82%D0%BD%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Checkered path; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: special-currency event; added: Summer update 2024"
+  },
+  {
+   "id": "chicken_fence",
+   "name": "Chicken fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 999,
+    "diamonds": null,
+    "other": "+100 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "chicken_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%BA%D1%83%D1%80%D1%8F%D1%82%D0%BD%D0%B8%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Pasture fence chicken; connectable piece (auto-joins neighbours); obtained via: shop; added: Autumn update 2019; en list: Calendar"
+  },
+  {
+   "id": "chinese_fence",
+   "name": "Chinese fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "chinese_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B8%D1%82%D0%B0%D0%B9%D1%81%D0%BA%D0%B8%D0%B9_%D0%B7%D0%B0%D0%B1%D0%BE%D1%80"
+   ],
+   "notes": "game_id=CNYFence; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer; added: Spring update 2017; en list: Packages"
+  },
+  {
+   "id": "classical_fence",
+   "name": "Classical fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "classical_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%BB%D0%B8%D0%BC%D0%BF%D0%B8%D0%B9%D1%81%D0%BA%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Olympic fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Spring update 2022"
+  },
+  {
+   "id": "cow_fence",
+   "name": "Cow fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 999,
+    "diamonds": null,
+    "other": "+100 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "cow_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%BA%D0%BE%D1%80%D0%BE%D0%B2%D0%BD%D0%B8%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Pasture fence cow; connectable piece (auto-joins neighbours); obtained via: movie night (ads), shop; added: Autumn update 2019; en list: Calendar"
+  },
+  {
+   "id": "crescent_fence",
+   "name": "Crescent fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "crescent_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%B0%D0%B1%D1%81%D0%BA%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Crescent fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, other, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "crocus",
+   "name": "Crocus",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "crocus",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%BE%D0%BA%D1%83%D1%81%D1%8B"
+   ],
+   "notes": "game_id=Crocus patch; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: currency-shop offer, movie night (ads), Farm Pass; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "dark_fence",
+   "name": "Dark fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "dark_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%91%D0%BC%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Halloween Fence; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Autumn update 2020"
+  },
+  {
+   "id": "desert_walls",
+   "name": "Desert walls",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "desert_walls",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B2_%D0%BF%D1%83%D1%81%D1%82%D1%8B%D0%BD%D0%B5"
+   ],
+   "notes": "game_id=Ramadan fence; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, other, special-currency event; added: Summer update 2019; en list: Packages"
+  },
+  {
+   "id": "fall_hedge",
+   "name": "Fall hedge",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "fall_hedge",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D1%8F%D1%8F_%D0%B8%D0%B7%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D1%8C"
+   ],
+   "notes": "game_id=Fall Hedge; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Farm Pass; added: Autumn update 2021"
+  },
+  {
+   "id": "farm_fence",
+   "name": "Farm fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "farm_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B4%D0%BB%D1%8F_%D1%84%D0%B5%D1%80%D0%BC%D1%8B"
+   ],
+   "notes": "game_id=Classic farm fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; added: Autumn update 2019"
+  },
+  {
+   "id": "fence",
+   "name": "Fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 11,
+   "cost": {
+    "coins": 5,
+    "diamonds": null,
+    "other": "+2 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Fence; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths L11 cost '5 [coin] +2 per purchase'"
+  },
+  {
+   "id": "festival_lights",
+   "name": "Festival lights",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "festival_lights",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B5%D1%81%D1%82%D0%B8%D0%B2%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5_%D0%B3%D0%B8%D1%80%D0%BB%D1%8F%D0%BD%D0%B4%D1%8B"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Spring update 2026"
+  },
+  {
+   "id": "fieldstone_fence",
+   "name": "Fieldstone fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "fieldstone_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D0%BF%D1%80%D0%B8%D1%80%D0%BE%D0%B4%D0%BD%D0%BE%D0%B3%D0%BE_%D0%BA%D0%B0%D0%BC%D0%BD%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Summer update 2026"
+  },
+  {
+   "id": "fireworks_fence",
+   "name": "Fireworks fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "fireworks_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D1%84%D0%B5%D0%B9%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Firework fence; level 1 = no level gate recorded (non-shop item); seasonal=New Year; connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "flagged_fence",
+   "name": "Flagged fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "flagged_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D1%84%D0%BB%D0%B0%D0%B6%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Flagged fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: derby; added: Winter update 2024"
+  },
+  {
+   "id": "flower_fence",
+   "name": "Flower fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "flower_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D1%8B%D0%B9_%D0%B7%D0%B0%D0%B1%D0%BE%D1%80"
+   ],
+   "notes": "game_id=FlowerFence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Farm Pass; added: Summer update 2016; en list: Packages"
+  },
+  {
+   "id": "flower_hedge",
+   "name": "Flower Hedge",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 35,
+    "diamonds": null,
+    "other": "+5 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "flower_hedge",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D0%B0%D1%8F_%D0%B8%D0%B7%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D1%8C"
+   ],
+   "notes": "game_id=Flower Hedge; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths/Nature L25 cost '35 [coin] +5 per purchase'"
+  },
+  {
+   "id": "flowershop_fence",
+   "name": "Flowershop fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "flowershop_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Flowershop fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Spring update 2023"
+  },
+  {
+   "id": "flowery_hedge",
+   "name": "Flowery hedge",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "flowery_hedge",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%B7%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D1%8C_%D1%81_%D1%86%D0%B2%D0%B5%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, gift; added: Winter update 2025"
+  },
+  {
+   "id": "garden_fence",
+   "name": "Garden fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "garden_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B4%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Garden fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "garden_flowers",
+   "name": "Garden flowers",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "garden_flowers",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B4%D0%BE%D0%B2%D1%8B%D0%B5_%D1%86%D0%B2%D0%B5%D1%82%D1%8B"
+   ],
+   "notes": "game_id=Garden flowers; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, movie night (ads), Farm Pass; added: Spring update 2023"
+  },
+  {
+   "id": "ghostly_fence",
+   "name": "Ghostly fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "ghostly_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B8%D0%B7%D1%80%D0%B0%D1%87%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Ghostly fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; added: Autumn update 2025"
+  },
+  {
+   "id": "gift_fence",
+   "name": "Gift fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "gift_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%B1%D0%BE%D1%80_%D0%B8%D0%B7_%D0%BF%D0%BE%D0%B4%D0%B0%D1%80%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Gift fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2023"
+  },
+  {
+   "id": "golden_wall",
+   "name": "Golden Wall",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 33,
+   "cost": {
+    "coins": 10000,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "golden_wall",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%B0%D1%8F_%D1%81%D1%82%D0%B5%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=GoldenWall; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths L33 cost '10,000 [coin] +500 per purchase'"
+  },
+  {
+   "id": "grass_board_fence",
+   "name": "Grass board fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "grass_board_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D0%BD%D0%B0%D1%80%D0%B8%D1%81%D0%BE%D0%B2%D0%B0%D0%BD%D0%BD%D1%8B%D0%BC%D0%B8_%D0%BA%D1%83%D1%81%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; added: Summer update 2025"
+  },
+  {
+   "id": "groovy_fence",
+   "name": "Groovy fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "groovy_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D0%B8%D0%BF%D0%BF%D0%B8-%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Groovy fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2025"
+  },
+  {
+   "id": "groovy_tile",
+   "name": "Groovy tile",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "groovy_tile",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D0%B8%D0%BF%D0%BF%D0%B8-%D0%BF%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Groovy tile; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2025"
+  },
+  {
+   "id": "hay_pole_fence",
+   "name": "Hay pole fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "hay_pole_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D1%88%D0%B5%D1%81%D1%82%D0%BE%D0%B2_%D0%B4%D0%BB%D1%8F_%D1%81%D0%B5%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Hay pole fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "heart_fence",
+   "name": "Heart Fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "heart_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D1%81%D0%B5%D1%80%D0%B4%D1%86%D0%B5%D0%BC"
+   ],
+   "notes": "game_id=Valentine's Fence; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; connectable piece (auto-joins neighbours); reward/special decoration; obtained via: currency-shop offer; added: Spring update 2020; en list: Packages"
+  },
+  {
+   "id": "heartwarming_fence",
+   "name": "Heartwarming fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "heartwarming_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D1%81%D0%B5%D1%80%D0%B4%D0%B5%D1%87%D0%BA%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Heartwarming fence; level 1 = no level gate recorded (non-shop item); seasonal=Valentine's Day; connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Winter update 2024"
+  },
+  {
+   "id": "hedge",
+   "name": "Hedge",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 20,
+   "cost": {
+    "coins": 10,
+    "diamonds": null,
+    "other": "+3 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "hedge",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D0%B8%D0%B2%D0%B0%D1%8F_%D0%B8%D0%B7%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D1%8C"
+   ],
+   "notes": "game_id=Hedge; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths/Nature L20 cost '10 [coin] +3 per purchase'"
+  },
+  {
+   "id": "holiday_fence",
+   "name": "Holiday Fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 5,
+    "other": null
+   },
+   "flippable": true,
+   "connect": {
+    "group": "holiday_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D1%8B%D0%B9_%D0%B7%D0%B0%D0%B1%D0%BE%D1%80"
+   ],
+   "notes": "game_id=ChristmasFence; seasonal=Christmas; obtained via: currency-shop offer, shop; en list: Seasonal cost '5 [dia]'"
+  },
+  {
+   "id": "holiday_light_fence",
+   "name": "Holiday Light Fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 8,
+    "other": null
+   },
+   "flippable": true,
+   "connect": {
+    "group": "holiday_light_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D0%BB%D0%B0%D0%BC%D0%BF%D0%BE%D1%87%D0%BA%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=ChristmasLightFence; seasonal=Christmas; obtained via: decoration set, currency-shop offer, shop, Farm Pass; en list: Seasonal cost '8 [dia]'"
+  },
+  {
+   "id": "holly_hedge",
+   "name": "Holly hedge",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 5,
+    "other": null
+   },
+   "flippable": true,
+   "connect": {
+    "group": "holly_hedge",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%B7%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D1%8C_%D0%B8%D0%B7_%D0%BF%D0%B0%D0%B4%D1%83%D0%B1%D0%B0"
+   ],
+   "notes": "game_id=Hollyhedge Fence; seasonal=Christmas; obtained via: decoration set, currency-shop offer, movie night (ads), shop, Farm Pass; added: Winter update 2020"
+  },
+  {
+   "id": "horse_fence",
+   "name": "Horse fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "horse_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%BE%D1%88%D0%B0%D0%B4%D0%B8%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Derby fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: derby; added: Spring update 2024"
+  },
+  {
+   "id": "horseshoe_hedge",
+   "name": "Horseshoe hedge",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "horseshoe_hedge",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%B7%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D1%8C-%D0%BF%D0%BE%D0%B4%D0%BA%D0%BE%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=Horseshoe fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: derby; added: Spring update 2023"
+  },
+  {
+   "id": "kiosk_fence",
+   "name": "Kiosk fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "kiosk_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D0%B2%D1%8B%D0%B5%D0%BC%D0%BA%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=Kiosk fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Summer update 2024"
+  },
+  {
+   "id": "koi_fish_fence",
+   "name": "Koi fish fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "koi_fish_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D0%BA%D0%B0%D1%80%D0%BF%D0%B0%D0%BC%D0%B8_%D0%BA%D0%BE%D0%B8"
+   ],
+   "notes": "game_id=Koi fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event, other; added: Summer update 2024"
+  },
+  {
+   "id": "lantern_fence",
+   "name": "Lantern fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "lantern_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D1%91%D0%BC"
+   ],
+   "notes": "game_id=CNYPillars; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer; added: Winter update 2017; en list: Packages"
+  },
+  {
+   "id": "log_fence",
+   "name": "Log fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "log_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D0%B1%D1%80%D1%91%D0%B2%D0%B5%D0%BD"
+   ],
+   "notes": "game_id=Log fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Summer update 2024"
+  },
+  {
+   "id": "lovely_fence",
+   "name": "Lovely fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "lovely_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B8%D0%BB%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Alpine Fence; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; connectable piece (auto-joins neighbours); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "lunar_obstacle",
+   "name": "Lunar obstacle",
+   "category": "fence",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D1%83%D0%BD%D0%BD%D0%B0%D1%8F_%D0%BF%D1%80%D0%B5%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Winter update 2025"
+  },
+  {
+   "id": "manor_wall",
+   "name": "Manor wall",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "manor_wall",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B5%D0%BD%D0%B0_%D1%83%D1%81%D0%B0%D0%B4%D1%8C%D0%B1%D1%8B"
+   ],
+   "notes": "game_id=FallFence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Farm Pass; added: Autumn update 2017; en list: Packages"
+  },
+  {
+   "id": "market_fence",
+   "name": "Market fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "market_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D1%80%D0%BC%D0%B0%D1%80%D0%BE%D1%87%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Market fence; level 1 = no level gate recorded (non-shop item); seasonal=Christmas; connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Farm Pass; added: Winter update 2023"
+  },
+  {
+   "id": "masonry_fence",
+   "name": "Masonry fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "masonry_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D0%BC%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Masonry fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2022"
+  },
+  {
+   "id": "mediterranean_fence",
+   "name": "Mediterranean fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "mediterranean_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%80%D0%B5%D0%B4%D0%B8%D0%B7%D0%B5%D0%BC%D0%BD%D0%BE%D0%BC%D0%BE%D1%80%D1%81%D0%BA%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Mediterranean fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Summer update 2024"
+  },
+  {
+   "id": "mini_golf_fence",
+   "name": "Mini golf fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "mini_golf_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%BC%D0%B8%D0%BD%D0%B8-%D0%B3%D0%BE%D0%BB%D1%8C%D1%84%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Summer update 2026"
+  },
+  {
+   "id": "mushroom_fence",
+   "name": "Mushroom fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "mushroom_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D1%80%D0%B8%D0%B1%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Mushroom fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass; added: Autumn update 2024"
+  },
+  {
+   "id": "musical_fence",
+   "name": "Musical fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "musical_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D1%83%D0%B7%D1%8B%D0%BA%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Musical note fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass, themed box; added: Spring update 2024"
+  },
+  {
+   "id": "nursery_fence",
+   "name": "Nursery Fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "nursery_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%8F%D1%81%D0%BB%D0%B5%D0%B9"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: gift, event, other, special-currency event; added: Spring update 2026"
+  },
+  {
+   "id": "orange_fence",
+   "name": "Orange fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "orange_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%80%D0%B0%D0%BD%D0%B6%D0%B5%D0%B2%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Orange fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Spring update 2022"
+  },
+  {
+   "id": "ornate_mushroom_fence",
+   "name": "Ornate mushroom fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "ornate_mushroom_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%98%D0%B7%D1%8B%D1%81%D0%BA%D0%B0%D0%BD%D0%BD%D0%B0%D1%8F_%D0%B3%D1%80%D0%B8%D0%B1%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Mushroom iron fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Autumn update 2024"
+  },
+  {
+   "id": "palette_fence",
+   "name": "Palette fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "palette_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%B1%D0%BE%D1%80_%D0%B8%D0%B7_%D0%BF%D0%B0%D0%BB%D0%B5%D1%82"
+   ],
+   "notes": "game_id=Palette fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "party_fence",
+   "name": "Party Fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "party_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B4%D1%83%D0%B6%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Party Fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Farm Pass, global event; added: Summer update 2021"
+  },
+  {
+   "id": "pebble_arch",
+   "name": "Pebble arch",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "pebble_arch",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%BA%D0%B0_%D0%B8%D0%B7_%D0%B3%D0%B0%D0%BB%D1%8C%D0%BA%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Winter update 2025"
+  },
+  {
+   "id": "pencil_fence",
+   "name": "Pencil fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "pencil_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%80%D0%B0%D0%BD%D0%B4%D0%B0%D1%88%D0%BD%D1%8B%D0%B9_%D0%B7%D0%B0%D0%B1%D0%BE%D1%80"
+   ],
+   "notes": "game_id=PencilFence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, task event; added: Summer update 2016; en list: Packages"
+  },
+  {
+   "id": "pet_fence",
+   "name": "Pet fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "pet_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%BF%D0%B8%D1%82%D0%BE%D0%BC%D1%86%D0%B5%D0%B2"
+   ],
+   "notes": "game_id=Pet fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
+  },
+  {
+   "id": "poolside_fence",
+   "name": "Poolside fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "poolside_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%B1%D0%B0%D1%81%D1%81%D0%B5%D0%B9%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Pool area fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: task event; added: Summer update 2024"
+  },
+  {
+   "id": "potted_fence",
+   "name": "Potted fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "potted_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D0%B3%D0%BE%D1%80%D1%88%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Potted fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: catalogue, Farm Pass; added: Spring update 2022"
+  },
+  {
+   "id": "pumpkin_fence",
+   "name": "Pumpkin fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "pumpkin_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%8B%D0%BA%D0%B2%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Pumpkin_fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Autumn update 2023"
+  },
+  {
+   "id": "purple_hedge",
+   "name": "Purple hedge",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "purple_hedge",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B8%D0%BE%D0%BB%D0%B5%D1%82%D0%BE%D0%B2%D0%B0%D1%8F_%D0%B8%D0%B7%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D1%8C"
+   ],
+   "notes": "game_id=Purple Hedge; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Winter update 2021"
+  },
+  {
+   "id": "railroad_fence",
+   "name": "Railroad fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "railroad_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D0%B5%D0%BB%D0%B5%D0%B7%D0%BD%D0%BE%D0%B4%D0%BE%D1%80%D0%BE%D0%B6%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Railroad fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Spring update 2023"
+  },
+  {
+   "id": "rattan_fence",
+   "name": "Rattan fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "rattan_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%BE%D1%82%D0%B0%D0%BD%D0%B3%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Wicker_fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Autumn update 2023"
+  },
+  {
+   "id": "red_dragon_fence",
+   "name": "Red dragon fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "red_dragon_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%BA%D1%80%D0%B0%D1%81%D0%BD%D0%BE%D0%B3%D0%BE_%D0%B4%D1%80%D0%B0%D0%BA%D0%BE%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=DragonFence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Autumn update 2023"
+  },
+  {
+   "id": "red_fence",
+   "name": "Red fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "red_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=CNY Red fence; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; obtained via: currency-shop offer, Farm Pass; added: Winter update 2018; en list: Packages"
+  },
+  {
+   "id": "restaurant_table_fence",
+   "name": "Restaurant table fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "restaurant_table_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D1%81%D1%82%D0%BE%D0%BB%D0%B8%D0%BA%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Restaurant fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer, Wheel of Fortune; added: Spring update 2022"
+  },
+  {
+   "id": "rope_fence",
+   "name": "Rope fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 20,
+   "cost": {
+    "coins": 1000,
+    "diamonds": null,
+    "other": "+100 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "rope_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%80%D1%91%D0%B2%D0%BE%D1%87%D0%BD%D0%BE%D0%B5_%D0%B7%D0%B0%D0%B3%D1%80%D0%B0%D0%B6%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5"
+   ],
+   "notes": "game_id=RopeFence; connectable piece (auto-joins neighbours); obtained via: movie night (ads), shop; added: Spring update 2016; en list: Fences & Paths L20 cost '1,000 [coin] +100 per purchase'"
+  },
+  {
+   "id": "rose_fence_orange",
+   "name": "Rose Fence: Orange",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 44,
+   "cost": {
+    "coins": 200,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "rose_fence_orange",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%80%D0%B0%D0%BD%D0%B6%D0%B5%D0%B2%D1%8B%D0%B5_%D1%80%D0%BE%D0%B7%D1%8B"
+   ],
+   "notes": "game_id=RoseFenceOrange; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths/Nature L44 cost '200 [coin] +10 per purchase'"
+  },
+  {
+   "id": "rose_fence_pink",
+   "name": "Rose Fence: Pink",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 48,
+   "cost": {
+    "coins": 200,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "rose_fence_pink",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%BE%D0%B7%D0%BE%D0%B2%D1%8B%D0%B5_%D1%80%D0%BE%D0%B7%D1%8B"
+   ],
+   "notes": "game_id=RoseFencePink; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths/Nature L48 cost '200 [coin] +10 per purchase'"
+  },
+  {
+   "id": "rose_fence_red",
+   "name": "Rose Fence: Red",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 53,
+   "cost": {
+    "coins": 200,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "rose_fence_red",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B5_%D1%80%D0%BE%D0%B7%D1%8B"
+   ],
+   "notes": "game_id=RoseFenceRed; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths/Nature L53 cost '200 [coin] +10 per purchase'"
+  },
+  {
+   "id": "rose_fence_white",
+   "name": "Rose Fence: White",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 19,
+   "cost": {
+    "coins": 200,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "rose_fence_white",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D0%BB%D1%8B%D0%B5_%D1%80%D0%BE%D0%B7%D1%8B"
+   ],
+   "notes": "game_id=RoseFenceWhite; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths/Nature L19 cost '200 [coin] +10 per purchase'"
+  },
+  {
+   "id": "rose_fence_yellow",
+   "name": "Rose Fence: Yellow",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 40,
+   "cost": {
+    "coins": 200,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "rose_fence_yellow",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D1%91%D0%BB%D1%82%D1%8B%D0%B5_%D1%80%D0%BE%D0%B7%D1%8B"
+   ],
+   "notes": "game_id=RoseFenceYellow; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths/Nature L40 cost '200 [coin] +10 per purchase'"
+  },
+  {
+   "id": "rustic_fence",
+   "name": "Rustic fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "rustic_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B5%D0%BB%D1%8C%D1%81%D0%BA%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Rustic fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Spring update 2022"
+  },
+  {
+   "id": "snow_castle_fence",
+   "name": "Snow castle fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "snow_castle_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81%D0%BD%D0%B5%D0%B6%D0%BD%D0%BE%D0%B3%D0%BE_%D0%B7%D0%B0%D0%BC%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Snowcastle fence; level 1 = no level gate recorded (non-shop item); seasonal=Winter; connectable piece (auto-joins neighbours); reward/special decoration; obtained via: special-currency event, Farm Pass, movie night (ads), currency-shop offer; added: Winter update 2021; en list: Packages"
+  },
+  {
+   "id": "snowdrop",
+   "name": "Snowdrop",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "snowdrop",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%B4%D1%81%D0%BD%D0%B5%D0%B6%D0%BD%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Snowdrop patch; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer; added: Spring update 2023"
+  },
+  {
+   "id": "snowy_hedge",
+   "name": "Snowy hedge",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "snowy_hedge",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BD%D0%B5%D0%B6%D0%BD%D0%B0%D1%8F_%D0%B8%D0%B7%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D1%8C"
+   ],
+   "notes": "game_id=Snowy hedge; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2024"
+  },
+  {
+   "id": "snowy_lantern_fence",
+   "name": "Snowy lantern fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "snowy_lantern_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D1%81%D0%BD%D0%B5%D0%B6%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D1%91%D0%BC"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: special-currency event; added: Winter update 2025"
+  },
+  {
+   "id": "spider_fence",
+   "name": "Spider fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "spider_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%83%D1%87%D1%8C%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Spider fence; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; connectable piece (auto-joins neighbours); obtained via: currency-shop offer, task event; added: Autumn update 2023"
+  },
+  {
+   "id": "spring_fence",
+   "name": "Spring fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "spring_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%81%D0%B5%D0%BD%D0%BD%D1%8F%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Spring Fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "stable_fence",
+   "name": "Stable fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "stable_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%BA%D0%BE%D0%BD%D1%8E%D1%88%D0%BD%D0%B8"
+   ],
+   "notes": "game_id=Stable fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Autumn update 2022"
+  },
+  {
+   "id": "stained_glass_fence",
+   "name": "Stained glass fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "stained_glass_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B8%D1%82%D1%80%D0%B0%D0%B6%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Glass wall; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Autumn update 2024"
+  },
+  {
+   "id": "star_fence",
+   "name": "Star fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "star_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81%D0%BE_%D0%B7%D0%B2%D1%91%D0%B7%D0%B4%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Star fence; level 1 = no level gate recorded (non-shop item); seasonal=Lunar New Year; connectable piece (auto-joins neighbours); obtained via: decoration set, Farm Pass, currency-shop offer; added: Winter update 2018; en list: Packages"
+  },
+  {
+   "id": "starry_lights",
+   "name": "Starry lights",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "starry_lights",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%B8%D1%80%D0%BB%D1%8F%D0%BD%D0%B4%D0%B0_%D0%B8%D0%B7_%D0%B7%D0%B2%D1%91%D0%B7%D0%B4"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Autumn update 2025"
+  },
+  {
+   "id": "stone_wall_fence",
+   "name": "Stone Wall",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 13,
+   "cost": {
+    "coins": 60,
+    "diamonds": null,
+    "other": "+10 coins per additional purchase"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "stone_wall_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D0%BC%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D0%B5%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Stone Wall; connectable piece (auto-joins neighbours); obtained via: shop; en list: Fences & Paths L13 cost '60 [coin] +10 per purchase'"
+  },
+  {
+   "id": "sugar_skull_paths",
+   "name": "Sugar skull paths",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "sugar_skull_paths",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%80%D0%BE%D0%B6%D0%BA%D0%B0_%D1%81_%D0%BA%D0%B0%D0%BB%D0%B0%D0%B2%D0%B5%D1%80%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Sugarskull path; level 1 = no level gate recorded (non-shop item); seasonal=Halloween; reward/special decoration; obtained via: currency-shop offer, Farm Pass, special-currency event; added: Autumn update 2021; en list: Packages"
+  },
+  {
+   "id": "summer_fence",
+   "name": "Summer fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "summer_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D0%BD%D0%B0%D0%BD%D0%B0%D1%81%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Summer fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Wheel of Fortune; added: Summer update 2024"
+  },
+  {
+   "id": "sunflower_fence",
+   "name": "Sunflower fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "sunflower_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%B1%D0%BE%D1%80_%D1%81_%D0%BF%D0%BE%D0%B4%D1%81%D0%BE%D0%BB%D0%BD%D1%83%D1%85%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Sunflower fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: currency-shop offer; added: Summer update 2023"
+  },
+  {
+   "id": "thanksgiving_fence",
+   "name": "Thanksgiving fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "thanksgiving_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%BA%D0%BE_%D0%94%D0%BD%D1%8E_%D0%B1%D0%BB%D0%B0%D0%B3%D0%BE%D0%B4%D0%B0%D1%80%D0%B5%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Thanksgiving fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Autumn update 2024"
+  },
+  {
+   "id": "trellis_fence",
+   "name": "Trellis fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "trellis_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D0%B5%D0%BB%D1%8C%D1%8F%D0%B6"
+   ],
+   "notes": "game_id=Trellis fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: catalogue, Wheel of Fortune; added: Spring update 2018; en list: Catalogue"
+  },
+  {
+   "id": "tropical_fence",
+   "name": "Tropical fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 5,
+    "other": null
+   },
+   "flippable": true,
+   "connect": {
+    "group": "tropical_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D0%BE%D0%BF%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Tropical fence; connectable piece (auto-joins neighbours); obtained via: special-currency event, shop; added: Spring update 2023"
+  },
+  {
+   "id": "upcycled_bottle_fence",
+   "name": "Upcycled Bottle Fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "upcycled_bottle_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D0%B1%D1%83%D1%82%D1%8B%D0%BB%D0%BE%D0%BA"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: special-currency event; added: Spring update 2026"
+  },
+  {
+   "id": "velvet_rope",
+   "name": "Velvet rope",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "velvet_rope",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B6%D0%B4%D0%B5%D0%BD%D0%B8%D0%B5_%D0%B8%D0%B7_%D0%B1%D0%B0%D1%80%D1%85%D0%B0%D1%82%D0%BD%D0%BE%D0%B3%D0%BE_%D0%BA%D0%B0%D0%BD%D0%B0%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Velvet rope fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: special-currency event; added: Summer update 2024"
+  },
+  {
+   "id": "venetian_fence",
+   "name": "Venetian fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "venetian_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D0%BD%D0%B5%D1%86%D0%B8%D0%B0%D0%BD%D1%81%D0%BA%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Venetian fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass, special-currency event; added: Winter update 2022"
+  },
+  {
+   "id": "vine_trellis",
+   "name": "Vine trellis",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "vine_trellis",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D0%B5%D0%BB%D1%8C%D1%8F%D0%B6_%D1%81_%D0%B2%D0%B8%D0%BD%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%BD%D0%BE%D0%B9_%D0%BB%D0%BE%D0%B7%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=Vine trellis; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass; added: Summer update 2024"
+  },
+  {
+   "id": "wedding_fence",
+   "name": "Wedding fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "wedding_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B0%D0%B4%D0%B5%D0%B1%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=Wedding fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Spring update 2025"
+  },
+  {
+   "id": "western_fence",
+   "name": "Western fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "western_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%B2%D0%B1%D0%BE%D0%B9%D1%81%D0%BA%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: currency-shop offer, other, themed box; added: Summer update 2025"
+  },
+  {
+   "id": "wheel_fence",
+   "name": "Wheel fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "wheel_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D0%B8%D0%B7_%D0%BA%D0%BE%D0%BB%D1%91%D1%81"
+   ],
+   "notes": "game_id=Wheel fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; obtained via: movie night (ads), catalogue, Wheel of Fortune, gift; added: Spring update 2018; en list: Catalogue"
+  },
+  {
+   "id": "winter_fence",
+   "name": "Winter fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 5,
+    "other": null
+   },
+   "flippable": true,
+   "connect": {
+    "group": "winter_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "game_id=WinterLoveFence; seasonal=Christmas; obtained via: decoration set, currency-shop offer, movie night (ads), shop, Farm Pass; added: Winter update 2017; en list: Packages"
+  },
+  {
+   "id": "wisteria_fence",
+   "name": "Wisteria fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "wisteria_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D0%B3%D0%BB%D0%B8%D1%86%D0%B8%D0%BD%D0%B8%D0%B5%D0%B9"
+   ],
+   "notes": "game_id=Wisteria fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: other, currency-shop offer, special-currency event; added: Spring update 2025"
+  },
+  {
+   "id": "wooden_heart_fence",
+   "name": "Wooden heart fence",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "wooden_heart_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B5%D1%80%D0%B5%D0%B2%D1%8F%D0%BD%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0_%D1%81_%D1%81%D0%B5%D1%80%D0%B4%D1%86%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Wooden heart fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass; added: Summer update 2024"
+  },
+  {
+   "id": "item_fence_2",
+   "name": "Праздничная ограда",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "item_fence_2",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "English name unavailable; Russian in-game name; level 1 = no level gate recorded (non-shop item); reward/special decoration; added: Autumn update 2025"
+  },
+  {
+   "id": "item_fence",
+   "name": "Яблочная ограда",
+   "category": "fence",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "connect": {
+    "group": "item_fence",
+    "style": "fence"
+   },
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D0%B1%D0%BB%D0%BE%D1%87%D0%BD%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
+   ],
+   "notes": "English name unavailable; Russian in-game name; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); reward/special decoration; added: Summer update 2025"
+  }
+ ]
+}

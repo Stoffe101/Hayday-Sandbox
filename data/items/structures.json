@@ -1,0 +1,2143 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "alpaca_gateway",
+   "name": "Alpaca Gateway",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%BA%D0%B0_%D0%B4%D0%BB%D1%8F_%D0%B0%D0%BB%D1%8C%D0%BF%D0%B0%D0%BA"
+   ],
+   "notes": "English name from en-wiki list (matched by valley season); level 1 = no level gate recorded (non-shop item); obtained via: valley; added: Summer update 2025; en list: Valley"
+  },
+  {
+   "id": "archery",
+   "name": "Archery",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B8%D1%88%D0%B5%D0%BD%D1%8C"
+   ],
+   "notes": "game_id=Archery; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Spring update 2022"
+  },
+  {
+   "id": "autumn_pavilion",
+   "name": "Autumn pavilion",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D0%B8%D0%B9_%D0%BF%D0%B0%D0%B2%D0%B8%D0%BB%D1%8C%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=Autumn pavilion; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer; added: Summer update 2023"
+  },
+  {
+   "id": "bamboo_gate",
+   "name": "Bamboo gate",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D0%BC%D0%B1%D1%83%D0%BA%D0%BE%D0%B2%D1%8B%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Bamboo forest; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Spring update 2025"
+  },
+  {
+   "id": "beach_hut",
+   "name": "Beach hut",
+   "category": "structures",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D1%8F%D0%B6%D0%BD%D0%B0%D1%8F_%D0%BA%D0%B0%D0%B1%D0%B8%D0%BD%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Beach Hut; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Spring update 2021"
+  },
+  {
+   "id": "big_gate",
+   "name": "Big gate",
+   "category": "structures",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": 10000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B8%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=BigGate; ru level=0 (town decoration / no farm level gate); requires reputation level 5; town decoration; obtained via: shop; added: Spring update 2016; en list: Ornaments L34 cost '10,000 [coin]'; unlock level differs: ru=0 en=34"
+  },
+  {
+   "id": "big_greenhouse",
+   "name": "Big greenhouse",
+   "category": "structures",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F_%D1%82%D0%B5%D0%BF%D0%BB%D0%B8%D1%86%D0%B0"
+   ],
+   "notes": "English name unavailable; using internal game id; game_id=Big greenhouse; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Autumn update 2025"
+  },
+  {
+   "id": "bird_pavilion",
+   "name": "Bird pavilion",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "400 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%82%D0%B8%D1%87%D0%B8%D0%B9_%D0%BF%D0%B0%D0%B2%D0%B8%D0%BB%D1%8C%D0%BE%D0%BD"
+   ],
+   "notes": "obtained via: design contest; added: Summer update 2025"
+  },
+  {
+   "id": "birthday_tent",
+   "name": "Birthday tent",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D0%BF%D0%B0%D0%BB%D0%B0%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Birthday Gift Tent; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Summer update 2020; en list: Packages"
+  },
+  {
+   "id": "blue_pavilion",
+   "name": "Blue pavilion",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BE%D0%BB%D1%83%D0%B1%D0%BE%D0%B9_%D0%BF%D0%B0%D0%B2%D0%B8%D0%BB%D1%8C%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=Derby Pavilion; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: derby; added: Spring update 2021; en list: Derby"
+  },
+  {
+   "id": "bouncy_castle",
+   "name": "Bouncy castle",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 90,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B0%D0%B4%D1%83%D0%B2%D0%BD%D0%BE%D0%B9_%D0%B7%D0%B0%D0%BC%D0%BE%D0%BA"
+   ],
+   "notes": "game_id=BouncyCastle; obtained via: currency-shop offer; added: Summer update 2016; en list: Packages"
+  },
+  {
+   "id": "bridge",
+   "name": "Bridge",
+   "category": "structures",
+   "footprint": [
+    3,
+    4
+   ],
+   "footprint_status": "community",
+   "unlock_level": 28,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "45 green voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%BE%D1%81%D1%82"
+   ],
+   "notes": "game_id=Bridge; obtained via: shop; en list: Ornaments L28 cost '45 [greenv]'"
+  },
+  {
+   "id": "butterfly_house",
+   "name": "Butterfly house",
+   "category": "structures",
+   "footprint": [
+    2,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D0%BC_%D0%B1%D0%B0%D0%B1%D0%BE%D1%87%D0%B5%D0%BA"
+   ],
+   "notes": "game_id=Butterfly house; level 1 = no level gate recorded (non-shop item); obtained via: collection; added: Winter update 2024"
+  },
+  {
+   "id": "carnival_gate",
+   "name": "Carnival gate",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%80%D0%BD%D0%B0%D0%B2%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Carnival gate; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Spring update 2023"
+  },
+  {
+   "id": "carrot_gazebo",
+   "name": "Carrot gazebo",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D1%81%D0%B5%D0%B4%D0%BA%D0%B0-%D0%BC%D0%BE%D1%80%D0%BA%D0%BE%D0%B2%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Carrot gazebo; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Spring update 2024"
+  },
+  {
+   "id": "carrot_house",
+   "name": "Carrot house",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D0%BC%D0%B8%D0%BA-%D0%BC%D0%BE%D1%80%D0%BA%D0%BE%D0%B2%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Carrot house; level 1 = no level gate recorded (non-shop item); added: Spring update 2024"
+  },
+  {
+   "id": "carved_shed",
+   "name": "Carved shed",
+   "category": "structures",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "600 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%BB%D0%B5%D0%BD%D1%8C%D0%B5_%D1%81%D1%82%D0%BE%D0%B9%D0%BB%D0%BE"
+   ],
+   "notes": "obtained via: design contest; added: Autumn update 2025"
+  },
+  {
+   "id": "colorful_hut",
+   "name": "Colorful hut",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B7%D0%BD%D0%BE%D1%86%D0%B2%D0%B5%D1%82%D0%BD%D0%B0%D1%8F_%D1%85%D0%B8%D0%B6%D0%B8%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Colorful hut; level 1 = no level gate recorded (non-shop item); obtained via: valley; added: Winter update 2024; en list: Valley; en wiki spells it 'Colourful Hut'"
+  },
+  {
+   "id": "colorful_towers",
+   "name": "Colorful towers",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B7%D0%BD%D0%BE%D1%86%D0%B2%D0%B5%D1%82%D0%BD%D1%8B%D0%B5_%D0%B1%D0%B0%D1%88%D0%BD%D0%B8"
+   ],
+   "notes": "game_id=Valley trophy Russia; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: valley; added: Autumn update 2021; en list: Valley"
+  },
+  {
+   "id": "covered_stand",
+   "name": "Covered stand",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D1%8B%D1%82%D0%B0%D1%8F_%D1%82%D1%80%D0%B8%D0%B1%D1%83%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Covered stand; level 1 = no level gate recorded (non-shop item); obtained via: derby; added: Winter update 2024"
+  },
+  {
+   "id": "crescent_arch",
+   "name": "Crescent Arch",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%BA%D0%B0_%D1%81_%D0%BF%D0%BE%D0%BB%D1%83%D0%BC%D0%B5%D1%81%D1%8F%D1%86%D0%B5%D0%BC"
+   ],
+   "notes": "game_id=Crescent Arch; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, other, special-currency event; added: Spring update 2021; en list: Packages"
+  },
+  {
+   "id": "crescent_gazebo",
+   "name": "Crescent gazebo",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D1%81%D0%B5%D0%B4%D0%BA%D0%B0_%D1%81_%D0%BF%D0%BE%D0%BB%D1%83%D0%BC%D0%B5%D1%81%D1%8F%D1%86%D0%B5%D0%BC"
+   ],
+   "notes": "game_id=Crescent town center; level 1 = no level gate recorded (non-shop item); obtained via: global event; added: Spring update 2024"
+  },
+  {
+   "id": "desert_tent",
+   "name": "Desert tent",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%82%D1%91%D1%80_%D0%B2_%D0%BF%D1%83%D1%81%D1%82%D1%8B%D0%BD%D0%B5"
+   ],
+   "notes": "game_id=Ramadan Tent; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, currency-shop offer; added: Summer update 2019; en list: Packages"
+  },
+  {
+   "id": "fairground_fortune_teller",
+   "name": "Fairground fortune teller",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B0%D1%82%D1%91%D1%80_%D0%B3%D0%B0%D0%B4%D0%B0%D0%BB%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Fairground fortune teller; level 1 = no level gate recorded (non-shop item); obtained via: collection; added: Autumn update 2024"
+  },
+  {
+   "id": "fancy_arch",
+   "name": "Fancy arch",
+   "category": "structures",
+   "footprint": [
+    3,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%BE%D0%B4%D0%BD%D0%B0%D1%8F_%D0%B0%D1%80%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=RomanGate; level 1 = no level gate recorded (non-shop item); obtained via: expansion plot, derby; added: Autumn update 2019; en list: Expansion; en wiki spells it 'Roman Gate'"
+  },
+  {
+   "id": "farm_windmill",
+   "name": "Farm windmill",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B5%D1%80%D0%BC%D0%B5%D1%80%D1%81%D0%BA%D0%B0%D1%8F_%D0%B2%D0%B5%D1%82%D1%80%D1%8F%D0%BD%D0%B0%D1%8F_%D0%BC%D0%B5%D0%BB%D1%8C%D0%BD%D0%B8%D1%86%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Summer update 2025"
+  },
+  {
+   "id": "festival_gate",
+   "name": "Festival gate",
+   "category": "structures",
+   "footprint": [
+    1,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "500 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B5%D1%81%D1%82%D0%B8%D0%B2%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D0%B0%D1%80%D0%BA%D0%B0"
+   ],
+   "notes": "obtained via: design contest; added: Summer update 2026"
+  },
+  {
+   "id": "festival_stage",
+   "name": "Festival stage",
+   "category": "structures",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B5%D1%81%D1%82%D0%B8%D0%B2%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D1%81%D1%86%D0%B5%D0%BD%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Spring update 2026"
+  },
+  {
+   "id": "festival_tent",
+   "name": "Festival tent",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B5%D1%81%D1%82%D0%B8%D0%B2%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D0%BD%D0%B0%D0%B2%D0%B5%D1%81"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Spring update 2026"
+  },
+  {
+   "id": "festive_stage",
+   "name": "Festive stage",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D1%81%D1%86%D0%B5%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Festive stage; level 1 = no level gate recorded (non-shop item); reward/special decoration; added: Spring update 2023"
+  },
+  {
+   "id": "flowery_gate",
+   "name": "Flowery gate",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D0%BE%D1%87%D0%BD%D1%8B%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Flower gate; level 1 = no level gate recorded (non-shop item); added: Summer update 2024"
+  },
+  {
+   "id": "frozen_bridge",
+   "name": "Frozen bridge",
+   "category": "structures",
+   "footprint": [
+    1,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%BB%D0%B5%D0%B4%D0%B5%D0%BD%D0%B5%D0%BB%D1%8B%D0%B9_%D0%BC%D0%BE%D1%81%D1%82"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Autumn update 2025"
+  },
+  {
+   "id": "frozen_castle",
+   "name": "Frozen castle",
+   "category": "structures",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 299,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B5%D0%B4%D1%8F%D0%BD%D0%BE%D0%B9_%D0%B7%D0%B0%D0%BC%D0%BE%D0%BA"
+   ],
+   "notes": "obtained via: shop, monthly decoration; added: Autumn update 2025"
+  },
+  {
+   "id": "garden_pavilion",
+   "name": "Garden pavilion",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B4%D0%BE%D0%B2%D1%8B%D0%B9_%D0%BF%D0%B0%D0%B2%D0%B8%D0%BB%D1%8C%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=Garden pavilion; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "garden_shed",
+   "name": "Garden shed",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B4%D0%BE%D0%B2%D1%8B%D0%B9_%D1%81%D0%B0%D1%80%D0%B0%D0%B9"
+   ],
+   "notes": "game_id=Gardener’s shed; level 1 = no level gate recorded (non-shop item); added: Summer update 2024"
+  },
+  {
+   "id": "garden_tent",
+   "name": "Garden Tent",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "confirmed",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "confirmed",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B4%D0%BE%D0%B2%D1%8B%D0%B9_%D1%88%D0%B0%D1%82%D1%91%D1%80"
+   ],
+   "notes": "game_id=Garden tent; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, movie night (ads), Farm Pass; added: Spring update 2020; en list: Packages"
+  },
+  {
+   "id": "gate_guardians",
+   "name": "Gate guardians",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%BE%D1%80%D0%BE%D0%B6%D0%B5%D0%B2%D0%B0%D1%8F_%D0%B1%D1%83%D0%B4%D0%BA%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: county fair; added: Spring update 2026"
+  },
+  {
+   "id": "gazebo",
+   "name": "Gazebo",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 19,
+   "cost": {
+    "coins": 2500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D1%81%D0%B5%D0%B4%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Gazebo_1; obtained via: shop; en list: Farming L19 cost '2,500 [coin]'"
+  },
+  {
+   "id": "golden_outhouse",
+   "name": "Golden Outhouse",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 30,
+   "cost": {
+    "coins": null,
+    "diamonds": 49,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%BE%D0%B9_%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82"
+   ],
+   "notes": "game_id=GoldenOuthouse; obtained via: shop; en list: Farming L30 cost '49 [dia]'"
+  },
+  {
+   "id": "greenhouse",
+   "name": "Greenhouse",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D0%BF%D0%BB%D0%B8%D1%86%D0%B0"
+   ],
+   "notes": "game_id=Greenhouse; level 1 = no level gate recorded (non-shop item); added: Summer update 2024"
+  },
+  {
+   "id": "groovy_stage",
+   "name": "Groovy stage",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D0%B8%D0%BF%D0%BF%D0%B8-%D1%81%D1%86%D0%B5%D0%BD%D0%B0"
+   ],
+   "notes": "English name unavailable; using internal game id; game_id=Groovy stage; level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Spring update 2025"
+  },
+  {
+   "id": "guinea_pig_castle",
+   "name": "Guinea pig castle",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%BC%D0%BE%D0%BA_%D0%BC%D0%BE%D1%80%D1%81%D0%BA%D0%B8%D1%85_%D1%81%D0%B2%D0%B8%D0%BD%D0%BE%D0%BA"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: task event; added: Summer update 2026"
+  },
+  {
+   "id": "harvest_shelter",
+   "name": "Harvest shelter",
+   "category": "structures",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D0%BC%D0%B8%D0%BA_%D0%B4%D0%BB%D1%8F_%D1%83%D1%80%D0%BE%D0%B6%D0%B0%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Summer update 2026"
+  },
+  {
+   "id": "hedge_gate",
+   "name": "Hedge gate",
+   "category": "structures",
+   "footprint": [
+    1,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D1%80%D0%BE%D1%82%D0%B0_%D0%B2_%D0%B6%D0%B8%D0%B2%D0%BE%D0%B9_%D0%B8%D0%B7%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Summer update 2025"
+  },
+  {
+   "id": "horseshoe_gate",
+   "name": "Horseshoe gate",
+   "category": "structures",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D1%80%D0%BE%D1%82%D0%B0-%D0%BF%D0%BE%D0%B4%D0%BA%D0%BE%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=Horseshoe Gate; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, derby; added: Autumn update 2019; en list: Packages"
+  },
+  {
+   "id": "iron_tower",
+   "name": "Iron tower",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D0%B5%D0%BB%D0%B5%D0%B7%D0%BD%D0%B0%D1%8F_%D0%B1%D0%B0%D1%88%D0%BD%D1%8F"
+   ],
+   "notes": "game_id=Valley trophy France Tower; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: valley, event, box; added: Summer update 2021; en list: Valley"
+  },
+  {
+   "id": "kite_stand",
+   "name": "Kite stand",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D0%B7%D0%B4%D1%83%D1%88%D0%BD%D1%8B%D0%B5_%D0%B7%D0%BC%D0%B5%D0%B8"
+   ],
+   "notes": "game_id=Kite Stand; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Summer update 2021"
+  },
+  {
+   "id": "lantern_temple",
+   "name": "Lantern Temple",
+   "category": "structures",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D1%80%D0%B0%D0%BC_%D1%84%D0%BE%D0%BD%D0%B0%D1%80%D0%B5%D0%B9"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Spring update 2026"
+  },
+  {
+   "id": "lemonade_stand",
+   "name": "Lemonade stand",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B8%D0%BC%D0%BE%D0%BD%D0%B0%D0%B4%D0%BD%D1%8B%D0%B9_%D0%BA%D0%B8%D0%BE%D1%81%D0%BA"
+   ],
+   "notes": "game_id=Fresh lemonade; level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Spring update 2024"
+  },
+  {
+   "id": "lighthouse",
+   "name": "Lighthouse",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D1%8F%D0%BA"
+   ],
+   "notes": "game_id=Lighthouse; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, expansion plot; added: Spring update 2022; en list: Packages"
+  },
+  {
+   "id": "lookout_tower",
+   "name": "Lookout tower",
+   "category": "structures",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "400 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BC%D0%BE%D1%82%D1%80%D0%BE%D0%B2%D0%B0%D1%8F_%D0%B2%D1%8B%D1%88%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Lookout tower; obtained via: design contest; added: Spring update 2025"
+  },
+  {
+   "id": "mask_stand",
+   "name": "Mask Stand",
+   "category": "structures",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D1%81%D0%BA%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Spring update 2026"
+  },
+  {
+   "id": "moon_gazebo",
+   "name": "Moon gazebo",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D1%83%D0%BD%D0%BD%D0%B0%D1%8F_%D0%B1%D0%B5%D1%81%D0%B5%D0%B4%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Moon gazebo; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: special-currency event, currency-shop offer; added: Winter update 2021"
+  },
+  {
+   "id": "mushroom_house",
+   "name": "Mushroom House",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 25,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D1%80%D0%B8%D0%B1%D0%BD%D0%BE%D0%B9_%D0%B4%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=MushroomHouse; obtained via: shop; en list: Ornaments L1 cost '25 [dia]'"
+  },
+  {
+   "id": "narrow_gate",
+   "name": "Narrow gate",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 49,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%B0%D1%8F_%D0%BA%D0%B0%D0%BB%D0%B8%D1%82%D0%BA%D0%B0"
+   ],
+   "notes": "obtained via: shop, monthly decoration; added: Summer update 2025"
+  },
+  {
+   "id": "observatory_gazebo",
+   "name": "Observatory gazebo",
+   "category": "structures",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D1%81%D0%B5%D0%B4%D0%BA%D0%B0-%D0%BE%D0%B1%D1%81%D0%B5%D1%80%D0%B2%D0%B0%D1%82%D0%BE%D1%80%D0%B8%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: task event, currency-shop offer; added: Autumn update 2025"
+  },
+  {
+   "id": "outhouse",
+   "name": "Outhouse",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 28,
+   "cost": {
+    "coins": 400,
+    "diamonds": null,
+    "other": "+50 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%83%D0%B0%D0%BB%D0%B5%D1%82"
+   ],
+   "notes": "game_id=Outhouse; obtained via: movie night (ads), shop; en list: Farming L28 cost '400 [coin]'"
+  },
+  {
+   "id": "pantry_stand",
+   "name": "Pantry stand",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B8%D0%BB%D0%B0%D0%B2%D0%BE%D0%BA_%D1%81_%D0%BC%D1%83%D0%BA%D0%BE%D0%B9"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: task event; added: Summer update 2026"
+  },
+  {
+   "id": "party_stage",
+   "name": "Party Stage",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B4%D1%83%D0%B6%D0%BD%D0%B0%D1%8F_%D1%81%D1%86%D0%B5%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Party Stage; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, global event; added: Summer update 2021"
+  },
+  {
+   "id": "pavilion",
+   "name": "Pavilion",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 19,
+   "cost": {
+    "coins": null,
+    "diamonds": 30,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D0%B2%D0%B8%D0%BB%D1%8C%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=Gazebo_2; obtained via: shop; en list: Farming L19 cost '30 [dia]'"
+  },
+  {
+   "id": "peaceful_windmill",
+   "name": "Peaceful windmill",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B8%D0%BB%D0%B0%D1%8F_%D0%BC%D0%B5%D0%BB%D1%8C%D0%BD%D0%B8%D1%86%D0%B0"
+   ],
+   "notes": "game_id=Valley Netherland; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: valley; added: Winter update 2021; en list: Valley"
+  },
+  {
+   "id": "phone_booth",
+   "name": "Phone booth",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B5%D0%BB%D0%B5%D1%84%D0%BE%D0%BD%D0%BD%D0%B0%D1%8F_%D0%B1%D1%83%D0%B4%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Phone booth; level 1 = no level gate recorded (non-shop item); obtained via: expansion plot, derby; added: Autumn update 2019; en list: Expansion"
+  },
+  {
+   "id": "pig_tower",
+   "name": "Pig tower",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B8%D0%BD%D0%B0%D1%8F_%D0%B1%D0%B0%D1%88%D0%BD%D1%8F"
+   ],
+   "notes": "game_id=Valley trophy Pig tower; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: valley, special-currency event, box; added: Spring update 2021; en list: Valley"
+  },
+  {
+   "id": "plushies_stand",
+   "name": "Plushies stand",
+   "category": "structures",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "320 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D1%8F%D0%B3%D0%BA%D0%B8%D0%B5_%D0%B8%D0%B3%D1%80%D1%83%D1%88%D0%BA%D0%B8"
+   ],
+   "notes": "obtained via: design contest; added: Summer update 2025"
+  },
+  {
+   "id": "pretzel_stand",
+   "name": "Pretzel stand",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%BE%D0%B4%D0%B0%D0%B2%D0%B5%D1%86_%D0%B1%D1%80%D0%B5%D1%86%D0%B5%D0%BB%D0%B5%D0%B9"
+   ],
+   "notes": "game_id=Pretzel station; level 1 = no level gate recorded (non-shop item); added: Summer update 2024"
+  },
+  {
+   "id": "pumpkin_arch",
+   "name": "Pumpkin arch",
+   "category": "structures",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%BA%D0%B0_%D0%B8%D0%B7_%D1%82%D1%8B%D0%BA%D0%B2"
+   ],
+   "notes": "game_id=Pumpkin Arch; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, global event; added: Autumn update 2022"
+  },
+  {
+   "id": "rainbow_arch",
+   "name": "Rainbow arch",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B4%D1%83%D0%B6%D0%BD%D0%B0%D1%8F_%D0%B0%D1%80%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Rainbow arch; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Winter update 2024"
+  },
+  {
+   "id": "rainbow_tent",
+   "name": "Rainbow tent",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D0%B4%D1%83%D0%B6%D0%BD%D1%8B%D0%B9_%D1%88%D0%B0%D1%82%D1%91%D1%80"
+   ],
+   "notes": "game_id=Rainbow tent; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, special-currency event, task event; added: Winter update 2022"
+  },
+  {
+   "id": "rose_arch",
+   "name": "Rose Arch",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 53,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "13 green voucher + 2 gold voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%BA%D0%B0_%D1%81_%D1%80%D0%BE%D0%B7%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=RoseArch; obtained via: shop; en list: Nature/Ornaments L53 cost '2 [goldv] 13 [greenv]'"
+  },
+  {
+   "id": "serene_temple",
+   "name": "Serene temple",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A5%D1%80%D0%B0%D0%BC_%D1%81%D0%BF%D0%BE%D0%BA%D0%BE%D0%B9%D1%81%D1%82%D0%B2%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Serene temple; level 1 = no level gate recorded (non-shop item); obtained via: valley; added: Winter update 2024; en list: Valley"
+  },
+  {
+   "id": "star_gate",
+   "name": "Star Gate",
+   "category": "structures",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Decorations/Packages"
+   ],
+   "notes": "not found in ru-wiki decoration module; footprint unknown; en list: Packages / Winter 2018"
+  },
+  {
+   "id": "starry_arch",
+   "name": "Starry arch",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D1%80%D0%BA%D0%B0_%D1%81%D0%BE_%D0%B7%D0%B2%D1%91%D0%B7%D0%B4%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Starballoon arch; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: decoration set, currency-shop offer, special-currency event; added: Winter update 2018"
+  },
+  {
+   "id": "starting_gates",
+   "name": "Starting gates",
+   "category": "structures",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B0%D1%80%D1%82%D0%BE%D0%B2%D1%8B%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Starting gates; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: derby; added: Spring update 2023"
+  },
+  {
+   "id": "steward_s_tower",
+   "name": "Steward's tower",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D1%8B%D1%88%D0%BA%D0%B0_%D0%BA%D0%BE%D0%BD%D1%82%D1%80%D0%BE%D0%BB%D1%91%D1%80%D0%B0"
+   ],
+   "notes": "game_id=Referee shed; level 1 = no level gate recorded (non-shop item); obtained via: derby; added: Winter update 2024"
+  },
+  {
+   "id": "stone_temple",
+   "name": "Stone temple",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D0%BC%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9_%D1%85%D1%80%D0%B0%D0%BC"
+   ],
+   "notes": "game_id=Valley Mexico; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: valley, event, box; added: Spring update 2022; en list: Valley"
+  },
+  {
+   "id": "summer_games_gate",
+   "name": "Summer games gate",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%BB%D0%B8%D0%BC%D0%BF%D0%B8%D0%B9%D1%81%D0%BA%D0%B8%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Summer games gate; level 1 = no level gate recorded (non-shop item); obtained via: county fair; added: Summer update 2024"
+  },
+  {
+   "id": "summer_games_stand",
+   "name": "Summer games stand",
+   "category": "structures",
+   "footprint": [
+    3,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%BB%D0%B8%D0%BC%D0%BF%D0%B8%D0%B9%D1%81%D0%BA%D0%B0%D1%8F_%D1%82%D1%80%D0%B8%D0%B1%D1%83%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Summer games stand; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Summer update 2024"
+  },
+  {
+   "id": "tent_defense",
+   "name": "Tent defense",
+   "category": "structures",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B1%D0%BE%D1%80%D0%BE%D0%BD%D0%B0_%D0%BF%D0%B0%D0%BB%D0%B0%D1%82%D0%BA%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: task event; added: Summer update 2026"
+  },
+  {
+   "id": "thanksgiving_pavilion",
+   "name": "Thanksgiving pavilion",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D0%B2%D0%B8%D0%BB%D1%8C%D0%BE%D0%BD_%D0%BA%D0%BE_%D0%94%D0%BD%D1%8E_%D0%B1%D0%BB%D0%B0%D0%B3%D0%BE%D0%B4%D0%B0%D1%80%D0%B5%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Thanksgiving pavilion; level 1 = no level gate recorded (non-shop item); obtained via: county fair; added: Autumn update 2024"
+  },
+  {
+   "id": "the_stallion",
+   "name": "The Stallion",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 52,
+   "cost": {
+    "coins": 1750000,
+    "diamonds": null,
+    "other": "+250000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%C2%AB%D0%96%D0%B5%D1%80%D0%B5%D0%B1%D0%B5%D1%86%C2%BB"
+   ],
+   "notes": "game_id=StatueRocky; obtained via: shop; en list: Ornaments L52 cost '1,750,000 [coin]'"
+  },
+  {
+   "id": "ticket_booth",
+   "name": "Ticket booth",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B8%D0%BB%D0%B5%D1%82%D0%BD%D0%B0%D1%8F_%D0%BA%D0%B0%D1%81%D1%81%D0%B0"
+   ],
+   "notes": "game_id=Ticket booth; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Autumn update 2024"
+  },
+  {
+   "id": "tropical_hut",
+   "name": "Tropical hut",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D0%BE%D0%BF%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B0%D1%8F_%D1%85%D0%B8%D0%B6%D0%B8%D0%BD%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Summer update 2025"
+  },
+  {
+   "id": "tropical_stand",
+   "name": "Tropical stand",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%80%D0%BE%D0%BF%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D0%BA%D0%B8%D0%BE%D1%81%D0%BA"
+   ],
+   "notes": "game_id=Tropical stand; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: other, special-currency event; added: Spring update 2023"
+  },
+  {
+   "id": "tuk_tuk_stand",
+   "name": "Tuk Tuk stand",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%BE%D1%82%D0%BE%D1%80%D0%B8%D0%BA%D1%88%D0%B0_%D0%93%D1%80%D0%B5%D0%B3"
+   ],
+   "notes": "game_id=Tuk Tuk stand; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: valley, box; added: Winter update 2023; en list: Valley"
+  },
+  {
+   "id": "wagon_stage",
+   "name": "Wagon stage",
+   "category": "structures",
+   "footprint": [
+    3,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%86%D0%B5%D0%BD%D0%B0-%D1%84%D1%83%D1%80%D0%B3%D0%BE%D0%BD"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other; added: Spring update 2026"
+  },
+  {
+   "id": "water_tower",
+   "name": "Water tower",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%BE%D0%B4%D0%BE%D0%BD%D0%B0%D0%BF%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D0%B1%D0%B0%D1%88%D0%BD%D1%8F"
+   ],
+   "notes": "game_id=Sunflower Tower; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot; added: Summer update 2021"
+  },
+  {
+   "id": "wedding_arch",
+   "name": "Wedding arch",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B0%D0%B4%D0%B5%D0%B1%D0%BD%D0%B0%D1%8F_%D0%B0%D1%80%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Wedding arch; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Spring update 2025"
+  },
+  {
+   "id": "western_booth",
+   "name": "Western booth",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%B2%D0%B1%D0%BE%D0%B9%D1%81%D0%BA%D0%B8%D0%B9_%D1%82%D0%B8%D1%80"
+   ],
+   "notes": "English name unavailable; using internal game id; game_id=Western booth; level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Summer update 2025"
+  },
+  {
+   "id": "western_gate",
+   "name": "Western gate",
+   "category": "structures",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%B2%D0%B1%D0%BE%D0%B9%D1%81%D0%BA%D0%B8%D0%B5_%D0%B2%D0%BE%D1%80%D0%BE%D1%82%D0%B0"
+   ],
+   "notes": "English name unavailable; using internal game id; game_id=Western gate; level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Summer update 2025"
+  },
+  {
+   "id": "western_water_tower",
+   "name": "Western water tower",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B0%D1%80%D0%B8%D0%BD%D0%BD%D0%B0%D1%8F_%D0%B2%D0%BE%D0%B4%D0%BE%D0%BD%D0%B0%D0%BF%D0%BE%D1%80%D0%BD%D0%B0%D1%8F_%D0%B1%D0%B0%D1%88%D0%BD%D1%8F"
+   ],
+   "notes": "game_id=Western water tower; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, currency-shop offer, other, themed box; added: Summer update 2025"
+  },
+  {
+   "id": "windmill",
+   "name": "Windmill",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 24,
+   "cost": {
+    "coins": null,
+    "diamonds": 35,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%82%D1%80%D1%8F%D0%BD%D0%B0%D1%8F_%D0%BC%D0%B5%D0%BB%D1%8C%D0%BD%D0%B8%D1%86%D0%B0"
+   ],
+   "notes": "game_id=WindmillShop; obtained via: shop; en list: Farming L24 cost '35 [dia]'",
+   "tags": [
+    "WindmillShop"
+   ]
+  },
+  {
+   "id": "windmill_collection_prize",
+   "name": "Windmill (collection prize)",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "no price in source (reward/prize item)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D0%B5%D1%82%D1%80%D1%8F%D0%BD%D0%B0%D1%8F_%D0%BC%D0%B5%D0%BB%D1%8C%D0%BD%D0%B8%D1%86%D0%B0_(%D0%BF%D1%80%D0%B8%D0%B7)"
+   ],
+   "notes": "collection-prize variant; game_id=Windmill; level 1 = no level gate recorded (non-shop item)"
+  },
+  {
+   "id": "windmill_vane",
+   "name": "Windmill vane",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%BB%D1%8E%D0%B3%D0%B5%D1%80_%D1%81%D0%BE_%D1%81%D0%B2%D0%B8%D0%BD%D1%8C%D1%91%D0%B9"
+   ],
+   "notes": "game_id=Golden weathervane; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "winter_pavilion",
+   "name": "Winter pavilion",
+   "category": "structures",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D0%B8%D0%B9_%D0%BF%D0%B0%D0%B2%D0%B8%D0%BB%D1%8C%D0%BE%D0%BD"
+   ],
+   "notes": "game_id=Winter pavilion; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, task event; added: Spring update 2024"
+  },
+  {
+   "id": "wisteria_bridge",
+   "name": "Wisteria bridge",
+   "category": "structures",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%BE%D1%81%D1%82%D0%B8%D0%BA_%D1%81_%D0%B3%D0%BB%D0%B8%D1%86%D0%B8%D0%BD%D0%B8%D0%B5%D0%B9"
+   ],
+   "notes": "game_id=Wisteria bridge; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, other; added: Summer update 2024"
+  },
+  {
+   "id": "wisteria_pagoda",
+   "name": "Wisteria pagoda",
+   "category": "structures",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D0%B3%D0%BE%D0%B4%D0%B0_%D1%81_%D0%B3%D0%BB%D0%B8%D1%86%D0%B8%D0%BD%D0%B8%D0%B5%D0%B9"
+   ],
+   "notes": "game_id=Wisteria pagoda; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, other; added: Spring update 2025"
+  },
+  {
+   "id": "wren_house",
+   "name": "Wren House",
+   "category": "structures",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 9,
+   "cost": {
+    "coins": null,
+    "diamonds": 5,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B2%D0%BE%D1%80%D0%B5%D1%87%D0%BD%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Birdhouse_2; obtained via: shop; en list: Farming L9 cost '5 [dia]'"
+  }
+ ]
+}

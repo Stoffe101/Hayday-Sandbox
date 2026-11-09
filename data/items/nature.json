@@ -1,0 +1,3343 @@
+{
+ "schema": "hayday-sandbox-items",
+ "schema_version": 1,
+ "generated_by": "tools/catalog/build_catalog.py",
+ "source_dataset": "data/research/items_research.json (fan wiki research, verified 2026-11-09)",
+ "items": [
+  {
+   "id": "acacia_tree",
+   "name": "Acacia tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "1 purple voucher + 3 blue voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D0%BA%D0%B0%D1%86%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Acacia_tree; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Yellow giraffe; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '3 [bluev] 1 [purplev]'"
+  },
+  {
+   "id": "aloe_plant",
+   "name": "Aloe plant",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%90%D0%BB%D0%BE%D1%8D"
+   ],
+   "notes": "game_id=Aloe_plant; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Gray hippo; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "angel_trumpet_tree",
+   "name": "Angel trumpet tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "1000 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D1%80%D1%83%D0%B3%D0%BC%D0%B0%D0%BD%D1%81%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Angel trumpet; reward/special decoration; obtained via: expansion plot, design contest; added: Spring update 2023"
+  },
+  {
+   "id": "arctic_pine",
+   "name": "Arctic pine",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%BB%D1%8F%D1%80%D0%BD%D0%B0%D1%8F_%D1%81%D0%BE%D1%81%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Arctic Firtree; unlocked by sanctuary animal: White arctic fox cub; sanctuary tab; obtained via: shop; added: Spring update 2022; en list: Sanctuary cost '?'"
+  },
+  {
+   "id": "axe_stump",
+   "name": "Axe stump",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B5%D0%BD%D1%8C_%D0%B4%D0%BB%D1%8F_%D1%82%D0%BE%D0%BF%D0%BE%D1%80%D0%B0"
+   ],
+   "notes": "game_id=StumpAxe; level 1 = no level gate recorded (non-shop item); obtained via: movie night (ads); added: Summer update 2018; en list: Derby"
+  },
+  {
+   "id": "badminton_ball_tree",
+   "name": "Badminton ball tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D1%80%D0%BA%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Badminton Tree; unlocked by sanctuary animal: Gray baby gorilla; sanctuary tab; obtained via: shop; added: Spring update 2021; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "bamboo_lunch",
+   "name": "Bamboo lunch",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D0%BC%D0%B1%D1%83%D0%BA_%D0%BD%D0%B0_%D0%BE%D0%B1%D0%B5%D0%B4"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Summer update 2026"
+  },
+  {
+   "id": "banana_plant",
+   "name": "Banana plant",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%BE%D1%81%D1%82%D0%BA%D0%B8_%D0%B1%D0%B0%D0%BD%D0%B0%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Banana plant; unlocked by sanctuary animal: Brown ostrich; sanctuary tab; obtained via: shop; added: Spring update 2024; en list: Sanctuary cost '5 [greenv] 1 [purplev]'"
+  },
+  {
+   "id": "baobab_tree",
+   "name": "Baobab tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "1 purple voucher + 5 green voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B0%D0%BE%D0%B1%D0%B0%D0%B1"
+   ],
+   "notes": "game_id=Baobab_tree; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Gray elephant; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '5 [greenv] 1 [purplev]'"
+  },
+  {
+   "id": "bee_topiary",
+   "name": "Bee topiary",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%BF%D1%87%D0%B5%D0%BB%D0%B0)"
+   ],
+   "notes": "game_id=Bee topiary; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "big_birch_tree",
+   "name": "Big birch tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F_%D0%B1%D0%B5%D1%80%D1%91%D0%B7%D0%B0"
+   ],
+   "notes": "game_id=Big birch tree; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "big_pine_tree",
+   "name": "Big Pine Tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 28,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "2 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F_%D1%81%D0%BE%D1%81%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=PineTree_Big; obtained via: shop; en list: Nature L28 cost '2 [purplev]'"
+  },
+  {
+   "id": "big_pruned_pine",
+   "name": "Big pruned pine",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F_%D0%BF%D0%BE%D0%B4%D1%81%D1%82%D1%80%D0%B8%D0%B6%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D1%81%D0%BE%D1%81%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Big bonsai tree; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "birch_tree",
+   "name": "Birch tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D1%80%D1%91%D0%B7%D0%B0"
+   ],
+   "notes": "game_id=Birch tree; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "bird_tree",
+   "name": "Bird tree",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%82%D0%B8%D1%87%D1%8C%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=Bird tree; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, special-currency event, Farm Pass; added: Autumn update 2022"
+  },
+  {
+   "id": "birthday_topiary",
+   "name": "Birthday topiary",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_%D0%BA%D0%BE_%D0%B4%D0%BD%D1%8E_%D1%80%D0%BE%D0%B6%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=10thBirthday Topiary; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: global event, special-currency event; added: Spring update 2022; en list: Rewards; en wiki spells it 'Birthday Toipary'"
+  },
+  {
+   "id": "blooming_cactus",
+   "name": "Blooming cactus",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D1%83%D1%89%D0%B8%D0%B9_%D0%BA%D0%B0%D0%BA%D1%82%D1%83%D1%81"
+   ],
+   "notes": "game_id=BloomingCactus; unlocked by sanctuary animal: Gray elephant calf; sanctuary tab; obtained via: shop; added: Winter update 2017; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "blue_wisteria_tree",
+   "name": "Blue Wisteria tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BE%D0%BB%D1%83%D0%B1%D0%B0%D1%8F_%D0%B3%D0%BB%D0%B8%D1%86%D0%B8%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Blue wisteria; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: decoration set, currency-shop offer, expansion plot; added: Autumn update 2022"
+  },
+  {
+   "id": "bonsai_tree",
+   "name": "Bonsai tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 22,
+   "cost": {
+    "coins": null,
+    "diamonds": 25,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%BE%D0%BD%D1%81%D0%B0%D0%B9"
+   ],
+   "notes": "game_id=BonsaiTree; obtained via: shop; added: Spring update 2016; en list: Nature/Ornaments L22 cost '25 [dia]'"
+  },
+  {
+   "id": "bracelet_tree",
+   "name": "Bracelet tree",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_%D0%B2_%D0%B1%D1%80%D0%B0%D1%81%D0%BB%D0%B5%D1%82%D0%B0%D1%85"
+   ],
+   "notes": "game_id=Blooming bracelets; level 1 = no level gate recorded (non-shop item); obtained via: valley; added: Spring update 2024; en list: Valley"
+  },
+  {
+   "id": "cactus_key",
+   "name": "Cactus key",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BD%D0%BE%D0%BF%D0%BA%D0%B0_%D0%BA%D0%B0%D0%BA%D1%82%D1%83%D1%81%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: global event; added: Summer update 2026"
+  },
+  {
+   "id": "cheetah_topiary",
+   "name": "Cheetah topiary",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%B3%D0%B5%D0%BF%D0%B0%D1%80%D0%B4)"
+   ],
+   "notes": "game_id=Cheetah topiary; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "chickfoot_topiary",
+   "name": "Chickfoot topiary",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%BA%D1%83%D1%80%D0%B8%D0%BD%D0%B0%D1%8F_%D0%BB%D0%B0%D0%BF%D0%BA%D0%B0)"
+   ],
+   "notes": "game_id=Chickleg Topiary; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Winter update 2021"
+  },
+  {
+   "id": "chinese_money_plant",
+   "name": "Chinese Money Plant",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 gold voucher + 10 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B8%D0%BB%D0%B5%D1%8F"
+   ],
+   "notes": "English name from en-wiki list (matched by game id); game_id=Chinese money plant; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Коричневая панда; sanctuary tab; obtained via: shop; added: Summer update 2026; en list: Sanctuary cost '19,500 [coin]'"
+  },
+  {
+   "id": "classic_topiary",
+   "name": "Classic Topiary",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 17,
+   "cost": {
+    "coins": null,
+    "diamonds": 5,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D1%88%D0%B0%D1%80)"
+   ],
+   "notes": "game_id=ClassicTopiary; obtained via: movie night (ads), shop; en list: Nature/Ornaments L17 cost '5 [dia]'"
+  },
+  {
+   "id": "cone_topiary",
+   "name": "Cone Topiary",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 17,
+   "cost": {
+    "coins": null,
+    "diamonds": 8,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%BA%D0%BE%D0%BD%D1%83%D1%81)"
+   ],
+   "notes": "game_id=ConeTopiary; obtained via: movie night (ads), shop; en list: Nature/Ornaments L17 cost '8 [dia]'"
+  },
+  {
+   "id": "coral_tree",
+   "name": "Coral Tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D1%80%D0%B0%D0%BB%D0%BB%D0%BE%D0%B2%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "English name from en-wiki list (matched by game id); game_id=Coral tree; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Коричневая капибара; sanctuary tab; obtained via: shop; added: Summer update 2025; en list: Sanctuary cost '6,000 [coin]'"
+  },
+  {
+   "id": "crane_topiary",
+   "name": "Crane Topiary",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 500,
+    "diamonds": null,
+    "other": "+50 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D1%86%D0%B0%D0%BF%D0%BB%D1%8F)"
+   ],
+   "notes": "game_id=CraneTopiary; obtained via: shop; en list: Nature/Ornaments L1 cost '500 [coin] +50 per purchase'"
+  },
+  {
+   "id": "creosote_bush",
+   "name": "Creosote bush",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%B5%D0%BE%D0%B7%D0%BE%D1%82%D0%BE%D0%B2%D1%8B%D0%B9_%D0%BA%D1%83%D1%81%D1%82"
+   ],
+   "notes": "game_id=CreosoteBush; unlocked by sanctuary animal: Yellow giraffe calf; sanctuary tab; obtained via: shop; added: Winter update 2017; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "dark_leafy_tree",
+   "name": "Dark Leafy Tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 28,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D1%91%D0%BC%D0%BD%D0%BE%D0%B5_%D0%BB%D0%B8%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_Big1; obtained via: shop; en list: Nature L28 cost '5 [greenv]'"
+  },
+  {
+   "id": "downy_birch",
+   "name": "Downy birch",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D1%80%D1%91%D0%B7%D0%B0_%D0%BF%D1%83%D1%88%D0%B8%D1%81%D1%82%D0%B0%D1%8F"
+   ],
+   "notes": "game_id=Downy Birch; unlocked by sanctuary animal: Gray reindeer; sanctuary tab; obtained via: shop; added: Spring update 2021; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "dragon_blood_tree",
+   "name": "Dragon blood tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "1 purple voucher + 3 blue voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D1%80%D0%B0%D0%BA%D0%BE%D0%BD%D0%BE%D0%B2%D0%BE_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=DragonBloodTree; unlocked by sanctuary animal: Gray hippo calf; sanctuary tab; obtained via: shop; added: Winter update 2017; en list: Sanctuary cost '3 [bluev] 1 [purplev]'"
+  },
+  {
+   "id": "dry_grass",
+   "name": "Dry grass",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 2 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%83%D1%85%D0%B0%D1%8F_%D1%82%D1%80%D0%B0%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=Dry grass; unlocked by sanctuary animal: Brown meerkat pup; sanctuary tab; obtained via: shop; added: Summer update 2023; en list: Sanctuary cost '5 [greenv] 2 [purplev]'"
+  },
+  {
+   "id": "dry_log",
+   "name": "Dry log",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%83%D1%85%D0%BE%D0%B5_%D0%B1%D1%80%D0%B5%D0%B2%D0%BD%D0%BE"
+   ],
+   "notes": "game_id=Muddy_log; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Brown elephant; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '1 [purplev] 5 [greenv]'"
+  },
+  {
+   "id": "egg_planter",
+   "name": "Egg planter",
+   "category": "nature",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AF%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D0%B3%D1%80%D1%8F%D0%B4%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Chocolate egg planter; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Spring update 2024"
+  },
+  {
+   "id": "elephant_ear_plant",
+   "name": "Elephant ear plant",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%BB%D0%BE%D0%BA%D0%B0%D0%B7%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=ElephantEar; unlocked by sanctuary animal: Gray elephant calf; sanctuary tab; obtained via: shop; added: Winter update 2017; en list: Sanctuary cost '1 [purplev] 5 [greenv]'"
+  },
+  {
+   "id": "exotic_topiary",
+   "name": "Exotic Topiary",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 500,
+    "diamonds": null,
+    "other": "+50 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE)"
+   ],
+   "notes": "game_id=Exotic Topiary; obtained via: shop; en list: Nature/Ornaments L1 cost '500 [coin] +50 per purchase'"
+  },
+  {
+   "id": "festive_birch",
+   "name": "Festive birch",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D1%8F%D1%8F_%D0%B1%D0%B5%D1%80%D1%91%D0%B7%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Autumn update 2025"
+  },
+  {
+   "id": "festive_palm_tree",
+   "name": "Festive palm tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D0%B0%D1%8F_%D0%BF%D0%B0%D0%BB%D1%8C%D0%BC%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Autumn update 2025"
+  },
+  {
+   "id": "festive_tree",
+   "name": "Festive tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%80%D0%B0%D0%B7%D0%B4%D0%BD%D0%B8%D1%87%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=Green_lights_tree; level 1 = no level gate recorded (non-shop item); obtained via: expansion plot; added: Spring update 2017; en list: Expansion"
+  },
+  {
+   "id": "frozen_bush",
+   "name": "Frozen bush",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "100 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%BC%D1%91%D1%80%D0%B7%D1%88%D0%B8%D0%B9_%D0%BA%D1%83%D1%81%D1%82"
+   ],
+   "notes": "game_id=Frozen bush; obtained via: global event, design contest; added: Spring update 2024"
+  },
+  {
+   "id": "frozen_chestnut_tree",
+   "name": "Frozen chestnut tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%BC%D1%91%D1%80%D0%B7%D1%88%D0%B8%D0%B9_%D0%BA%D0%B0%D1%88%D1%82%D0%B0%D0%BD"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Winter update 2025"
+  },
+  {
+   "id": "frozen_tree",
+   "name": "Frozen tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%BC%D1%91%D1%80%D0%B7%D1%88%D0%B5%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: county fair; added: Autumn update 2025"
+  },
+  {
+   "id": "frozen_willow",
+   "name": "Frozen willow",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "490 golden keys"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%BC%D1%91%D1%80%D0%B7%D1%88%D0%B0%D1%8F_%D0%B8%D0%B2%D0%B0"
+   ],
+   "notes": "obtained via: event; added: Winter update 2025"
+  },
+  {
+   "id": "giant_winter_maple_tree",
+   "name": "Giant winter maple tree",
+   "category": "nature",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%B3%D1%80%D0%BE%D0%BC%D0%BD%D1%8B%D0%B9_%D0%B7%D0%B8%D0%BC%D0%BD%D0%B8%D0%B9_%D0%BA%D0%BB%D1%91%D0%BD"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other; added: Winter update 2025"
+  },
+  {
+   "id": "golden_tree",
+   "name": "Golden Tree",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 100,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "no price in source (reward/prize item)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=GoldenTree; reward/special decoration; en list: Rewards"
+  },
+  {
+   "id": "grassy_rock",
+   "name": "Grassy rock",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D1%80%D0%BE%D1%81%D1%88%D0%B8%D0%B5_%D0%B2%D0%B0%D0%BB%D1%83%D0%BD%D1%8B"
+   ],
+   "notes": "game_id=Grassy rock; unlocked by sanctuary animal: Brown meerkat; sanctuary tab; obtained via: shop; added: Spring update 2023; en list: Sanctuary cost '5 [greenv] 1 [purplev]'"
+  },
+  {
+   "id": "green_bow_tree",
+   "name": "Green bow tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B5%D0%BB%D1%91%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_%D1%81_%D0%B1%D0%B0%D0%BD%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, other; added: Winter update 2025"
+  },
+  {
+   "id": "heart_topiary",
+   "name": "Heart Topiary",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 500,
+    "diamonds": null,
+    "other": "+50 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D1%81%D0%B5%D1%80%D0%B4%D1%86%D0%B5)"
+   ],
+   "notes": "game_id=HeartTopiary; obtained via: shop; en list: Nature/Ornaments L1 cost '500 [coin] +50 per purchase'"
+  },
+  {
+   "id": "horse_topiary",
+   "name": "Horse Topiary",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 27,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%BB%D0%BE%D1%88%D0%B0%D0%B4%D1%8C)"
+   ],
+   "notes": "game_id=HorseTopiary; reward/special decoration; obtained via: derby; en list: Derby"
+  },
+  {
+   "id": "ice_plant",
+   "name": "Ice plant",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B5%D0%B4%D1%8F%D0%BD%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=Ice_plant; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Yellow giraffe; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "joshua_tree",
+   "name": "Joshua tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%AE%D0%BA%D0%BA%D0%B0_%D0%BA%D0%BE%D1%80%D0%BE%D1%82%D0%BA%D0%BE%D0%BB%D0%B8%D1%81%D1%82%D0%BD%D0%B0%D1%8F"
+   ],
+   "notes": "game_id=Joshua Tree; unlocked by sanctuary animal: Gray baby zebra; sanctuary tab; obtained via: shop; added: Summer update 2020; en list: Sanctuary cost '?'"
+  },
+  {
+   "id": "king_frog_rock",
+   "name": "King frog rock",
+   "category": "nature",
+   "footprint": [
+    3,
+    3
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D0%B0%D0%B1%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BE%D0%BB%D1%8C"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other; added: Spring update 2026"
+  },
+  {
+   "id": "kitsune_topiary",
+   "name": "Kitsune topiary",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%BA%D0%B8%D1%86%D1%83%D0%BD%D1%8D)"
+   ],
+   "notes": "game_id=Kitsune bush; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "lala_palm",
+   "name": "Lala palm",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "3 blue voucher + 5 green voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%B8%D1%84%D0%B5%D0%BD%D0%B0_%D0%BA%D0%BE%D0%B6%D0%B8%D1%81%D1%82%D0%B0%D1%8F"
+   ],
+   "notes": "game_id=Lala_palm; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Beige giraffe; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '5 [greenv] 3 [bluev]'"
+  },
+  {
+   "id": "lamb_topiary",
+   "name": "Lamb Topiary",
+   "category": "nature",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D1%8F%D0%B3%D0%BD%D1%91%D0%BD%D0%BE%D0%BA)"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Spring update 2026"
+  },
+  {
+   "id": "large_longleaf_pine",
+   "name": "Large longleaf pine",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BE%D1%81%D0%BD%D0%B0_%D0%B1%D0%BE%D0%BB%D0%BE%D1%82%D0%BD%D0%B0%D1%8F_%D0%B1%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other, currency-shop offer, themed box; added: Spring update 2026"
+  },
+  {
+   "id": "layered_topiary",
+   "name": "Layered Topiary",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 700,
+    "diamonds": null,
+    "other": "+70 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D1%85%D0%BE%D0%BB%D0%BC)"
+   ],
+   "notes": "game_id=LayeredTopiary; obtained via: shop; en list: Nature/Ornaments L1 cost '700 [coin]'"
+  },
+  {
+   "id": "leafy_plant",
+   "name": "Leafy Plant",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "3 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B8%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_(%D0%B3%D0%BE%D1%80%D0%BE%D0%B4)"
+   ],
+   "notes": "game_id=LeafyPlant; ru level=0 (town decoration / no farm level gate); requires reputation level 6; town decoration; obtained via: shop; en list: Nature L34 cost '1 [purplev] 3 [greenv]'; unlock level differs: ru=0 en=34"
+  },
+  {
+   "id": "leafy_tree",
+   "name": "Leafy Tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 28,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "3 blue voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B8%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_Big2; obtained via: shop; en list: Nature L28 cost '3 [bluev]'"
+  },
+  {
+   "id": "lichen_stump",
+   "name": "Lichen stump",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B5%D0%BD%D1%8C_%D1%81_%D0%BB%D0%B8%D1%88%D0%B0%D0%B9%D0%BD%D0%B8%D0%BA%D0%BE%D0%BC"
+   ],
+   "notes": "game_id=Lichen; unlocked by sanctuary animal: Brown reindeer; sanctuary tab; obtained via: shop; added: Spring update 2021; en list: Sanctuary cost '1 [purplev] 5 [greenv]'"
+  },
+  {
+   "id": "lush_fern",
+   "name": "Lush fern",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": 10,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%8B%D1%88%D0%BD%D1%8B%D0%B9_%D0%BF%D0%B0%D0%BF%D0%BE%D1%80%D0%BE%D1%82%D0%BD%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=LushFern; obtained via: catalogue, shop; en list: Nature L1 cost '10 [dia]'"
+  },
+  {
+   "id": "maple_bonsai",
+   "name": "Maple bonsai",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%80%D0%BB%D0%B8%D0%BA%D0%BE%D0%B2%D1%8B%D0%B9_%D0%BA%D0%BB%D1%91%D0%BD"
+   ],
+   "notes": "game_id=Potted Acer Palmatum; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot; added: Winter update 2018; en list: Expansion"
+  },
+  {
+   "id": "maple_tree",
+   "name": "Maple tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "400 film (event currency)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BB%D1%91%D0%BD"
+   ],
+   "notes": "game_id=Autumn maple tree; obtained via: task event, design contest; added: Summer update 2024"
+  },
+  {
+   "id": "mauve_wisteria_tree",
+   "name": "Mauve Wisteria tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B8%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F_%D0%B3%D0%BB%D0%B8%D1%86%D0%B8%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Pink wisteria; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: movie night (ads); added: Autumn update 2022"
+  },
+  {
+   "id": "medium_frozen_tree",
+   "name": "Medium frozen tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%80%D0%B5%D0%B4%D0%BD%D0%B5%D0%B5_%D0%B7%D0%B0%D0%BC%D1%91%D1%80%D0%B7%D1%88%D0%B5%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Winter update 2025"
+  },
+  {
+   "id": "medium_longleaf_pine",
+   "name": "Medium longleaf pine",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BE%D1%81%D0%BD%D0%B0_%D0%B1%D0%BE%D0%BB%D0%BE%D1%82%D0%BD%D0%B0%D1%8F_%D1%81%D1%80%D0%B5%D0%B4%D0%BD%D1%8F%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other, currency-shop offer, themed box; added: Spring update 2026"
+  },
+  {
+   "id": "medium_winter_maple_tre",
+   "name": "Medium winter maple tre",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%80%D0%B5%D0%B4%D0%BD%D0%B8%D0%B9_%D0%B7%D0%B8%D0%BC%D0%BD%D0%B8%D0%B9_%D0%BA%D0%BB%D1%91%D0%BD"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other; added: Winter update 2025"
+  },
+  {
+   "id": "mossy_log",
+   "name": "Mossy log",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D1%80%D0%B8%D0%B1%D0%BD%D0%BE%D0%B5_%D0%B1%D1%80%D0%B5%D0%B2%D0%BD%D0%BE"
+   ],
+   "notes": "game_id=Mushroom log; level 1 = no level gate recorded (non-shop item); added: Autumn update 2024"
+  },
+  {
+   "id": "mossy_rock",
+   "name": "Mossy Rock",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 24,
+   "cost": {
+    "coins": 3500,
+    "diamonds": null,
+    "other": "+350 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D0%BC%D1%88%D0%B5%D0%BB%D1%8B%D0%B9_%D0%B2%D0%B0%D0%BB%D1%83%D0%BD"
+   ],
+   "notes": "game_id=MossyRock; obtained via: shop; en list: Nature L24 cost '3,500 [coin]'"
+  },
+  {
+   "id": "mushroom_picking",
+   "name": "Mushroom picking",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B1%D0%BE%D1%80_%D0%B3%D1%80%D0%B8%D0%B1%D0%BE%D0%B2"
+   ],
+   "notes": "game_id=Mushroom picking; level 1 = no level gate recorded (non-shop item); obtained via: task event; added: Autumn update 2024"
+  },
+  {
+   "id": "mushroom_stump",
+   "name": "Mushroom stump",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 26,
+   "cost": {
+    "coins": 5500,
+    "diamonds": null,
+    "other": "+550 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B5%D0%BD%D1%8C_%D1%81_%D0%B3%D1%80%D0%B8%D0%B1%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=MushroomLog; obtained via: shop; en list: Nature L26 cost '5,500 [coin]'; en wiki spells it 'Mushroom Log'"
+  },
+  {
+   "id": "orange_ice_plant",
+   "name": "Orange ice plant",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%80%D0%B0%D0%BD%D0%B6%D0%B5%D0%B2%D1%8B%D0%B9_%D0%BB%D0%B5%D0%B4%D1%8F%D0%BD%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=OrangeIcePlant; unlocked by sanctuary animal: Brown elephant calf; sanctuary tab; obtained via: shop; added: Winter update 2017; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "orange_tree_decoration",
+   "name": "Orange tree (decoration)",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 23,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 blue voucher + 10 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%80%D0%B0%D0%BD%D0%B6%D0%B5%D0%B2%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=Orange_tree; obtained via: shop, themed box; added: Summer update 2017; en list: Nature L23 cost '10 [purplev] 5 [bluev]'"
+  },
+  {
+   "id": "painted_rocks",
+   "name": "Painted rocks",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%B0%D1%81%D0%BA%D1%80%D0%B0%D1%88%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5_%D0%BA%D0%B0%D0%BC%D0%BD%D0%B8"
+   ],
+   "notes": "game_id=Painted Rocks; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: derby; added: Spring update 2021"
+  },
+  {
+   "id": "palm_tree",
+   "name": "Palm tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 3 blue voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D0%BB%D1%8C%D0%BC%D0%B0"
+   ],
+   "notes": "game_id=Palm_tree; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Gray hippo; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '3 [bluev] 5 [greenv]'"
+  },
+  {
+   "id": "pickaxe_rock",
+   "name": "Pickaxe rock",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D0%BC%D0%B5%D0%BD%D1%8C_%D1%81_%D0%BA%D0%B8%D1%80%D0%BA%D0%BE%D0%B9"
+   ],
+   "notes": "game_id=Axe Rock; level 1 = no level gate recorded (non-shop item); obtained via: derby, expansion plot; added: Autumn update 2019; en list: Expansion"
+  },
+  {
+   "id": "pine_bonsai",
+   "name": "Pine Bonsai",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D1%80%D0%BB%D0%B8%D0%BA%D0%BE%D0%B2%D0%B0%D1%8F_%D1%81%D0%BE%D1%81%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Potted Bonsai; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot; added: Winter update 2018; en list: Expansion"
+  },
+  {
+   "id": "pine_tree",
+   "name": "Pine Tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 28,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BE%D1%81%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=PineTree_Med; obtained via: shop; en list: Nature L28 cost '5 [greenv]'"
+  },
+  {
+   "id": "pinecones",
+   "name": "Pinecones",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A8%D0%B8%D1%88%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Pine Cone Basket; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: currency-shop offer, Farm Pass; added: Summer update 2020"
+  },
+  {
+   "id": "pink_bow_tree",
+   "name": "Pink bow tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%BE%D0%B7%D0%BE%D0%B2%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_%D1%81_%D0%B1%D0%B0%D0%BD%D1%82%D0%B0%D0%BC%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, other; added: Winter update 2025"
+  },
+  {
+   "id": "pink_trumpet_tree",
+   "name": "Pink trumpet tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%B0%D0%B1%D0%B5%D0%B1%D1%83%D0%B9%D1%8F_%D1%80%D0%BE%D0%B7%D0%BE%D0%B2%D0%B0%D1%8F"
+   ],
+   "notes": "game_id=TrumpetTree; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, Farm Pass; added: Summer update 2016; en list: Packages"
+  },
+  {
+   "id": "poisonous_mushrooms",
+   "name": "Poisonous Mushrooms",
+   "category": "nature",
+   "footprint": null,
+   "provisional_footprint": [
+    1,
+    1
+   ],
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": null
+   },
+   "flippable": true,
+   "data_status": "unverified",
+   "sources": [
+    "https://hayday.fandom.com/wiki/Decorations/Packages"
+   ],
+   "notes": "not found in ru-wiki decoration module; footprint unknown; en list: Packages / Halloween 2019"
+  },
+  {
+   "id": "pruned_pine",
+   "name": "Pruned pine",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BE%D0%B4%D1%81%D1%82%D1%80%D0%B8%D0%B6%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D1%81%D0%BE%D1%81%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Bonsai tree; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "purple_maple",
+   "name": "Purple maple",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%B8%D0%BB%D0%BE%D0%B2%D1%8B%D0%B9_%D0%BA%D0%BB%D1%91%D0%BD"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, other; added: Winter update 2025"
+  },
+  {
+   "id": "purple_tree",
+   "name": "Purple tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 23,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "25 blue voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B8%D0%BE%D0%BB%D0%B5%D1%82%D0%BE%D0%B2%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=Purple_tree; obtained via: shop; added: Summer update 2017; en list: Nature L23 cost '25 [bluev]'"
+  },
+  {
+   "id": "red_oats_grass",
+   "name": "Red oats grass",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D0%B0%D1%8F_%D1%82%D1%80%D0%B0%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=RedOatsGrass; unlocked by sanctuary animal: Cowlick zebra; sanctuary tab; obtained via: shop; added: Autumn update 2019; en list: Sanctuary cost '5 [greenv] 1 [purplev]'"
+  },
+  {
+   "id": "red_tree",
+   "name": "Red tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 23,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "10 gold voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=Red_tree; obtained via: shop, themed box; added: Summer update 2017; en list: Nature L23 cost '10 [goldv]'"
+  },
+  {
+   "id": "rock_dancers",
+   "name": "Rock dancers",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%BE%D0%BA-%D0%BD-%D1%80%D0%BE%D0%BB%D0%BB%D1%8C%D1%89%D0%B8%D0%BA%D0%B8"
+   ],
+   "notes": "game_id=Do the twist; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: special-currency event; added: Summer update 2024"
+  },
+  {
+   "id": "rock_exhibit",
+   "name": "Rock Exhibit",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "4 purple voucher + 4 gold voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BE%D0%BC%D0%BF%D0%BE%D0%B7%D0%B8%D1%86%D0%B8%D1%8F_%D0%B8%D0%B7_%D0%BA%D0%B0%D0%BC%D0%BD%D0%B5%D0%B9"
+   ],
+   "notes": "game_id=MonumentalRock; ru level=0 (town decoration / no farm level gate); requires reputation level 10; town decoration; obtained via: shop; en list: Nature L34 cost '4 [purplev] 4 [goldv]'; unlock level differs: ru=0 en=34"
+  },
+  {
+   "id": "rock_formation",
+   "name": "Rock formation",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BA%D0%B0%D0%BB%D0%B0"
+   ],
+   "notes": "game_id=Rock_formation; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Beige giraffe; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "rock_key",
+   "name": "Rock key",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%BD%D0%BE%D0%BF%D0%BA%D0%B0_%D0%BA%D0%B0%D0%BC%D0%BD%D0%B5%D0%B9"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: global event; added: Summer update 2026"
+  },
+  {
+   "id": "rocket_adventure",
+   "name": "Rocket adventure",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%83%D1%82%D0%B5%D1%88%D0%B5%D1%81%D1%82%D0%B2%D0%B8%D0%B5_%D0%BD%D0%B0_%D1%80%D0%B0%D0%BA%D0%B5%D1%82%D0%B5"
+   ],
+   "notes": "game_id=Big bang; level 1 = no level gate recorded (non-shop item); obtained via: Farm Pass; added: Spring update 2024"
+  },
+  {
+   "id": "rocking_horse",
+   "name": "Rocking horse",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 18,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9B%D0%BE%D1%88%D0%B0%D0%B4%D0%BA%D0%B0-%D0%BA%D0%B0%D1%87%D0%B0%D0%BB%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=RockingHorse; reward/special decoration; obtained via: derby; en list: Derby"
+  },
+  {
+   "id": "rocking_reideer",
+   "name": "Rocking reideer",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D0%BB%D0%B5%D0%BD%D1%8C-%D0%BA%D0%B0%D1%87%D0%B0%D0%BB%D0%BA%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); added: Autumn update 2025"
+  },
+  {
+   "id": "rocking_unicorn",
+   "name": "Rocking unicorn",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%95%D0%B4%D0%B8%D0%BD%D0%BE%D1%80%D0%BE%D0%B3-%D0%BA%D0%B0%D1%87%D0%B0%D0%BB%D0%BA%D0%B0"
+   ],
+   "notes": "game_id=Rocking unicorn; level 1 = no level gate recorded (non-shop item); obtained via: derby; added: Spring update 2018; en list: Derby"
+  },
+  {
+   "id": "rocky_shore",
+   "name": "Rocky shore",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 7500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D0%BC%D0%B5%D0%BD%D0%B8%D1%81%D1%82%D1%8B%D0%B9_%D0%B1%D0%B5%D1%80%D0%B5%D0%B3"
+   ],
+   "notes": "game_id=Rocky shore; requires reputation level 1; unlocked by sanctuary animal: Blue penguin chick; sanctuary tab; obtained via: shop; added: Winter update 2023; en list: Sanctuary cost '8,000 [coin]'; coin cost differs: ru=7500 en=8000"
+  },
+  {
+   "id": "rose_tree",
+   "name": "Rose tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A0%D0%BE%D0%B7%D0%BE%D0%B2%D1%8B%D0%B9_%D0%BA%D1%83%D1%81%D1%82"
+   ],
+   "notes": "English name unavailable; using internal game id; game_id=Rose tree; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Summer update 2025"
+  },
+  {
+   "id": "royal_poinciana_tree",
+   "name": "Royal poinciana tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B5%D0%BB%D0%BE%D0%BD%D0%B8%D0%BA%D1%81_%D1%86%D0%B0%D1%80%D1%81%D0%BA%D0%B8%D0%B9"
+   ],
+   "notes": "game_id=PoincianaTree; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, other; added: Summer update 2016; en list: Packages"
+  },
+  {
+   "id": "sago_palm",
+   "name": "Sago palm",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "3 blue voucher + 5 green voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%B0%D0%BB%D1%8C%D0%BC%D0%B0_%D1%81%D0%B0%D0%B3%D0%BE"
+   ],
+   "notes": "game_id=SagoPalm; unlocked by sanctuary animal: Brown elephant calf; sanctuary tab; obtained via: shop; added: Winter update 2017; en list: Sanctuary cost '5 [greenv] 3 [bluev]'"
+  },
+  {
+   "id": "saguaro_cactus",
+   "name": "Saguaro cactus",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 3 blue voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9A%D0%B0%D0%BA%D1%82%D1%83%D1%81_%D1%81%D0%B0%D0%B3%D1%83%D0%B0%D1%80%D0%BE"
+   ],
+   "notes": "game_id=SaguaroCactus; unlocked by sanctuary animal: Yellow giraffe calf; sanctuary tab; obtained via: shop; added: Winter update 2017; en list: Sanctuary cost '3 [bluev] 5 [greenv]'"
+  },
+  {
+   "id": "sand_plant",
+   "name": "Sand plant",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 gold voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D1%81%D0%B0%D0%BC%D0%BC%D0%BE%D1%84%D0%B8%D1%82"
+   ],
+   "notes": "game_id=Sand_plant; unlocked by sanctuary animal: Blue penguin; sanctuary tab; obtained via: shop; added: Autumn update 2023; en list: Sanctuary cost '5 [greenv] 1 [goldv]'"
+  },
+  {
+   "id": "savannah_cactus",
+   "name": "Savannah cactus",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 5500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%B2%D0%B0%D0%BD%D0%BD%D1%8B%D0%B9_%D0%BA%D0%B0%D0%BA%D1%82%D1%83%D1%81"
+   ],
+   "notes": "game_id=Savannah cactus; unlocked by sanctuary animal: Red meerkat pup; sanctuary tab; obtained via: shop; added: Summer update 2023; en list: Sanctuary cost '5,500 [coin]'"
+  },
+  {
+   "id": "savannah_grass",
+   "name": "Savannah grass",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D0%B5%D0%BF%D0%BD%D0%B0%D1%8F_%D1%82%D1%80%D0%B0%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=Grass Patch; unlocked by sanctuary animal: Brown baby zebra; sanctuary tab; obtained via: shop; added: Summer update 2020; en list: Sanctuary cost '1 [purplev] 5 [greenv]'"
+  },
+  {
+   "id": "selfmade_rocket",
+   "name": "Selfmade rocket",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B0%D0%BC%D0%BE%D0%B4%D0%B5%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D1%80%D0%B0%D0%BA%D0%B5%D1%82%D0%B0"
+   ],
+   "notes": "game_id=Bunny_rocket; level 1 = no level gate recorded (non-shop item); requires reputation level 1; obtained via: currency-shop offer; added: Autumn update 2023"
+  },
+  {
+   "id": "short_bush",
+   "name": "Short bush",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9D%D0%B5%D0%B2%D1%8B%D1%81%D0%BE%D0%BA%D0%B8%D0%B9_%D0%BA%D1%83%D1%81%D1%82"
+   ],
+   "notes": "game_id=Savannah_bush; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Brown hippo; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "small_acacia_tree",
+   "name": "Small acacia tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "1 purple voucher + 5 green voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B0%D1%8F_%D0%B0%D0%BA%D0%B0%D1%86%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=SmallAcaciaTree; unlocked by sanctuary animal: Brown hippo calf; sanctuary tab; obtained via: shop; added: Winter update 2017; en list: Sanctuary cost '5 [greenv] 1 [purplev]'"
+  },
+  {
+   "id": "small_birch_tree",
+   "name": "Small birch tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%B0%D1%8F_%D0%B1%D0%B5%D1%80%D1%91%D0%B7%D0%B0"
+   ],
+   "notes": "game_id=Small birch tree; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "small_dark_tree",
+   "name": "Small dark tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%BE%D0%B5_%D1%82%D1%91%D0%BC%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_Small_dark; obtained via: shop; added: Summer update 2023"
+  },
+  {
+   "id": "small_frozen_tree",
+   "name": "Small frozen tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%BE%D0%B5_%D0%B7%D0%B0%D0%BC%D1%91%D1%80%D0%B7%D1%88%D0%B5%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer; added: Winter update 2025"
+  },
+  {
+   "id": "small_leafy_tree",
+   "name": "Small Leafy Tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%BE%D0%B5_%D0%BB%D0%B8%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_Small; obtained via: movie night (ads), catalogue, shop; en list: Nature L25 cost '6,000 [coin]'",
+   "tags": [
+    "LeafyTree_Small"
+   ]
+  },
+  {
+   "id": "small_leafy_tree_collection_prize",
+   "name": "Small Leafy Tree (collection prize)",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "no price in source (reward/prize item)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%BE%D0%B5_%D0%BB%D0%B8%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_(%D0%BF%D1%80%D0%B8%D0%B7)"
+   ],
+   "notes": "collection-prize variant; game_id=LeafyTree_SmallGift; level 1 = no level gate recorded (non-shop item)"
+  },
+  {
+   "id": "small_longleaf_pine",
+   "name": "Small longleaf pine",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BE%D1%81%D0%BD%D0%B0_%D0%B1%D0%BE%D0%BB%D0%BE%D1%82%D0%BD%D0%B0%D1%8F_%D0%BC%D0%B0%D0%BB%D0%B0%D1%8F"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other, currency-shop offer, themed box; added: Spring update 2026"
+  },
+  {
+   "id": "small_orange_tree",
+   "name": "Small orange tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%BE%D0%B5_%D0%BE%D1%80%D0%B0%D0%BD%D0%B6%D0%B5%D0%B2%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_Small_orange; obtained via: shop; added: Summer update 2023"
+  },
+  {
+   "id": "small_pine_tree",
+   "name": "Small Pine Tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B0%D1%8F_%D1%81%D0%BE%D1%81%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=PineTree_Small; obtained via: catalogue, shop; en list: Nature L25 cost '6,000 [coin]'",
+   "tags": [
+    "PineTree_Small"
+   ]
+  },
+  {
+   "id": "small_pine_tree_collection_prize",
+   "name": "Small Pine Tree (collection prize)",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "no price in source (reward/prize item)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B0%D1%8F_%D1%81%D0%BE%D1%81%D0%BD%D0%B0_(%D0%BF%D1%80%D0%B8%D0%B7)"
+   ],
+   "notes": "collection-prize variant; game_id=PineTree_SmallGift; level 1 = no level gate recorded (non-shop item)"
+  },
+  {
+   "id": "small_pruned_pine",
+   "name": "Small pruned pine",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%B0%D1%8F_%D0%BF%D0%BE%D0%B4%D1%81%D1%82%D1%80%D0%B8%D0%B6%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D1%81%D0%BE%D1%81%D0%BD%D0%B0"
+   ],
+   "notes": "game_id=Small bonsai tree; level 1 = no level gate recorded (non-shop item); added: Winter update 2024"
+  },
+  {
+   "id": "small_purple_tree",
+   "name": "Small purple tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%BE%D0%B5_%D0%BF%D1%83%D1%80%D0%BF%D1%83%D1%80%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_Small_purple; obtained via: shop; added: Summer update 2023"
+  },
+  {
+   "id": "small_red_tree",
+   "name": "Small red tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%BE%D0%B5_%D0%BA%D1%80%D0%B0%D1%81%D0%BD%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_Small_red; obtained via: shop; added: Summer update 2023"
+  },
+  {
+   "id": "small_vibrant_tree",
+   "name": "Small vibrant tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%BE%D0%B5_%D1%81%D0%B2%D0%B5%D1%82%D0%BB%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_Small_vibrant; obtained via: shop; added: Summer update 2023"
+  },
+  {
+   "id": "small_weeping_willow",
+   "name": "Small Weeping willow",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B0%D1%8F_%D0%BF%D0%BB%D0%B0%D0%BA%D1%83%D1%87%D0%B0%D1%8F_%D0%B8%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=Small weeping willow; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot; added: Spring update 2023"
+  },
+  {
+   "id": "small_winter_maple_tree",
+   "name": "Small winter maple tree",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B7%D0%B8%D0%BC%D0%BD%D0%B8%D0%B9_%D0%BA%D0%BB%D1%91%D0%BD"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: other; added: Winter update 2025"
+  },
+  {
+   "id": "small_winter_tree",
+   "name": "Small winter tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%BE%D0%B5_%D0%B7%D0%B8%D0%BC%D0%BD%D0%B5%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_winter; obtained via: shop; added: Summer update 2023"
+  },
+  {
+   "id": "small_yellow_tree",
+   "name": "Small yellow tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9C%D0%B0%D0%BB%D0%B5%D0%BD%D1%8C%D0%BA%D0%BE%D0%B5_%D0%B6%D1%91%D0%BB%D1%82%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_Small_yellow; obtained via: shop; added: Summer update 2023"
+  },
+  {
+   "id": "snake_plant",
+   "name": "Snake plant",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "3 blue voucher + 5 green voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A9%D1%83%D1%87%D0%B8%D0%B9_%D1%8F%D0%B7%D1%8B%D0%BA"
+   ],
+   "notes": "game_id=Snake Plant; unlocked by sanctuary animal: Brown baby gorilla; sanctuary tab; obtained via: shop; added: Spring update 2021; en list: Sanctuary cost '5 [greenv] 3 [bluev]'"
+  },
+  {
+   "id": "snowy_boulder",
+   "name": "Snowy boulder",
+   "category": "nature",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D1%81%D0%BD%D0%B5%D0%B6%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9_%D0%B1%D1%83%D0%BB%D1%8B%D0%B6%D0%BD%D0%B8%D0%BA"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Winter update 2025"
+  },
+  {
+   "id": "snowy_log",
+   "name": "Snowy log",
+   "category": "nature",
+   "footprint": [
+    2,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 green voucher + 1 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B0%D1%81%D0%BD%D0%B5%D0%B6%D0%B5%D0%BD%D0%BD%D0%BE%D0%B5_%D0%B1%D1%80%D0%B5%D0%B2%D0%BD%D0%BE"
+   ],
+   "notes": "game_id=Snowy trunk; unlocked by sanctuary animal: Brown walrus calf; sanctuary tab; obtained via: shop; added: Winter update 2022; en list: Sanctuary cost '?'; en wiki spells it 'Snowy Trunk'"
+  },
+  {
+   "id": "sparkling_tree",
+   "name": "Sparkling tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B5%D1%80%D0%BA%D0%B0%D1%8E%D1%89%D0%B5%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=Purple_lights_tree; level 1 = no level gate recorded (non-shop item); obtained via: expansion plot; added: Spring update 2017"
+  },
+  {
+   "id": "special_pruned_pine",
+   "name": "Special pruned pine",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%BE%D0%B1%D0%B0%D1%8F_%D0%BF%D0%BE%D0%B4%D1%81%D1%82%D1%80%D0%B8%D0%B6%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F_%D1%81%D0%BE%D1%81%D0%BD%D0%B0"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Winter update 2025"
+  },
+  {
+   "id": "stacked_rock",
+   "name": "Stacked rock",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%BB%D0%BE%D0%B6%D0%B5%D0%BD%D0%BD%D1%8B%D0%B5_%D0%BA%D0%B0%D0%BC%D0%BD%D0%B8"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, themed box; added: Spring update 2026"
+  },
+  {
+   "id": "star_grass",
+   "name": "Star grass",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B2%D1%91%D0%B7%D0%B4%D0%BD%D0%B0%D1%8F_%D1%82%D1%80%D0%B0%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=StarGrass; unlocked by sanctuary animal: Cowlick zebra; sanctuary tab; obtained via: shop; added: Autumn update 2019; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "tall_grass",
+   "name": "Tall grass",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D1%8B%D1%81%D0%BE%D0%BA%D0%B0%D1%8F_%D1%82%D1%80%D0%B0%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=Elephant_grass; ru level=0 (town decoration / no farm level gate); requires reputation level 3; unlocked by sanctuary animal: Brown elephant; sanctuary tab; obtained via: shop; added: Summer update 2017; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "tall_potted_plant",
+   "name": "Tall potted plant",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%92%D1%8B%D1%81%D0%BE%D0%BA%D0%BE%D0%B5_%D1%80%D0%B0%D1%81%D1%82%D0%B5%D0%BD%D0%B8%D0%B5_%D0%B2_%D0%B3%D0%BE%D1%80%D1%88%D0%BA%D0%B5"
+   ],
+   "notes": "game_id=Tall potted plant; level 1 = no level gate recorded (non-shop item); obtained via: special-currency event; added: Winter update 2024"
+  },
+  {
+   "id": "thanksgiving_tree",
+   "name": "Thanksgiving tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9E%D1%81%D0%B5%D0%BD%D0%BD%D0%B5%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "level 1 = no level gate recorded (non-shop item); obtained via: special-currency event, currency-shop offer; added: Autumn update 2025"
+  },
+  {
+   "id": "topiary_letter_a",
+   "name": "Topiary letter A",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%B1%D1%83%D0%BA%D0%B2%D0%B0_A)"
+   ],
+   "notes": "game_id=Topiary letter A; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "topiary_letter_d",
+   "name": "Topiary letter D",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%B1%D1%83%D0%BA%D0%B2%D0%B0_D)"
+   ],
+   "notes": "game_id=Topiary letter D; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "topiary_letter_h",
+   "name": "Topiary letter H",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%B1%D1%83%D0%BA%D0%B2%D0%B0_H)"
+   ],
+   "notes": "game_id=Topiary letter H; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "topiary_letter_y",
+   "name": "Topiary letter Y",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D0%B1%D1%83%D0%BA%D0%B2%D0%B0_Y)"
+   ],
+   "notes": "game_id=Topiary letter Y; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "topiary_number_1",
+   "name": "Topiary number 1",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D1%86%D0%B8%D1%84%D1%80%D0%B0_1)"
+   ],
+   "notes": "English name unavailable; using internal game id; game_id=Topiary number 1; level 1 = no level gate recorded (non-shop item); added: Summer update 2025"
+  },
+  {
+   "id": "topiary_number_3",
+   "name": "Topiary number 3",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A2%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D0%B9_(%D1%86%D0%B8%D1%84%D1%80%D0%B0_3)"
+   ],
+   "notes": "English name unavailable; using internal game id; game_id=Topiary number 3; level 1 = no level gate recorded (non-shop item); added: Summer update 2025"
+  },
+  {
+   "id": "topiary_pruning",
+   "name": "Topiary pruning",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D1%82%D1%80%D0%B8%D0%B6%D0%BA%D0%B0_%D1%82%D0%BE%D0%BF%D0%B8%D0%B0%D1%80%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=Hedge pruning; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "treehouse",
+   "name": "Treehouse",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D0%BC%D0%B8%D0%BA_%D0%BD%D0%B0_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%B5"
+   ],
+   "notes": "game_id=Treehouse; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Summer update 2021"
+  },
+  {
+   "id": "vibrant_tree",
+   "name": "Vibrant tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 23,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "10 green voucher + 10 purple voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A1%D0%B2%D0%B5%D1%82%D0%BB%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=Vibrant_tree; obtained via: shop, movie night (ads); added: Summer update 2017; en list: Nature L23 cost '10 [purplev] 10 [greenv]'"
+  },
+  {
+   "id": "wavy_bush",
+   "name": "Wavy Bush",
+   "category": "nature",
+   "footprint": [
+    1,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A4%D0%B8%D0%B3%D1%83%D1%80%D0%BD%D1%8B%D0%B9_%D0%BA%D1%83%D1%81%D1%82"
+   ],
+   "notes": "game_id=Wavy Bush; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: Farm Pass; added: Summer update 2020"
+  },
+  {
+   "id": "weeping_willow",
+   "name": "Weeping willow",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%9F%D0%BB%D0%B0%D0%BA%D1%83%D1%87%D0%B0%D1%8F_%D0%B8%D0%B2%D0%B0"
+   ],
+   "notes": "game_id=Weeping willow; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: expansion plot; added: Spring update 2023"
+  },
+  {
+   "id": "white_ice_plant",
+   "name": "White ice plant",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": 4500,
+    "diamonds": null,
+    "other": "+500 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%91%D0%B5%D0%BB%D1%8B%D0%B9_%D0%BB%D0%B5%D0%B4%D1%8F%D0%BD%D0%B8%D0%BA"
+   ],
+   "notes": "game_id=WhiteIcePlant; unlocked by sanctuary animal: Gray hippo calf; sanctuary tab; obtained via: shop; added: Winter update 2017; en list: Sanctuary cost '5,000 [coin]'; coin cost differs: ru=4500 en=5000"
+  },
+  {
+   "id": "wild_grass_patch",
+   "name": "Wild grass patch",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B8%D0%BA%D0%B8%D0%B5_%D1%82%D1%80%D0%B0%D0%B2%D1%8B"
+   ],
+   "notes": "game_id=Wild grass patch; level 1 = no level gate recorded (non-shop item); added: Summer update 2024"
+  },
+  {
+   "id": "winter_tree",
+   "name": "Winter tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 25,
+   "cost": {
+    "coins": 6000,
+    "diamonds": null,
+    "other": "+1000 coins per additional purchase"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%97%D0%B8%D0%BC%D0%BD%D0%B5%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=LeafyTree_Small_winter; obtained via: shop; added: Summer update 2023"
+  },
+  {
+   "id": "wish_tree",
+   "name": "Wish tree",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%B5%D1%80%D0%B5%D0%B2%D0%BE_%D1%81_%D0%BF%D0%BE%D0%B6%D0%B5%D0%BB%D0%B0%D0%BD%D0%B8%D1%8F%D0%BC%D0%B8"
+   ],
+   "notes": "game_id=Wish tree; level 1 = no level gate recorded (non-shop item); added: Spring update 2025"
+  },
+  {
+   "id": "wisteria_tree",
+   "name": "Wisteria tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%93%D0%BB%D0%B8%D1%86%D0%B8%D0%BD%D0%B8%D1%8F"
+   ],
+   "notes": "game_id=WisteriaTree; level 1 = no level gate recorded (non-shop item); obtained via: currency-shop offer, expansion plot; added: Summer update 2016; en list: Packages"
+  },
+  {
+   "id": "wonder_tree",
+   "name": "Wonder tree",
+   "category": "nature",
+   "footprint": [
+    2,
+    2
+   ],
+   "footprint_status": "community",
+   "unlock_level": 1,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "not sold in shop (source lists 999-diamond placeholder)"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%A7%D1%83%D0%B4%D0%BE-%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=WonderTree; level 1 = no level gate recorded (non-shop item); reward/special decoration; obtained via: global event, other, special-currency event; added: Winter update 2020; en list: Events"
+  },
+  {
+   "id": "yellow_tree",
+   "name": "Yellow tree",
+   "category": "nature",
+   "footprint": [
+    1,
+    1
+   ],
+   "footprint_status": "community",
+   "unlock_level": 23,
+   "cost": {
+    "coins": null,
+    "diamonds": null,
+    "other": "5 purple voucher + 5 gold voucher"
+   },
+   "flippable": true,
+   "data_status": "community",
+   "sources": [
+    "https://hayday.fandom.com/ru/wiki/%D0%96%D1%91%D0%BB%D1%82%D0%BE%D0%B5_%D0%B4%D0%B5%D1%80%D0%B5%D0%B2%D0%BE"
+   ],
+   "notes": "game_id=Yellow_tree; obtained via: shop, themed box; added: Summer update 2017; en list: Nature L23 cost '5 [goldv] 5 [purplev]'"
+  }
+ ]
+}

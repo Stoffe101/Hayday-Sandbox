@@ -1,0 +1,6 @@
+{"categories": [
+  {"id": "production", "name": "Production", "order": 1, "color": "#d9824b"},
+  {"id": "decoration", "name": "Decorations", "order": 2, "color": "#7fb069"},
+  {"id": "fence", "name": "Fences", "order": 3, "color": "#a47148"},
+  {"id": "path", "name": "Paths", "order": 4, "color": "#c2b280"}
+]}

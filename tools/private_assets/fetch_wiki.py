@@ -136,6 +136,7 @@ EXCLUDED_CATEGORIES = {
 RELEVANT_KEYWORDS = re.compile(r"deco|build|tree|bush|farm|animal|shelter|crop|field|fence|path|season|sanctuar|"
 	r"town|valley|custom|theme|fishing|boat|truck|derby|catalog|neighbo|house|pen\b|plant|flower|nature|"
 	r"украш|здани|дерев|культур|жилищ|событ", re.I)
+UI_NAME_RE = re.compile(r"\bMastery\b", re.I)  # "<Building> Mastery II.png" = badge; "Mastered" = building
 LOGO_RE = re.compile(r"(^|[\s_\-])(logo|wordmark|favicon)([\s_\-.]|$)|^wiki\.png$|^site-|community-header|"
 	r"wiki[\s_-]?background", re.I)
 SMALL_WORDS = {"a", "an", "and", "the", "of", "in", "on", "at", "to", "for", "with", "or", "de", "la", "le", "du",
@@ -548,7 +549,7 @@ def catalog_pages(wiki: Wiki, store: Store, items: list[dict], lang: str) -> dic
 	lead: dict[str, str] = {}
 	for batch in chunks(sorted(pages), 50):
 		for d in wiki.query_all({"titles": "|".join(batch), "redirects": "1", "prop": "images|pageimages",
-				"imlimit": "max", "piprop": "name", "pilimit": "50"}):
+				"imlimit": "max", "piprop": "name"}):
 			rm = resolve_map(d)
 			back: dict[str, list[str]] = {}
 			for t in batch:
@@ -592,7 +593,7 @@ def catalog_pages(wiki: Wiki, store: Store, items: list[dict], lang: str) -> dic
 # --------------------------------------------------------------------------------------------------------------
 # selection
 
-def skip_reason(r: dict) -> str | None:
+def skip_reason(r: dict, strict_page_images: bool) -> str | None:
 	info = r["info"]
 	title = r["title"]
 	base = title.split(":", 1)[1]
@@ -613,8 +614,13 @@ def skip_reason(r: dict) -> str | None:
 	if excluded and not relevant and not catalog:
 		c = sorted(excluded)[0]
 		return f"non_object_category: {c} ({classes[c][1]})"
+	if UI_NAME_RE.search(base) and not relevant and not catalog:
+		return "mastery_badge_ui (by name)"
 	if r["matched_by"] == {"catalog_page"} and not relevant and not r["lead_image_of"]:
-		return "page_image_not_object (not lead image, no object category)"
+		# en: uncategorised page images are often object renders (stages, mastered/event variants) -> keep.
+		# ru: nearly every file only carries the licence category, so require the lead image or an object category.
+		if strict_page_images or r["categories"] - {c for c, (k, _) in classes.items() if k == "neutral"}:
+			return "page_image_not_object (not lead image, no object category)"
 	if mime == "image/gif" and not relevant and not catalog:
 		return "gif_ui_or_uncategorised"
 	if w > 1600 and mime == "image/jpeg":
@@ -801,7 +807,7 @@ def main() -> int:
 				en_sha1.setdefault(f["sha1"], f["title"])
 	kept, skipped = [], []
 	for r in sorted(store.recs.values(), key=lambda r: r["title"]):
-		reason = skip_reason(r)
+		reason = skip_reason(r, strict_page_images=(lang != "en"))
 		if reason is None and r["info"].get("sha1") in en_sha1:
 			reason = f"duplicate_of_en_wiki: {en_sha1[r['info']['sha1']]}"
 		if reason:
@@ -908,6 +914,7 @@ def main() -> int:
 		"discovered": len(store.recs),
 		"kept_after_metadata_filters": len(kept),
 		"kept_unique_sha1": len(primaries),
+		"kept_unique_bytes_per_api": sum(int(r["info"].get("size") or 0) for r in primaries),
 		"skipped": len(skipped),
 		"skipped_by_reason": dict(sorted(reasons.items(), key=lambda kv: -kv[1])),
 		"stored_files": len(files_out),

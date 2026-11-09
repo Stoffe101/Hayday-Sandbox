@@ -112,7 +112,7 @@ static func clear(node: Node) -> void:
 
 static func status_color(status: String) -> Color:
 	match status:
-		"confirmed", "original": return UiTheme.c("accent")
+		"confirmed", "original", "game_data": return UiTheme.c("accent")
 		"community": return UiTheme.c("info")
 		"approximation", "unverified": return UiTheme.c("warn")
 		_: return UiTheme.c("danger")
@@ -121,6 +121,7 @@ static func status_color(status: String) -> Color:
 static func status_text(status: String) -> String:
 	match status:
 		"confirmed": return "Confirmed"
+		"game_data": return ItemDef.status_label("game_data")
 		"community": return "Community data"
 		"approximation": return "Approximate"
 		"unverified": return "Unverified"

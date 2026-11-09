@@ -34,6 +34,21 @@ var _ref_drag := false
 var _ref_drag_last := Vector2.ZERO
 var _layout_dirty_ui := true
 var _last_title := ""
+## Fixed landmarks: hovered id, the subtle "fixed in place" hint near the
+## cursor (rate-limited), and the load-report dialog of the open layout.
+var home_button: Button
+var last_fixed_hint := ""
+var fixed_hint_count := 0
+var _hint_panel: PanelContainer
+var _hint_label: Label
+var _hint_tween: Tween
+var _hint_times: Dictionary = {}     ## text -> ticks ms of the last time it was shown
+const HINT_REPEAT_MS := 1500
+var hint_hold_s := 1.8                ## how long the hint stays (visual tests raise it)
+var _lm_hover := ""
+var _reported_session: EditorSession
+var _suppress_open_toast := false
+var load_report_modal: Modal
 
 
 func _ready() -> void:
@@ -53,12 +68,14 @@ func _ready() -> void:
 	_build_world()
 	_apply_ui_scale()
 	_build_ui()
-	App.notify.connect(func(t, k): toasts.show_toast(t, k))
+	App.notify.connect(_on_notify)
 	App.session_changed.connect(_on_session_changed)
 	App.assets_reloaded.connect(func():
 		renderer.refresh_all_art()
+		_refresh_world()
 		overlay.refresh()
 		catalog.refresh())
+	App.map_changed.connect(_on_map_changed)
 	App.art_changed.connect(_on_art_changed)
 	App.settings.changed.connect(_on_setting_changed)
 	_open_initial()
@@ -102,6 +119,14 @@ func _handle_install_args() -> bool:
 		get_tree().quit(0 if all_ok else 1)
 		return false
 	return true
+
+
+func _on_notify(text: String, kind: String) -> void:
+	# The load-report dialog replaces App's "Opened …" summary toast.
+	if _suppress_open_toast and text.begins_with("Opened “"):
+		_suppress_open_toast = false
+		return
+	toasts.show_toast(text, kind)
 
 
 func _on_art_changed(keys: Array) -> void:
@@ -154,7 +179,10 @@ func _build_world() -> void:
 	controller.status_changed.connect(func(t): dock.set_status(t))
 	controller.request_text.connect(func(title, initial, cb): Modal.prompt(modal_layer, title, initial, cb))
 	controller.request_context_menu.connect(_context_menu)
+	controller.request_landmark_menu.connect(_landmark_menu)
 	controller.calibration_point.connect(_on_calibration_point)
+	controller.fixed_refused.connect(show_fixed_hint)
+	controller.landmark_hovered.connect(_on_landmark_hovered)
 
 
 func _build_ui() -> void:
@@ -176,6 +204,7 @@ func _build_ui() -> void:
 	canvas_area.gui_input.connect(_on_canvas_input)
 	canvas_area.mouse_exited.connect(func():
 		overlay.hover_uid = 0
+		controller.clear_hover()
 		overlay.cursor_text = ""
 		overlay.ghosts = [] if controller.session and controller.session.tool != "place" and not controller.stamp_mode else overlay.ghosts
 		overlay.refresh())
@@ -187,6 +216,7 @@ func _build_ui() -> void:
 	top_bar.offset_right = -m
 	top_bar.offset_top = m
 	top_bar.action.connect(_on_top_action)
+	top_bar.farm_level_set.connect(_set_farm_level)
 	root.add_child(top_bar)
 	catalog = CatalogPanel.new()
 	catalog.anchor_top = 0
@@ -196,6 +226,9 @@ func _build_ui() -> void:
 	catalog.offset_bottom = -m
 	catalog.item_chosen.connect(_on_item_chosen)
 	catalog.open_assets.connect(_open_asset_manager)
+	catalog.farm_level_requested.connect(_set_farm_level)
+	catalog.mode_requested.connect(func(m: String):
+		_on_top_action("mode_creative" if m == FarmLayout.MODE_CREATIVE else "mode_realistic"))
 	root.add_child(catalog)
 	inspector = InspectorPanel.new()
 	inspector.anchor_left = 1
@@ -205,6 +238,7 @@ func _build_ui() -> void:
 	inspector.offset_bottom = -m
 	inspector.offset_right = -m
 	inspector.action.connect(_on_inspector_action)
+	inspector.renderer = renderer
 	root.add_child(inspector)
 	dock = ToolDock.new()
 	dock.anchor_left = 0
@@ -228,11 +262,99 @@ func _build_ui() -> void:
 	toasts.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	toasts.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	root.add_child(toasts)
+	_build_hint()
+	_add_home_button()
 	modal_layer = Control.new()
 	modal_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	modal_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(modal_layer)
 	_layout_panels()
+
+
+func _add_home_button() -> void:
+	## "Home" (farmhouse) next to the dock's fit button; a small floating
+	## button if the dock layout ever changes.
+	home_button = UI.icon_button("house", "Home: centre the farmhouse (Home / Shift+H)", "Ghost")
+	home_button.pressed.connect(go_home)
+	var fit := _find_button(dock, "Fit farm")
+	if fit:
+		fit.tooltip_text = "Fit farm (F)"
+		fit.get_parent().add_child(home_button)
+		fit.get_parent().move_child(home_button, fit.get_index() + 1)
+	else:
+		home_button.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+		home_button.position += Vector2(20, -150)
+		root.add_child(home_button)
+
+
+static func _find_button(n: Node, tip_prefix: String) -> Button:
+	for c in n.get_children():
+		if c is Button and (c as Button).tooltip_text.begins_with(tip_prefix):
+			return c
+		var r := _find_button(c, tip_prefix)
+		if r:
+			return r
+	return null
+
+
+func _build_hint() -> void:
+	## The small "fixed in place" note shown near the cursor.
+	_hint_panel = PanelContainer.new()
+	_hint_panel.theme_type_variation = "Toast"
+	_hint_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hint_panel.visible = false
+	var h := UI.hbox(8)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hint_panel.add_child(h)
+	h.add_child(UI.icon_rect("lock", 16, UiTheme.c("text_dim")))
+	_hint_label = UI.label("", "Dim")
+	_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_hint_label.custom_minimum_size.x = 220
+	h.add_child(_hint_label)
+	root.add_child(_hint_panel)
+
+
+func show_fixed_hint(text: String, screen_pos: Vector2 = Vector2(-1, -1)) -> void:
+	## Subtle, rate-limited note near the cursor (fixed landmarks, obstacles):
+	## the same text at most once per HINT_REPEAT_MS.
+	if text.is_empty() or _hint_panel == null:
+		return
+	var now := Time.get_ticks_msec()
+	if _hint_times.has(text) and now - int(_hint_times[text]) < HINT_REPEAT_MS and _hint_panel.visible:
+		return
+	_hint_times[text] = now
+	last_fixed_hint = text
+	fixed_hint_count += 1
+	if screen_pos.x < 0:
+		screen_pos = canvas_area.get_local_mouse_position() if canvas_area else Vector2(200, 200)
+	_hint_label.text = text
+	_hint_label.custom_minimum_size.x = clampf(text.length() * 7.0, 160.0, 340.0)
+	_hint_panel.reset_size()
+	var vs := root.get_viewport_rect().size
+	var sz := _hint_panel.get_combined_minimum_size()
+	var at := screen_pos + Vector2(18, 20)
+	at.x = clampf(at.x, 8.0, maxf(8.0, vs.x - sz.x - 8.0))
+	at.y = clampf(at.y, 8.0, maxf(8.0, vs.y - sz.y - 8.0))
+	_hint_panel.position = at
+	_hint_panel.visible = true
+	_hint_panel.modulate.a = 0.0
+	if _hint_tween:
+		_hint_tween.kill()
+	_hint_tween = create_tween()
+	_hint_tween.tween_property(_hint_panel, "modulate:a", 1.0, 0.12)
+	_hint_tween.tween_interval(hint_hold_s)
+	_hint_tween.tween_property(_hint_panel, "modulate:a", 0.0, 0.4)
+	_hint_tween.tween_callback(func(): _hint_panel.visible = false)
+
+
+func _fixed_refusal(action: String) -> bool:
+	## A landmark is selected: object edits don't apply to it. Shows the hint
+	## and returns true (the caller then does nothing).
+	var s := App.session
+	if s == null or s.selected_landmark.is_empty():
+		return false
+	show_fixed_hint(s.explain_fixed(s.selected_landmark, action))
+	return true
 
 
 func _layout_panels() -> void:
@@ -360,12 +482,15 @@ func _on_session_changed() -> void:
 	ground.setup(s.map, s.layout.unlocked_plots)
 	if scenery.map != s.map:
 		scenery.setup(s.map, App.assets, s.db)
+	_apply_world_bounds()
 	ground.hide_locked = bool(_view_state.get("hide_locked", false))
 	grid.setup(s.map, s.layout, s.db)
 	grid.show_grid = bool(App.settings.get_v("show_grid"))
 	grid.show_occupancy = bool(App.settings.get_v("show_occupancy"))
 	renderer.show_shadows = bool(App.settings.get_v("show_shadows"))
 	renderer.bind(s.layout, s.db, App.assets)
+	_lm_hover = ""
+	_refresh_world()
 	overlay.layout = s.layout
 	overlay.db = s.db
 	overlay.assets = App.assets
@@ -387,22 +512,220 @@ func _on_session_changed() -> void:
 	s.message.connect(func(t, k): toasts.show_toast(t, k))
 	s.mode_changed.connect(func():
 		_refresh_issues()
+		_refresh_level_blocks()
 		inspector.queue_rebuild()
-		top_bar.update_state(s))
+		top_bar.update_state(s)
+		catalog.on_level_context_changed())
 	s.layout.land_changed.connect(func():
 		ground.setup(s.map, s.layout.unlocked_plots)
+		_refresh_level_blocks()
 		grid.queue_redraw())
+	if not s.layout.world_changed.is_connected(_on_world_changed):
+		s.layout.world_changed.connect(_on_world_changed)
+	if not s.landmark_selected.is_connected(_on_landmark_selected):
+		s.landmark_selected.connect(_on_landmark_selected)
 	s.layout.annotations_changed.connect(overlay.refresh)
 	s.layout.meta_changed.connect(func(): top_bar.update_state(s))
 	s.layout.planning_changed.connect(func():
 		_refresh_issues()
-		inspector.queue_rebuild())
+		_refresh_level_blocks()
+		inspector.queue_rebuild()
+		catalog.on_level_context_changed())
 	_on_tool_changed()
 	_on_history_changed()
+	_refresh_level_blocks()
+	_on_landmark_selected(s.selected_landmark)
 	inspector.view_state = _view_state
 	inspector.rebuild()
 	catalog.refresh()
 	_update_title()
+	_maybe_report_load(s)
+
+
+# ---------------------------------------------------------------------------
+# World layer: landmarks, bounds, home, season
+# ---------------------------------------------------------------------------
+
+func _refresh_world() -> void:
+	## (Re)builds the renderer's world entries for every landmark of the open
+	## world, in the look this layout gives them (theme, state, skin, visibility).
+	var s := App.session
+	if s == null:
+		return
+	renderer.set_world_entries(LandmarkView.entries_for(s.map, s.layout, App.assets, _landmark_tints()))
+	_update_landmark_overlay()
+
+
+func _landmark_tints() -> Dictionary:
+	var out := {}
+	var s := App.session
+	if not _lm_hover.is_empty():
+		out[_lm_hover] = Color(1.12, 1.12, 1.08)
+	if s and not s.selected_landmark.is_empty():
+		out[s.selected_landmark] = Color(1.16, 1.12, 1.0)
+	return out
+
+
+func _on_world_changed(_keys: Array) -> void:
+	_refresh_world()
+	inspector.queue_rebuild()
+
+
+func _on_map_changed() -> void:
+	## A private world pack was installed / removed: new ground, scenery,
+	## landmarks and camera bounds (the open layout itself is unchanged).
+	var s := App.session
+	if s == null:
+		return
+	ground.setup(s.map, s.layout.unlocked_plots)
+	scenery.setup(s.map, App.assets, s.db)
+	grid.setup(s.map, s.layout, s.db)
+	_apply_world_bounds()
+	_refresh_world()
+	_refresh_level_blocks()
+	_refresh_issues()
+	controller.refresh_hover()
+	inspector.queue_rebuild()
+
+
+func world_rect_px(m: FarmMap) -> Rect2:
+	var wb := m.world_bounds if m.world_bounds.size != Vector2i.ZERO else Rect2i(Vector2i.ZERO, m.size)
+	return Iso.footprint_world_bounds(wb.position, wb.size)
+
+
+func _apply_world_bounds() -> void:
+	var s := App.session
+	if s == null:
+		return
+	camera.home = Iso.grid_to_world(LandmarkView.home_tile_point(s.map))
+	camera.set_limits(world_rect_px(s.map))
+
+
+func go_home() -> void:
+	## Home: the farmhouse (or the starting land's centre) at 100 %.
+	if App.session == null:
+		return
+	_update_view_rect()
+	camera.go_home()
+	dock.set_status("Home")
+
+
+func _on_landmark_hovered(id: String) -> void:
+	var old := _lm_hover
+	_lm_hover = id
+	var s := App.session
+	if s == null:
+		return
+	for lid in [old, id]:
+		if lid.is_empty():
+			continue
+		var tint: Color = _landmark_tints().get(lid, Color.WHITE)
+		renderer.update_world_entry(LandmarkView.key_of(lid), {"tint": tint})
+
+
+func _on_landmark_selected(id: String) -> void:
+	var s := App.session
+	if s == null:
+		return
+	_update_landmark_overlay()
+	for lm in s.map.landmarks:
+		var key := LandmarkView.key_of(lm.id)
+		var want: Color = _landmark_tints().get(lm.id, Color.WHITE)
+		var cur: Variant = renderer.world_entry(key).get("tint", Color.WHITE)
+		if cur != want:
+			renderer.update_world_entry(key, {"tint": want})
+	if not id.is_empty():
+		overlay.selection = []
+		if inspector.current_tab() != 0:
+			inspector.show_tab(0)
+	inspector.queue_rebuild()
+
+
+func _update_landmark_overlay() -> void:
+	var s := App.session
+	var lm: Landmark = s.selected_landmark_def() if s else null
+	overlay.landmark_selected = lm.rect() if lm else Rect2i()
+	overlay.landmark_name = lm.name if lm else ""
+	overlay.landmark_bounds = renderer.world_entry_bounds(LandmarkView.key_of(lm.id)) if lm else Rect2()
+	var hl: Landmark = s.map.landmark(_lm_hover) if s and not _lm_hover.is_empty() else null
+	overlay.landmark_hover = hl.rect() if hl else Rect2i()
+	overlay.refresh()
+
+
+func focus_landmark(id: String) -> void:
+	var s := App.session
+	var lm: Landmark = s.map.landmark(id) if s else null
+	if lm == null:
+		return
+	s.select_landmark(id)
+	camera.center_on(Iso.footprint_center(lm.origin, lm.footprint))
+
+
+func _refresh_level_blocks() -> void:
+	## Realistic mode: locked plots the farm level can't unlock yet are drawn
+	## darker with their level (the land tool refuses them).
+	var s := App.session
+	if s == null:
+		return
+	var out := {}
+	if s.layout.mode == FarmLayout.MODE_REALISTIC:
+		var lvl := RealisticAnalyzer.farm_level(s.layout)
+		for p in s.map.plots:
+			var pid := str(p["id"])
+			if s.map.is_plot_unlocked(pid, s.layout.unlocked_plots):
+				continue
+			var ml := RealisticAnalyzer.plot_required_level(s.map, pid)
+			if ml > lvl:
+				out[pid] = ml
+	ground.set_level_blocked(out)
+
+
+func set_theme(theme_id: String) -> void:
+	var s := App.session
+	if s == null:
+		return
+	if not theme_id in LandmarkView.themes_with_art(s.map, App.assets):
+		App.toast("No art for the %s season is installed" % LandmarkView.theme_name(theme_id), "info")
+		return
+	s.set_theme(theme_id)
+
+
+# ---------------------------------------------------------------------------
+# Load report (migrated / corrected layouts)
+# ---------------------------------------------------------------------------
+
+func _maybe_report_load(s: EditorSession) -> void:
+	## Once per opened layout: a compact dialog when the file was upgraded or
+	## objects were changed / need a look; small reports stay a toast (App).
+	if s == _reported_session:
+		return
+	_reported_session = s
+	var rep := s.load_report
+	if rep == null or not Dialogs.load_report_needs_dialog(rep) or _is_automation():
+		return
+	_suppress_open_toast = true
+	call_deferred("show_load_report", rep)
+
+
+func show_load_report(rep: LayoutIO.LoadReport) -> Modal:
+	_suppress_open_toast = false
+	var s := App.session
+	if s == null or rep == null:
+		return null
+	if is_instance_valid(load_report_modal):
+		load_report_modal.close()
+	load_report_modal = Dialogs.load_report(modal_layer, rep, s.layout, s.db, s.map, show_object)
+	return load_report_modal
+
+
+func show_object(uid: int) -> void:
+	## Centre the camera on an object and select it (load report "Show").
+	var s := App.session
+	var o := s.layout.get_obj(uid) if s else null
+	if o == null:
+		return
+	s.select([uid], false, false)
+	camera.center_on(Iso.footprint_center(o.origin, o.size))
 
 
 func _fit_or_restore() -> void:
@@ -413,6 +736,7 @@ func _fit_or_restore() -> void:
 		camera.target_zoom = camera.zoom.x
 		camera.position = Vector2(float(s.layout.camera["x"]), float(s.layout.camera["y"]))
 		camera.force_update_scroll()
+		camera.set_limits(world_rect_px(s.map))
 		_on_view_changed()
 	else:
 		_fit()
@@ -542,6 +866,13 @@ func _unhandled_input(e: InputEvent) -> void:
 	var s := App.session
 	var ctrl := k.ctrl_pressed or k.meta_pressed
 	var handled := true
+	# A selected fixed landmark: object edits explain themselves near the cursor.
+	if not s.selected_landmark.is_empty():
+		var act := _landmark_key_action(k, ctrl)
+		if not act.is_empty():
+			_fixed_refusal(act)
+			get_viewport().set_input_as_handled()
+			return
 	match k.keycode:
 		KEY_Z when ctrl and k.shift_pressed: _redo()
 		KEY_Z when ctrl: _undo()
@@ -577,6 +908,7 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_I: s.set_tool("pick")
 		KEY_M: s.set_tool("land")
 		KEY_N: s.set_tool("annotate")
+		KEY_H when k.shift_pressed: go_home()
 		KEY_H: s.set_tool("pan")
 		KEY_R:
 			if s.tool == "place":
@@ -593,7 +925,8 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_L: _toggle_selection_flag("locked", "Lock")
 		KEY_G: _set_view("show_grid", not bool(App.settings.get_v("show_grid")))
 		KEY_O: _set_view("show_occupancy", not bool(App.settings.get_v("show_occupancy")))
-		KEY_F, KEY_HOME: _fit()
+		KEY_F: _fit()
+		KEY_HOME: go_home()
 		KEY_TAB:
 			_panels_hidden = not _panels_hidden
 			_update_view_rect()
@@ -607,6 +940,22 @@ func _unhandled_input(e: InputEvent) -> void:
 		_: handled = false
 	if handled:
 		get_viewport().set_input_as_handled()
+
+
+func _landmark_key_action(k: InputEventKey, ctrl: bool) -> String:
+	## Which object edit a key would be (for the fixed-landmark hint); "" for
+	## keys that don't edit objects.
+	match k.keycode:
+		KEY_DELETE, KEY_BACKSPACE: return "delete"
+		KEY_R when not ctrl: return "rotate"
+		KEY_L when not ctrl: return "lock"
+		KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT: return "nudge"
+		KEY_C when ctrl: return "copy"
+		KEY_X when ctrl: return "cut"
+		KEY_D when ctrl: return "duplicate"
+		KEY_G when ctrl: return "group"
+		KEY_P when not ctrl and App.session.tool != "place": return "planned"
+	return ""
 
 
 func _arrow(d: Vector2i) -> void:
@@ -676,10 +1025,40 @@ func _context_menu(screen: Vector2, uid: int) -> void:
 		pm.set_item_disabled(pm.item_count - 1, s.clipboard.is_empty())
 		pm.add_item("Select all  (Ctrl+A)", 11)
 		pm.add_item("Fit farm  (F)", 12)
+		pm.add_item("Home: the farmhouse  (Home)", 13)
 	pm.id_pressed.connect(_on_context_id.bind(uid))
 	root.add_child(pm)
 	pm.popup_hide.connect(pm.queue_free)
 	pm.popup(Rect2i(Vector2i(screen), Vector2i.ZERO))
+
+
+func _landmark_menu(screen: Vector2, landmark_id: String) -> void:
+	var s := App.session
+	var lm := s.map.landmark(landmark_id)
+	if lm == null:
+		return
+	var pm := PopupMenu.new()
+	pm.add_item("%s — fixed in place in Hay Day" % lm.name, 0)
+	pm.set_item_disabled(0, true)
+	pm.add_separator()
+	pm.add_item("Details", 1)
+	pm.add_item("Centre view here", 2)
+	pm.add_item("Rotate  (R)", 3)
+	pm.add_item("Delete  (Del)", 4)
+	pm.id_pressed.connect(_on_landmark_menu_id.bind(landmark_id))
+	root.add_child(pm)
+	pm.popup_hide.connect(pm.queue_free)
+	pm.popup(Rect2i(Vector2i(screen), Vector2i.ZERO))
+
+
+func _on_landmark_menu_id(id: int, landmark_id: String) -> void:
+	match id:
+		1:
+			inspector.show_tab(0)
+			inspector.rebuild()
+		2: focus_landmark(landmark_id)
+		3: _fixed_refusal("rotate")
+		4: _fixed_refusal("delete")
 
 
 func _on_context_id(id: int, uid: int) -> void:
@@ -700,6 +1079,7 @@ func _on_context_id(id: int, uid: int) -> void:
 		10: controller.start_stamp()
 		11: s.select_all()
 		12: _fit()
+		13: go_home()
 
 
 # ---------------------------------------------------------------------------
@@ -749,6 +1129,21 @@ func _on_top_action(a: String) -> void:
 			_update_view_rect()
 
 
+func _set_farm_level(level: int) -> void:
+	## Farm level = the layout's profile.level: one undoable profile edit that
+	## never touches placed objects (Realistic filters/highlights follow it).
+	var s := App.session
+	if s == null:
+		return
+	level = clampi(level, AppSettings.LEVEL_MIN, AppSettings.LEVEL_MAX)
+	if int(s.layout.profile.get("level", -1)) == level:
+		return
+	var p := s.layout.profile.duplicate(true)
+	p["level"] = level
+	s.execute(EditCommands.SetProfile.new(s.layout.profile, p, "Set farm level"))
+	dock.set_status("Farm level %d" % level)
+
+
 func _on_dock_action(a: String) -> void:
 	match a:
 		"zoom_in": camera.zoom_at(camera.view_rect.get_center(), 1.25)
@@ -770,7 +1165,15 @@ func _inspector_place_flip() -> void:
 
 func _on_inspector_action(a: String, arg: Variant) -> void:
 	var s := App.session
+	if a in ["flip", "duplicate", "lock", "planned", "group", "delete"] and _fixed_refusal({"flip": "rotate"}.get(a, a)):
+		return
 	match a:
+		"landmark_state": s.set_landmark_state(str(arg[0]), str(arg[1]))
+		"landmark_skin": s.set_landmark_skin(str(arg[0]), str(arg[1]))
+		"landmark_visible": s.set_landmark_visible(str(arg[0]), bool(arg[1]))
+		"landmark_focus": focus_landmark(str(arg))
+		"theme": set_theme(str(arg))
+		"home": go_home()
 		"place_flip": _inspector_place_flip()
 		"place_planned":
 			s.place_planned = not s.place_planned
@@ -803,7 +1206,17 @@ func _on_inspector_action(a: String, arg: Variant) -> void:
 		"tool": s.set_tool(arg)
 		"land_all":
 			var old := s.layout.unlocked_plots.keys()
-			s.execute(EditCommands.SetLand.new(old, s.map.all_plot_ids() if arg else [], "Unlock all land" if arg else "Lock all expansions"))
+			var plots: Array = []
+			var skipped := 0
+			if arg:
+				for pid in s.map.all_plot_ids():
+					if controller.plot_unlock_block(pid).is_empty():
+						plots.append(pid)
+					else:
+						skipped += 1
+			s.execute(EditCommands.SetLand.new(old, plots, "Unlock all land" if arg else "Lock all expansions"))
+			if skipped > 0:
+				App.toast("%d plot%s need a higher farm level and stay locked (Realistic mode)" % [skipped, "" if skipped == 1 else "s"], "info")
 		"profile":
 			var p := s.layout.profile.duplicate(true)
 			p.merge(arg, true)

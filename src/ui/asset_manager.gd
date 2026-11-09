@@ -367,7 +367,9 @@ func _passes(id: String) -> bool:
 
 
 func _refresh_list() -> void:
-	var filters := {}
+	# include_hidden: landmark duplicates (e.g. the farmhouse) stay reviewable
+	# here even though the catalogue hides them.
+	var filters := {"include_hidden": true}
 	if not category.is_empty():
 		filters["category"] = category
 	var results := App.db.search(_search.text, filters, "name" if _search.text.strip_edges().is_empty() else "relevance")
@@ -991,7 +993,7 @@ func _fill_review_results() -> void:
 	var q := _review_search.text.strip_edges()
 	if not q.is_empty():
 		var n := 0
-		for it: ItemDef in App.db.search(q, {}, "relevance"):
+		for it: ItemDef in App.db.search(q, {"include_hidden": true}, "relevance"):
 			if seen.has(it.id):
 				continue
 			_add_result(it, "")

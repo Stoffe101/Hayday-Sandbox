@@ -1,6 +1,9 @@
 class_name FarmCamera
 extends Camera2D
 ## Pan / zoom-at-cursor camera with smooth zoom and fit-to-rect.
+## `limits` keeps the centre of the visible canvas inside the farm world
+## (FarmMap.world_bounds, set by main.gd), so the farm can't be lost off
+## screen; `home` is the world point "Home" returns to (the farmhouse).
 
 signal view_changed
 
@@ -13,6 +16,11 @@ var _zoom_anchor_world := Vector2.ZERO
 var smooth := true
 ## Visible canvas region in viewport coordinates (excludes floating panels).
 var view_rect := Rect2()
+## World-px rectangle the centre of view_rect is kept inside (empty = no limit).
+var limits := Rect2()
+## World point Home (Home key / Shift+H / dock button) centres on.
+var home := Vector2.ZERO
+const HOME_ZOOM := 1.0
 
 
 func _ready() -> void:
@@ -56,6 +64,7 @@ func _apply_zoom(z: float) -> void:
 	force_update_scroll()
 	var now := screen_to_world(_zoom_anchor_screen)
 	position += _zoom_anchor_world - now
+	_clamp()
 	force_update_scroll()
 	view_changed.emit()
 
@@ -70,6 +79,7 @@ func _process(dt: float) -> void:
 
 func pan_screen(delta: Vector2) -> void:
 	position -= delta / zoom.x
+	_clamp()
 	view_changed.emit()
 
 
@@ -79,6 +89,7 @@ func center_on(world: Vector2) -> void:
 	var vp_center := get_viewport_rect().size * 0.5
 	var offset_screen := vr.get_center() - vp_center
 	position = world - offset_screen / zoom.x
+	_clamp()
 	force_update_scroll()
 	view_changed.emit()
 
@@ -91,6 +102,40 @@ func fit_world_rect(r: Rect2, margin: float = 40.0) -> void:
 	zoom = Vector2(z, z)
 	target_zoom = z
 	center_on(r.get_center())
+
+
+func set_limits(r: Rect2) -> void:
+	## Keep the view centre inside `r` (world px); Rect2() removes the limit.
+	limits = r
+	if _clamp():
+		force_update_scroll()
+		view_changed.emit()
+
+
+func view_center() -> Vector2:
+	## World point at the centre of view_rect (independent of force_update_scroll).
+	var off := (_view().get_center() - get_viewport_rect().size * 0.5) / maxf(zoom.x, 0.0001)
+	return position + off
+
+
+func _clamp() -> bool:
+	## Moves the camera so the view centre lies inside `limits`. True if it moved.
+	if limits.size.x <= 0.0 or limits.size.y <= 0.0:
+		return false
+	var c := view_center()
+	var cc := Vector2(clampf(c.x, limits.position.x, limits.end.x), clampf(c.y, limits.position.y, limits.end.y))
+	if cc.is_equal_approx(c):
+		return false
+	position += cc - c
+	return true
+
+
+func go_home(z: float = HOME_ZOOM) -> void:
+	## Centres `home` at zoom z (immediately; no smooth zoom).
+	z = clampf(z, MIN_ZOOM, MAX_ZOOM)
+	zoom = Vector2(z, z)
+	target_zoom = z
+	center_on(home)
 
 
 func _view() -> Rect2:

@@ -1,6 +1,6 @@
 class_name Dialogs
 extends RefCounted
-## Export, settings, help/shortcuts and welcome dialogs.
+## Export, settings, help/shortcuts, welcome and load-report dialogs.
 
 const SHORTCUTS := [
 	["Tools", ""],
@@ -15,8 +15,9 @@ const SHORTCUTS := [
 	["Ctrl+C / Ctrl+X / Ctrl+V", "Copy / cut / paste (click to stamp, Esc to stop)"], ["Ctrl+D", "Duplicate selection"],
 	["Ctrl+A", "Select all"], ["Ctrl+G / Ctrl+Shift+G", "Group / ungroup"], ["L", "Lock / unlock selection"],
 	["Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y", "Undo / redo"],
+	["Click a landmark", "Farmhouse, truck, shop…: details, state and look (they are fixed in place)"],
 	["View & file", ""],
-	["Mouse wheel / + / -", "Zoom"], ["F / Home", "Fit the farm"], ["G", "Grid"], ["O", "Occupied-tile overlay"], ["Tab", "Hide / show panels"],
+	["Mouse wheel / + / -", "Zoom"], ["F", "Fit the farm"], ["Home / Shift+H", "Home: centre the farmhouse"], ["G", "Grid"], ["O", "Occupied-tile overlay"], ["Tab", "Hide / show panels"],
 	["Ctrl+F", "Search catalogue"], ["Ctrl+M", "Switch Creative / Realistic"], ["Ctrl+S", "Save (keeps a revision)"], ["Ctrl+O", "Layouts"],
 	["Ctrl+N", "New layout"], ["Ctrl+E", "Export image"], ["Ctrl+Shift+A", "Asset manager (art, anchors, review)"], ["F1", "This help"],
 ]
@@ -188,3 +189,159 @@ static func settings(parent: Control, on_change: Callable) -> void:
 	m.body.add_child(art_row)
 	m.body.add_child(UI.label("Data folder: %s" % ProjectSettings.globalize_path("user://"), "Faint", true))
 	m.add_button("Done", "Accent", m.close)
+
+
+# ---------------------------------------------------------------------------
+# Load report: what happened when an older / corrected layout was opened
+# ---------------------------------------------------------------------------
+
+## Footprint corrections up to this many stay a toast (no dialog).
+const REPORT_SMALL_FOOTPRINTS := 3
+const REPORT_LIST_MAX := 12
+
+
+static func load_report_needs_dialog(rep: LayoutIO.LoadReport) -> bool:
+	## A dialog for upgraded files (frame shift, landmark objects taken out),
+	## objects that need a look (collisions, review) or many footprint
+	## corrections; anything smaller stays App's toast.
+	if rep == null or not rep.ok:
+		return false
+	return rep.shifted != Vector2i.ZERO or not rep.migrated_landmarks.is_empty() or not rep.collisions.is_empty() \
+		or not rep.review_uids.is_empty() or rep.footprint_changes.size() > REPORT_SMALL_FOOTPRINTS
+
+
+static func _obj_name(l: FarmLayout, db: ItemDatabase, uid: int) -> String:
+	var o := l.get_obj(uid) if l else null
+	if o == null:
+		return "Object %d" % uid
+	var it := db.get_item(o.item_id) if db else null
+	return it.name if it else o.item_id
+
+
+static func load_report_data(rep: LayoutIO.LoadReport, l: FarmLayout, db: ItemDatabase, map: FarmMap = null) -> Dictionary:
+	## Plain data behind the load-report dialog (also used by the self-test):
+	## {from, shifted: Vector2i, shift_px: Vector2, landmarks: [{landmark, name, item, at}],
+	##  collisions: [{uid, name, reason}], review: [{uid, name}],
+	##  footprints: [{uid, name, old, new, turned}], backup: String, backup_exists: bool,
+	##  summary: String}
+	var d := {"from": rep.migrated_from, "shifted": rep.shifted, "shift_px": Iso.grid_to_world(Vector2(rep.shifted)),
+		"landmarks": [], "collisions": [], "review": [], "footprints": [], "backup": rep.backup_path,
+		"backup_exists": not rep.backup_path.is_empty() and FileAccess.file_exists(rep.backup_path), "summary": rep.summary(),
+		"starter_unlocked": rep.starter_unlocked}
+	for e in rep.migrated_landmarks:
+		var rec: Dictionary = e.get("record", {}) if e.get("record") is Dictionary else {}
+		var lid := str(e.get("landmark", ""))
+		var lm: Landmark = map.landmark(lid) if map and not lid.is_empty() else null
+		var item := str(rec.get("item", ""))
+		var it := db.get_item(item) if db and not item.is_empty() else null
+		d["landmarks"].append({"landmark": lid, "name": lm.name if lm else str(e.get("name", lid.capitalize())),
+			"item": it.name if it else item, "at": Vector2i(int(rec.get("x", 0)), int(rec.get("y", 0))),
+			"reason": str(e.get("reason", ""))})
+	for c in rep.collisions:
+		var uid := int(c.get("uid", 0))
+		d["collisions"].append({"uid": uid, "name": _obj_name(l, db, uid), "reason": str(c.get("reason", ""))})
+	for u in rep.review_uids:
+		d["review"].append({"uid": int(u), "name": _obj_name(l, db, int(u))})
+	for f in rep.footprint_changes:
+		var uid2 := int(f.get("uid", 0))
+		var old: Vector2i = f.get("old", Vector2i.ZERO)
+		var nw: Vector2i = f.get("new", Vector2i.ZERO)
+		d["footprints"].append({"uid": uid2, "name": _obj_name(l, db, uid2), "old": old, "new": nw,
+			"turned": bool(f.get("flipped_toggled", false))})
+	return d
+
+
+static func load_report(parent: Control, rep: LayoutIO.LoadReport, l: FarmLayout, db: ItemDatabase, map: FarmMap, on_show: Callable) -> Modal:
+	## Compact, non-blocking report after opening an upgraded or corrected
+	## layout. "Show" closes it and calls on_show(uid) (main centres the object).
+	var d := load_report_data(rep, l, db, map)
+	var m := Modal.open(parent, "“%s” was updated" % (l.name if l else "Layout"), 620, "clock-arrow-up")
+	m.set_meta("load_report", d)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(580, 0)
+	var v := UI.vbox(10)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(v)
+	m.body.add_child(scroll)
+	var rows := 0
+	if int(d["from"]) >= 0:
+		var txt := "Saved with an older version (format %d)." % int(d["from"])
+		if d["shifted"] != Vector2i.ZERO:
+			txt += " Every position was converted to the game's tile grid (moved by %d, %d tiles); nothing changed on the farm itself." % [d["shifted"].x, d["shifted"].y]
+		v.add_child(UI.label(txt, "Dim", true))
+	if int(d["starter_unlocked"]) > 0:
+		v.add_child(UI.label("%d starter building%s (barn, silo…) no longer locked: they can be moved in Hay Day." % [int(d["starter_unlocked"]), "" if int(d["starter_unlocked"]) == 1 else "s"], "Dim", true))
+	if not (d["landmarks"] as Array).is_empty():
+		v.add_child(UI.section("Now fixed landmarks"))
+		v.add_child(UI.label("These were placed as objects in the old file. They are fixed parts of every Hay Day farm, so the world draws them now. The old entries are kept in the file (nothing is lost).", "Faint", true))
+		var card := UI.card()
+		var cv := UI.vbox(3)
+		card.add_child(cv)
+		for e in (d["landmarks"] as Array).slice(0, REPORT_LIST_MAX):
+			var nm := str(e["name"])
+			cv.add_child(UI.kv(nm, "was “%s”" % str(e["item"]) if str(e["item"]) != nm else "kept in the file"))
+		if (d["landmarks"] as Array).size() > REPORT_LIST_MAX:
+			cv.add_child(UI.label("+ %d more" % ((d["landmarks"] as Array).size() - REPORT_LIST_MAX), "Faint"))
+		v.add_child(card)
+	var check: Array = []
+	for c in d["collisions"]:
+		check.append([c["uid"], c["name"], c["reason"]])
+	var seen := {}
+	for c in check:
+		seen[c[0]] = true
+	for r in d["review"]:
+		if not seen.has(r["uid"]):
+			check.append([r["uid"], r["name"], "the old map put its land elsewhere — check its place"])
+	if not check.is_empty():
+		v.add_child(UI.section("Please check (%d)" % check.size()))
+		v.add_child(UI.label("Kept exactly where they were and highlighted in red; move or remove them as you like.", "Faint", true))
+		var card2 := UI.card()
+		var cv2 := UI.vbox(4)
+		card2.add_child(cv2)
+		for c in check.slice(0, REPORT_LIST_MAX):
+			var row := UI.hbox(8)
+			var lab := UI.label("%s — %s" % [c[1], c[2]], "", true)
+			lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(lab)
+			var b := UI.button("Show", "crosshair", "Centre the view on it and select it", "Ghost")
+			var uid: int = c[0]
+			b.pressed.connect(func():
+				m.close()
+				if on_show.is_valid():
+					on_show.call(uid))
+			row.add_child(b)
+			cv2.add_child(row)
+			rows += 1
+		if check.size() > REPORT_LIST_MAX:
+			cv2.add_child(UI.label("+ %d more (shown in red on the farm)" % (check.size() - REPORT_LIST_MAX), "Faint"))
+		v.add_child(card2)
+	if not (d["footprints"] as Array).is_empty():
+		var resized := 0
+		var turned := 0
+		for f in d["footprints"]:
+			if f["turned"]:
+				turned += 1
+			else:
+				resized += 1
+		var parts := PackedStringArray()
+		if resized > 0:
+			parts.append("%d object%s got a corrected size" % [resized, "" if resized == 1 else "s"])
+		if turned > 0:
+			parts.append("%d turned to match a corrected footprint (same tiles)" % turned)
+		v.add_child(UI.section("Footprints"))
+		v.add_child(UI.label(", ".join(parts) + ". Each keeps its top corner.", "Dim", true))
+	if not str(d["backup"]).is_empty():
+		var bt := ("The original file is kept as: %s" if d["backup_exists"] else "When you save, the original file is kept as: %s") % str(d["backup"])
+		var bl := UI.label(bt, "Faint", true)
+		bl.mouse_filter = Control.MOUSE_FILTER_STOP
+		bl.tooltip_text = ProjectSettings.globalize_path(str(d["backup"])) if str(d["backup"]).begins_with("user://") else str(d["backup"])
+		v.add_child(bl)
+	# As tall as the content, up to ~60 % of the window (then it scrolls).
+	var max_h := maxf(240.0, parent.get_viewport_rect().size.y * 0.6)
+	scroll.custom_minimum_size.y = clampf(180.0 + rows * 36.0 + (d["landmarks"] as Array).size() * 24.0, 160.0, max_h)
+	v.resized.connect(func():
+		if is_instance_valid(scroll):
+			scroll.custom_minimum_size.y = clampf(v.size.y, 120.0, max_h))
+	m.add_button("OK", "Accent", m.close)
+	return m

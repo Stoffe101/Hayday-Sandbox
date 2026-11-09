@@ -9,6 +9,11 @@ const C_OK := Color(0.30, 0.85, 0.45, 0.42)
 const C_BAD := Color(0.95, 0.25, 0.22, 0.50)
 const C_LOCKED := Color(0.98, 0.65, 0.15, 0.50)
 const C_OUT := Color(0.4, 0.4, 0.4, 0.45)
+## Tiles of a fixed landmark: a neutral "this is part of the farm" colour,
+## not the red of a real conflict.
+const C_FIXED := Color(0.62, 0.66, 0.78, 0.5)
+## Selected / hovered fixed landmark (distinct from the object-selection accent).
+const C_LANDMARK := Color(1.0, 0.86, 0.52)
 
 var layout: FarmLayout
 var db: ItemDatabase
@@ -36,6 +41,12 @@ var visible_rect := Rect2()
 var cursor_text := ""
 var cursor_world := Vector2.ZERO
 var font: Font
+## Fixed landmarks: footprint of the hovered / selected one (size 0 = none),
+## the selected one's name and sprite bounds (for its tag).
+var landmark_hover := Rect2i()
+var landmark_selected := Rect2i()
+var landmark_name := ""
+var landmark_bounds := Rect2()
 
 
 func _ready() -> void:
@@ -85,6 +96,7 @@ func _draw() -> void:
 	if selection.size() > 1:
 		var r := layout.bounds_of(selection)
 		_dashed(Iso.grid_rect_polygon(r.grow(0)), Color(1, 1, 1, 0.85))
+	_draw_landmark_marks()
 	# Hover
 	if hover_uid != 0 and not hover_uid in selection:
 		var o := layout.get_obj(hover_uid)
@@ -104,6 +116,7 @@ func _draw() -> void:
 				PlacementRules.OK_TILE: c = C_OK
 				PlacementRules.LOCKED_LAND: c = C_LOCKED
 				PlacementRules.OUT_OF_BOUNDS: c = C_OUT
+				PlacementRules.LANDMARK: c = C_FIXED
 				_: c = C_BAD
 			draw_colored_polygon(Iso.footprint_polygon(ghost_result.tiles[i], Vector2i.ONE), c)
 	for g in ghosts:
@@ -130,6 +143,21 @@ func _draw() -> void:
 		_draw_labels()
 	if not cursor_text.is_empty():
 		_draw_tag(cursor_world + Vector2(18, 22) / maxf(zoom, 0.05), cursor_text)
+
+
+func _draw_landmark_marks() -> void:
+	if landmark_selected.size != Vector2i.ZERO:
+		var poly := Iso.footprint_polygon(landmark_selected.position, landmark_selected.size)
+		var f := C_LANDMARK
+		f.a = 0.18
+		draw_colored_polygon(poly, f)
+		_outline(poly, C_LANDMARK, 2.5)
+		if not landmark_name.is_empty():
+			var top := landmark_bounds.position + Vector2(landmark_bounds.size.x * 0.5, 0.0) if landmark_bounds.size != Vector2.ZERO \
+				else Iso.footprint_center(landmark_selected.position, landmark_selected.size)
+			_draw_tag(top - Vector2(0, 14.0 / maxf(zoom, 0.05)), landmark_name + " · fixed", Color(0.45, 0.36, 0.16, 0.95), true)
+	if landmark_hover.size != Vector2i.ZERO and landmark_hover != landmark_selected:
+		_outline(Iso.footprint_polygon(landmark_hover.position, landmark_hover.size), Color(1, 1, 1, 0.8), 2.0)
 
 
 func _draw_ghost(g: Dictionary) -> void:
@@ -191,9 +219,15 @@ func _draw_annotations() -> void:
 
 
 func _draw_tag(at: Vector2, text: String, col: Color = Color(0.12, 0.14, 0.13, 0.88), centered: bool = false) -> void:
+	## A small label box in screen-size pixels at a world point; "\n" starts a new line.
 	var inv := 1.0 / maxf(zoom, 0.05)
 	var fs := 15
-	var size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs)
+	var lines := text.split("\n")
+	var lh := font.get_height(fs)
+	var size := Vector2.ZERO
+	for ln in lines:
+		size.x = maxf(size.x, font.get_string_size(ln, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
+	size.y = lh * lines.size()
 	draw_set_transform(at, 0.0, Vector2(inv, inv))
 	var pos := Vector2(-size.x * 0.5 - 8, -size.y * 0.5 - 4) if centered else Vector2.ZERO
 	var box := Rect2(pos, size + Vector2(16, 8))
@@ -201,7 +235,8 @@ func _draw_tag(at: Vector2, text: String, col: Color = Color(0.12, 0.14, 0.13, 0
 	if centered:
 		bg = Color(col.r * 0.55, col.g * 0.55, col.b * 0.55, 0.9)
 	draw_rect(box, bg, true)
-	draw_string(font, pos + Vector2(8, 4 + size.y * 0.78), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 1, 1, 0.97))
+	for i in lines.size():
+		draw_string(font, pos + Vector2(8, 4 + lh * i + font.get_ascent(fs)), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 1, 1, 0.97))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 

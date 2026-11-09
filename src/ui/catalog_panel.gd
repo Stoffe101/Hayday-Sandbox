@@ -1,9 +1,15 @@
 class_name CatalogPanel
 extends PanelContainer
 ## Searchable, filterable item catalogue with thumbnail grid.
+## Realistic mode = "my farm at level N": only items unlocked at that level are
+## listed (unknown unlock levels stay visible, marked "Lv ?"); "Show locked"
+## adds the rest greyed out, and they can't become the brush. Creative mode is
+## the full sandbox: everything is listed and placeable.
 
 signal item_chosen(id: String)
 signal open_assets(id: String)      ## open the Asset Manager on this item
+signal farm_level_requested(level: int)   ## "Set level to N" on a locked item
+signal mode_requested(mode: String)       ## "Creative" on a locked item
 
 var _search: LineEdit
 var _list: ItemList
@@ -15,7 +21,14 @@ var _filter_btn: MenuButton
 var _scope := "all"            ## all | favorites | recent
 var _category := ""
 var _sort := "relevance"
-var _filters := {"fits_level": false, "trusted_only": false, "placeable_only": true, "with_art": false}
+var _filters := {"trusted_only": false, "placeable_only": true, "with_art": false}
+var _show_locked := false      ## Realistic: also list items above the farm level (greyed)
+var _level_ctx := ""           ## "<mode>:<level>" the list was built for
+var _level_box: VBoxContainer
+var _level_icon: TextureRect
+var _level_text: Label
+var _locked_btn: Button
+var _unknown_text: Label
 var _ids: Array[String] = []
 var _icon_queue: Array = []
 var _debounce: Timer
@@ -75,7 +88,7 @@ func _ready() -> void:
 	_filter_btn.flat = true
 	var fp := _filter_btn.get_popup()
 	fp.hide_on_checkable_item_selection = false
-	for f in [["Only items unlocked at my level", "fits_level"], ["Only verified/community sizes", "trusted_only"],
+	for f in [["Only verified/community sizes", "trusted_only"],
 			["Hide reference-only items", "placeable_only"], ["Only items with their own art", "with_art"]]:
 		fp.add_check_item(f[0])
 		fp.set_item_metadata(fp.item_count - 1, f[1])
@@ -92,6 +105,7 @@ func _ready() -> void:
 	_chips.add_theme_constant_override("v_separation", 5)
 	v.add_child(_chips)
 	_build_chips()
+	_build_level_strip(v)
 	_list = ItemList.new()
 	_list.icon_mode = ItemList.ICON_MODE_TOP
 	_list.max_columns = 0
@@ -184,14 +198,95 @@ func _set_category(c: String) -> void:
 	refresh()
 
 
+func _build_level_strip(parent: Container) -> void:
+	## "1,169 of 1,949 available at level 60" + "Show locked" (Realistic), or
+	## the sandbox note (Creative).
+	_level_box = UI.vbox(4)
+	var row := UI.hbox(6)
+	_level_icon = UI.icon_rect("sprout", 16, UiTheme.c("accent"))
+	row.add_child(_level_icon)
+	_level_text = UI.label("", "Dim", true)
+	_level_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_level_text.mouse_filter = Control.MOUSE_FILTER_STOP
+	row.add_child(_level_text)
+	_level_box.add_child(row)
+	var row2 := UI.hbox(6)
+	_locked_btn = UI.button("Show locked", "lock", "Also list items your farm level hasn't unlocked yet (greyed; they can't be placed in Realistic mode)", "Chip")
+	_locked_btn.toggle_mode = true
+	_locked_btn.button_pressed = _show_locked
+	_locked_btn.toggled.connect(func(on: bool):
+		_show_locked = on
+		refresh())
+	row2.add_child(_locked_btn)
+	row2.add_child(UI.spacer())
+	_unknown_text = UI.label("", "Faint")
+	_unknown_text.mouse_filter = Control.MOUSE_FILTER_STOP
+	_unknown_text.tooltip_text = "Items whose unlock level isn't known stay visible, marked “Lv ?”. They are never guessed — check them in the game."
+	row2.add_child(_unknown_text)
+	_level_box.add_child(row2)
+	parent.add_child(_level_box)
+
+
+func _mode() -> String:
+	return App.session.layout.mode if App.session else FarmLayout.MODE_CREATIVE
+
+
+func _level() -> int:
+	return RealisticAnalyzer.farm_level(App.session.layout) if App.session else 1
+
+
+func _realistic() -> bool:
+	return _mode() == FarmLayout.MODE_REALISTIC
+
+
+func on_level_context_changed() -> void:
+	## Mode or farm level changed (also on undo/redo): rebuild the list when the
+	## level view differs, and drop a brush that the new level can't place.
+	var key := "%s:%d" % [_mode(), _level()]
+	if key != _level_ctx:
+		refresh()
+		_show_detail(_selected_id)
+	_drop_locked_brush()
+
+
+func _drop_locked_brush() -> void:
+	var s := App.session
+	if s == null or s.active_item.is_empty():
+		return
+	var why := RealisticAnalyzer.item_level_block(s.db.get_item(s.active_item), s.layout.mode, _level())
+	if why.is_empty():
+		return
+	var keep := _selected_id
+	_disarm(s)
+	_reselect(keep)
+	App.toast(why, "warn")
+
+
+func _disarm(s: EditorSession) -> void:
+	## Drop the brush (and the place tool's ghost) without touching the layout.
+	if s == null:
+		return
+	if not s.active_item.is_empty():
+		s.set_active_item("")
+	if s.tool == "place":
+		s.set_tool("select")
+
+
+func _reselect(id: String) -> void:
+	## Keep showing an item in the list/detail without arming the brush.
+	_selected_id = id
+	for i in _ids.size():
+		if _ids[i] == id and not id.is_empty():
+			_list.select(i)
+	_show_detail(id)
+
+
 func refresh() -> void:
 	var filters := {}
 	if not _category.is_empty():
 		filters["category"] = _category
 	if _filters["trusted_only"]:
 		filters["status"] = "trusted"
-	if _filters["fits_level"] and App.session:
-		filters["max_level"] = int(App.session.layout.profile.get("level", 1))
 	if _scope == "favorites":
 		var d := {}
 		for f in App.settings.get_v("favorites"):
@@ -209,28 +304,67 @@ func refresh() -> void:
 	_list.clear()
 	_ids.clear()
 	_icon_queue.clear()
-	var favs: Array = App.settings.get_v("favorites")
+	var matching: Array[ItemDef] = []
 	for it: ItemDef in results:
 		if _filters["placeable_only"] and not it.placeable:
 			continue
 		if _filters["with_art"] and not App.assets.has_art(it.art_key):
 			continue
-		var label := ("★ " if it.id in favs else "") + it.name
+		matching.append(it)
+	var mode := _mode()
+	var level := _level()
+	_level_ctx = "%s:%d" % [mode, level]
+	var lf := RealisticAnalyzer.filter_by_level(matching, mode, level, _show_locked)
+	var favs: Array = App.settings.get_v("favorites")
+	for it: ItemDef in lf["items"]:
+		var st := RealisticAnalyzer.mode_level_state(it, mode, level)
+		var label := it.name
+		if mode == FarmLayout.MODE_REALISTIC and st == RealisticAnalyzer.ABOVE_LEVEL:
+			label = "Lv %d · %s" % [it.unlock_level, label]
+		elif mode == FarmLayout.MODE_REALISTIC and st == RealisticAnalyzer.LEVEL_UNKNOWN:
+			label = "Lv ? · " + label
+		label = ("★ " if it.id in favs else "") + label
 		var idx := _list.add_item(label, null)
-		_list.set_item_tooltip(idx, _tooltip(it))
-		if not it.placeable:
+		_list.set_item_tooltip(idx, _tooltip(it, st))
+		if not it.placeable or st == RealisticAnalyzer.ABOVE_LEVEL:
 			_list.set_item_custom_fg_color(idx, UiTheme.c("text_faint"))
+		if st == RealisticAnalyzer.ABOVE_LEVEL:
+			_list.set_item_icon_modulate(idx, Color(1, 1, 1, 0.4))
 		_ids.append(it.id)
 		_icon_queue.append(idx)
 		if it.id == _selected_id:
 			_list.select(idx)
 	var total := App.db.count()
 	_count.text = "%s of %s" % [UI.fmt_int(_ids.size()), UI.fmt_int(total)]
+	_update_level_strip(lf, mode, level)
 	if _ids.is_empty():
 		var msg := "No favourites yet — right-click an item to star it." if _scope == "favorites" else ("Nothing placed recently." if _scope == "recent" else "No items match “%s”." % _search.text)
+		if mode == FarmLayout.MODE_REALISTIC and not _show_locked and int(lf["locked"]) > 0:
+			msg = "Nothing here is unlocked at level %d yet — %s locked item%s hidden. Use “Show locked” to see them." % [level, UI.fmt_int(lf["locked"]), "" if int(lf["locked"]) == 1 else "s"]
 		var idx := _list.add_item(msg, null, false)
 		_list.set_item_disabled(idx, true)
 		_ids.append("")
+
+
+func _update_level_strip(lf: Dictionary, mode: String, level: int) -> void:
+	if _level_box == null:
+		return
+	var real := mode == FarmLayout.MODE_REALISTIC
+	_level_icon.texture = Icons.get_icon("sprout" if real else "wand-sparkles", 16)
+	_locked_btn.get_parent().visible = real
+	if not real:
+		_level_text.text = "Sandbox — every item unlocked"
+		_level_text.tooltip_text = "Creative mode places anything, whatever its unlock level. Switch to Realistic to see only what your farm has unlocked."
+		return
+	var unlocked: int = lf["unlocked"]
+	var total: int = lf["total"]
+	_level_text.text = "%s of %s available at level %d" % [UI.fmt_int(unlocked), UI.fmt_int(total), level]
+	_level_text.tooltip_text = "Realistic mode: your farm is level %d (change it in the top bar). Items above it are hidden unless “Show locked” is on, and can't be placed." % level
+	_locked_btn.text = "Show locked (%s)" % UI.fmt_int(lf["locked"])
+	_locked_btn.set_pressed_no_signal(_show_locked)
+	var unknown: int = lf["unknown"]
+	_unknown_text.visible = unknown > 0
+	_unknown_text.text = "%s level unknown" % UI.fmt_int(unknown)
 
 
 func _process(_dt: float) -> void:
@@ -266,10 +400,15 @@ func _art_key_of(id: String) -> String:
 	return it.art_key if it else ""
 
 
-func _tooltip(it: ItemDef) -> String:
+func _tooltip(it: ItemDef, state: String = RealisticAnalyzer.AVAILABLE) -> String:
 	var lines := PackedStringArray([it.name, "%d×%d tiles · %s" % [it.footprint.x, it.footprint.y, UI.status_text(it.footprint_status)]])
 	if it.unlock_level > 0:
 		lines.append("Unlocks at level %d" % it.unlock_level)
+	if _realistic():
+		if state == RealisticAnalyzer.ABOVE_LEVEL:
+			lines.append("Locked — your farm is level %d" % _level())
+		elif state == RealisticAnalyzer.LEVEL_UNKNOWN:
+			lines.append("Unlock level unknown — not checked against your level")
 	if not it.placeable:
 		lines.append("Reference only — fixed scenery in the game")
 	return "\n".join(lines)
@@ -278,7 +417,15 @@ func _tooltip(it: ItemDef) -> String:
 func _on_selected(idx: int) -> void:
 	if idx >= _ids.size() or _ids[idx].is_empty():
 		return
-	_selected_id = _ids[idx]
+	var id := _ids[idx]
+	var why := RealisticAnalyzer.item_level_block(App.db.get_item(id), _mode(), _level())
+	if not why.is_empty():
+		# Realistic mode: a locked item can be inspected but not placed.
+		_disarm(App.session)
+		_reselect(id)
+		App.toast(why, "warn")
+		return
+	_selected_id = id
 	_show_detail(_selected_id)
 	item_chosen.emit(_selected_id)
 
@@ -359,6 +506,36 @@ func _show_detail(id: String) -> void:
 		badges.add_child(UI.badge("%d variant%s" % [nv, "" if nv == 1 else "s"], UiTheme.c("info")))
 	if it.flippable:
 		badges.add_child(UI.badge("Rotatable", UiTheme.c("text_dim")))
+	var st := RealisticAnalyzer.mode_level_state(it, _mode(), _level())
+	if st == RealisticAnalyzer.ABOVE_LEVEL:
+		badges.add_child(UI.badge("Locked · Lv %d" % it.unlock_level, UiTheme.c("danger")))
+	elif st == RealisticAnalyzer.LEVEL_UNKNOWN:
+		var ub := UI.badge("Level unknown", UiTheme.c("warn"))
+		ub.tooltip_text = "This item's unlock level isn't known, so it isn't checked against your farm level."
+		badges.add_child(ub)
 	info.add_child(badges)
 	top.add_child(info)
 	_detail.add_child(top)
+	if st == RealisticAnalyzer.ABOVE_LEVEL:
+		_detail.add_child(UI.label("Unlocks at level %d — your farm is level %d, so it can't be placed in Realistic mode." % [it.unlock_level, _level()], "Dim", true))
+		var acts := UI.hbox(6)
+		var up := UI.button("Set level to %d" % it.unlock_level, "sprout", "Raise this farm's level (undoable; placed objects don't change)", "Ghost")
+		up.pressed.connect(func():
+			farm_level_requested.emit(it.unlock_level)
+			_arm_if_allowed(it.id))
+		acts.add_child(up)
+		var cr := UI.button("Creative", "wand-sparkles", "Sandbox: everything unlocked", "Ghost")
+		cr.pressed.connect(func():
+			mode_requested.emit(FarmLayout.MODE_CREATIVE)
+			_arm_if_allowed(it.id))
+		acts.add_child(cr)
+		_detail.add_child(acts)
+
+
+func _arm_if_allowed(id: String) -> void:
+	## After "Set level" / "Creative" on a locked item: pick it up as the brush
+	## once the new level or mode allows it.
+	if not RealisticAnalyzer.item_level_block(App.db.get_item(id), _mode(), _level()).is_empty():
+		return
+	_reselect(id)
+	item_chosen.emit(id)

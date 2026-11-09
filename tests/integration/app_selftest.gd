@@ -195,6 +195,7 @@ func _integration() -> void:
 	check(int(s.layout.profile.get("level", -1)) == App.default_farm_level(), "new layout starts at the default farm level (%d)" % App.default_farm_level())
 	_template_check()
 	await _landmark_check()
+	await _world_ui_check()
 	var bakery := App.db.get_item("bakery")
 	var at := _free_origin(bakery, Vector2i(14, 28))
 	main.camera.center_on(Iso.tile_center(at))
@@ -350,6 +351,7 @@ func _integration() -> void:
 	# Asset packs: zip install, thumbnails, variants, overrides, Asset Manager.
 	await _asset_pack_check()
 	await _world_pack_check()
+	await _load_report_check()
 	App.library.delete(s.layout.id)
 
 
@@ -526,7 +528,8 @@ func _world_pack_check() -> void:
 	DirAccess.make_dir_recursive_absolute(dir.path_join("world"))
 	var world: Dictionary = JsonUtil.read_json("res://data/maps/hayday_farm.json")
 	world["provenance"] = {"kind": "private_game_data", "source": "selftest: synthetic copy of the public map", "generated": "2026-01-01", "confidence": "approximate"}
-	(world["landmarks"] as Array).append({"id": "selftest_statue", "name": "Selftest Statue", "origin": [30, 1], "footprint": [1, 1], "confidence": "approximate"})
+	(world["landmarks"] as Array).append({"id": "selftest_statue", "name": "Selftest Statue", "origin": [30, 1], "footprint": [1, 1], "confidence": "approximate",
+		"states": ["broken", "repaired"], "default_state": "repaired", "fallback_art": "barn"})
 	world["initial_objects"] = [{"item": "barn", "x": 2, "y": 2, "group": "start"}, {"item": "silo", "x": 7, "y": 2, "group": "start"}]
 	JsonUtil.write_atomic(dir.path_join("world/world.json"), JSON.stringify(world), false)
 	var bush_item := App.db.get_item("raspberry_bush")
@@ -556,6 +559,29 @@ func _world_pack_check() -> void:
 	check(bush != null and bush.size == bsize and bush.flipped != bflip and s.stack.size() == steps + 1,
 		"open layout: an axis-swapped footprint keeps its tiles (flip toggled) as one undo step")
 	check(App.has_initial_objects() and App.layout_templates().any(func(t): return t["id"] == "new_farm"), "fresh game farm template offered with world data")
+	var skey := LandmarkView.key_of("selftest_statue")
+	check(main.renderer.world_entry_keys().has(skey) and main.renderer.world_entry_keys().size() == App.map.landmarks.size(),
+		"the new world's landmarks are drawn after map_changed (%d world entries)" % main.renderer.world_entry_keys().size())
+	check(str(main.renderer.world_entry(skey).get("variant", "")) == "repaired", "landmark drawn in its default state")
+	# Inspector state picker -> undoable world-state command -> renderer variant.
+	s.select_landmark("selftest_statue")
+	main.inspector.rebuild()
+	var so: OptionButton = main.inspector.landmark_state_option
+	check(main.inspector.landmark_card_id == "selftest_statue" and so != null and so.item_count == 2, "landmark card offers its states")
+	if so != null:
+		var bi := -1
+		for i in so.item_count:
+			if str(so.get_item_metadata(i)) == "broken":
+				bi = i
+		var st0 := s.stack.size()
+		so.select(bi)
+		so.item_selected.emit(bi)
+		await _frames(1)
+		check(s.layout.landmark_state("selftest_statue") == "broken" and str(main.renderer.world_entry(skey).get("variant", "")) == "broken"
+			and s.stack.size() == st0 + 1, "choosing a state is one undo step and redraws the landmark")
+		_key(KEY_Z, true)
+		check(str(main.renderer.world_entry(skey).get("variant", "")) == "repaired", "Ctrl+Z restores the default state")
+	s.clear_selection()
 	check(PackInstaller.uninstall(pid) == OK, "world pack removed")
 	App.reload_assets()
 	await _frames(2)
@@ -696,6 +722,7 @@ func _migration_check() -> void:
 
 func _perf() -> void:
 	var results := {}
+	results["world"] = await _bench_world()
 	# A: the real farm (all mapped land unlocked), packed densely.
 	results["farm"] = await _bench("farm", 4000, App.maps["hayday_farm"])
 	# B: synthetic stress maps far beyond any real farm.
@@ -712,6 +739,36 @@ func _perf() -> void:
 	check(r5["pick_us"] < 5000.0, "pixel-accurate pick: %.0f µs" % r5["pick_us"])
 	check(r5["save_ms"] < 3000.0 and r5["load_ms"] < 3000.0, "save %.0f ms / load %.0f ms" % [r5["save_ms"], r5["load_ms"]])
 	App.maps.erase(big.id)
+
+
+func _bench_world() -> Dictionary:
+	## World layer of the active world: scenery build, ground redraw (one
+	## frame), landmark world-entry refresh, landmark-aware hover pick.
+	App.open_layout(App.new_layout("World bench", "expanded"))
+	await _frames(2)
+	var s := _s()
+	var t0 := Time.get_ticks_usec()
+	main.scenery.setup(s.map, App.assets, s.db)
+	var scenery_ms := _ms(t0)
+	t0 = Time.get_ticks_usec()
+	main.ground.setup(s.map, s.layout.unlocked_plots)
+	await _frames(1)   # the redraw happens in the next frame
+	var ground_ms := _ms(t0)
+	t0 = Time.get_ticks_usec()
+	for i in 10:
+		main._refresh_world()
+	var entries_ms := _ms(t0) / 10.0
+	var w: Vector2 = main.camera.view_center()
+	t0 = Time.get_ticks_usec()
+	for i in 500:
+		main.controller.pick_at(w + Vector2(i % 50, i / 50) * 7.0)
+	var pick_us := _ms(t0) * 1000.0 / 500.0
+	var r := {"world": s.map.provenance_label(), "landmarks": s.map.landmarks.size(), "scenery_sprites": main.scenery._items.size(),
+		"scenery_build_ms": snappedf(scenery_ms, 0.1), "ground_redraw_frame_ms": snappedf(ground_ms, 0.1),
+		"world_entries_refresh_ms": snappedf(entries_ms, 0.01), "hover_pick_us": snappedf(pick_us, 0.1)}
+	check(scenery_ms < 1000.0 and entries_ms < 50.0 and pick_us < 2000.0,
+		"world layer: scenery %.0f ms, ground redraw+frame %.0f ms, landmark refresh %.1f ms, hover pick %.0f µs" % [scenery_ms, ground_ms, entries_ms, pick_us])
+	return r
 
 
 func _bench(label: String, n: int, map: FarmMap) -> Dictionary:
@@ -1114,3 +1171,303 @@ func _artflow() -> void:
 	mem["end_texture_mb"] = snappedf(Performance.get_monitor(tex_mon) / 1048576.0, 0.1)
 	print("ARTFLOW TIMES ", JSON.stringify(T))
 	print("ARTFLOW MEM ", JSON.stringify(mem))
+
+
+# --- world layer in the app: landmark rendering + interaction, home, land level ----------
+
+func _landmark_pick_tile(id: String) -> Vector2i:
+	## A footprint tile whose centre pick_any() resolves to the landmark
+	## ((-9999, -9999) = none: hidden or covered everywhere).
+	var lm := App.map.landmark(id)
+	if lm == null:
+		return Vector2i(-9999, -9999)
+	var key := LandmarkView.key_of(id)
+	var c := lm.origin + Vector2i((lm.footprint.x - 1) / 2, (lm.footprint.y - 1) / 2)
+	var order: Array = [c]
+	for y in lm.footprint.y:
+		for x in lm.footprint.x:
+			order.append(lm.origin + Vector2i(x, y))
+	for t: Vector2i in order:
+		var r: Dictionary = main.renderer.pick_any(Iso.tile_center(t))
+		if r.get("kind") == "landmark" and r.get("key") == key:
+			return t
+	return Vector2i(-9999, -9999)
+
+
+func _snapshot_objects() -> String:
+	return JSON.stringify(LayoutIO.to_dict(_s().layout)["objects"])
+
+
+func _place_near_landmark(lm: Landmark, item_id: String, front: bool) -> int:
+	## Places item_id right in front of (south / east) or behind (north / west)
+	## the landmark so that their sprites overlap; returns the uid (0 = no free
+	## spot found).
+	var s := _s()
+	var it := App.db.get_item(item_id)
+	var key := LandmarkView.key_of(lm.id)
+	var lb: Rect2 = main.renderer.world_entry_bounds(key)
+	var cands: Array = []
+	for k in 8:
+		for dx in range(-it.footprint.x + 1, lm.footprint.x):
+			cands.append(Vector2i(lm.origin.x + dx, lm.origin.y + lm.footprint.y + k) if front \
+				else Vector2i(lm.origin.x + dx, lm.origin.y - it.footprint.y - k))
+		for dy in range(-it.footprint.y + 1, lm.footprint.y):
+			cands.append(Vector2i(lm.origin.x + lm.footprint.x + k, lm.origin.y + dy) if front \
+				else Vector2i(lm.origin.x - it.footprint.x - k, lm.origin.y + dy))
+	for o: Vector2i in cands:
+		if not PlacementRules.check_item(s.layout, s.map, it, o, false).ok:
+			continue
+		var po := PlacedObject.new()
+		po.item_id = it.id
+		po.origin = o
+		po.size = it.footprint
+		var uids := s.place_objects([po], "selftest depth probe")
+		if uids.is_empty():
+			continue
+		main.renderer.ensure_sorted()
+		if main.renderer.bounds_of(uids[0]).intersects(lb):
+			return uids[0]
+		s.stack.undo()
+	return 0
+
+
+func _world_ui_check() -> void:
+	print("World layer (rendering, landmark UI, home, land level)")
+	var s := _s()
+	s.set_tool("select")
+	s.clear_selection()
+	main.controller.stamp_mode = false
+	# Every landmark of the active world is a renderer world entry.
+	var keys: Array = main.renderer.world_entry_keys()
+	var all_in := keys.size() == s.map.landmarks.size()
+	for lm in s.map.landmarks:
+		all_in = all_in and keys.has(LandmarkView.key_of(lm.id))
+	check(all_in and not keys.is_empty(), "every landmark of the world is drawn (%d world entries)" % keys.size())
+	var fh := s.map.landmark("farmhouse")
+	if fh == null:
+		check(false, "farmhouse landmark present")
+		return
+	var key := LandmarkView.key_of("farmhouse")
+	check(main.renderer.world_entry_bounds(key).size != Vector2.ZERO, "farmhouse drawn (art or placeholder; bounds %s)" % str(main.renderer.world_entry_bounds(key).size))
+	# Depth: an object in front of the farmhouse draws over it, one behind under it.
+	var front := _place_near_landmark(fh, "bakery", true)
+	if front == 0:
+		front = _place_near_landmark(fh, "apple_tree", true)
+	var back := _place_near_landmark(fh, "bakery", false)
+	if back == 0:
+		back = _place_near_landmark(fh, "apple_tree", false)
+	var fo: int = main.renderer.world_order_of(key)
+	check(front != 0 and main.renderer.order_of(front) > fo, "object in front of the farmhouse is drawn over it")
+	check(back != 0 and main.renderer.order_of(back) < fo, "object behind the farmhouse is drawn under it")
+	var co: Dictionary = main.renderer.check_order()
+	check(int(co["mismatch"]) == 0 and int(co["violations"]) == 0, "landmarks depth-sort together with objects (%s)" % str(co))
+	for u in [back, front]:
+		if u != 0:
+			s.stack.undo()
+	# Click selects the landmark (its own card); drag / erase / R explain instead.
+	main.camera.center_on(Iso.footprint_center(fh.origin, fh.footprint))
+	await _frames(2)
+	var pt := _landmark_pick_tile("farmhouse")
+	check(pt.x != -9999, "farmhouse is pickable pixel-accurately (pick_any)")
+	if pt.x == -9999:
+		return
+	var hover_before: int = main.fixed_hint_count
+	_move(_screen_of_tile(pt))
+	check(main._lm_hover == "farmhouse" and main.overlay.landmark_hover == fh.rect(), "hovering the farmhouse highlights it")
+	_click_tile(pt)
+	check(s.selected_landmark == "farmhouse" and s.selection.is_empty(), "clicking the farmhouse selects the landmark (not an object)")
+	main.inspector.rebuild()
+	check(main.inspector.landmark_card_id == "farmhouse" and main.overlay.landmark_selected == fh.rect(), "inspector shows the farmhouse card; selection outline drawn")
+	var snap := _snapshot_objects()
+	var steps := s.stack.size()
+	var origin0 := fh.origin
+	main._hint_times.clear()
+	_drag_tiles(pt, pt + Vector2i(3, 2))
+	check(App.map.landmark("farmhouse").origin == origin0 and _snapshot_objects() == snap and s.stack.size() == steps,
+		"dragging the farmhouse moves nothing")
+	check(main.fixed_hint_count > hover_before and main.last_fixed_hint == s.explain_fixed("farmhouse", "drag"),
+		"…and shows the fixed-in-place hint near the cursor: %s" % main.last_fixed_hint)
+	main._hint_times.clear()
+	_key(KEY_R)
+	check(main.last_fixed_hint == s.explain_fixed("farmhouse", "rotate") and s.stack.size() == steps, "R on the landmark: hint, no change")
+	main._hint_times.clear()
+	var n0: int = main.fixed_hint_count
+	_key(KEY_DELETE)
+	check(main.fixed_hint_count == n0 + 1 and main.last_fixed_hint == s.explain_fixed("farmhouse", "delete") and _snapshot_objects() == snap, "Delete on the landmark: hint, no change")
+	_key(KEY_ESCAPE)
+	check(s.selected_landmark.is_empty(), "Esc clears the landmark selection")
+	# Erase tool on the landmark does nothing.
+	s.set_tool("erase")
+	main._hint_times.clear()
+	var c0 := s.layout.count()
+	_click_tile(pt)
+	check(s.layout.count() == c0 and s.stack.size() == steps and App.map.landmark("farmhouse") != null
+		and main.last_fixed_hint == s.explain_fixed("farmhouse", "erase"), "erase tool on the farmhouse removes nothing (hint: %s)" % main.last_fixed_hint)
+	s.set_tool("select")
+	# Box selection never selects landmarks.
+	var b: Rect2 = main.renderer.world_entry_bounds(key).grow(64)
+	var start := Vector2.ZERO
+	var found := false
+	for p in [b.position, Vector2(b.end.x, b.position.y), Vector2(b.position.x, b.end.y), b.end]:
+		if (main.renderer.pick_any(p) as Dictionary).get("kind", "") == "":
+			start = p
+			found = true
+			break
+	if found:
+		var a: Vector2 = main.camera.world_to_screen(start)
+		var z: Vector2 = main.camera.world_to_screen(b.get_center() * 2.0 - start)
+		_move(a)
+		_button(a, true)
+		for i in 10:
+			_move(a.lerp(z, (i + 1) / 10.0), MOUSE_BUTTON_MASK_LEFT)
+		_button(z, false)
+		check(s.selected_landmark.is_empty() and s.selection.all(func(u): return s.layout.objects.has(u)), "box selection over the farmhouse never selects the landmark")
+		s.clear_selection()
+	else:
+		check(true, "box selection check skipped (no empty corner around the farmhouse)")
+	# Visibility of a landmark is per layout, undoable, and hides it from picking.
+	s.set_landmark_visible("farmhouse", false)
+	check(not bool(main.renderer.world_entry(key).get("visible", true)) and (main.renderer.pick_any(Iso.tile_center(pt)) as Dictionary).get("key", "") != key,
+		"hiding a landmark hides it in the renderer (not pickable)")
+	_key(KEY_Z, true)
+	check(bool(main.renderer.world_entry(key).get("visible", false)), "Ctrl+Z shows it again")
+	# Season selector: only themes with art (public build: Default only).
+	var themes := LandmarkView.themes_with_art(s.map, App.assets)
+	check(themes[0] == FarmLayout.DEFAULT_THEME and (themes.size() == 1 or App.map.is_game_data() or App.assets.has_art("lm_farmhouse")),
+		"season choices = themes with art: %s" % str(themes))
+	main.set_theme("no_such_season")
+	check(s.layout.theme() == FarmLayout.DEFAULT_THEME, "a season without art can't be chosen")
+	if themes.size() > 1:
+		var t: String = themes[themes.size() - 1]
+		main.set_theme(t)
+		var seasonal := 0
+		for lm in s.map.landmarks:
+			if str(main.renderer.world_entry(LandmarkView.key_of(lm.id)).get("variant", "")).ends_with("__" + t):
+				seasonal += 1
+		check(s.layout.theme() == t and seasonal > 0, "season %s: %d landmark(s) switch to their seasonal art" % [t, seasonal])
+		_key(KEY_Z, true)
+		check(s.layout.theme() == FarmLayout.DEFAULT_THEME, "Ctrl+Z restores the default season")
+	main.inspector.show_tab(2)
+	main.inspector.rebuild()
+	check(main.inspector.theme_option != null and main.inspector.theme_option.item_count == themes.size(), "View tab: season selector lists %d theme(s)" % themes.size())
+	main.inspector.show_tab(0)
+	# Home: farmhouse (else starting land) at 100 %, via button, Home key and Shift+H.
+	var home_pt := Iso.grid_to_world(LandmarkView.home_tile_point(s.map))
+	main.camera.center_on(home_pt + Vector2(900, 600))
+	main.home_button.pressed.emit()
+	check(main.camera.view_center().distance_to(home_pt) < 1.0 and is_equal_approx(main.camera.zoom.x, FarmCamera.HOME_ZOOM), "Home button centres the farmhouse at 100%")
+	main.camera.center_on(home_pt + Vector2(-700, 300))
+	_key(KEY_HOME)
+	var ok_home: bool = main.camera.view_center().distance_to(home_pt) < 1.0
+	main.camera.center_on(home_pt + Vector2(500, -300))
+	_key(KEY_H, false, true)
+	check(ok_home and main.camera.view_center().distance_to(home_pt) < 1.0 and s.tool == "select", "Home key and Shift+H go home too (H alone stays the pan tool)")
+	# Camera bounds: the view centre can't leave the world.
+	main.camera.pan_screen(Vector2(-200000, -150000))
+	var lim: Rect2 = main.camera.limits
+	check(lim.size != Vector2.ZERO and lim.grow(1.0).has_point(main.camera.view_center()), "camera stays inside the world bounds")
+	main.go_home()
+	main.camera.zoom = Vector2(1.5, 1.5)
+	main.camera.target_zoom = 1.5
+	# Land tool: Realistic mode refuses plots above the farm level.
+	var plot_id := ""
+	for p in s.map.plots:
+		var pid := str(p["id"])
+		if not s.map.is_plot_unlocked(pid, s.layout.unlocked_plots) and RealisticAnalyzer.plot_required_level(s.map, pid) > 1 and p.has("center"):
+			plot_id = pid
+			break
+	if plot_id.is_empty():
+		check(true, "land level check skipped (no plot with a known level above 1)")
+		return
+	var lvl0 := RealisticAnalyzer.farm_level(s.layout)
+	var prof := s.layout.profile.duplicate(true)
+	prof["level"] = 1
+	s.execute(EditCommands.SetProfile.new(s.layout.profile, prof, "selftest level"))
+	s.set_mode(FarmLayout.MODE_REALISTIC)
+	s.set_tool("land")
+	var pc: Vector2 = s.map.plot(plot_id)["center"]
+	var ptile := Vector2i(floori(pc.x), floori(pc.y))
+	if s.map.plot_id_at(ptile) != plot_id:
+		for y in s.map.size.y:
+			for x in s.map.size.x:
+				if s.map.plot_id_at(Vector2i(x, y)) == plot_id:
+					ptile = Vector2i(x, y)
+	var got: Array = []
+	var cb := func(t, _k): got.append(t)
+	s.message.connect(cb)
+	var st1 := s.stack.size()
+	_click_tile(ptile)
+	s.message.disconnect(cb)
+	var need := RealisticAnalyzer.plot_required_level(s.map, plot_id)
+	check(not s.map.is_plot_unlocked(plot_id, s.layout.unlocked_plots) and s.stack.size() == st1
+		and got.any(func(t): return str(t).contains("Requires level %d" % need)), "Realistic, level 1: a level-%d plot can't be unlocked (%s)" % [need, str(got.slice(0, 1))])
+	check(main.ground.level_blocked.has(plot_id), "…and is drawn as level-locked on the ground")
+	s.set_mode(FarmLayout.MODE_CREATIVE)
+	_click_tile(ptile)
+	check(s.map.is_plot_unlocked(plot_id, s.layout.unlocked_plots) and main.ground.level_blocked.is_empty(), "Creative (sandbox) unlocks it")
+	_key(KEY_Z, true)
+	prof["level"] = lvl0
+	s.execute(EditCommands.SetProfile.new(s.layout.profile, prof, "selftest level"))
+	s.set_tool("select")
+
+
+func _load_report_check() -> void:
+	## Opening an old (v1) layout: the load-report dialog data and its "Show"
+	## buttons. Positions are computed from the active world (no game data here).
+	print("Load report")
+	var road := Vector2i(-1, -1)
+	for y in App.map.size.y:
+		for x in App.map.size.x:
+			if road.x < 0 and App.map.kind_at(Vector2i(x, y)) == FarmMap.Kind.ROAD and App.map.landmark_at(Vector2i(x, y)) < 0:
+				road = Vector2i(x, y)
+	var shift := Vector2i(5, 3)   # v1 = game frame + (5, 3)
+	var objs: Array = [
+		{"uid": 1, "item": "farmhouse", "x": 19, "y": 15, "w": 4, "h": 4, "locked": true, "note": LayoutIO.V1_STARTER_NOTE},
+		{"uid": 2, "item": "barn", "x": 9, "y": 7, "w": 4, "h": 4, "locked": true, "note": LayoutIO.V1_STARTER_NOTE}]
+	if road.x >= 0:
+		objs.append({"uid": 3, "item": "bakery", "x": road.x + shift.x, "y": road.y + shift.y, "w": 3, "h": 3})
+	var v1 := {"format": LayoutIO.FORMAT, "schema_version": 1, "app_version": "0.1.0",
+		"meta": {"id": "selftest_report_v1", "name": "Old farm (report)", "mode": "creative"},
+		"map": {"id": "hayday_farm", "unlocked_plots": []}, "objects": objs, "camera": {"x": 0.0, "y": 0.0, "zoom": 1.0}}
+	var rep := LayoutIO.LoadReport.new()
+	var l := LayoutIO.from_dict(v1, App.db, rep, App.map)
+	check(l != null, "old layout loads")
+	if l == null:
+		return
+	var d := Dialogs.load_report_data(rep, l, App.db, App.map)
+	check(d["shifted"] == Vector2i(-5, -3) and (d["landmarks"] as Array).size() == 1 and str(d["landmarks"][0]["landmark"]) == "farmhouse"
+		and Dialogs.load_report_needs_dialog(rep), "load report: frame shift, farmhouse now a fixed landmark (%s)" % rep.summary())
+	check(road.x < 0 or (d["collisions"] as Array).any(func(c): return int(c["uid"]) == 3), "load report lists the object on the road as a collision")
+	var small := LayoutIO.LoadReport.new()
+	check(not Dialogs.load_report_needs_dialog(small), "nothing to report -> no dialog")
+	l.id = ""   # not a library layout: keeps the app's "last layout" setting untouched
+	App.open_layout(l, rep)
+	await _frames(2)
+	check(main.load_report_modal == null or not is_instance_valid(main.load_report_modal) or main.load_report_modal.is_queued_for_deletion(),
+		"automation: the dialog is not opened by itself")
+	var m: Modal = main.show_load_report(rep)
+	await _frames(2)
+	var shows: Array = []
+	var stack: Array = [m]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n is Button and (n as Button).text == "Show":
+			shows.append(n)
+		stack.append_array(n.get_children())
+	var expect := 0
+	var seen := {}
+	for c in d["collisions"]:
+		seen[c["uid"]] = true
+	for r in d["review"]:
+		seen[r["uid"]] = true
+	expect = mini(seen.size(), Dialogs.REPORT_LIST_MAX)
+	check(m != null and shows.size() == expect, "dialog: one Show button per object to check (%d)" % shows.size())
+	if road.x >= 0 and not shows.is_empty():
+		(shows[0] as Button).pressed.emit()
+		await _frames(2)
+		var u := int((d["collisions"] as Array)[0]["uid"]) if not (d["collisions"] as Array).is_empty() else int(d["review"][0]["uid"])
+		var o := _s().layout.get_obj(u)
+		check(o != null and _s().selection == [u] and main.camera.view_center().distance_to(Iso.footprint_center(o.origin, o.size)) < 1.0
+			and (not is_instance_valid(m) or m.is_queued_for_deletion()), "Show closes the dialog, selects the object and centres it")
+	if is_instance_valid(m):
+		m.close()

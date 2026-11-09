@@ -11,6 +11,7 @@ var _tab := 0
 var _refresh_timer: Timer
 var report: RealisticAnalyzer.Report
 var view_state: Dictionary = {}      ## filled by main: reference/compare state
+var renderer: ObjectRenderer         ## set by main: landmark previews
 
 
 func _ready() -> void:
@@ -70,6 +71,10 @@ func rebuild() -> void:
 # ---------------------------------------------------------------------------
 
 func _build_selection(s: EditorSession) -> void:
+	landmark_card_id = ""
+	if not s.selected_landmark.is_empty() and s.selected_landmark_def() != null:
+		_build_landmark(s, s.selected_landmark_def())
+		return
 	var objs := s.selected_objects()
 	if objs.is_empty():
 		var it := s.db.get_item(s.active_item) if s.tool == "place" else null
@@ -127,6 +132,133 @@ func _build_selection(s: EditorSession) -> void:
 
 
 var variant_option: OptionButton    ## exposed for tests
+## Landmark card (exposed for tests): id shown ("" = none) and its pickers.
+var landmark_card_id := ""
+var landmark_state_option: OptionButton
+var landmark_skin_option: OptionButton
+var landmark_visible_check: CheckButton
+var theme_option: OptionButton
+
+
+# ---------------------------------------------------------------------------
+# Fixed landmark card
+# ---------------------------------------------------------------------------
+
+func _build_landmark(s: EditorSession, lm: Landmark) -> void:
+	## A fixed landmark (farmhouse, truck, …): what it is, where its position
+	## comes from, and how it looks in this design (state, skin, visibility).
+	## Moving / rotating / removing it is impossible — it's part of the farm.
+	landmark_card_id = lm.id
+	landmark_state_option = null
+	landmark_skin_option = null
+	landmark_visible_check = null
+	_body.add_child(UI.section("Fixed landmark"))
+	var card := UI.card()
+	var v := UI.vbox(6)
+	card.add_child(v)
+	var top := UI.hbox(10)
+	var tex := TextureRect.new()
+	var key := LandmarkView.key_of(lm.id)
+	var spr: AssetLibrary.SpriteInfo = null
+	if renderer:
+		spr = renderer.world_sprite_of(key)
+	tex.texture = spr.texture if spr else Icons.get_icon("landmark", 48)
+	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex.custom_minimum_size = Vector2(96, 84)
+	top.add_child(tex)
+	var info := UI.vbox(3)
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_child(UI.label(lm.name, "Heading", true))
+	info.add_child(UI.label(LandmarkView.area_name(lm.area), "Dim"))
+	var badges := HFlowContainer.new()
+	badges.add_theme_constant_override("h_separation", 4)
+	badges.add_theme_constant_override("v_separation", 4)
+	badges.add_child(UI.badge("Fixed", UiTheme.c("text_dim")))
+	var conf_col := UiTheme.c("accent") if lm.confidence == "verified-in-data" else (UiTheme.c("info") if lm.confidence in ["strong", "plausible"] else UiTheme.c("warn"))
+	badges.add_child(UI.badge(LandmarkView.confidence_name(lm.confidence), conf_col))
+	if not LandmarkView.is_visible(lm, s.layout):
+		badges.add_child(UI.badge("Hidden", UiTheme.c("warn")))
+	info.add_child(badges)
+	top.add_child(info)
+	v.add_child(top)
+	var fixed := UI.label("Fixed in place in Hay Day", "", true)
+	fixed.add_theme_color_override("font_color", UiTheme.c("text"))
+	v.add_child(fixed)
+	v.add_child(UI.label("It is part of every farm: it can't be moved, rotated, copied or removed. Its look in this design can change below.", "Faint", true))
+	v.add_child(UI.kv("Footprint", "%d × %d tiles" % [lm.footprint.x, lm.footprint.y]))
+	v.add_child(UI.kv("Position", "%d, %d" % [lm.origin.x, lm.origin.y]))
+	if lm.unlock_level > 0:
+		v.add_child(UI.kv("Unlocks", "Level %d" % lm.unlock_level))
+	var src := UI.kv("Source", LandmarkView.source_label(s.map, lm))
+	v.add_child(src)
+	if not lm.evidence.is_empty():
+		var ev := UI.label("Evidence: " + lm.evidence.left(180) + ("…" if lm.evidence.length() > 180 else ""), "Faint", true)
+		ev.tooltip_text = lm.evidence
+		ev.mouse_filter = Control.MOUSE_FILTER_STOP
+		v.add_child(ev)
+	if not lm.note.is_empty():
+		v.add_child(UI.label(lm.note, "Faint", true))
+	_body.add_child(card)
+	_landmark_look(s, lm)
+
+
+func _landmark_look(s: EditorSession, lm: Landmark) -> void:
+	var rows := UI.vbox(8)
+	var state := LandmarkView.state_of(lm, s.layout)
+	if lm.states.size() > 1:
+		var row := UI.hbox(8)
+		row.add_child(UI.label("State", "Dim"))
+		var ob := OptionButton.new()
+		ob.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ob.focus_mode = Control.FOCUS_NONE
+		ob.tooltip_text = "How it looks in this design (Ctrl+Z undoes)"
+		for st in lm.states:
+			ob.add_item(LandmarkView.state_name(st) + (" (default)" if st == lm.default_state else ""))
+			ob.set_item_metadata(ob.item_count - 1, st)
+			if st == state:
+				ob.selected = ob.item_count - 1
+		ob.item_selected.connect(func(i): action.emit("landmark_state", [lm.id, str(ob.get_item_metadata(i))]))
+		row.add_child(ob)
+		rows.add_child(row)
+		landmark_state_option = ob
+	if lm.is_customizable():
+		var row2 := UI.hbox(8)
+		row2.add_child(UI.label("Skin", "Dim"))
+		var sk := OptionButton.new()
+		sk.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		sk.focus_mode = Control.FOCUS_NONE
+		var cur := LandmarkView.skin_of(lm, s.layout)
+		for c in LandmarkView.skin_choices(lm):
+			sk.add_item(str(c["name"]))
+			sk.set_item_metadata(sk.item_count - 1, str(c["id"]))
+			if str(c["id"]) == cur:
+				sk.selected = sk.item_count - 1
+		if sk.item_count <= 1:
+			sk.disabled = true
+			sk.tooltip_text = "Skin presets come with your private game-art pack"
+		else:
+			sk.tooltip_text = "Skin preset (Ctrl+Z undoes)"
+		sk.item_selected.connect(func(i): action.emit("landmark_skin", [lm.id, str(sk.get_item_metadata(i))]))
+		row2.add_child(sk)
+		rows.add_child(row2)
+		landmark_skin_option = sk
+		if lm.states.size() > 1 and state != lm.default_state:
+			rows.add_child(UI.label("Skins show on the “%s” look." % LandmarkView.state_name(lm.default_state), "Faint", true))
+	if lm.hidden_by_default or lm.transient:
+		var vis := CheckButton.new()
+		vis.text = "Show on the farm"
+		vis.button_pressed = LandmarkView.is_visible(lm, s.layout)
+		vis.tooltip_text = "Only there sometimes in the game (hidden by default)" if lm.transient else "Hidden by default"
+		vis.toggled.connect(func(on): action.emit("landmark_visible", [lm.id, on]))
+		rows.add_child(vis)
+		landmark_visible_check = vis
+	if rows.get_child_count() == 0:
+		return
+	_body.add_child(UI.section("Look in this design"))
+	var card := UI.card()
+	card.add_child(rows)
+	_body.add_child(card)
 
 
 func _variant_picker(s: EditorSession, objs: Array) -> void:
@@ -371,12 +503,13 @@ func _build_farm(s: EditorSession) -> void:
 	var mode_card := UI.card()
 	var mv := UI.vbox(6)
 	mode_card.add_child(mv)
+	var lvl_now := RealisticAnalyzer.farm_level(l)
 	if l.mode == FarmLayout.MODE_CREATIVE:
-		mv.add_child(UI.label("Creative — no limits", "Heading"))
-		mv.add_child(UI.label("Everything is available. Switch to Realistic to check this design against your level, inventory and land. Nothing in the layout is changed by switching.", "Dim", true))
+		mv.add_child(UI.label("Creative — sandbox", "Heading", true))
+		mv.add_child(UI.label("Everything is unlocked: every item at any level. Switch to Realistic to check this design against your farm level, inventory and land. Nothing in the layout is changed by switching.", "Dim", true))
 	else:
-		mv.add_child(UI.label("Realistic — can I build this?", "Heading"))
-		mv.add_child(UI.label("Objects you can't build yet are highlighted. Set your level and what you own below.", "Dim", true))
+		mv.add_child(UI.label("Realistic — my farm at level %d" % lvl_now, "Heading", true))
+		mv.add_child(UI.label("The catalogue lists what your farm has unlocked at level %d (items with an unknown unlock level stay visible, marked “Lv ?”). Objects you can't build yet are highlighted. Set your level and what you own below." % lvl_now, "Dim", true))
 	var mbtn := UI.button("Switch to Realistic" if l.mode == FarmLayout.MODE_CREATIVE else "Switch to Creative", "wand-sparkles", "Ctrl+M")
 	mbtn.pressed.connect(func(): action.emit("toggle_mode", null))
 	mv.add_child(mbtn)
@@ -400,7 +533,9 @@ func _build_farm(s: EditorSession) -> void:
 	none.pressed.connect(func(): action.emit("land_all", false))
 	lrow.add_child(none)
 	lv.add_child(lrow)
-	var mapnote := UI.label("Map: %s. Plot shapes are approximate; %d further sections across the road aren't mapped yet." % [s.map.name, _unmapped(s)], "Faint", true)
+	var note_txt := "Map: %s (%s). Plot shapes and positions come from your game data." % [s.map.name, s.map.provenance_label()] if s.map.is_game_data() \
+		else "Map: %s. Plot shapes are approximate; %d further sections across the road aren't mapped yet." % [s.map.name, _unmapped(s)]
+	var mapnote := UI.label(note_txt, "Faint", true)
 	lv.add_child(mapnote)
 	_body.add_child(land)
 	# Realistic profile
@@ -412,12 +547,19 @@ func _build_farm(s: EditorSession) -> void:
 	lvl_row.add_child(UI.label("Farm level", "Dim"))
 	lvl_row.add_child(UI.spacer())
 	var lvl := SpinBox.new()
-	lvl.min_value = 1
-	lvl.max_value = 999
-	lvl.value = int(l.profile.get("level", 1))
+	lvl.min_value = AppSettings.LEVEL_MIN
+	lvl.max_value = AppSettings.LEVEL_MAX
+	lvl.rounded = true
+	lvl.value = lvl_now
+	lvl.tooltip_text = "Realistic mode: what your farm has unlocked at this level (undoable; placed objects don't change)"
 	lvl.value_changed.connect(func(v): action.emit("profile", {"level": int(v)}))
 	lvl_row.add_child(lvl)
 	pv.add_child(lvl_row)
+	var lf := RealisticAnalyzer.filter_by_level(s.db.search("", {}), FarmLayout.MODE_REALISTIC, lvl_now, true)
+	var avail := "%s of %s catalogue items unlocked at level %d" % [UI.fmt_int(lf["unlocked"]), UI.fmt_int(lf["total"]), lvl_now]
+	if int(lf["unknown"]) > 0:
+		avail += " · %s with unknown level" % UI.fmt_int(lf["unknown"])
+	pv.add_child(UI.label(avail, "Faint", true))
 	for b in [["budget_coins", "Coin budget"], ["budget_diamonds", "Diamond budget"]]:
 		var row := UI.hbox(8)
 		row.add_child(UI.label(b[1], "Dim"))
@@ -448,6 +590,70 @@ func _build_farm(s: EditorSession) -> void:
 	_report_card(s)
 
 
+func _build_world_section(s: EditorSession) -> void:
+	## Season (theme), the world data in use, hidden landmarks and a jump list.
+	theme_option = null
+	_body.add_child(UI.section("World"))
+	var card := UI.card()
+	var v := UI.vbox(6)
+	card.add_child(v)
+	v.add_child(UI.kv("World data", s.map.provenance_label()))
+	var row := UI.hbox(8)
+	row.add_child(UI.label("Season", "Dim"))
+	var ob := OptionButton.new()
+	ob.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ob.focus_mode = Control.FOCUS_NONE
+	var themes := LandmarkView.themes_with_art(s.map, App.assets)
+	var cur := s.layout.theme()
+	for t in themes:
+		ob.add_item(LandmarkView.theme_name(t))
+		ob.set_item_metadata(ob.item_count - 1, t)
+		if t == cur:
+			ob.selected = ob.item_count - 1
+	if not cur in themes:
+		ob.add_item("%s (no art installed)" % LandmarkView.theme_name(cur))
+		ob.set_item_metadata(ob.item_count - 1, cur)
+		ob.selected = ob.item_count - 1
+	ob.disabled = ob.item_count <= 1
+	ob.tooltip_text = "Seasonal look of the landmarks (Ctrl+Z undoes)" if not ob.disabled else "Seasonal art comes with your private game-art pack"
+	ob.item_selected.connect(func(i): action.emit("theme", str(ob.get_item_metadata(i))))
+	row.add_child(ob)
+	v.add_child(row)
+	theme_option = ob
+	if not s.map.landmarks.is_empty():
+		var jr := UI.hbox(8)
+		jr.add_child(UI.label("Landmarks", "Dim"))
+		var jump := OptionButton.new()
+		jump.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		jump.focus_mode = Control.FOCUS_NONE
+		jump.add_item("Go to… (%d)" % s.map.landmarks.size())
+		jump.set_item_metadata(0, "")
+		var lms := s.map.landmarks.duplicate()
+		lms.sort_custom(func(a: Landmark, b: Landmark): return a.name.naturalnocasecmp_to(b.name) < 0)
+		for lm: Landmark in lms:
+			jump.add_item(lm.name + ("" if LandmarkView.is_visible(lm, s.layout) else " (hidden)"))
+			jump.set_item_metadata(jump.item_count - 1, lm.id)
+		jump.item_selected.connect(func(i):
+			var lid := str(jump.get_item_metadata(i))
+			if not lid.is_empty():
+				action.emit("landmark_focus", lid))
+		jr.add_child(jump)
+		v.add_child(jr)
+		for lm: Landmark in lms:
+			if not (lm.hidden_by_default or lm.transient):
+				continue
+			var cb := CheckButton.new()
+			cb.text = "Show %s" % lm.name
+			cb.button_pressed = LandmarkView.is_visible(lm, s.layout)
+			cb.tooltip_text = "Only there sometimes in the game (hidden by default)"
+			cb.toggled.connect(func(on): action.emit("landmark_visible", [lm.id, on]))
+			v.add_child(cb)
+	var home := UI.button("Home", "house", "Centre the farmhouse (Home / Shift+H)")
+	home.pressed.connect(func(): action.emit("home", null))
+	v.add_child(home)
+	_body.add_child(card)
+
+
 func _unmapped(s: EditorSession) -> int:
 	var data: Variant = JsonUtil.read_json("res://data/maps/%s.json" % s.map.id)
 	return (data.get("unmapped_sections", []) as Array).size() if data is Dictionary else 0
@@ -460,19 +666,54 @@ func _report_card(s: EditorSession) -> void:
 	var v := UI.vbox(6)
 	card.add_child(v)
 	var ok := r.can_recreate()
+	var lvl := RealisticAnalyzer.farm_level(s.layout)
 	var head := UI.hbox(8)
 	head.add_child(UI.icon_rect("check" if ok else "circle-x", 22, UiTheme.c("accent") if ok else UiTheme.c("danger")))
-	var hl := UI.label("Ready to build" if ok else "%d object(s) can't be built yet" % r.blocking_count, "Heading", true)
+	var verdict := "Ready to build"
+	if r.blocking_count > 0:
+		verdict = "%d object(s) can't be built yet" % r.blocking_count
+	elif not r.land_level_locked.is_empty():
+		verdict = "Some land needs a higher farm level"
+	elif not ok:
+		verdict = "Over budget"
+	var hl := UI.label(verdict, "Heading", true)
 	hl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(hl)
 	v.add_child(head)
 	if r.required_level > 0:
-		v.add_child(UI.kv("Needs level", str(r.required_level)))
+		var kvl := UI.kv("Needs level", "%d (your farm: %d)" % [r.required_level, lvl])
+		if r.required_level > lvl:
+			(kvl.get_child(1) as Label).add_theme_color_override("font_color", UiTheme.c("danger"))
+		v.add_child(kvl)
 	if not r.plots_needed.is_empty():
 		var names := PackedStringArray()
 		for p in r.plots_needed:
 			names.append(str(s.map.plot(p).get("number", p)))
 		v.add_child(UI.kv("Needs land", "Plots " + ", ".join(names)))
+	if not r.land_level_locked.is_empty():
+		# Grouped by level ("9 plots need level 22"); plot numbers in the tooltip.
+		var by_level := {}
+		var tip := PackedStringArray()
+		for e in r.land_level_locked:
+			var ml: int = e["min_level"]
+			by_level[ml] = int(by_level.get(ml, 0)) + 1
+			tip.append("%s: level %d" % [str(e["name"]), ml])
+		var parts := PackedStringArray()
+		for ml in by_level:
+			parts.append("%d plot%s need%s level %d" % [by_level[ml], "" if by_level[ml] == 1 else "s", "s" if by_level[ml] == 1 else "", ml])
+		var kvland := UI.kv("Land level", ", ".join(parts))
+		var lvl_label := kvland.get_child(1) as Label
+		lvl_label.add_theme_color_override("font_color", UiTheme.c("danger"))
+		lvl_label.tooltip_text = "\n".join(tip.slice(0, 30))
+		lvl_label.mouse_filter = Control.MOUSE_FILTER_STOP
+		v.add_child(kvland)
+	if not r.land_level_unknown.is_empty():
+		v.add_child(UI.label("%d plot(s) have an unknown level requirement — not checked." % r.land_level_unknown.size(), "Faint", true))
+	if not r.level_unknown_items.is_empty():
+		var nu := 0
+		for k in r.level_unknown_items:
+			nu += int(r.level_unknown_items[k])
+		v.add_child(UI.label("%d object(s) have an unknown unlock level — not checked." % nu, "Faint", true))
 	if r.coins_needed > 0 or r.diamonds_needed > 0:
 		var c := PackedStringArray()
 		if r.coins_needed > 0:
@@ -524,7 +765,8 @@ func _report_card(s: EditorSession) -> void:
 # View tab: layers, reference image, compare
 # ---------------------------------------------------------------------------
 
-func _build_view(_s: EditorSession) -> void:
+func _build_view(s: EditorSession) -> void:
+	_build_world_section(s)
 	_body.add_child(UI.section("Layers"))
 	var card := UI.card()
 	var v := UI.vbox(2)

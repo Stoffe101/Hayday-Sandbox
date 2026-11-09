@@ -3,6 +3,13 @@ extends Node
 ## Translates pointer/keyboard input on the farm canvas into tool behaviour.
 ## One continuous gesture (drag-move, paint stroke, line, rectangle, erase
 ## stroke) always produces exactly one undo step.
+##
+## Fixed landmarks (FarmMap.landmarks, drawn as renderer world entries) are
+## picked pixel-accurately with ObjectRenderer.pick_any(): hovering highlights
+## one, clicking selects it (EditorSession.select_landmark), and trying to drag,
+## erase, eyedrop or rotate one only emits `fixed_refused` with the session's
+## friendly explanation (main.gd shows it near the cursor). Box selection only
+## ever selects placed objects.
 
 signal status_changed(text: String)
 signal hover_changed(tile: Vector2i, uid: int)
@@ -10,6 +17,12 @@ signal request_text(title: String, initial: String, callback: Callable)
 signal request_context_menu(screen_pos: Vector2, uid: int)
 signal plot_hovered(plot_id: String)
 signal calibration_point(world: Vector2)
+## An edit was refused because the target is a fixed landmark (text from
+## EditorSession.explain_fixed; screen_pos = where the pointer is).
+signal fixed_refused(text: String, screen_pos: Vector2)
+## The hovered fixed landmark changed ("" = none).
+signal landmark_hovered(id: String)
+signal request_landmark_menu(screen_pos: Vector2, landmark_id: String)
 
 const DRAG_THRESHOLD := 5.0
 
@@ -33,6 +46,8 @@ var _space_down := false
 var _last_mouse := Vector2.ZERO
 var _hover_tile := Vector2i.ZERO
 var _hover_uid := 0
+var _hover_lm := ""
+var _press_lm := ""            ## landmark under the pointer when the gesture started
 var stamp_mode := false        ## pasting the clipboard
 var calibrating := false       ## screenshot reference calibration clicks
 
@@ -140,13 +155,40 @@ func _mouse_motion(e: InputEventMouseMotion) -> void:
 	overlay.refresh()
 
 
+func pick_at(w: Vector2) -> Dictionary:
+	## Top-most placed object or fixed landmark under a world point:
+	## {"kind": "object" | "landmark" | "", "uid": int, "id": landmark id}.
+	var r := renderer.pick_any(w)
+	var kind := str(r.get("kind", ""))
+	var lid := ""
+	if kind == "landmark":
+		lid = LandmarkView.id_of(str(r.get("key", "")))
+		if lid.is_empty() or session.map == null or session.map.landmark(lid) == null:
+			kind = ""
+	return {"kind": kind, "uid": int(r.get("uid", 0)) if kind == "object" else 0, "id": lid}
+
+
+func _refuse_fixed(landmark_id: String, action: String, screen: Vector2) -> void:
+	var why := session.explain_fixed(landmark_id, action)
+	if not why.is_empty():
+		fixed_refused.emit(why, screen)
+
+
 func _update_hover(t: Vector2i, screen: Vector2) -> void:
 	var w := world_at(screen)
 	var uid := 0
+	var lid := ""
 	if session.tool in ["select", "erase", "pick"] and not stamp_mode:
-		uid = renderer.pick(w)
+		var hit := pick_at(w)
+		uid = hit["uid"]
+		lid = hit["id"]
 	_hover_uid = uid
 	overlay.hover_uid = uid
+	if lid != _hover_lm:
+		_hover_lm = lid
+		var lm: Landmark = session.map.landmark(lid) if not lid.is_empty() else null
+		overlay.landmark_hover = lm.rect() if lm else Rect2i()
+		landmark_hovered.emit(lid)
 	overlay.hover_tile = t
 	overlay.show_hover_tile = session.tool in ["select", "annotate"]
 	overlay.line_tiles = []
@@ -158,8 +200,10 @@ func _update_hover(t: Vector2i, screen: Vector2) -> void:
 		overlay.cursor_text = ""
 	if session.tool == "land":
 		var pid := session.map.plot_id_at(t)
-		if ground.highlight_plot != pid:
+		var blocked := not pid.is_empty() and not plot_unlock_block(pid).is_empty()
+		if ground.highlight_plot != pid or ground.highlight_blocked != blocked:
 			ground.highlight_plot = pid
+			ground.highlight_blocked = blocked
 			ground.queue_redraw()
 		plot_hovered.emit(pid)
 	hover_changed.emit(t, uid)
@@ -171,8 +215,15 @@ func _status_for_hover(t: Vector2i, uid: int) -> void:
 	var k := session.map.kind_at(t)
 	match k:
 		FarmMap.Kind.PLOT:
-			var p := session.map.plot(session.map.plot_id_at(t))
-			parts.append("%s (%s)" % [p.get("name", "Plot"), "unlocked" if session.layout.unlocked_plots.has(p.get("id", "")) else "locked"])
+			var pid := session.map.plot_id_at(t)
+			var p := session.map.plot(pid)
+			var open := session.map.is_plot_unlocked(pid, session.layout.unlocked_plots)
+			var txt := "%s (%s)" % [p.get("name", "Plot"), "unlocked" if open else "locked"]
+			if not open and session.tool == "land":
+				var why := plot_unlock_block(pid)
+				if not why.is_empty():
+					txt += " · " + why
+			parts.append(txt)
 		FarmMap.Kind.ROAD: parts.append("Road")
 		FarmMap.Kind.WATER: parts.append("Water")
 		FarmMap.Kind.VOID: parts.append("Outside the farm")
@@ -183,6 +234,10 @@ func _status_for_hover(t: Vector2i, uid: int) -> void:
 		if o:
 			parts.append("%s · %d×%d%s%s" % [it.name if it else o.item_id + " (unknown)", o.size.x, o.size.y,
 				" · locked" if o.locked else "", " · planned" if o.planned else ""])
+	elif not _hover_lm.is_empty():
+		var lm := session.map.landmark(_hover_lm)
+		if lm:
+			parts.append("%s · fixed landmark (part of the farm)" % lm.name)
 	status_changed.emit("   ·   ".join(parts))
 
 
@@ -258,10 +313,18 @@ func _left_press(e: InputEventMouseButton) -> void:
 	if stamp_mode:
 		_gesture = "stamp"
 		return
+	_press_lm = ""
 	match session.tool:
 		"select":
-			var uid := renderer.pick(w)
-			if uid != 0:
+			var hit := pick_at(w)
+			var uid: int = hit["uid"]
+			if hit["kind"] == "landmark":
+				# Fixed landmark: select it (its own card in the inspector);
+				# dragging it only explains that it is fixed.
+				_press_lm = hit["id"]
+				session.select_landmark(_press_lm)
+				_gesture = "landmark"
+			elif uid != 0:
 				if e.shift_pressed or e.ctrl_pressed:
 					session.select([uid], true)
 				elif not uid in session.selection:
@@ -298,12 +361,19 @@ func _left_press(e: InputEventMouseButton) -> void:
 
 func _start_drag() -> void:
 	match _gesture:
+		"landmark":
+			_refuse_fixed(_press_lm, "drag", _press_pos)
+			_gesture = "landmark_held"
 		"move":
 			_move_uids = session.editable_selection()
 			if _move_uids.is_empty():
 				_gesture = "marquee" if session.selection.is_empty() else ""
 				if not session.selection.is_empty():
-					session.message.emit("Locked objects can't be moved — unlock with L", "warn")
+					var why := session.move_refusal_message()
+					if why.is_empty() or why.begins_with("Locked"):
+						session.message.emit("Locked objects can't be moved — unlock with L", "warn")
+					else:
+						fixed_refused.emit(why, _press_pos)   # obstacles: subtle hint near the cursor
 				return
 			renderer.set_hidden(_move_uids)
 			_move_delta = Vector2i.ZERO
@@ -398,6 +468,7 @@ func _cancel_gesture() -> void:
 	if renderer and _gesture == "move":
 		renderer.set_hidden([])
 	_gesture = ""
+	_press_lm = ""
 	_dragging = false
 	_move_uids = []
 	_paint_objs = []
@@ -429,7 +500,7 @@ func cancel() -> bool:
 	if session.tool != "select":
 		session.set_tool("select")
 		return true
-	if not session.selection.is_empty():
+	if session.has_selection():
 		session.clear_selection()
 		return true
 	return false
@@ -441,8 +512,9 @@ func _paint_at(t: Vector2i) -> void:
 	var item := session.db.get_item(session.active_item)
 	if item == null:
 		return
-	if not item.placeable:
-		session.message.emit("%s can't be placed (fixed scenery in the game)" % item.name, "warn")
+	if not item.can_place():
+		var why := session.item_block_reason(item.id)
+		session.message.emit(why if not why.is_empty() else item.not_placeable_reason(), "warn")
 		return
 	var origin := ghost_origin(item, t)
 	var flipped := session.place_flipped and item.flippable
@@ -567,7 +639,11 @@ func _commit_stamp() -> void:
 # --- erase / pick / land / annotate ---------------------------------------------
 
 func _erase_at(w: Vector2) -> void:
-	var uid := renderer.pick(w)
+	var hit := pick_at(w)
+	if hit["kind"] == "landmark":
+		_refuse_fixed(hit["id"], "erase", camera.world_to_screen(w))
+		return
+	var uid: int = hit["uid"]
 	if uid == 0 or _erase_uids.has(uid):
 		return
 	var o := session.layout.get_obj(uid)
@@ -593,7 +669,11 @@ func _commit_erase() -> void:
 
 
 func _eyedrop(w: Vector2) -> void:
-	var uid := renderer.pick(w)
+	var hit := pick_at(w)
+	if hit["kind"] == "landmark":
+		_refuse_fixed(hit["id"], "copy", camera.world_to_screen(w))
+		return
+	var uid: int = hit["uid"]
 	if uid == 0:
 		return
 	var o := session.layout.get_obj(uid)
@@ -605,23 +685,62 @@ func _eyedrop(w: Vector2) -> void:
 	session.message.emit("Picked %s" % session.db.get_item(o.item_id).name, "info")
 
 
+func plot_unlock_block(pid: String) -> String:
+	## Why the plot can't be unlocked right now ("" = it can): in Realistic
+	## mode a plot whose known level requirement is above the farm level
+	## ("Requires level 45"). Creative mode is the full sandbox.
+	if session.layout.mode != FarmLayout.MODE_REALISTIC or pid.is_empty():
+		return ""
+	if session.map.is_plot_unlocked(pid, session.layout.unlocked_plots):
+		return ""
+	var info := RealisticAnalyzer.plot_level_info(session.map, pid, RealisticAnalyzer.farm_level(session.layout))
+	return "" if bool(info["ok"]) else str(info["reason"])
+
+
 func _toggle_plot(pid: String, all_mode: bool) -> void:
+	var map := session.map
 	var old := session.layout.unlocked_plots.keys()
-	var new_list := old.duplicate()
+	var unlocked := map.canonical_unlocked(session.layout.unlocked_plots)
+	var new_list: Array = unlocked.keys()
+	var realistic := session.layout.mode == FarmLayout.MODE_REALISTIC
+	var label := ""
 	if all_mode:
-		if old.size() == session.map.plots.size():
+		var all_open := true
+		for p in map.all_plot_ids():
+			all_open = all_open and unlocked.has(p)
+		if all_open:
 			new_list = []
+			label = "Lock all land"
 		else:
-			new_list = session.map.all_plot_ids()
+			new_list = []
+			var skipped := 0
+			for p in map.all_plot_ids():
+				if unlocked.has(p) or plot_unlock_block(p).is_empty():
+					new_list.append(p)
+				else:
+					skipped += 1
+			label = "Unlock all land"
+			if skipped > 0:
+				session.message.emit("%d plot%s need a higher farm level and stay locked" % [skipped, "" if skipped == 1 else "s"], "info")
 	elif pid.is_empty():
 		return
-	elif pid in new_list:
-		new_list.erase(pid)
+	elif map.is_plot_unlocked(pid, unlocked):
+		new_list.erase(map.resolve_plot_id(pid))
+		label = "Lock " + str(map.plot(pid).get("name", pid))
 	else:
-		new_list.append(pid)
-		if session.layout.mode == FarmLayout.MODE_REALISTIC and not pid in session.map.unlockable_plots(session.layout.unlocked_plots):
+		var why := plot_unlock_block(pid)
+		if not why.is_empty():
+			session.message.emit("%s: %s (your farm is level %d)" % [str(map.plot(pid).get("name", pid)), why, RealisticAnalyzer.farm_level(session.layout)], "warn")
+			return
+		var cid := map.resolve_plot_id(pid)
+		new_list.append(cid)
+		label = "Unlock " + str(map.plot(pid).get("name", pid))
+		if realistic and not cid in map.unlockable_plots(unlocked):
 			session.message.emit("Note: in the game this plot only unlocks after a neighbouring plot", "warn")
-	var label := "Unlock all land" if all_mode and not new_list.is_empty() else ("Lock all land" if all_mode else ("Unlock " if pid in new_list else "Lock ") + str(session.map.plot(pid).get("name", pid)))
+	# Ids of other maps (kept by the layout) stay as they are.
+	for k in old:
+		if not map.has_plot(str(k)) and not k in new_list:
+			new_list.append(k)
 	session.execute(EditCommands.SetLand.new(old, new_list, label))
 
 
@@ -673,14 +792,23 @@ func _right_click(screen: Vector2) -> void:
 		session.set_tool("select")
 		_cancel_gesture()
 		return
-	var uid := renderer.pick(world_at(screen))
+	var hit := pick_at(world_at(screen))
+	if hit["kind"] == "landmark":
+		session.select_landmark(hit["id"])
+		request_landmark_menu.emit(screen, hit["id"])
+		return
+	var uid: int = hit["uid"]
 	if uid != 0 and not uid in session.selection:
 		session.select([uid])
 	request_context_menu.emit(screen, uid)
 
 
 func _double_click(screen: Vector2) -> void:
-	var uid := renderer.pick(world_at(screen))
+	var hit := pick_at(world_at(screen))
+	if hit["kind"] == "landmark":
+		session.select_landmark(hit["id"])
+		return
+	var uid: int = hit["uid"]
 	if uid == 0:
 		return
 	var o := session.layout.get_obj(uid)
@@ -700,6 +828,15 @@ func start_stamp() -> void:
 	session.set_tool("select")
 	_update_place_ghost(_hover_tile)
 	overlay.refresh()
+
+
+func clear_hover() -> void:
+	## Pointer left the canvas: forget the hovered object / landmark.
+	_hover_uid = 0
+	if not _hover_lm.is_empty():
+		_hover_lm = ""
+		overlay.landmark_hover = Rect2i()
+		landmark_hovered.emit("")
 
 
 func set_space(down: bool) -> void:

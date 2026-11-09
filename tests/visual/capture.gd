@@ -19,7 +19,7 @@ extends Node
 
 const ALL := ["overview", "place_valid", "place_invalid", "selection", "search", "realistic", "land", "zoomed",
 	"gallery", "help", "settings", "welcome", "reference", "compare", "export", "light",
-	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty"]
+	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty", "landmarks", "migration"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
 const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>"]
 ## Asset scenarios install a synthetic pack generated from the built-in
@@ -37,6 +37,7 @@ var outline_all := false   ## at_* scenarios select everything, so every footpri
 var hide_panels := false   ## hide top bar + side panels (Tab) for unobstructed QA shots
 var dump_objects := false  ## write <shot>.objects.json: id, footprint corners + sprite bounds in screen px
 var select_items: Array = ["field", "apple_tree"]   ## "selection" scenario (--select-items=a+b)
+var _migration_layout_open := false
 
 
 func _ready() -> void:
@@ -96,11 +97,22 @@ func _run() -> void:
 func _reset() -> void:
 	for c in main.modal_layer.get_children():
 		c.queue_free()
+	for c in main.toasts.get_children():
+		c.queue_free()
+	main.hint_hold_s = 60.0   # slow software rendering: keep the cursor hint for the shot
+	if main._hint_panel:
+		main._hint_panel.visible = false
 	if _pack_installed:
 		PackInstaller.uninstall(SyntheticPack.PACK_ID)
 		_app().reload_assets()
 		_pack_installed = false
 	var s = _app().session
+	if s and _migration_layout_open:
+		# Back to an ordinary farm after the migration scenario.
+		_migration_layout_open = false
+		_app().library.delete("capture_v1")
+		main._open_template("res://data/samples/01_meadow_showcase.hdlayout", "My first farm")
+		s = _app().session
 	if s:
 		s.set_mode(FarmLayout.MODE_CREATIVE)
 		s.layout.reference = {}
@@ -282,11 +294,9 @@ func _scenario(sc: String) -> bool:
 			_ghost_at("bakery", _find_free("bakery", Vector2i(24, 26)))
 		"place_invalid":
 			main._fit()
-			var fh: PlacedObject = null
-			for o: PlacedObject in s.layout.objects.values():
-				if o.item_id == "farmhouse":
-					fh = o
-			_ghost_at("dairy", fh.origin + Vector2i(1, 1) if fh else Vector2i(20, 15))
+			# The farmhouse is a fixed landmark of the world (not an object).
+			var fh: Landmark = s.map.landmark("farmhouse")
+			_ghost_at("dairy", fh.origin + Vector2i(1, 1) if fh else Vector2i(15, 13))
 		"selection":
 			var uids: Array = []
 			for o: PlacedObject in s.layout.objects.values():
@@ -394,6 +404,56 @@ func _scenario(sc: String) -> bool:
 				_dump_objects(p4.get_basename() + ".objects.json", Vector2.ONE, r4, 1.0)
 			print("EXPORT %dx%d" % [img4.get_width(), img4.get_height()])
 			main._fit()
+		"landmarks":
+			# A fixed landmark selected: its card in the inspector, the hover /
+			# selection marks and the "fixed in place" hint near the cursor.
+			# Public build: approximate positions + placeholder art only.
+			var lm: Landmark = s.map.landmark("farmhouse")
+			if lm == null:
+				return false
+			main.camera.smooth = false
+			main.camera.set_zoom_level(1.25)
+			main.camera.zoom = Vector2(1.25, 1.25)
+			main.camera.target_zoom = 1.25
+			main.focus_landmark("farmhouse")
+			main.inspector.show_tab(0)
+			main.inspector.rebuild()
+			await _frames(4)
+			if s.map.landmark("roadside_shop"):
+				main._on_landmark_hovered("roadside_shop")
+				main._update_landmark_overlay()
+			var p: Vector2 = main.camera.world_to_screen(Iso.footprint_center(lm.origin, lm.footprint))
+			main.show_fixed_hint(s.explain_fixed("farmhouse", "drag"), p)
+		"migration":
+			# A synthetic schema-1 layout (made-up positions, public item ids)
+			# opened the way a file is opened: the load-report dialog.
+			var v1 := {"format": LayoutIO.FORMAT, "schema_version": 1, "app_version": "0.1.0",
+				"meta": {"id": "capture_v1", "name": "My old farm", "mode": "creative"},
+				"map": {"id": "hayday_farm_h1", "unlocked_plots": ["main_01"]},
+				"objects": [
+					{"uid": 1, "item": "farmhouse", "x": 19, "y": 15, "w": 4, "h": 4, "locked": true, "note": LayoutIO.V1_STARTER_NOTE},
+					{"uid": 2, "item": "barn", "x": 9, "y": 7, "w": 4, "h": 4, "locked": true, "note": LayoutIO.V1_STARTER_NOTE},
+					{"uid": 3, "item": "truck_and_order_board", "x": 18, "y": 31, "w": 4, "h": 3, "locked": true, "note": LayoutIO.V1_STARTER_NOTE},
+					{"uid": 4, "item": "roadside_shop", "x": 24, "y": 31, "w": 3, "h": 3, "locked": true, "note": LayoutIO.V1_STARTER_NOTE},
+					{"uid": 5, "item": "mailbox", "x": 23, "y": 15, "w": 1, "h": 1},
+					{"uid": 6, "item": "bakery", "x": 12, "y": 22, "w": 3, "h": 3},
+					{"uid": 7, "item": "bakery", "x": 30, "y": 36, "w": 3, "h": 3},
+					{"uid": 8, "item": "apple_tree", "x": 60, "y": 20, "w": 1, "h": 1}],
+				"camera": {"x": 0.0, "y": 0.0, "zoom": 1.0}}
+			# Saved as a library file, so the report also names the backup that
+			# the first save keeps (isolated data folder).
+			JsonUtil.write_atomic(_app().library.path_for("capture_v1"), JSON.stringify(v1, "\t"), false)
+			var rep := LayoutIO.LoadReport.new()
+			var l: FarmLayout = _app().library.load_layout("capture_v1", rep)
+			if l == null:
+				return false
+			main._suppress_open_toast = true   # as in the app: the dialog replaces the toast
+			_app().open_layout(l, rep)
+			_migration_layout_open = true
+			main._fit()
+			await _frames(4)
+			if main.show_load_report(rep) == null:
+				return false
 		"light":
 			_app().settings.set_v("theme", "light", false)
 			await main._rebuild_ui()

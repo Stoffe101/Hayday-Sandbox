@@ -31,13 +31,22 @@ Pipeline:
                  client renders of the same object and against trusted footprints); the report says whether a
                  common per-category scale exists, else per-item footprint fitting is used, flagged auto_anchor.
                  Overrides: mapping/calibration_overrides.json.          -> mapping/calibration_report.json
-  5. variants    mastered / level / yearly skins -> "variants"; fences (pole/below/right/corner) and ditch-style
-                 paths/water (16 pieces) -> "connections" masks 1=NE(-y) 2=SE(+x) 4=SW(+y) 8=NW(-x).
-  6. output      packs/hayday_original/{pack.json, items/*.webp (<= 2 px per world px, WebP q92 with alpha),
-                 thumbs/*.webp (<= 128 px), review.json + review/, hashes.json}; optional install (keeps the
-                 user's overrides.json).
+  5. variants    only looks the client has: lvl_N, stage_N + dead (fruit trees / gatherer bushes), look_N (later
+                 production-building rows), mastered / look_N_mastered, broken, yearly copies and seasonal theme
+                 skins "<variant>__<theme>" (themes.csv ExportNamePostfix; "" = base, e.g. "__winter"); fences
+                 (pole/below/right/corner) and ditch-style paths/water (16 pieces, also when the catalogue has no
+                 connect style yet) -> "connections" masks 1=NE(-y) 2=SE(+x) 4=SW(+y) 8=NW(-x); decorations.csv
+                 ExportNameMirror -> "mirror"; Fan Kit / wiki pictures that differ -> "references" (not selectable).
+  6. output      packs/hayday_original/{pack.json, items/*.webp (client art at 2 x its texels per SC unit, rounded
+                 down to 0.25 within 2..3 px per world px; Fan Kit / wiki <= 2), refs/*.webp, thumbs/*.webp
+                 (<= 128 px), review.json + review/, hashes.json}; optional install (keeps overrides.json).
   7. coverage    mapping/coverage.json + dashboard/index.html (self-contained, thumbnails linked relatively).
   8. sheets      review_sheets/contact_*.png for eyeballing matches and anchors.
+  Derived       raw/apk_sprites_clean/<build>/: client renders that differ from the plain export render (HUD
+  renders        bubble removed; bee / squirrel tree middle clips with gatherer_nests.csv nests at their locators;
+                 curated representative nested frames), re-rendered when the extractor's RENDER_REV changes.
+  Curation      mapping/art_curation.json (PRIVATE): curated client links for items the name matching misses,
+                 duplicate items sharing art, nested frames, dropped cross-item variants.
   World          when build_world.py has written <root>/packs/hayday_original_world/ (or with --build-world): its
                  catalog_overrides.json footprints are used for anchoring and mirroring (an item whose footprint the
                  client states is never mirrored to fit an old catalogue size), and world/world.json, the landmark
@@ -97,7 +106,10 @@ TOOL_VERSION = "1.0"
 
 HALF_W, HALF_H = 32.0, 16.0          # world px of half a tile (64 x 32 tiles)
 SC_TILE_HALF_W, SC_TILE_HALF_H = 64.0, 32.0   # SC units of half a tile in client exports
-MAX_PPW = 2.0                        # output pixels per world px (cap)
+MAX_PPW = 3.0                        # output pixels per world px (cap; client renders are 3.0, sources denser
+                                     # than 1.5 texels/SC unit keep up to 3.0 - see ppw_for_density)
+MIN_PPW = 2.0                        # client sources are never stored below this (the old fixed density)
+NAMED_MAX_PPW = 2.0                  # Fan Kit / wiki images (no texel density to measure)
 THUMB_MAX = 128
 REVIEW_MAX_SIDE = 512
 WEBP_QUALITY = 92
@@ -538,6 +550,30 @@ DITCH_MASKS = {"ExportName": 0, "DitchN": 1, "DitchE": 2, "DitchS": 4, "DitchW":
 	"DitchENS": 7, "DitchNSWE": 15}
 
 
+def level_variant_id(table: str, level: int) -> str:
+	"""Variant id of a client continuation row (ExportName of row `level`, 1 = the base row).
+	fruit_trees rows are growth stages (FruitCount 2/3/4); processing_buildings rows are later looks whose meaning
+	(mastery / workbench upgrade) is unknown, so they are numbered looks; everything else keeps lvl_N (silo, barn,
+	gatherer trees, houses: real levels)."""
+	if table in ("fruit_trees", "gatherer_mines"):
+		return f"stage_{level}"
+	if table == "processing_buildings":
+		return f"look_{level}"
+	return f"lvl_{level}"
+
+
+def theme_postfixes(gd: dict) -> list[tuple[str, str]]:
+	"""[(export postfix, theme id)] from themes.csv ExportNamePostfix, e.g. ("_winter", "winter")."""
+	t = (gd.get("tables") or {}).get("themes") if gd else None
+	out = []
+	for e in (t or {}).get("entries", []):
+		r0 = e["rows"][0]
+		pf = r0.get("ExportNamePostfix", "")
+		if pf and str(r0.get("Enabled", "true")).lower() != "false" and pf not in [x[0] for x in out]:
+			out.append((pf, pf.lstrip("_")))
+	return out
+
+
 def game_objects(gd: dict) -> list[dict]:
 	"""Placeable client objects: table, internal name, TID texts, sprite exports, game tile size, pieces."""
 	out = []
@@ -569,6 +605,7 @@ def game_objects(gd: dict) -> list[dict]:
 				"en": gd["texts_en"].get(tid, "") if tid else "", "ru": gd["texts_ru"].get(tid, "") if tid else "",
 				"sc": Path(r0.get("FileName", "")).stem, "export": exp, "fp": (w, h),
 				"mastered": r0.get("ExportNameMastered", ""), "mirror": r0.get("ExportNameMirror", ""),
+				"dead": r0.get("DeadExportName", ""), "broken": r0.get("BrokenExportName", ""),
 				"fence": None, "ditch": None, "levels": [], "parts": [], "pieces": [],
 				"placeholder_art": Path(r0.get("FileName", "")).stem == "placeholders"}
 			if r0.get("FenceBelowExportName"):
@@ -585,7 +622,7 @@ def game_objects(gd: dict) -> list[dict]:
 				le = r.get("ExportName", "")
 				if le and le not in seen and "<" not in le:
 					seen.append(le)
-					obj["levels"].append({"level": li, "export": le,
+					obj["levels"].append({"level": li, "export": le, "mastered": r.get("ExportNameMastered", ""),
 						"parts": [r[c] for c in ("ExportNameMiddle", "ExportNameTop") if r.get(c)]})
 			if tname == "animal_habitats" and pieces:
 				for r in e["rows"]:
@@ -664,7 +701,8 @@ def discover(root: Path) -> tuple[list[dict], dict]:
 							"build": vdir.name, "sc": scdir.name, "export": ename, "fetched_at": rep.get("finished") or rep.get("started")},
 						"apk": {"build": vdir.name, "sc": scdir.name, "export": ename, "origin": e.get("origin"),
 							"scale": e.get("scale"), "ppw": e.get("pixels_per_world_px"), "frames": e.get("frames"),
-							"frame_label": e.get("frame_label"), "kind": e.get("kind"), "warnings": e.get("warnings") or []}})
+							"frame_label": e.get("frame_label"), "frame_rendered": e.get("frame_rendered", 0),
+							"kind": e.get("kind"), "warnings": e.get("warnings") or []}})
 					n += 1
 			meta["sources"][f"apk_{vdir.name}"] = {"fetched_at": rep.get("finished") or rep.get("started"),
 				"files_found": exports, "acquired": n, "input": Path(str(rep.get("input", ""))).name}
@@ -819,8 +857,9 @@ def plausible_aspect(img: dict, item: dict, aspect_ranges: dict) -> bool:
 	return rng[0] * 0.75 <= ar <= rng[1] * 1.33
 
 
-def match_game_objects(objs: list[dict], cat: CatalogIndex) -> dict:
-	"""catalogue id -> {'primary': obj, 'others': [obj...], 'confidence', 'method'}; plus review/unmatched lists."""
+def match_game_objects(objs: list[dict], cat: CatalogIndex, extra: dict | None = None) -> dict:
+	"""catalogue id -> {'primary': obj, 'others': [obj...], 'confidence', 'method'}; plus review/unmatched lists.
+	extra: {(table, row name): (item id, confidence, note)} from the private art curation (wins over CURATED)."""
 	links: dict[str, list] = collections.defaultdict(list)   # item id -> [(obj, conf, method)]
 	obj_status = {}
 	for o in objs:
@@ -828,13 +867,14 @@ def match_game_objects(objs: list[dict], cat: CatalogIndex) -> dict:
 			obj_status[o["key"]] = ("skip", None, "none", "game_placeholder_art", "row uses the client's placeholder art")
 			continue
 		allowed = TABLE_CATS.get(o["table"])
-		cur = CURATED.get((o["table"], o["name"]))
+		cur = (extra or {}).get((o["table"], o["name"])) or CURATED.get((o["table"], o["name"]))
 		if cur:
 			iid, conf, note = cur
 			if iid in cat.by_id:
 				if conf in ("exact", "high"):
-					links[iid].append((o, conf, "game_curated"))
-					obj_status[o["key"]] = ("auto", iid, conf, "game_curated", note)
+					method = "art_curation" if (extra or {}).get((o["table"], o["name"])) else "game_curated"
+					links[iid].append((o, conf, method))
+					obj_status[o["key"]] = ("auto", iid, conf, method, note)
 				else:
 					obj_status[o["key"]] = ("review", iid, conf, "game_curated", note)
 				continue
@@ -1247,82 +1287,309 @@ def render_job(job: dict) -> dict:
 		return {"id": job["id"], "error": f"{type(ex).__name__}: {ex}"}
 
 
-# ------------------------------------------------------------------------------------------------- HUD-free renders
-def rerender_without_hud(root: Path, version: str) -> dict:
-	"""Re-render client exports whose clip has HUD children (e.g. the barn's upgrade bubble) without them.
+# ------------------------------------------------------------------------------------------------- derived renders
+NEST_IDLE_LABELS = ("Idle", "IdleStart", "idle")
 
-	Uses tools/private_assets/extract_from_apk.py as a library on the container files already copied to
-	<root>/raw/apk_extracted/<version>/assets/sc (nothing is downloaded). Output: <root>/raw/apk_sprites_clean/
-	<version>/<sc>/<export>.png + index.json (same fields as the extractor). Returns {(sc, export): entry}.
-	Skipped (returns what exists) when the extractor's dependencies (zstandard, texture2ddecoder) are missing."""
-	out_root = root / "raw" / "apk_sprites_clean" / version
-	have = {}
-	for idx_p in out_root.glob("*/index.json"):
-		for ex, e in (read_json(idx_p, {}) or {}).items():
-			if e.get("file") and (idx_p.parent / e["file"]).exists():
-				have[(idx_p.parent.name, ex)] = {**e, "path": str(idx_p.parent / e["file"])}
-	sc_dir = root / "raw" / "apk_extracted" / version / "assets" / "sc"
-	src_dir = root / "raw" / "apk_sprites" / version
-	targets = collections.defaultdict(list)
-	for scd in sorted(p for p in src_dir.iterdir() if p.is_dir()) if src_dir.is_dir() else []:
-		for ex in (read_json(scd / "index.json", {}) or {}):
-			if STRIP_OVERLAY_RE.match(ex) and (scd.name, ex) not in have:
-				targets[scd.name].append(ex)
-	if not targets:
-		return have
+
+def _load_extractor():
+	"""tools/private_assets/extract_from_apk.py as a library, or None when its dependencies are missing."""
 	try:
 		sys.path.insert(0, str(Path(__file__).resolve().parent))
 		import extract_from_apk as X  # noqa: PLC0415 - optional dependency chain
 		X.need("zstandard")
 		X.need("texture2ddecoder")
+		return X
 	except Exception as ex:  # noqa: BLE001
-		log(f"HUD-free re-render skipped ({ex}); the overlay-strip heuristic is used instead")
-		return have
-	for sc, exports in targets.items():
-		f = sc_dir / f"{sc}.sc"
-		if not f.exists():
+		log(f"extractor unavailable ({ex})")
+		return None
+
+
+class ScCache:
+	"""Parsed client .sc files (textures decoded on demand) from <root>/raw/apk_extracted/<version>/assets/sc."""
+
+	def __init__(self, X, sc_dir: Path):
+		self.X, self.sc_dir = X, sc_dir
+		self._swf: dict = {}
+
+	def get(self, sc: str, textures: bool = True):
+		key = (sc, textures)
+		if key in self._swf:
+			return self._swf[key]
+		if textures and (sc, False) in self._swf:
+			self._swf.pop((sc, False))
+		f = self.sc_dir / f"{sc}.sc"
+		swf = None
+		if f.exists():
+			raw_sc = f.read_bytes()
+			X = self.X
+			if X.is_sc2(raw_sc):
+				swf = X.parse_sc2(raw_sc, sc)
+			else:
+				body, _ = X.decompress_sc(raw_sc, sc)
+				swf = X.parse_sc(body, sc, is_tex=False)
+				tex = self.sc_dir / f"{sc}_tex.sc"
+				if swf.flags.get("external_texture") and tex.exists():
+					tbody, _ = X.decompress_sc(tex.read_bytes(), tex.name)
+					X.parse_sc(tbody, sc, is_tex=True, swf=swf)
+			if textures:
+				X.load_textures(swf, "auto", lambda n: (self.sc_dir / n).read_bytes() if (self.sc_dir / n).exists() else None)
+		self._swf[key] = swf
+		if textures:
+			self._swf[(sc, False)] = swf
+		return swf
+
+	def drop(self, sc: str):
+		self._swf.pop((sc, True), None)
+		self._swf.pop((sc, False), None)
+
+
+def _clip_children(swf, oid: int, frame: int = 0) -> list[tuple]:
+	"""[(child id, instance name, matrix, colour transform)] placed in `frame` of clip oid, in display order."""
+	c = swf.clips[oid]
+	fi = min(frame, len(c.frames) - 1)
+	start = sum(n for n, _ in c.frames[:fi])
+	count = c.frames[fi][0]
+	bank = swf.banks[c.bank] if c.bank < len(swf.banks) else swf.banks[0]
+	out = []
+	for ci, mi, ki in c.elements[start:start + count]:
+		if ci >= len(c.children):
 			continue
-		raw_sc = f.read_bytes()
-		swf = X.parse_sc2(raw_sc, sc) if X.is_sc2(raw_sc) else None
+		m = bank["m"][mi] if mi != 0xFFFF and mi < len(bank["m"]) else (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+		ct = bank["c"][ki] if ki != 0xFFFF and ki < len(bank["c"]) else ((255.0, 255.0, 255.0, 255.0), (0.0, 0.0, 0.0))
+		out.append((c.children[ci], c.names[ci] if ci < len(c.names) else None, m, ct))
+	return out
+
+
+def _label_frame(swf, oid: int, labels=NEST_IDLE_LABELS) -> int:
+	clip = swf.clips.get(oid)
+	if clip is None:
+		return 0
+	starts = {lab: i for i, (_, lab) in reversed(list(enumerate(clip.frames))) if lab}
+	return next((starts[w] for w in labels if w in starts), 0)
+
+
+def gatherer_nest_specs(gd: dict) -> list[dict]:
+	"""Bee tree / squirrel tree: the habitat's ExportNameMiddle clip only holds locators (<Nest>01..04). The nests of
+	gatherer_nests.csv go there: at habitat level L (NestCount = L) nest k = 1..L draws row k's ExportNameNests at
+	locator <Nest>0k, back to front by the row's DepthOffset. -> [{sc, middle, nests: [(index, export, depth)]}]."""
+	if not gd:
+		return []
+	nests_t = gd["tables"].get("gatherer_nests")
+	hab_t = gd["tables"].get("gatherer_habitats")
+	if not nests_t or not hab_t:
+		return []
+	nests = {}
+	for e in nests_t["entries"]:
+		rows = []
+		for k, r in enumerate(e["rows"], start=1):
+			ex = r.get("ExportNameNests") or r.get("ExportName") or (rows[-1][1] if rows else "")
+			try:
+				dep = int(r.get("DepthOffset") or 0)
+			except ValueError:
+				dep = 0
+			rows.append((k, ex, dep))
+		nests[e["Name"]] = {"sc": Path(e["rows"][0].get("FileName", "")).stem, "rows": rows}
+	out = []
+	for e in hab_t["entries"]:
+		r0 = e["rows"][0]
+		nest = nests.get(r0.get("Nest", ""))
+		if not nest:
+			continue
+		sc = Path(r0.get("FileName", "")).stem
+		for r in e["rows"]:
+			mid = r.get("ExportNameMiddle", "")
+			try:
+				count = int(r.get("NestCount") or 0)
+			except ValueError:
+				count = 0
+			if not mid or count <= 0:
+				continue
+			out.append({"sc": sc, "nest_sc": nest["sc"], "middle": mid, "nest": r0.get("Nest"),
+				"nests": [x for x in nest["rows"] if x[0] <= count]})
+	return out
+
+
+def _render_gatherer_middle(X, swf, rend, spec: dict) -> tuple:
+	"""The middle clip with every <Nest>NN locator replaced by nest NN (others kept unless marker-only)."""
+	ids = {n: i for i, n in swf.exports}
+	mid = ids.get(spec["middle"])
+	if mid is None or mid not in swf.clips:
+		return None, None, ["middle export missing"]
+	by_index = {k: (ex, dep) for k, ex, dep in spec["nests"]}
+	loc_re = re.compile(rf"^{re.escape(spec['nest'])}(\d+)$")
+	placed, other_ops, warns = [], [], []
+	for cid, nm, m, ct in _clip_children(swf, mid):
+		mm = loc_re.match(nm or "")
+		if mm:
+			k = int(mm.group(1))
+			if k in by_index and by_index[k][0] in ids:
+				placed.append((by_index[k][1], k, ids[by_index[k][0]], m, ct))
+			continue
+		ops: list = []
+		rend._emit(cid, m, ct, 0, ops, warns, 1)
+		draws = [o for o in ops if o[0] == "draw"]
+		if draws and not all(o[1].uv and all(q == o[1].uv[0] for q in o[1].uv) for o in draws):
+			other_ops += ops
+	ops = list(other_ops)
+	for dep, k, nid, m, ct in sorted(placed):
+		rend._emit(nid, m, ct, _label_frame(swf, nid), ops, warns, 0)
+	if not placed:
+		return None, None, ["no nest locator matched"]
+	img, origin = rend.render(ops, 1.5)
+	return img, origin, warns + [f"nests at locators {sorted(k for _, k, _, _, _ in placed)} (DepthOffset order)"]
+
+
+def derived_renders(root: Path, version: str, gd: dict, curation: dict) -> dict:
+	"""Client renders that differ from the extractor's plain export render, cached in <root>/raw/apk_sprites_clean/
+	<version>/<sc>/<export>.png + index.json (same fields as the extractor, plus "derived" and "render_rev"):
+
+	  hud_free        clips whose idle frame bakes in a HUD child (barn/silo upgrade bubble): rendered without it
+	  gatherer_nests  bee/squirrel tree "middle" locator clips with the gatherer_nests.csv nests drawn at the locators
+	  nested_frame    exports whose frame 0 is unrepresentative, rendered with nested clips at a curated frame
+	                  (mapping/art_curation.json "nested_frames")
+
+	Uses extract_from_apk.py as a library on the container files under <root>/raw/apk_extracted/<version>/assets/sc
+	(nothing is downloaded). Entries rendered by an older RENDER_REV are re-rendered. Returns {(sc, export): entry}.
+	Skipped (returns what exists) when the extractor's dependencies are missing."""
+	out_root = root / "raw" / "apk_sprites_clean" / version
+	sc_dir = root / "raw" / "apk_extracted" / version / "assets" / "sc"
+	src_dir = root / "raw" / "apk_sprites" / version
+	have, stale = {}, set()
+	X = _load_extractor()
+	rev = getattr(X, "RENDER_REV", None) if X else None
+	for idx_p in out_root.glob("*/index.json"):
+		for ex, e in (read_json(idx_p, {}) or {}).items():
+			if e.get("file") and (idx_p.parent / e["file"]).exists():
+				have[(idx_p.parent.name, ex)] = {**e, "path": str(idx_p.parent / e["file"])}
+				if rev and e.get("render_rev") != rev:
+					stale.add((idx_p.parent.name, ex))
+	targets: dict = collections.defaultdict(dict)   # sc -> export -> spec
+	for scd in sorted(p for p in src_dir.iterdir() if p.is_dir()) if src_dir.is_dir() else []:
+		for ex in (read_json(scd / "index.json", {}) or {}):
+			if STRIP_OVERLAY_RE.match(ex):
+				targets[scd.name][ex] = {"derived": "hud_free"}
+	for spec in gatherer_nest_specs(gd):
+		if spec["nest_sc"] == spec["sc"]:
+			targets[spec["sc"]][spec["middle"]] = {"derived": "gatherer_nests", **spec}
+	for key, fr in ((curation or {}).get("nested_frames") or {}).items():
+		if "/" in key and isinstance(fr, dict) and isinstance(fr.get("nested_frame"), int):
+			sc, ex = key.split("/", 1)
+			targets[sc][ex] = {"derived": "nested_frame", "nested_frame": fr["nested_frame"]}
+	todo = {sc: {ex: t for ex, t in d.items() if (sc, ex) not in have or (sc, ex) in stale
+		or have[(sc, ex)].get("derived", "hud_free") != t["derived"]
+		or have[(sc, ex)].get("nested_frame") != t.get("nested_frame")} for sc, d in targets.items()}
+	todo = {sc: d for sc, d in todo.items() if d}
+	# derived entries that are no longer wanted are dropped (e.g. a removed curation)
+	for (sc, ex) in list(have):
+		if ex not in targets.get(sc, {}):
+			have.pop((sc, ex))
+	if not todo:
+		return have
+	if X is None:
+		log("derived renders skipped (extractor unavailable); the overlay-strip heuristic is used for HUD bubbles")
+		return {k: v for k, v in have.items() if k not in stale}
+	cache = ScCache(X, sc_dir)
+	n = 0
+	for sc, exports in sorted(todo.items()):
+		swf = cache.get(sc)
 		if swf is None:
 			continue
-
-		def _external(name: str):
-			p = sc_dir / name
-			return p.read_bytes() if p.exists() else None
-		X.load_textures(swf, "auto", _external)
 		empty_id = -424242
 		swf.shapes[empty_id] = X.Shape(empty_id)
-		rend = X.Renderer(swf)
-		ids = {n: i for i, n in swf.exports}
+		ids = {nm: i for i, nm in swf.exports}
 		idx_p = out_root / sc / "index.json"
 		index = read_json(idx_p, {}) or {}
-		for ex in exports:
+		for ex, t in sorted(exports.items()):
 			oid = ids.get(ex)
 			clip = swf.clips.get(oid)
-			if clip is None:
+			if oid is None:
 				continue
-			removed = []
-			for ci, nm in enumerate(clip.names):
-				if nm and HUD_INSTANCE_RE.match(nm):
-					clip.children[ci] = empty_id
-					removed.append(nm)
-			starts = {lab: i for i, (_, lab) in reversed(list(enumerate(clip.frames))) if lab}
-			frame = starts.get("IdleStart", 0)
-			ops, warns = rend.display_list(oid, frame)
-			img, origin = rend.render(ops, 1.5)
+			frame = _label_frame(swf, oid, ("IdleStart", "Idle", "idle")) if clip is not None else 0
+			entry = {"id": oid, "scale": 1.5, "pixels_per_world_px": 3.0, "frame_rendered": frame, "derived": t["derived"],
+				"render_rev": rev}
+			warns: list = []
+			if t["derived"] == "hud_free" and clip is not None:
+				saved = list(clip.children)
+				removed = []
+				for ci, nm in enumerate(clip.names):
+					if nm and HUD_INSTANCE_RE.match(nm):
+						clip.children[ci] = empty_id
+						removed.append(nm)
+				rend = X.Renderer(swf)
+				ops, warns = rend.display_list(oid, frame)
+				img, origin = rend.render(ops, 1.5)
+				clip.children[:] = saved
+				entry["removed_instances"] = removed
+			elif t["derived"] == "gatherer_nests":
+				rend = X.Renderer(swf)
+				img, origin, warns = _render_gatherer_middle(X, swf, rend, t)
+				entry["nests"] = [{"index": k, "export": e_, "depth_offset": d_} for k, e_, d_ in t["nests"]]
+			elif t["derived"] == "nested_frame":
+				rend = X.Renderer(swf, nested_frame=t["nested_frame"])
+				ops, warns = rend.display_list(oid, frame)
+				img, origin = rend.render(ops, 1.5)
+				entry["nested_frame"] = t["nested_frame"]
+			else:
+				continue
 			if img is None:
 				continue
 			(out_root / sc).mkdir(parents=True, exist_ok=True)
 			img.save(out_root / sc / f"{ex}.png")
-			index[ex] = {"id": oid, "file": f"{ex}.png", "size": list(img.size), "origin": [round(origin[0], 2),
-				round(origin[1], 2)], "scale": 1.5, "pixels_per_world_px": 3.0, "frame_rendered": frame,
-				"frame_label": "IdleStart" if "IdleStart" in starts else None, "removed_instances": removed,
-				"warnings": sorted(set(warns))}
-			have[(sc, ex)] = {**index[ex], "path": str(out_root / sc / f"{ex}.png")}
+			entry.update({"file": f"{ex}.png", "size": list(img.size), "origin": [round(origin[0], 2), round(origin[1], 2)],
+				"frame_label": next((lab for lab in ("IdleStart", "Idle", "idle") if clip is not None and
+					any(lb == lab for _, lb in clip.frames)), None), "warnings": sorted(set(warns))})
+			index[ex] = entry
+			have[(sc, ex)] = {**entry, "path": str(out_root / sc / f"{ex}.png")}
+			n += 1
 		write_json(idx_p, index)
-	log(f"HUD-free re-render: {sum(len(v) for v in targets.values())} exports -> {out_root}")
+		cache.drop(sc)
+	log(f"derived renders: {n} exports re-rendered -> {out_root}")
 	return have
+
+
+def texel_densities(root: Path, version: str, wanted: set, frames: dict) -> dict:
+	"""Source texture density per client export {(sc, export): {p50, p90}} (texels per SC unit, area-weighted),
+	cached in <root>/raw/apk_sprites/<version>/texel_density.json. Textures are not decoded (sizes suffice)."""
+	cache_p = root / "raw" / "apk_sprites" / version / "texel_density.json"
+	cache = read_json(cache_p, {}) or {}
+	todo = collections.defaultdict(list)
+	for sc, ex in wanted:
+		k = f"{sc}/{ex}"
+		if k not in cache or cache[k].get("frame") != frames.get((sc, ex), 0):
+			todo[sc].append(ex)
+	if todo:
+		X = _load_extractor()
+		if X is not None:
+			sc_cache = ScCache(X, root / "raw" / "apk_extracted" / version / "assets" / "sc")
+			for sc, exs in sorted(todo.items()):
+				try:
+					swf = sc_cache.get(sc, textures=False)
+				except Exception as ex_:  # noqa: BLE001
+					log(f"texel density: {sc}: {ex_}")
+					continue
+				if swf is None:
+					continue
+				ids = {nm: i for i, nm in swf.exports}
+				rend = X.Renderer(swf, drop_placeholders=False)
+				for ex in exs:
+					oid = ids.get(ex)
+					if oid is None:
+						continue
+					fr = frames.get((sc, ex), 0)
+					ops, _ = rend.display_list(oid, fr)
+					d = rend.texel_density(ops)
+					cache[f"{sc}/{ex}"] = {**(d or {"p50": None, "p90": None}), "frame": fr}
+				sc_cache.drop(sc)
+			write_json(cache_p, cache)
+	return {(k.split("/", 1)[0], k.split("/", 1)[1]): v for k, v in cache.items()}
+
+
+def ppw_for_density(p50: float | None) -> float:
+	"""Pack px per world px for a client source: 2 x texels/SC unit rounded DOWN to 0.25, within [MIN_PPW, MAX_PPW]
+	(the raw renders are 3 px per world px; sources below 2 px stay at the old 2.0 so nothing gets softer)."""
+	if not p50:
+		return MIN_PPW
+	return max(MIN_PPW, min(MAX_PPW, math.floor(2 * p50 * 4 + 1e-6) / 4))
 
 
 # ------------------------------------------------------------------------------------------------- builder
@@ -1340,6 +1607,7 @@ class Builder:
 		self.world_dir = None if getattr(args, "no_world", False) else (getattr(args, "world_dir", None)
 			or self.root / "packs" / WORLD_DIR_NAME)
 		self.world_overrides = read_json(self.world_dir / "catalog_overrides.json") if self.world_dir else None
+		self.curation = read_json(self.mapdir / "art_curation.json", {}) or {}
 
 	# --- stage 1
 	def inventory(self):
@@ -1349,17 +1617,27 @@ class Builder:
 			log(f"catalog overrides: {len(self.fp_overridden)} items use client-stated footprints "
 				f"({self.world_dir / 'catalog_overrides.json'})")
 		self.cat = CatalogIndex(self.items)
+		self.gd = load_game_data(self.root)
 		recs, self.src_meta = discover(self.root)
 		vers = sorted({r["apk"]["build"] for r in recs if r["source"] == "apk"}, key=_version_tuple)
-		self.clean = rerender_without_hud(self.root, vers[-1]) if vers else {}
+		self.clean = derived_renders(self.root, vers[-1], self.gd if self.gd.get("version") == vers[-1] else {},
+			self.curation) if vers else {}
 		for r in recs:
 			if r["source"] == "apk" and r["apk"]["build"] == (vers[-1] if vers else None):
 				c = self.clean.get((r["apk"]["sc"], r["apk"]["export"]))
 				if c:
 					r["path"] = c["path"]
 					r["apk"]["origin"] = c["origin"]
-					r["apk"]["hud_removed"] = c.get("removed_instances", [])
-					r["prov"]["rerendered_without"] = c.get("removed_instances", [])
+					r["apk"]["derived"] = c.get("derived", "hud_free")
+					r["prov"]["derived_render"] = c.get("derived", "hud_free")
+					if c.get("removed_instances"):
+						r["apk"]["hud_removed"] = c.get("removed_instances", [])
+						r["prov"]["rerendered_without"] = c.get("removed_instances", [])
+					if c.get("nested_frame") is not None:
+						r["apk"]["nested_frame"] = c["nested_frame"]
+						r["prov"]["nested_frame"] = c["nested_frame"]
+					if c.get("nests"):
+						r["prov"]["nests"] = c["nests"]
 		self.inv = run_inventory(recs, self.mapdir / "inventory.json", self.args.rebuild, self.workers)
 		self.recs = {r["key"]: r for r in recs if r["key"] in self.inv}
 		inv_out = {"generated": now_iso(), "tool": f"build_pack.py {TOOL_VERSION}", "root": str(self.root),
@@ -1370,15 +1648,56 @@ class Builder:
 		log(f"inventory: {len(self.inv)} records written ({errs} unreadable)")
 
 	# --- stage 2/3
+	def _curated_links(self, gm0: dict) -> tuple[dict, dict]:
+		"""Private art curation (mapping/art_curation.json "links") -> ({(table, row): (item, "high", note)} for
+		client objects no other item links, {item: (sc, export, note)} for exports used through an alias record)."""
+		linked_by = {}
+		for iid, L in gm0["links"].items():
+			for o in [L["primary"]] + L["others"] + L["other_tables"]:
+				linked_by.setdefault(o["key"], iid)
+		by_export = {}
+		for o in self.objs:
+			by_export.setdefault((o["sc"], o["export"]), o)
+		extra, alias = {}, {}
+		for iid, ln in sorted(((self.curation or {}).get("links") or {}).items()):
+			if iid not in self.cat.by_id or not isinstance(ln, dict):
+				continue
+			note = f"art curation ({ln.get('confidence', '?')}): {ln.get('evidence', '')}"
+			o = None
+			if ln.get("object") and ":" in ln["object"]:
+				o = self.obj_by_key.get(ln["object"])
+			elif ln.get("export") and "/" in ln["export"]:
+				sc, ex = ln["export"].split("/", 1)
+				o = by_export.get((sc, ex))
+				if o is None or (linked_by.get(o["key"]) not in (None, iid)):
+					alias[iid] = (sc, ex, note, o)
+					continue
+			if o is not None and linked_by.get(o["key"]) in (None, iid):
+				extra[(o["table"], o["name"])] = (iid, "high", note)
+				# further client rows of the same object (yearly copies) become its variants
+				for more in ln.get("also") or []:
+					sc2, ex2 = more.split("/", 1) if "/" in more else ("", "")
+					o2 = by_export.get((sc2, ex2))
+					if o2 is not None and o2["table"] == o["table"] and linked_by.get(o2["key"]) in (None, iid):
+						extra[(o2["table"], o2["name"])] = (iid, "high", note)
+			elif o is not None:
+				alias[iid] = (o["sc"], o["export"], note, o)
+		return extra, alias
+
 	def match(self):
-		gd = load_game_data(self.root)
+		gd = self.gd
 		self.game_version = gd.get("version", "")
 		self.objs = game_objects(gd)
 		self.obj_by_key = {o["key"]: o for o in self.objs}
-		log(f"game data: build {self.game_version or '-'}; {len(self.objs)} placeable client objects")
-		gm = match_game_objects(self.objs, self.cat)
+		self.themes = theme_postfixes(gd)
+		log(f"game data: build {self.game_version or '-'}; {len(self.objs)} placeable client objects; themes "
+			f"{[t for _, t in self.themes]}")
+		gm0 = match_game_objects(self.objs, self.cat)
+		extra, self.curated_alias = self._curated_links(gm0)
+		gm = match_game_objects(self.objs, self.cat, extra) if extra else gm0
 		self.links = gm["links"]
 		self.obj_status = gm["obj_status"]
+		log(f"art curation: {len(extra)} object links, {len(self.curated_alias)} export aliases")
 		apk_by = {}
 		for k, r in self.inv.items():
 			if r["source"] == "apk" and r["apk"]["build"] == self.game_version:
@@ -1405,11 +1724,24 @@ class Builder:
 				role_base = "primary" if o is L["primary"] else "variant"
 				vbase = "" if o is L["primary"] else variant_name_from(L["primary"], o)
 				conf = L["confidence"] if o is L["primary"] else "high"
+				vb = vbase + "_" if vbase else ""
 				refs = [(o["export"], role_base, vbase)]
 				if o["mastered"]:
-					refs.append((o["mastered"], "variant", (vbase + "_" if vbase else "") + "mastered"))
+					refs.append((o["mastered"], "variant", vb + "mastered"))
 				for lv in o["levels"]:
-					refs.append((lv["export"], "variant", (vbase + "_" if vbase else "") + f"lvl_{lv['level']}"))
+					lvid = vb + level_variant_id(o["table"], lv["level"])
+					refs.append((lv["export"], "variant", lvid))
+					if lv.get("mastered") and lv["mastered"] != o["mastered"]:
+						refs.append((lv["mastered"], "variant", lvid + "_mastered"))
+				for col in ("dead", "broken"):
+					if o.get(col):
+						refs.append((o[col], "variant", vb + col))
+				# seasonal theme skins: <export><postfix> in the same file (themes.csv), "<variant>__<theme>"
+				for ex_, role_, var_ in list(refs):
+					for pf, theme in self.themes:
+						if (not ex_.endswith(pf) and (o["sc"], ex_ + pf) in apk_by and not (o["parts"] or o["pieces"])
+								and not (o["fence"] or o["ditch"])):
+							refs.append((ex_ + pf, "variant", f"{var_}__{theme}"))
 				for p in o["parts"]:
 					refs.append((p, "part", vbase))
 				if o["fence"]:
@@ -1482,6 +1814,19 @@ class Builder:
 			d.setdefault("variant", "")
 			d["updated"] = ts
 			decisions[k] = d
+		# curated exports already used by another item (or without a CSV row): an alias record per item
+		for iid, (sc, ex, note, o) in sorted(self.curated_alias.items()):
+			k = apk_by.get((sc, ex))
+			if not k:
+				self.notes.append(f"art curation: {iid}: export {sc}/{ex} not rendered")
+				continue
+			ak = f"{k}#{iid}"
+			self.inv[ak] = {**self.inv[k], "key": ak}
+			self.recs[ak] = self.recs.get(k, self.inv[k])
+			decisions[ak] = {"item_id": iid, "status": "auto", "confidence": "high", "method": "art_curation_alias",
+				"variant": "", "role": "primary", "game_object": None,
+				"game_fp": list(o["fp"]) if o else list(self.cat.by_id[iid]["fp"]), "alias_of": k, "note": note,
+				"updated": ts}
 		# reuse prior human decisions (never overridden by automation)
 		kept = 0
 		for k, p in prior_dec.items():
@@ -1551,7 +1896,8 @@ class Builder:
 			primary = sorted(confirmed or apk_primary or cands, key=rank)[0] if (confirmed or apk_primary or cands) else None
 			if primary is None:
 				continue
-			s = {"primary": primary, "variants": {}, "connections": {}, "alternates": [], "duplicates": [], "parts": []}
+			s = {"primary": primary, "variants": {}, "connections": {}, "alternates": [], "duplicates": [], "parts": [],
+				"references": {}}
 			pd = D[primary]
 			game_obj = None
 			if pd.get("game_object"):
@@ -1588,11 +1934,16 @@ class Builder:
 					s["duplicates"].append(k)
 					D[k]["role"] = "duplicate" if dist <= PHASH_DUP else "similar"
 				else:
+					# Fan Kit / wiki pictures that look different are NOT in-game looks (older marketing renders, other
+					# objects, map icons, promo groups): reference images, never selectable variants
 					vid = f"alt_{inv[k]['source']}_{slug(str(inv[k]['prov'].get('id') or inv[k]['title']), 20)}"
-					s["variants"][vid] = k
+					s["references"][vid] = k
 					s["alternates"].append(k)
-					D[k]["role"] = "alternate"
+					D[k]["role"] = "reference"
 					chosen.append(k)
+			for vid, why in (((self.curation or {}).get("drop_variants") or {}).get(iid) or {}).items():
+				if s["variants"].pop(vid, None):
+					self.notes.append(f"variant dropped by art curation: {iid}/{vid} ({why})")
 			D[primary]["role"] = "primary" if D[primary].get("role") in (None, "candidate", "primary") else D[primary]["role"]
 			self.sel[iid] = s
 
@@ -1803,11 +2154,35 @@ class Builder:
 		self.fp_mismatch = []
 		jobs = []
 		pd = self.packdir
+		self.shared = {}
+		# source texture density of every client export the pack uses -> per-sprite resolution (ppw_for_density)
+		wanted, frames = set(), {}
+		for k, d in D.items():
+			r = inv.get(k)
+			if r and r["source"] == "apk" and d.get("item_id") and d.get("status") in ("auto", "confirmed"):
+				key_ = (r["apk"]["sc"], r["apk"]["export"])
+				wanted.add(key_)
+				frames[key_] = int(r["apk"].get("frame_rendered") or 0)
+		for s_ in self.sel.values():   # dedicated mirrored exports are not decisions of their own
+			go_ = s_.get("game_object")
+			if go_ and go_.get("mirror"):
+				wanted.add((go_["sc"], go_["mirror"]))
+		self.density = texel_densities(self.root, self.game_version, wanted, frames) if self.game_version else {}
+
+		def ppw_cap(k, layers=None) -> float:
+			r = inv[k]
+			if r["source"] != "apk":
+				return NAMED_MAX_PPW
+			ds = [self.density.get((r["apk"]["sc"], r["apk"]["export"]), {}).get("p50")]
+			for L in layers or []:
+				ds.append(L.get("density"))
+			ds = [x for x in ds if x]
+			return ppw_for_density(max(ds) if ds else None)
 
 		def job_for(jid, k, anchor, ppw, rel, thumb_rel=None, mirror=False, layers=None, anchor_rel=None, strip=False):
 			r = inv[k]
 			j = {"id": jid, "src": r["path"], "anchor": anchor, "ppw": ppw, "rel": rel, "out": str(pd / rel),
-				"mirror": mirror, "strip_overlay": strip, "max_ppw": MAX_PPW}
+				"mirror": mirror, "strip_overlay": strip, "max_ppw": ppw_cap(k, layers)}
 			if thumb_rel:
 				j["thumb"] = str(pd / thumb_rel)
 				j["thumb_rel"] = thumb_rel
@@ -1817,9 +2192,17 @@ class Builder:
 			jobs.append(j)
 			return j
 
+		share = {iid: v for iid, v in ((self.curation or {}).get("share_art") or {}).items()
+			if isinstance(v, dict) and v.get("with") in self.sel and iid in self.cat.by_id
+			and tuple(self.cat.by_id[iid]["fp"]) == tuple(self.cat.by_id[v["with"]]["fp"])}
+		for iid, v in sorted(share.items()):
+			self.shared[self.cat.by_id[iid]["art_key"]] = {"item": iid, "with_key": self.cat.by_id[v["with"]]["art_key"],
+				"with": v["with"], "confidence": v.get("confidence"), "evidence": v.get("evidence", "")}
 		for iid, s in sorted(self.sel.items()):
 			it = self.cat.by_id[iid]
 			key = it["art_key"]
+			if iid in share:
+				continue
 			k = s["primary"]
 			r = inv[k]
 			over = self.cal_over.get(iid) or {}
@@ -1836,7 +2219,7 @@ class Builder:
 			cal = {"item": iid, "category": it["category"], "source": r["source"], "catalog_fp": list(it["fp"]),
 				"catalog_fp_status": it["fp_status"]}
 			if r["source"] == "apk":
-				gfp = tuple(go["fp"]) if go else tuple(it["fp"])
+				gfp = tuple(go["fp"]) if go else tuple(D[k].get("game_fp") or it["fp"])
 				cal["game_fp"] = list(gfp)
 				if gfp != tuple(it["fp"]):
 					if gfp == tuple(it["fp"])[::-1] and gfp[0] != gfp[1]:
@@ -1856,6 +2239,12 @@ class Builder:
 					layers, anchor_rel = self._layers_for(go, None, gfp)
 					cal["composite"] = "parts" if go["parts"] else "habitat_pieces"
 					ent["composite"] = cal["composite"] + " (assembled from client exports; unverified against the game)"
+					if any(L.get("derived") == "gatherer_nests" for L in layers):
+						cal["composite"] += "+gatherer_nests"
+						ent["composite"] = ("parts + gatherer_nests.csv nests at the middle clip's locators (assembled "
+							"from client exports; nest order by DepthOffset is plausible, unverified against the game)")
+				if r["apk"].get("nested_frame") is not None:
+					ent["nested_frame"] = r["apk"]["nested_frame"]
 				strip = bool(STRIP_OVERLAY_RE.match(r["apk"]["export"])) and not r["apk"].get("hud_removed")
 			else:
 				c = self._named_calibration(r, it)
@@ -1894,12 +2283,12 @@ class Builder:
 				vr = inv[vk]
 				if vr["source"] == "apk":
 					vgo = self.obj_by_key.get(D[vk].get("game_object")) or go
-					vfp = tuple(vgo["fp"]) if vgo else tuple(it["fp"])
+					vfp = tuple(vgo["fp"]) if vgo else tuple(D[vk].get("game_fp") or it["fp"])
 					va = self._apk_anchor(vr, vfp)
 					vppw = float(vr["apk"]["ppw"])
 					vlayers = vrel = None
-					if vgo and vgo["parts"] and vid.startswith("lvl_"):
-						lv = next((x for x in vgo["levels"] if f"lvl_{x['level']}" == vid), None)
+					if vgo and vgo["parts"]:
+						lv = next((x for x in vgo["levels"] if level_variant_id(vgo["table"], x["level"]) == vid), None)
 						if lv and lv["parts"]:
 							vlayers, vrel = self._layers_for(vgo, lv, vfp)
 					vmirror = mirror
@@ -1917,6 +2306,28 @@ class Builder:
 				vents[vid] = {"source": {"key": vk, "kind": vr["source"]}, "auto_anchor": vauto}
 			if vents:
 				ent["variants"] = vents
+			# dedicated mirrored export (decorations.csv ExportNameMirror): letters, numbers, keys, statues whose
+			# flipped look is its own drawing; drawn unflipped on the swapped footprint when the object is flipped
+			if go and go.get("mirror") and r["source"] == "apk" and not mirror:
+				mk = self.apk_by.get((go["sc"], go["mirror"]))
+				if mk:
+					mfp = (gfp[1], gfp[0])
+					job_for(f"{key}|m", mk, list(self._apk_anchor(inv[mk], mfp)), float(inv[mk]["apk"]["ppw"]),
+						f"items/{key}__mirror.webp")
+					ent["mirror_source"] = {"key": mk, "kind": "apk", "export": go["mirror"]}
+			# Fan Kit / wiki pictures that differ from the selected art: reference images only (not selectable)
+			refs = {}
+			for vid, rk in sorted(s.get("references", {}).items()):
+				rr = inv[rk]
+				img = rr.get("img") or {}
+				bb = img.get("bbox") or [0, 0, img.get("w", 1), img.get("h", 1)]
+				rel = f"refs/{key}__{slug(vid, 40)}.webp"
+				jobs.append({"id": f"{key}|r|{vid}", "src": rr["path"], "anchor": [(bb[0] + bb[2]) / 2, bb[3]], "ppw": 1.0,
+					"rel": rel, "out": str(pd / rel), "max_side": REVIEW_MAX_SIDE})
+				refs[vid] = {"source": {"key": rk, "kind": rr["source"], "title": rr["title"],
+					"url": rr["prov"].get("url") or rr["prov"].get("description_url")}}
+			if refs:
+				ent["references"] = refs
 			# connections
 			conns = self._connection_plan(it, s, mirror)
 			if conns:
@@ -1954,7 +2365,8 @@ class Builder:
 				continue
 			r = inv[k]
 			scale = scale or float(r["apk"]["scale"])
-			layers.append({"path": r["path"], "origin": r["apk"]["origin"]})
+			layers.append({"path": r["path"], "origin": r["apk"]["origin"], "derived": r["apk"].get("derived"),
+				"density": (getattr(self, "density", {}).get((sc, ex)) or {}).get("p50")})
 		if not level:
 			# habitat pieces: each at its tile's top corner, mirrored ones flipped; back-to-front by (x+y)
 			for pc in sorted(go["pieces"], key=lambda p: (p["x"] + p["y"], p["y"])):
@@ -1966,7 +2378,8 @@ class Builder:
 				dx = s * (pc["x"] - pc["y"]) * SC_TILE_HALF_W
 				dy = s * (pc["x"] + pc["y"]) * SC_TILE_HALF_H
 				layers.append({"path": r["path"], "origin": r["apk"]["origin"], "dx": dx, "dy": dy,
-					"mirror": pc["mirrored"]})
+					"mirror": pc["mirrored"],
+					"density": (getattr(self, "density", {}).get((pc["sc"], pc["export"])) or {}).get("p50")})
 		scale = scale or 1.5
 		W, H = gfp
 		return layers, (scale * (W - H) * SC_TILE_HALF_W / 2, scale * (W + H) * SC_TILE_HALF_H / 2)
@@ -1974,7 +2387,9 @@ class Builder:
 	def _connection_plan(self, it: dict, s: dict, mirror: bool) -> dict:
 		"""mask -> (source key, piece name). Fences: own SE/SW bits pick pole/right/below/corner."""
 		go = s.get("game_object")
-		if not go or not it["connect_style"]:
+		if not go or not (it["connect_style"] or go["ditch"]):
+			# deco_ditches rows carry 16 pieces even where the catalogue has no connect style yet (ditch, creek,
+			# canal, minigolf track, leafy path): ship them so a catalogue "connect" entry finds its art
 			return {}
 		out = {}
 		pole_k = s["primary"]
@@ -2009,7 +2424,7 @@ class Builder:
 		pd = self.packdir
 		if self.args.rebuild and pd.exists():
 			shutil.rmtree(pd)
-		for sub in ("items", "thumbs", "review"):
+		for sub in ("items", "thumbs", "review", "refs"):
 			(pd / sub).mkdir(parents=True, exist_ok=True)
 		# review images
 		rjobs, rentries = self._review_plan()
@@ -2036,9 +2451,21 @@ class Builder:
 				out["thumb"] = res["thumb"]
 			if res.get("notes"):
 				self.render_notes[key] = res["notes"]
-			for f in ("auto_anchor", "verified", "verified_by", "mirrored", "composite", "source", "match"):
+			for f in ("auto_anchor", "verified", "verified_by", "mirrored", "composite", "source", "match", "nested_frame"):
 				if f in ent and ent[f] not in (None, False) or f == "auto_anchor":
 					out[f] = ent.get(f, False)
+			mres = results.get(f"{key}|m")
+			if mres and "error" not in mres:
+				out["mirror"] = {"file": mres["file"], "anchor": mres["anchor"], "pixels_per_world_px": mres["ppw"],
+					"source": ent.get("mirror_source")}
+			if ent.get("references"):
+				refs = {}
+				for vid, rd in ent["references"].items():
+					rres = results.get(f"{key}|r|{vid}")
+					if rres and "error" not in rres:
+						refs[vid] = {"file": rres["file"], "source": rd["source"]}
+				if refs:
+					out["references"] = refs
 			if ent.get("variants"):
 				vs = {}
 				for vid, vd in ent["variants"].items():
@@ -2066,6 +2493,16 @@ class Builder:
 					if tres and tres.get("thumb"):
 						out["thumb"] = tres["thumb"]
 			sprites[key] = out
+		# duplicate catalogue items of the same client object (same footprint) reuse the other item's art
+		for key, sh in sorted(self.shared.items()):
+			src = sprites.get(sh["with_key"])
+			if not src:
+				continue
+			cp = json.loads(json.dumps(src))
+			for f in ("verified", "verified_by", "references"):
+				cp.pop(f, None)
+			cp["shared_from"] = {"item": sh["with"], "confidence": sh["confidence"], "evidence": sh["evidence"]}
+			sprites[key] = cp
 		self.sprites = sprites
 		review_items = []
 		for re_ in rentries:
@@ -2086,9 +2523,13 @@ class Builder:
 					live.add(v["thumb"])
 			for c in (sp.get("connections") or {}).values():
 				live.add(c["file"])
+			if sp.get("mirror"):
+				live.add(sp["mirror"]["file"])
+			for rf in (sp.get("references") or {}).values():
+				live.add(rf["file"])
 		live |= {ri["file"] for ri in review_items}
 		removed = 0
-		for sub in ("items", "thumbs", "review"):
+		for sub in ("items", "thumbs", "review", "refs"):
 			for p in (pd / sub).glob("*"):
 				if f"{sub}/{p.name}" not in live:
 					p.unlink()
@@ -2103,7 +2544,20 @@ class Builder:
 		version = pv if pv.endswith("-" + digest) else dt.datetime.now(dt.timezone.utc).strftime("%Y.%m.%d") + "-" + digest
 		pack = {"format": "hayday-sandbox-asset-pack", "schema_version": 1, "id": PACK_ID, "name": PACK_NAME,
 			"license": LICENSE, "art_kind": "original", "priority": 100, "version": version,
-			"pixels_per_world_px": MAX_PPW, "alpha_bleed": True,
+			"pixels_per_world_px": MIN_PPW, "max_pixels_per_world_px": MAX_PPW, "alpha_bleed": True,
+			"conventions": {
+				"pixels_per_world_px": "per sprite: client sources 2 x their texels per SC unit rounded down to 0.25 within "
+					f"[{MIN_PPW}, {MAX_PPW}]; Fan Kit / wiki images <= {NAMED_MAX_PPW}; landmark sprites as build_world.py",
+				"variants": "only looks that exist in the client: lvl_N (levels), stage_N + dead (fruit trees / gatherer "
+					"bushes: growth stages), look_N (later production-building looks, meaning unknown), mastered / "
+					"look_N_mastered, broken, yearly copies, and seasonal theme skins '<variant>__<theme>' ('' = the base "
+					"image, e.g. '__winter', 'lvl_2__winter') from themes.csv ExportNamePostfix",
+				"references": "Fan Kit / wiki pictures that differ from the client art (older renders, other objects, map "
+					"icons): reference images, not selectable looks",
+				"mirror": "the client's own mirrored drawing (decorations.csv ExportNameMirror); when the object is flipped, "
+					"draw this texture UNflipped at this anchor instead of mirroring the base image",
+				"shared_from": "a duplicate catalogue item of the same client object reuses that item's art",
+				"nested_frame": "rendered with nested clips at this frame (frame 0 is unrepresentative)"},
 			"provenance": {"generated": now_iso(), "tool": f"tools/private_assets/build_pack.py {TOOL_VERSION}",
 				"private_root": str(self.root), "client_build": self.game_version,
 				"sources": self.src_meta.get("sources", {}),
@@ -2217,7 +2671,7 @@ class Builder:
 				anchor = self._apk_anchor(r, gfp)
 				ppw = float(r["apk"]["ppw"])
 				j = {"id": f"review|{k}", "src": r["path"], "anchor": list(anchor), "ppw": ppw, "rel": name,
-					"out": str(self.packdir / name), "max_ppw": MAX_PPW}
+					"out": str(self.packdir / name), "max_ppw": MIN_PPW}
 			else:
 				bb = img.get("bbox") or [0, 0, img.get("w", 1), img.get("h", 1)]
 				j = {"id": f"review|{k}", "src": r["path"], "anchor": [(bb[0] + bb[2]) / 2, bb[3]], "ppw": 1.0, "rel": name,

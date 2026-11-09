@@ -37,6 +37,12 @@ itself (collected-item icons, reward slots, emblems) and are dropped; so are exp
 brightest channel (black = invisible, as in the game); under other non-normal blend modes they are not drawn. ``extract --only-degenerate`` re-renders only
 the exports that contain degenerate-uv fills, i.e. the ones whose output changed with that fix (2026-11-09).
 
+Nested clips are drawn at their frame 0 by default (the root clip at ``--frame`` / ``--frame-label``). Map objects keep
+their ambient motion in nested clips, and a few (seasonal-creature decorations) show only a closed prop at frame 0:
+``--nested-frame G`` plays every nested clip at ``G mod <its length>`` (Flash/SC playback of instances placed at frame
+0), which renders a representative pose. Every index entry records ``render_rev`` (``RENDER_REV``): consumers that
+cache derived renders (build_pack.py) re-render when it changes.
+
 Every rendered PNG is proprietary Supercell art: personal use only, never commit, never redistribute.
 
 What is TESTED (2026-11-09) on three Supercell-signed builds (signer SHA-256 2265e901...0cc1bab):
@@ -111,6 +117,8 @@ SC_EXTS = (".sc", ".sctx", ".ktx", ".zktx")
 # its footprint (1x1 paths/fields span x -64..64, y 0..64; 2x2/3x3/4x4 buildings end at y = 128/192/~256).
 # The app's world tile is 64 x 32 px, so 1 SC unit = 0.5 world px.
 SC_UNITS_PER_WORLD_PX = 2.0
+# Bumped whenever rendering output changes for the same input (consumers re-render cached derived images).
+RENDER_REV = "2026-11-09.2"
 # Largest canvas rendered in one piece (RGBA float32 working layers: 16 bytes per pixel per layer).
 MAX_CANVAS_PIXELS = 64_000_000
 
@@ -1093,10 +1101,13 @@ PLACEHOLDER_WARN = "runtime placeholder fills (pure-red single texel) dropped"
 
 
 class Renderer:
-	def __init__(self, swf: Swf, max_depth: int = 64, drop_placeholders: bool = True):
+	def __init__(self, swf: Swf, max_depth: int = 64, drop_placeholders: bool = True, nested_frame: int | None = None):
+		"""``nested_frame`` None: nested clips at frame 0 (default). An int G: every nested clip plays frame
+		G mod its frame count (instances placed at frame 0 advance with the root timeline)."""
 		self.swf = swf
 		self.max_depth = max_depth
 		self.drop_placeholders = drop_placeholders
+		self.nested_frame = nested_frame
 		self._ph_cache: dict = {}
 
 	def is_runtime_placeholder(self, cmd: Command) -> bool:
@@ -1152,7 +1163,10 @@ class Renderer:
 			return
 		if not clip.frames:
 			return
-		fi = min(frame, len(clip.frames) - 1) if depth == 0 else 0
+		if depth == 0:
+			fi = min(frame, len(clip.frames) - 1)
+		else:
+			fi = self.nested_frame % len(clip.frames) if self.nested_frame is not None else 0
 		start = sum(n for n, _ in clip.frames[:fi])
 		count = clip.frames[fi][0]
 		bank = swf.banks[clip.bank] if clip.bank < len(swf.banks) else swf.banks[0]
@@ -1209,6 +1223,44 @@ class Renderer:
 			return 1.0
 		vals.sort()
 		return vals[len(vals) // 2]
+
+	def texel_density(self, ops) -> dict | None:
+		"""Source texture density of a draw list: texels per SC unit, area-weighted p50 / p90 over the draw commands
+		(degenerate-uv fills excluded). 1 world px = 2 SC units, so 2 * p50 is the largest output pixels per world px
+		that still adds detail. None when nothing textured is drawn."""
+		vals = []
+		for op in ops:
+			if op[0] != "draw":
+				continue
+			cmd, m = op[1], op[2]
+			tex = self.swf.textures[cmd.tex] if cmd.tex < len(self.swf.textures) else None
+			if tex is None or len(cmd.xy) < 3:
+				continue
+			xy = _world(cmd.xy, m)
+			A = _affine_from(xy[:3], self._uv_px(cmd, tex)[:3])
+			if A is None:
+				continue
+			det = abs(A[0] * A[4] - A[1] * A[3])
+			if det < 1e-9:
+				continue
+			area = 0.0
+			for i in range(len(xy)):
+				x0, y0 = xy[i]
+				x1, y1 = xy[(i + 1) % len(xy)]
+				area += x0 * y1 - x1 * y0
+			vals.append((math.sqrt(det), abs(area) / 2))
+		tot = sum(a for _, a in vals)
+		if not vals or tot <= 0:
+			return None
+		vals.sort()
+		acc, p50, p90 = 0.0, None, None
+		for v, a in vals:
+			acc += a
+			if p50 is None and acc >= 0.5 * tot:
+				p50 = v
+			if p90 is None and acc >= 0.9 * tot:
+				p90 = v
+		return {"p50": round(p50, 4), "p90": round(p90 if p90 is not None else vals[-1][0], 4), "commands": len(vals)}
 
 	# ---- raster ---------------------------------------------------------------------------------
 	def canvas(self, ops, scale: float = 1.0, pad: int = 2):
@@ -1620,7 +1672,8 @@ def cmd_extract(args) -> int:
 					for i, t in enumerate(swf.textures):
 						if t.image is not None:
 							t.image.convert("RGBA").save(atl_root / f"{base}_{i}.png")
-				rend = Renderer(swf)
+				nested = getattr(args, "nested_frame", None)
+				rend = Renderer(swf, nested_frame=nested)
 				exports = [(i, n) for i, n in swf.exports if not export_re or export_re.search(n)]
 				if args.max:
 					exports = exports[:args.max]
@@ -1630,7 +1683,10 @@ def cmd_extract(args) -> int:
 				index = json.loads(index_path.read_text()) if index_path.exists() else {}
 				done = failed = skipped_same = 0
 				for oid, ename in exports:
-					entry = {"id": oid, "kind": "clip" if oid in swf.clips else ("shape" if oid in swf.shapes else "other")}
+					entry = {"id": oid, "kind": "clip" if oid in swf.clips else ("shape" if oid in swf.shapes else "other"),
+						"render_rev": RENDER_REV}
+					if nested is not None:
+						entry["nested_frame"] = nested
 					try:
 						frame, label = args.frame, None
 						clip = swf.clips.get(oid)
@@ -1742,6 +1798,9 @@ def main(argv=None) -> int:
 				help="re-render only exports that contain degenerate-uv fills (their output changed with the "
 				"2026-11-09 renderer fix); other index entries and PNGs are left untouched")
 			p.add_argument("--frame", type=int, default=0, help="frame of the exported clip to render")
+			p.add_argument("--nested-frame", type=int, default=None,
+				help="play nested clips at frame G mod their length (default: nested clips at frame 0); use with "
+				"--exports and a separate --out for representative poses (index entries record nested_frame)")
 			p.add_argument("--scale", type=float, default=1.5,
 				help="output px per SC unit (default 1.5 = buildings' native texel density = 3 px per world px; "
 				"0 = per-export native density)")

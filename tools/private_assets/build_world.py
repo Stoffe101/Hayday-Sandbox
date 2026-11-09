@@ -66,10 +66,11 @@ MAP_SCHEMA = 2
 MAP_ID = "hayday_farm"
 OVERRIDES_FORMAT = "hayday-sandbox-catalog-overrides"
 WIKI_RESEARCH = REPO_ROOT / "data" / "research" / "expansions_research.json"
-PPW = 2.0                       # pack pixels per world px (build_pack.MAX_PPW)
+PPW = 3.0                       # landmark pixels per world px (= the client renders' 1.5 px per SC unit; build_pack.MAX_PPW)
 SC_UNITS_PER_WORLD_PX = 2.0     # 1 tile = 128 x 64 SC units = 64 x 32 world px
 HALF_W, HALF_H = 32.0, 16.0     # world px of half a tile
 WORLD_MARGIN = 12               # tiles of scenery around the data extent (camera / placeholder scenery)
+EDGE_MARGIN = 2                 # tiles around the edge-art extent (edge_art_extent)
 CONFIDENCE = ("verified-in-data", "strong", "plausible", "approximate", "unknown")
 AREAS = ("farm_side", "road_verge", "across_road", "river", "cliff")
 REGION_KINDS = ("void", "buildable", "plot", "road", "water", "blocked", "scenery")
@@ -1311,6 +1312,17 @@ class WorldBuilder:
 			ys += [_int(z.get("Y"), 0), _int(z.get("Y"), 0) + _int(z.get("Height"), 1) - 1]
 		bx0, by0 = min(xs) - WORLD_MARGIN, min(ys) - WORLD_MARGIN
 		bx1, by1 = max(xs) + WORLD_MARGIN, max(ys) + WORLD_MARGIN
+		# the camera must reach every piece of the client's edge art (river bank, cliff, forests), which extends
+		# well beyond the data margin: union with the art's extent in tiles (verified placement rules, see
+		# edge_art_extent); skipped with a warning when the extractor is unavailable
+		ext = edge_art_extent(c, W, self.areas()["road_rows"][0])
+		if ext:
+			self.report["edge_art_extent"] = ext
+			# + EDGE_MARGIN: the unplaced north cliff-tile copies and soft art edges
+			bx0, by0 = min(bx0, math.floor(ext["x0"]) - EDGE_MARGIN), min(by0, math.floor(ext["y0"]) - EDGE_MARGIN)
+			bx1, by1 = max(bx1, math.ceil(ext["x1"]) + EDGE_MARGIN), max(by1, math.ceil(ext["y1"]) + EDGE_MARGIN)
+		else:
+			self.warn("edge art extent unavailable (extractor or background.sc missing): world_bounds from data only")
 		world_bounds = [bx0, by0, bx1 - bx0 + 1, by1 - by0 + 1]
 		scenery = []
 		river_x = min([_int(z.get("X"), 0) for z in wdz] + [0])
@@ -1765,6 +1777,69 @@ class Art:
 		return swf._rend.render(ops, scale=scale)
 
 
+# Placement of the client's farm-edge art (background.sc). No table states it; the rules were derived by fitting the
+# art to data facts (river bank = level_0 River sound zone, cliff foot = row 0, south road strip = the main road rows,
+# east frame = the last TileMap column) and are expressed here in map terms only: "origin" = tile (0, 0), "road" =
+# (0, first main-road row), "road_east" = (last column, first main-road row). The bg_edge_north_tile / _forest copies
+# (their pitch is not known from data) are not placed; EDGE_MARGIN around the extent covers them.
+EDGE_PIECES = (("bg_edge_west", "origin"), ("bg_edge_north", "origin"), ("deco_layer_01", "origin"),
+	("bg_edge_south", "road"), ("bg_edge_southeast", "road"), ("bg_edge_east", "road_east"))
+
+
+def edge_art_extent(client: "Client", W: int, road_y0: int) -> dict | None:
+	"""Tile-frame extent {x0, y0, x1, y1} (floats) of every vertex the edge-art exports draw (all theme versions),
+	placed by EDGE_PIECES. Geometry only: textures are not decoded. None when the extractor or the file is missing."""
+	try:
+		sys.path.insert(0, str(TOOLS_DIR))
+		import extract_from_apk as X  # noqa: PLC0415
+		X.need("zstandard")
+	except Exception:  # noqa: BLE001
+		return None
+	f = client.sc / "background.sc"
+	if not f.exists():
+		return None
+	raw = f.read_bytes()
+	if X.is_sc2(raw):
+		swf = X.parse_sc2(raw, "background")
+	else:
+		body, _ = X.decompress_sc(raw, "background")
+		swf = X.parse_sc(body, "background", is_tex=False)
+	ids = {}
+	for i, n in swf.exports:
+		ids.setdefault(n, i)
+	rend = X.Renderer(swf, drop_placeholders=False)
+	anchors = {"origin": (0, 0), "road": (0, road_y0), "road_east": (W - 1, road_y0)}
+	pfx = [""] + theme_postfixes(client)
+	x0 = y0 = math.inf
+	x1 = y1 = -math.inf
+	used = []
+	for export, rule in EDGE_PIECES:
+		ax, ay = anchors[rule]
+		for pf in pfx:
+			oid = ids.get(export + pf)
+			if oid is None:
+				continue
+			ops, _ = rend.display_list(oid, 0)
+			n = 0
+			for op in ops:
+				if op[0] != "draw":
+					continue
+				m = op[2]
+				for px, py in op[1].xy:
+					sx, sy = m[0] * px + m[2] * py + m[4], m[1] * px + m[3] * py + m[5]
+					# SC units -> tile frame: sx = (X - Y) * 64, sy = (X + Y) * 32 relative to the anchor tile
+					tx = ax + (sx / 64.0 + sy / 32.0) / 2.0
+					ty = ay + (sy / 32.0 - sx / 64.0) / 2.0
+					x0, x1, y0, y1 = min(x0, tx), max(x1, tx), min(y0, ty), max(y1, ty)
+					n += 1
+			if n:
+				used.append(export + pf)
+	if not used:
+		return None
+	return {"x0": round(x0, 2), "y0": round(y0, 2), "x1": round(x1, 2), "y1": round(y1, 2), "exports": len(used),
+		"rule": "edge exports placed by EDGE_PIECES (origin / road / road_east)"}
+
+
 class SkinComposer:
 	"""Compose a customizable landmark from customization part rows (port of the landmark research composer)."""
 
@@ -1817,7 +1892,8 @@ class SkinComposer:
 	@staticmethod
 	def _tint(t):
 		m, a = t["mul_pct"], t["add"]
-		mul = tuple(min(255.0, (v if v is not None else 100) * 2.55) for v in m) + (255.0,)
+		# percent -> 0..255 like the client: min(255, round(pct * 2.56)) (100 % -> 255, 50 % -> 128)
+		mul = tuple(float(min(255, round((v if v is not None else 100) * 2.56))) for v in m) + (255.0,)
 		add = tuple(min(255.0, float(v or 0)) for v in a)
 		return (mul, add)
 

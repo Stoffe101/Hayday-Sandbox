@@ -8,8 +8,8 @@ original placeholder art — no item has official artwork.
 
 | Category | Items | Footprint trusted | weak | unknown | Unlock level | Price | Art own | Art shared | No art | Reference only |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Production | 60 | 58 | 0 | 2 | 60 | 59 | 60 | 0 | 0 | 0 |
-| Farm buildings | 18 | 0 | 0 | 18 | 16 | 4 | 18 | 0 | 0 | 11 |
+| Production | 60 | 58 | 0 | 2 | 60 | 59 | 60 | 0 | 0 | 2 |
+| Farm buildings | 18 | 0 | 0 | 18 | 16 | 4 | 18 | 0 | 0 | 16 |
 | Animal homes | 18 | 8 | 0 | 10 | 18 | 18 | 18 | 0 | 0 | 0 |
 | Fields | 1 | 0 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
 | Fruit trees | 13 | 13 | 0 | 0 | 13 | 13 | 13 | 0 | 0 | 0 |
@@ -25,7 +25,7 @@ original placeholder art — no item has official artwork.
 | Other decorations | 888 | 871 | 0 | 17 | 864 | 70 | 138 | 750 | 0 | 0 |
 | Obstacles & scenery | 5 | 0 | 0 | 5 | 0 | 0 | 1 | 4 | 0 | 0 |
 | Planning markers | 5 | 5 | 0 | 0 | 0 | 0 | 5 | 0 | 0 | 0 |
-| **Total** | 1967 | 1906 | 1 | 60 | 1900 | 347 | 475 | 1492 | 0 | 11 |
+| **Total** | 1967 | 1906 | 1 | 60 | 1900 | 347 | 475 | 1492 | 0 | 18 |
 
 Of 1967 records, 52 have footprints marked *confirmed* (cross-checked wiki infoboxes),
 1849 *community* (single fan-wiki source), 60 have no known footprint.

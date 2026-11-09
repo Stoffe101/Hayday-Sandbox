@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c05hjyv8r82td"
-path="res://.godot/imported/mailbox_newspaper_neighborhood_letters.shadow.png-1ffa2d355e01b88ddf62685820712d06.ctex"
+uid="uid://df7kqlevvi7df"
+path="res://.godot/imported/mailbox.png-f2dbed64d4475f9de8deb1102fa94916.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/placeholders/items/mailbox_newspaper_neighborhood_letters.shadow.png"
-dest_files=["res://.godot/imported/mailbox_newspaper_neighborhood_letters.shadow.png-1ffa2d355e01b88ddf62685820712d06.ctex"]
+source_file="res://assets/placeholders/items/mailbox.png"
+dest_files=["res://.godot/imported/mailbox.png-f2dbed64d4475f9de8deb1102fa94916.ctex"]
 
 [params]
 

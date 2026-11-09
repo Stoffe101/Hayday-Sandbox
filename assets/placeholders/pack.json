@@ -20623,19 +20623,19 @@
   "field": {
    "file": "items/field.png",
    "anchor": [
-    124.0,
-    70.0
+    60.0,
+    38.0
    ],
    "shadow": {
     "file": "items/field.shadow.png",
     "anchor": [
-     127.0,
-     71.0
+     63.0,
+     39.0
     ]
    },
    "footprint": [
-    2,
-    2
+    1,
+    1
    ]
   },
   "fieldflower_patch": {
@@ -39047,14 +39047,14 @@
    ],
    "shared": true
   },
-  "mailbox_newspaper_neighborhood_letters": {
-   "file": "items/mailbox_newspaper_neighborhood_letters.png",
+  "mailbox": {
+   "file": "items/mailbox.png",
    "anchor": [
     23.0,
     77.0
    ],
    "shadow": {
-    "file": "items/mailbox_newspaper_neighborhood_letters.shadow.png",
+    "file": "items/mailbox.shadow.png",
     "anchor": [
      12.0,
      31.0

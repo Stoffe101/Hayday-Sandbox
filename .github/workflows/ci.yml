@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  validate:
+    name: Data & licence guard
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate manifests, maps, asset pack, samples; enforce art guard
+        run: python3 tools/ci/validate_data.py
+      - name: Catalogue coverage is up to date
+        run: |
+          python3 tools/catalog/coverage_report.py
+          git diff --exit-code docs/CATALOG_COVERAGE.md
+
+  godot-tests:
+    name: Godot tests (headless)
+    runs-on: ubuntu-24.04
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot
+        run: |
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          godot --version
+      - name: Import project
+        run: godot --headless --path . --import || true
+      - name: Compile every script
+        run: godot --headless --path . --script res://tools/ci/check_scripts.gd
+      - name: Unit tests
+        run: godot --headless --path . --script res://tests/run_tests.gd -- --junit=unit-tests.xml
+      - name: In-app integration self-test
+        run: godot --headless --path . -- --selftest | tee selftest.log && grep -q "SELFTEST PASS" selftest.log
+      - name: Performance benchmark
+        run: godot --headless --path . -- --selftest=perf | tee perf.log && grep -q "SELFTEST PASS" perf.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            unit-tests.xml
+            selftest.log
+            perf.log
+
+  visual:
+    name: Visual screenshots (Xvfb, software GL)
+    runs-on: ubuntu-24.04
+    needs: godot-tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot + Xvfb
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1 libegl1 mesa-utils > /dev/null
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+      - run: godot --headless --path . --import || true
+      - name: Capture screenshots (1080p, 1440p@125%, ultrawide, 4K@200%)
+        run: tools/ci/visual_tests.sh all
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: artifacts/screens
+
+  windows-build:
+    name: Windows build
+    runs-on: ubuntu-24.04
+    needs: godot-tests
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot
+        run: |
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-templates-${{ env.GODOT_VERSION }}
+      - name: Export Windows (+ Linux verification build) and self-test the export
+        run: tools/build/build.sh release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HaydaySandbox-windows-x86_64
+          path: build/HaydaySandbox-windows-x86_64.zip

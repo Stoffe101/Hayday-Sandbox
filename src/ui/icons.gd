@@ -33,7 +33,10 @@ static func get_icon(name: String, size: int = 20) -> Texture2D:
 		# Lucide's viewBox is 24px.
 		var px_scale := float(size) * scale / 24.0 * 1.0
 		if img.load_svg_from_string(svg, px_scale) == OK:
-			tex = ImageTexture.create_from_image(img)
+			var it := ImageTexture.create_from_image(img)
+			# High-res pixels, logical-size layout: crisp at any UI scale.
+			it.set_size_override(Vector2i(size, size))
+			tex = it
 	_cache[key] = tex
 	return tex
 

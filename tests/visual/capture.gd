@@ -63,7 +63,7 @@ func _reset() -> void:
 		c.queue_free()
 	var s = _app().session
 	if s:
-		s.layout.mode = FarmLayout.MODE_CREATIVE
+		s.set_mode(FarmLayout.MODE_CREATIVE)
 		s.layout.reference = {}
 		main._load_reference()
 		main.overlay.diff = {}

@@ -66,10 +66,21 @@ func _ready() -> void:
 		var drv: Variant = load("res://tests/visual/capture.gd")
 		if drv:
 			add_child(drv.new())
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--selftest"):
+			var st: Variant = load("res://tests/integration/app_selftest.gd")
+			if st:
+				var node: Node = st.new()
+				node.set("mode", a.get_slice("=", 1) if a.contains("=") else "all")
+				add_child(node)
+			else:
+				print("SELFTEST UNAVAILABLE (tests not packaged)")
+				get_tree().quit(3)
 
 
 func _is_automation() -> bool:
-	return OS.get_cmdline_user_args().has("--no-welcome") or OS.get_cmdline_user_args().has("--capture") or DisplayServer.get_name() == "headless"
+	var args := OS.get_cmdline_user_args()
+	return args.has("--no-welcome") or args.has("--capture") or DisplayServer.get_name() == "headless" or "--selftest" in " ".join(args)
 
 
 # ---------------------------------------------------------------------------

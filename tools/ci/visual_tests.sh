@@ -5,9 +5,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 SCEN="${1:-all}"; shift || true
-CONFIGS=("${@:-1920x1080:1 2560x1440:1.25 3440x1440:1 3840x2160:2}")
 [ "$#" -gt 0 ] && CONFIGS=("$@") || CONFIGS=(1920x1080:1 2560x1440:1.25 3440x1440:1 3840x2160:2)
-OUT="artifacts/screens"; mkdir -p "$OUT"
+OUT="artifacts/screens"; mkdir -p "$OUT"; touch artifacts/.gdignore
 GODOT="${GODOT:-godot}"
 fail=0
 for cfg in "${CONFIGS[@]}"; do

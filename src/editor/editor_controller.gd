@@ -625,7 +625,35 @@ func _toggle_plot(pid: String, all_mode: bool) -> void:
 	session.execute(EditCommands.SetLand.new(old, new_list, label))
 
 
+func annotation_at(t: Vector2i) -> int:
+	## Index of the topmost annotation covering tile t, or -1.
+	for i in range(session.layout.annotations.size() - 1, -1, -1):
+		var a: Dictionary = session.layout.annotations[i]
+		var r: Array = a.get("rect", [0, 0, 1, 1])
+		if Rect2i(int(r[0]), int(r[1]), int(r[2]), int(r[3])).has_point(t):
+			return i
+	return -1
+
+
+func _edit_annotation(idx: int) -> void:
+	var a: Dictionary = session.layout.annotations[idx]
+	request_text.emit("Edit note (clear the text to delete it)", str(a.get("text", "")), func(text: String):
+		var old := session.layout.annotations.duplicate(true)
+		var list := session.layout.annotations.duplicate(true)
+		if text.strip_edges().is_empty():
+			list.remove_at(idx)
+			session.execute(EditCommands.SetAnnotations.new(old, list, "Delete note"))
+		else:
+			list[idx]["text"] = text.strip_edges()
+			session.execute(EditCommands.SetAnnotations.new(old, list, "Edit note")))
+
+
 func _create_annotation(r: Rect2i, as_zone: bool) -> void:
+	if not as_zone:
+		var existing := annotation_at(r.position)
+		if existing >= 0:
+			_edit_annotation(existing)
+			return
 	var kind := "zone" if as_zone else "label"
 	request_text.emit("Zone name" if as_zone else "Note text", "", func(text: String):
 		if text.strip_edges().is_empty() and not as_zone:

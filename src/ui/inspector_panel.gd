@@ -212,6 +212,8 @@ func _landmark_look(s: EditorSession, lm: Landmark) -> void:
 		var ob := OptionButton.new()
 		ob.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		ob.focus_mode = Control.FOCUS_NONE
+		ob.fit_to_longest_item = false
+		ob.clip_text = true
 		ob.tooltip_text = "How it looks in this design (Ctrl+Z undoes)"
 		for st in lm.states:
 			ob.add_item(LandmarkView.state_name(st) + (" (default)" if st == lm.default_state else ""))
@@ -228,6 +230,8 @@ func _landmark_look(s: EditorSession, lm: Landmark) -> void:
 		var sk := OptionButton.new()
 		sk.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		sk.focus_mode = Control.FOCUS_NONE
+		sk.fit_to_longest_item = false
+		sk.clip_text = true
 		var cur := LandmarkView.skin_of(lm, s.layout)
 		for c in LandmarkView.skin_choices(lm):
 			sk.add_item(str(c["name"]))
@@ -603,6 +607,8 @@ func _build_world_section(s: EditorSession) -> void:
 	var ob := OptionButton.new()
 	ob.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	ob.focus_mode = Control.FOCUS_NONE
+	ob.fit_to_longest_item = false
+	ob.clip_text = true
 	var themes := LandmarkView.themes_with_art(s.map, App.assets)
 	var cur := s.layout.theme()
 	for t in themes:
@@ -626,6 +632,8 @@ func _build_world_section(s: EditorSession) -> void:
 		var jump := OptionButton.new()
 		jump.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		jump.focus_mode = Control.FOCUS_NONE
+		jump.fit_to_longest_item = false
+		jump.clip_text = true
 		jump.add_item("Go to… (%d)" % s.map.landmarks.size())
 		jump.set_item_metadata(0, "")
 		var lms := s.map.landmarks.duplicate()
@@ -644,6 +652,7 @@ func _build_world_section(s: EditorSession) -> void:
 				continue
 			var cb := CheckButton.new()
 			cb.text = "Show %s" % lm.name
+			cb.clip_text = true
 			cb.button_pressed = LandmarkView.is_visible(lm, s.layout)
 			cb.tooltip_text = "Only there sometimes in the game (hidden by default)"
 			cb.toggled.connect(func(on): action.emit("landmark_visible", [lm.id, on]))

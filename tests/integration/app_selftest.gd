@@ -1278,6 +1278,18 @@ func _world_ui_check() -> void:
 	check(s.selected_landmark == "farmhouse" and s.selection.is_empty(), "clicking the farmhouse selects the landmark (not an object)")
 	main.inspector.rebuild()
 	check(main.inspector.landmark_card_id == "farmhouse" and main.overlay.landmark_selected == fh.rect(), "inspector shows the farmhouse card; selection outline drawn")
+	var sk: OptionButton = main.inspector.landmark_skin_option
+	if sk != null and sk.item_count > 1:
+		# Private packs: a skin preset is an undoable world-state change.
+		var sid := str(sk.get_item_metadata(1))
+		sk.select(1)
+		sk.item_selected.emit(1)
+		await _frames(1)
+		var v := str(main.renderer.world_entry(key).get("variant", ""))
+		check(s.layout.landmark_skin("farmhouse") == sid and (v.begins_with("skin_" + sid) or not App.assets.variants_of(fh.art).has("skin_" + sid)),
+			"skin preset “%s” applied (variant %s)" % [sid, v])
+		_key(KEY_Z, true)
+		check(s.layout.landmark_skin("farmhouse", "original") == "original", "Ctrl+Z restores the original skin")
 	var snap := _snapshot_objects()
 	var steps := s.stack.size()
 	var origin0 := fh.origin

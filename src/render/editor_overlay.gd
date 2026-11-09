@@ -64,12 +64,14 @@ func _draw() -> void:
 		var o := layout.get_obj(u)
 		if o == null:
 			continue
-		var c := Color(0.95, 0.3, 0.2, 0.9) if issues[u] >= 2 else Color(0.98, 0.7, 0.15, 0.9)
 		var poly := Iso.footprint_polygon(o.origin, o.size)
-		var fill := c
-		fill.a = 0.16
-		draw_colored_polygon(poly, fill)
-		_outline(poly, c, 2.0)
+		if issues[u] >= 2:
+			var c := Color(0.95, 0.3, 0.2, 0.9)
+			draw_colored_polygon(poly, Color(c.r, c.g, c.b, 0.16))
+			_outline(poly, c, 2.0)
+		else:
+			# Warnings (e.g. unverified footprint) stay subtle.
+			_dashed(poly, Color(0.98, 0.72, 0.2, 0.55))
 	# Selection
 	var sel_fill := accent
 	sel_fill.a = 0.20

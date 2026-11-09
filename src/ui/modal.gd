@@ -36,7 +36,8 @@ func _build(title: String, width: float, icon: String) -> void:
 	add_child(center)
 	card = PanelContainer.new()
 	card.theme_type_variation = "Modal"
-	card.custom_minimum_size.x = width
+	# Never wider than the window (small windows, large UI scales).
+	card.custom_minimum_size.x = minf(width, get_viewport_rect().size.x - 32.0)
 	center.add_child(card)
 	var v := UI.vbox(14)
 	card.add_child(v)

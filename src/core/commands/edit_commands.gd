@@ -49,7 +49,7 @@ class RemoveObjects extends Command:
 		var copies: Array = []
 		for o: PlacedObject in _removed:
 			copies.append(o.duplicate_obj())
-		layout.add_objects(copies)
+		layout.add_objects(copies, true, true)   # put back exactly what was removed
 
 	func is_noop() -> bool:
 		return _uids.is_empty()

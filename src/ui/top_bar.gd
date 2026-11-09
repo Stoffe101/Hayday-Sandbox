@@ -22,6 +22,10 @@ var _undo: Button
 var _redo: Button
 var _left_toggle: Button
 var _right_toggle: Button
+var _brand: Label
+var _brand_sep: VSeparator
+var _issues_btn: Button
+var _compact := -1
 
 
 func _ready() -> void:
@@ -35,14 +39,16 @@ func _ready() -> void:
 	h.add_child(_left_toggle)
 	var logo := UI.icon_rect("tent-tree", 22, UiTheme.c("accent"))
 	h.add_child(logo)
-	var brand := UI.label("Hayday Sandbox", "Heading")
-	h.add_child(brand)
-	h.add_child(VSeparator.new())
+	_brand = UI.label("Hayday Sandbox", "Heading")
+	h.add_child(_brand)
+	_brand_sep = VSeparator.new()
+	h.add_child(_brand_sep)
 	_name_btn = UI.button("Untitled farm", "pencil", "Rename layout", "Ghost")
 	_name_btn.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_name_btn.pressed.connect(func(): action.emit("rename"))
 	_name_btn.custom_minimum_size.x = 180
 	_name_btn.clip_text = true
+	_name_btn.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_name_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	h.add_child(_name_btn)
 	_dirty = UI.label("●", "Faint")
@@ -66,6 +72,15 @@ func _ready() -> void:
 	_level_btn.pressed.connect(_open_level_popup)
 	sh.add_child(_level_btn)
 	h.add_child(seg)
+	# Problems in the design (conflicts, Realistic blockers): one button that
+	# opens the grouped list instead of outlining every object in red.
+	_issues_btn = UI.button("", "circle-x", "", "Ghost")
+	_issues_btn.add_theme_color_override("icon_normal_color", UiTheme.c("warn"))
+	_issues_btn.add_theme_color_override("font_color", UiTheme.c("warn"))
+	_issues_btn.add_theme_color_override("icon_hover_color", UiTheme.c("warn"))
+	_issues_btn.visible = false
+	_issues_btn.pressed.connect(func(): action.emit("issues"))
+	h.add_child(_issues_btn)
 	h.add_child(UI.spacer())
 	_undo = UI.icon_button("undo-2", "Undo (Ctrl+Z)")
 	_undo.pressed.connect(func(): action.emit("undo"))
@@ -101,9 +116,50 @@ func update_state(s: EditorSession) -> void:
 	_redo.tooltip_text = "Redo %s (Ctrl+Shift+Z)" % s.stack.redo_label() if s.stack.can_redo() else "Nothing to redo"
 
 
-func set_panels(left: bool, right: bool) -> void:
-	_left_toggle.button_pressed = left
-	_right_toggle.button_pressed = right
+func set_panels(left: bool, right: bool, right_auto: bool = false) -> void:
+	_left_toggle.set_pressed_no_signal(left)
+	_right_toggle.set_pressed_no_signal(right)
+	_left_toggle.tooltip_text = "Collapse the catalogue to its rail ([ · Tab hides all panels)" if left else "Expand the catalogue ([)"
+	if right_auto:
+		_right_toggle.tooltip_text = "Hide the inspector (])" if right else "Show the inspector (]) — it also opens by itself when you select or place something"
+	else:
+		_right_toggle.tooltip_text = "Hide the inspector (])" if right else "Show the inspector (])"
+
+
+func set_issues(count: int, tip: String) -> void:
+	## "3 issues" button (hidden at 0).
+	_issues_btn.visible = count > 0
+	_issues_btn.text = "" if _compact >= 2 else ("%s issue%s" % [UI.fmt_int(count), "" if count == 1 else "s"])
+	_issues_btn.set_meta("count", count)
+	_issues_btn.tooltip_text = tip
+
+
+func issues_count() -> int:
+	return int(_issues_btn.get_meta("count", 0)) if _issues_btn.visible else 0
+
+
+func fit_width(avail: float) -> void:
+	## Picks the least compact level whose content fits `avail` (re-run when the
+	## window, the layout name or the issues button change).
+	for lvl in 3:
+		set_compact(lvl)
+		if get_combined_minimum_size().x <= avail:
+			return
+
+
+func set_compact(level: int) -> void:
+	## 0 = full; 1 = no brand text; 2 = also icon-only mode switch and a
+	## shorter name (narrow windows / large UI scales).
+	if level == _compact:
+		return
+	_compact = level
+	_brand.visible = level < 1
+	_brand_sep.visible = level < 1
+	_name_btn.custom_minimum_size.x = 180 if level < 2 else 112
+	_mode_creative.text = "Creative" if level < 2 else ""
+	_mode_real.text = "Realistic" if level < 2 else ""
+	if _issues_btn.visible:
+		set_issues(int(_issues_btn.get_meta("count", 0)), _issues_btn.tooltip_text)
 
 
 # ---------------------------------------------------------------------------

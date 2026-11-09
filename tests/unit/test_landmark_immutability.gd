@@ -370,6 +370,7 @@ func test_world_state_edits_are_undoable_and_leave_geometry_alone() -> void:
 	assert_false(s.set_landmark_state("house", "no_such_state"))
 	assert_true(s.set_landmark_state("house", "fixed"))
 	assert_eq(layout.landmark_state("house", "?"), "?", "default state is stored as 'no override'")
+	map.landmark("dock").transient = true   # only landmarks that come and go can be hidden
 	assert_true(s.set_landmark_visible("dock", false))
 	assert_false(layout.is_landmark_visible("dock"))
 	assert_true(s.set_landmark_skin("house", "original"))
@@ -384,3 +385,137 @@ func test_world_state_edits_are_undoable_and_leave_geometry_alone() -> void:
 	assert_true(layout.is_landmark_visible("dock"))
 	assert_eq(_objects_json(), before)
 	_invariants("world state")
+
+
+# --- regressions found by the integration audit ---------------------------------------
+
+func test_permanent_landmarks_cant_be_hidden() -> void:
+	## Hiding a permanent landmark removes it from the farm (not drawn, not
+	## pickable, and the UI offers no switch to bring it back). Neither the
+	## session nor a crafted / imported layout file may do that.
+	var steps := s.stack.size()
+	assert_false(map.landmark("house").can_hide())
+	assert_false(s.set_landmark_visible("house", false), "a permanent landmark refuses to hide")
+	assert_eq(s.stack.size(), steps, "no command")
+	assert_has(str(msgs.back()[0]), "can't be removed")
+	assert_true(layout.is_landmark_visible("house"))
+	# A file that says "hidden" anyway: the value is kept in the file, the landmark stays.
+	var d := LayoutIO.to_dict(layout)
+	d["world"]["landmark_visible"] = {"house": false, "dock": false}
+	var back := LayoutIO.from_dict(d, db, null, map)
+	assert_true(LandmarkView.is_visible(map.landmark("house"), back), "the house is drawn whatever the file says")
+	assert_true(LandmarkView.is_visible(map.landmark("dock"), back))
+	for e: Dictionary in LandmarkView.entries_for(map, back, null):
+		assert_true(bool(e["visible"]), "%s visible" % e["key"])
+	assert_eq(LayoutIO.to_dict(back)["world"]["landmark_visible"], {"house": false, "dock": false}, "the saved value round-trips untouched")
+	# A transient landmark still follows the layout.
+	map.landmark("dock").transient = true
+	assert_false(LandmarkView.is_visible(map.landmark("dock"), back))
+	map.landmark("dock").transient = false
+	_invariants("hide")
+
+
+func test_undo_of_delete_restores_objects_the_world_now_owns() -> void:
+	## A world change while the layout is open (e.g. a private pack whose
+	## landmark replaces an item already on the farm) makes that item "fixed".
+	## The objects stay; deleting one and undoing must bring it back exactly
+	## (undo used to be refused by FarmLayout.add_objects -> silent loss).
+	var lamp := _uid_of("t_lamp")
+	var before := _objects_json()
+	var m2 := FarmMap.load_file(WORLD)
+	m2.landmark("dock").replaces_items = PackedStringArray(["t_lamp"])
+	s.set_map(m2)
+	assert_true(s.is_fixed_item("t_lamp"), "the lamp is now a landmark copy")
+	assert_false(s.can_move_object(layout.get_obj(lamp)))
+	s.select([lamp])
+	s.delete_selection()
+	assert_null(layout.get_obj(lamp), "a landmark copy left over in the layout can be removed")
+	s.stack.undo()
+	assert_not_null(layout.get_obj(lamp), "undo brings it back")
+	assert_eq(_objects_json(), before, "exactly as it was")
+	s.stack.redo()
+	assert_null(layout.get_obj(lamp))
+	s.stack.undo()
+	# A NEW copy is still refused.
+	assert_eq(s.place_objects([make_obj(db.get_item("t_lamp"), Vector2i(0, 12))], "t"), [])
+	s.execute(EditCommands.AddObjects.new([make_obj(db.get_item("t_lamp"), Vector2i(1, 12))]))
+	assert_eq(_objects_json(), before, "raw AddObjects still can't add a landmark copy")
+
+
+func test_ordinary_buildings_and_plants_are_not_fixed() -> void:
+	## With the public catalogue and map: barn, silo, production buildings,
+	## animal homes, fields, trees, bushes and decorations are never treated as
+	## landmarks: they can be placed, moved, rotated (when flippable), copied
+	## and removed. Only catalogue entries tagged as landmark copies are fixed.
+	var pdb := ItemDatabase.new()
+	pdb.load_default()
+	var pub := WorldLoader.load("res://data/maps/hayday_farm.json", [], "")
+	var ps := EditorSession.new(FarmLayout.new(), pdb, pub)
+	var per_cat := {}
+	for it: ItemDef in pdb.ordered:
+		var tagged := not it.landmark.is_empty() or not it.landmarks.is_empty()
+		assert_eq(ps.is_fixed_item(it.id), tagged or not LayoutIO.landmark_of(it.id, it, pub).is_empty(), "%s fixed only if it is a landmark copy" % it.id)
+		if tagged:
+			continue
+		per_cat[it.category] = int(per_cat.get(it.category, 0)) + 1
+		if it.category in ["animal_home", "bush", "field", "fruit_tree", "decoration", "production", "farm_building", "flowers", "fence", "path"]:
+			var o := make_obj(it, Vector2i(0, 0))
+			assert_true(ps.can_remove_object(o), "%s removable" % it.id)
+			assert_eq(ps.can_move_object(o), it.movable, "%s movable" % it.id)
+			if it.can_place():
+				assert_true(ps.can_copy_object(o), "%s copyable" % it.id)
+	for cat in ["animal_home", "bush", "field", "fruit_tree", "decoration", "production", "farm_building"]:
+		assert_true(int(per_cat.get(cat, 0)) > 0, "catalogue has ordinary %s items" % cat)
+	# The concrete ones, edited on the real map (approximate landmarks don't block).
+	var lay := ps.layout
+	lay.set_unlocked(pub.all_plot_ids(), false)
+	for id in ["barn", "silo", "bakery", "chicken_coop", "field", "apple_tree", "raspberry_bush", "fence"]:
+		var it := pdb.get_item(id)
+		assert_not_null(it, id)
+		if it == null:
+			continue
+		var at := Vector2i(-1, -1)
+		var room := it.size_for(false) + Vector2i(2, 2)
+		for y in range(0, pub.size.y - room.y):
+			for xx in range(0, pub.size.x - room.x):
+				if at.x < 0 and PlacementRules.check_rect(lay, pub, Rect2i(Vector2i(xx, y), room)).ok:
+					at = Vector2i(xx, y) + Vector2i.ONE
+		assert_true(at.x >= 0, "%s: room found" % id)
+		var uids := ps.place_objects([make_obj(it, at)], "Place " + id)
+		assert_eq(uids.size(), 1, "%s placed" % id)
+		ps.select(uids)
+		assert_true(ps.nudge(Vector2i(0, 1)) or ps.nudge(Vector2i(0, -1)), "%s moves" % id)
+		assert_eq(ps.copy_selection(), 1, "%s copies" % id)
+		if it.flippable:
+			ps.flip_selection()
+			assert_true(lay.get_obj(uids[0]).flipped, "%s rotates" % id)
+		ps.delete_selection()
+		assert_null(lay.get_obj(uids[0]), "%s removed" % id)
+		ps.stack.undo()
+		assert_not_null(lay.get_obj(uids[0]), "%s back after undo" % id)
+		assert_false(lay.get_obj(uids[0]).locked, "%s not locked" % id)
+
+
+func test_cut_removes_only_what_was_copied() -> void:
+	## Ctrl+X on a mixed selection: objects that can't be copied (here an item
+	## of another area, already on the farm from an old file) must stay put.
+	var lake := PlacedObject.new()
+	lake.item_id = "w_lake"
+	lake.origin = Vector2i(0, 12)
+	lake.size = Vector2i(2, 2)
+	layout.add_objects([lake])
+	var lamp := _uid_of("t_lamp")
+	s.select([lamp, lake.uid])
+	var steps := s.stack.size()
+	assert_eq(s.cut_selection(), 1, "only the lamp is copied")
+	assert_eq(s.clipboard.size(), 1)
+	assert_null(layout.get_obj(lamp), "the copied lamp is cut")
+	assert_not_null(layout.get_obj(lake.uid), "the uncopyable object stays on the farm")
+	assert_eq(s.stack.size(), steps + 1, "one undo step")
+	s.stack.undo()
+	assert_not_null(layout.get_obj(lamp))
+	# A selected landmark: nothing is cut.
+	s.select_landmark("house")
+	assert_eq(s.cut_selection(), 0)
+	assert_eq(s.stack.size(), steps, "no command")
+	_invariants("cut")

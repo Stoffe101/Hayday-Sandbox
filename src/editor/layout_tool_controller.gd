@@ -30,9 +30,20 @@ var _augmented: Array = []
 func setup(ctrl: Node, ov: EditorOverlay, tool_dock: ToolDock, world: Node, ui_root: Control, modal_parent: Control) -> void:
 	controller = ctrl
 	overlay = ov
-	dock = tool_dock
 	tool_overlay = ToolOverlay.new()
 	world.add_child(tool_overlay)
+	attach_ui(tool_dock, ui_root, modal_parent)
+
+
+func attach_ui(tool_dock: ToolDock, ui_root: Control, modal_parent: Control) -> void:
+	## (Re)connects the dock and builds the stamps panel in `ui_root`. main.gd
+	## calls it again after rebuilding the UI (theme / UI scale change): the old
+	## dock and panel are freed with the old UI.
+	if dock != null and is_instance_valid(dock) and dock.tool_action.is_connected(_on_dock):
+		dock.tool_action.disconnect(_on_dock)
+	if panel != null and is_instance_valid(panel) and not panel.is_queued_for_deletion():
+		panel.queue_free()
+	dock = tool_dock
 	panel = StampsPanel.new()
 	panel.tools = self
 	panel.modal_parent = modal_parent
@@ -48,6 +59,7 @@ func setup(ctrl: Node, ov: EditorOverlay, tool_dock: ToolDock, world: Node, ui_r
 	ui_root.add_child(panel)
 	ui_root.move_child(panel, modal_parent.get_index())
 	dock.tool_action.connect(_on_dock)
+	dock.set_repeat_values(repeat_params)
 
 
 func bind(s: EditorSession) -> void:
@@ -194,6 +206,8 @@ func set_repeat_open(on: bool) -> void:
 
 func set_repeat_params(p: Dictionary) -> void:
 	repeat_params.merge(p, true)
+	if dock:
+		dock.set_repeat_values(repeat_params)
 	if mode == "repeat":
 		_update_repeat_preview()
 

@@ -194,7 +194,9 @@ static func from_dict(d: Dictionary, db: ItemDatabase, report: LoadReport = null
 		report.migrated_from = ver
 		data = migrate(data, ver, db, map)
 		var mig: Variant = data.get("migration")
-		if mig is Dictionary:
+		# The "migration" record describes the 1 -> 2 upgrade: report it only when
+		# this load ran that step (a v2 file keeps the record of an earlier upgrade).
+		if mig is Dictionary and ver < 2:
 			var sb: Variant = mig.get("shifted_by", [0, 0])
 			if sb is Array and (sb as Array).size() == 2:
 				report.shifted = Vector2i(int(sb[0]), int(sb[1]))
@@ -298,7 +300,7 @@ static func from_dict(d: Dictionary, db: ItemDatabase, report: LoadReport = null
 		var ru: Array = []
 		for o: PlacedObject in review:
 			ru.append(o.uid)
-		if ver < SCHEMA_VERSION:
+		if ver < 2:   # flagged by this load's 1 -> 2 step; a v2 file keeps its saved list
 			l.migration["review_uids"] = ru
 			report.review_uids = ru.duplicate()
 	# --- footprint source (which catalogue the sizes were reconciled with) ---
@@ -613,14 +615,24 @@ static func backup_original(path: String) -> String:
 	## If `path` holds a pre-v2 layout and no backup exists yet, copies its
 	## original bytes to backup_path_for(path, <its version>). Returns the backup
 	## path (existing or new), "" when no backup is needed, or "error:<message>"
-	## when the copy failed.
+	## when the copy failed. When `path` is missing or unreadable, the intact
+	## .tmp/.bak a load recovered from is the original that gets kept (the save
+	## would otherwise rotate it away).
 	var ver := file_schema_version(path)
+	if ver >= SCHEMA_VERSION:
+		return ""
+	var src := path
+	if ver < 0 or JsonUtil.parse(JsonUtil.read_text(path)) == null:
+		src = JsonUtil.recover(path)
+		if src.is_empty() or src == path:
+			return ""
+		ver = file_schema_version(src)
 	if ver < 0 or ver >= SCHEMA_VERSION:
 		return ""
 	var bk := backup_path_for(path, ver)
 	if FileAccess.file_exists(bk):
 		return bk
-	var err := DirAccess.copy_absolute(path, bk)
+	var err := DirAccess.copy_absolute(src, bk)
 	if err != OK:
 		return "error:%s" % error_string(err)
 	return bk
@@ -630,7 +642,7 @@ static func save_file(l: FarmLayout, path: String) -> Error:
 	## Atomic save. A pre-v2 layout file is never overwritten without keeping
 	## its original bytes as `<file>.v<N>-backup` first (the first save over a
 	## migrated file); if that copy fails nothing is written.
-	if FileAccess.file_exists(path):
+	if FileAccess.file_exists(path) or FileAccess.file_exists(path + ".bak") or FileAccess.file_exists(path + ".tmp"):
 		var bk := backup_original(path)
 		if bk.begins_with("error:"):
 			push_warning("Not saving %s: could not keep a backup of the old file (%s)" % [path, bk.substr(6)])

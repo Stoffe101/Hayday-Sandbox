@@ -2,46 +2,80 @@ class_name Dialogs
 extends RefCounted
 ## Export, settings, help/shortcuts, welcome and load-report dialogs.
 
+## Keys and gestures, checked against main.gd (_unhandled_input), EditorController
+## and LayoutToolController. ["Section", ""] starts a section.
 const SHORTCUTS := [
 	["Tools", ""],
-	["V", "Select & move"], ["B", "Place / paint (with catalogue item)"], ["E", "Erase (Shift-drag clears an area)"],
-	["I / Alt+click", "Eyedropper"], ["M", "Land: lock / unlock plots"], ["N", "Notes & zones (drag for a zone)"], ["H / Space-drag / middle-drag / right-drag", "Pan"],
+	["V", "Select & move"], ["B", "Place / paint (with a catalogue item)"], ["E", "Erase (Shift-drag clears an area)"],
+	["I / Alt+click", "Eyedropper: pick up the item under the cursor"], ["M", "Land: lock / unlock plots"],
+	["N", "Notes & zones (drag for a zone)"], ["D", "Pan tool"],
+	["Space-drag / middle-drag / right-drag", "Pan with any tool"],
 	["Placing", ""],
 	["Click / drag", "Place / paint repeatedly"], ["Shift+drag", "Line of items"], ["Ctrl+drag", "Rectangle fill"],
-	["R", "Rotate (mirror) where the game allows it"], ["P", "Toggle planned (future) placement"], ["Esc / right-click", "Stop placing"],
+	["Line / Fill / Outline (inspector)", "Brush shape; Outline draws a fence or path ring in one drag"],
+	["R", "Rotate (mirror) where the game allows it"], ["P", "Toggle planned (future) placement"],
+	["Esc / right-click", "Stop placing"],
+	["Selecting", ""],
+	["Click / Shift+click", "Select / add to the selection"], ["Drag on empty ground", "Box select"],
+	["Click again on the same spot", "Select the object behind it (cycles through the stack)"],
+	["Right-click", "Menu with “Objects here”: pick any of the overlapping objects"],
+	["Double-click", "Select all of that item"],
+	["Click a landmark", "Farmhouse, truck, shop…: details and look (they are fixed in place)"],
 	["Editing", ""],
-	["Click / Shift+click", "Select / add to selection"], ["Drag on empty ground", "Box select"], ["Double-click", "Select all of that item"],
+	["Drag", "Move the selection (red tiles and chips explain a blocked spot)"],
+	["Alt while dragging", "Toggle “snap to free space” (Settings sets the default)"],
 	["Arrow keys", "Nudge selection (↑ NE, → SE, ↓ SW, ← NW)"], ["Delete / Backspace", "Delete selection"],
 	["Ctrl+C / Ctrl+X / Ctrl+V", "Copy / cut / paste (click to stamp, Esc to stop)"], ["Ctrl+D", "Duplicate selection"],
 	["Ctrl+A", "Select all"], ["Ctrl+G / Ctrl+Shift+G", "Group / ungroup"], ["L", "Lock / unlock selection"],
 	["Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y", "Undo / redo"],
-	["Click a landmark", "Farmhouse, truck, shop…: details, state and look (they are fixed in place)"],
-	["View & file", ""],
-	["Mouse wheel / + / -", "Zoom"], ["F / Shift+F", "Fit the selection or farm / the whole world"], ["H / Home", "Home: centre the farmhouse"],
-	["1…9 / Ctrl+1…9", "Go to / save a view"], ["Click again on the same spot", "Select the object behind (right-click lists all)"], ["D or hold Space", "Pan tool / pan"], ["G", "Grid"], ["O", "Occupied-tile overlay"], ["Tab", "Hide / show panels"],
-	["Ctrl+F", "Search catalogue"], ["Ctrl+M", "Switch Creative / Realistic"], ["Ctrl+S", "Save (keeps a revision)"], ["Ctrl+O", "Layouts"],
-	["Ctrl+N", "New layout"], ["Ctrl+E", "Export image"], ["Ctrl+Shift+A", "Asset manager (art, anchors, review)"], ["F1", "This help"],
+	["Layout tools", ""],
+	["Symmetry (dock)", "Placing also places a mirrored copy; pick the mirror line in the row above the dock"],
+	["Repeat (selection row)", "Copy the selection as an N × M array with gaps, previewed; Apply = one undo step"],
+	["Align (selection row)", "Line up 2+ objects along or across the road"],
+	["Equal ↔ / Equal ↕", "Distribute 3+ objects with equal gaps"],
+	["Stamps (dock) / Save stamp", "Keep a selection as a reusable group; click to place copies, Esc stops"],
+	["View", ""],
+	["Mouse wheel / + / -", "Zoom"], ["F / Shift+F", "Fit the selection (or the farm) / the whole world"],
+	["H / Home", "Home: centre the farmhouse"], ["1 … 9 / Ctrl+1 … 9", "Go to / save a view (saved with the layout)"],
+	["G", "Grid"], ["O", "Occupied-tile overlay"],
+	["[ / ]", "Collapse the catalogue to its rail / show or hide the inspector"], ["Tab", "Hide / show all panels"],
+	["File & app", ""],
+	["Ctrl+F", "Search catalogue"], ["Ctrl+M", "Switch Creative / Realistic"], ["Ctrl+S", "Save (keeps a revision)"],
+	["Ctrl+O", "Layouts"], ["Ctrl+N", "New layout"], ["Ctrl+E", "Export image"],
+	["Ctrl+Shift+A", "Asset manager (art, anchors, review)"], ["F1 / ?", "This help"],
 ]
 
 
 static func help(parent: Control) -> void:
-	var m := Modal.open(parent, "Keyboard shortcuts", 760, "keyboard")
+	var vs := parent.get_viewport_rect().size
+	var w := minf(900.0, vs.x - 48.0)
+	var m := Modal.open(parent, "Keyboard shortcuts", w, "keyboard")
+	m.set_meta("help", true)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(700, 520)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(0, clampf(vs.y - 260.0, 200.0, 620.0))
 	var grid := GridContainer.new()
 	grid.columns = 2
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	grid.add_theme_constant_override("h_separation", 24)
 	grid.add_theme_constant_override("v_separation", 6)
+	var key_w := clampf(w * 0.36, 150.0, 300.0)
 	for s in SHORTCUTS:
 		if s[1].is_empty():
-			grid.add_child(UI.section(s[0]))
+			var sec := UI.section(s[0])
+			sec.custom_minimum_size.y = 26
+			sec.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+			grid.add_child(sec)
 			grid.add_child(Control.new())
 			continue
-		var k := UI.label(s[0], "Heading")
+		var k := UI.label(s[0], "Heading", true)
+		k.custom_minimum_size.x = key_w
 		k.add_theme_font_size_override("font_size", 14)
 		k.add_theme_color_override("font_color", UiTheme.c("accent"))
 		grid.add_child(k)
-		grid.add_child(UI.label(s[1], "Dim"))
+		var d := UI.label(s[1], "Dim", true)
+		d.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(d)
 	scroll.add_child(grid)
 	m.body.add_child(scroll)
 	var about := UI.label("Hayday Sandbox %s — unofficial, offline fan tool. Not affiliated with, endorsed, sponsored or approved by Supercell. Placeholder art is original. Item facts come from community wikis (see the Farm tab sources)." % App.VERSION, "Faint", true)
@@ -166,6 +200,12 @@ static func settings(parent: Control, on_change: Callable) -> void:
 	wz.selected = maxi(0, wheel_steps.find(float(s.get_v("wheel_zoom_factor"))))
 	wz.item_selected.connect(func(i): s.set_v("wheel_zoom_factor", wheel_steps[i]))
 	grid.add_child(wz)
+	grid.add_child(UI.label("Inspector hides when not needed", "Dim"))
+	var ah := CheckButton.new()
+	ah.button_pressed = bool(s.get_v("inspector_auto_hide"))
+	ah.tooltip_text = "The inspector appears when you select or place something; ] or the top-bar button keeps it open"
+	ah.toggled.connect(func(on): s.set_v("inspector_auto_hide", on))
+	grid.add_child(ah)
 	grid.add_child(UI.label("Dragged objects snap to free space", "Dim"))
 	var snap := CheckButton.new()
 	snap.button_pressed = bool(s.get_v("drag_snap_valid"))
@@ -212,6 +252,26 @@ static func settings(parent: Control, on_change: Callable) -> void:
 	m.body.add_child(art_row)
 	m.body.add_child(UI.label("Data folder: %s" % ProjectSettings.globalize_path("user://"), "Faint", true))
 	m.add_button("Done", "Accent", m.close)
+	_scroll_body(m, parent)
+
+
+static func _scroll_body(m: Modal, parent: Control, reserve: float = 170.0) -> void:
+	## Short windows / large UI scales: the dialog's content scrolls (title and
+	## buttons stay visible) instead of running off the screen.
+	var max_h := maxf(160.0, parent.get_viewport_rect().size.y - reserve)
+	var content := UI.vbox(10)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for c in m.body.get_children():
+		m.body.remove_child(c)
+		content.add_child(c)
+	var sc := ScrollContainer.new()
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.add_child(content)
+	m.body.add_child(sc)
+	sc.custom_minimum_size.y = minf(content.get_combined_minimum_size().y, max_h)
+	content.resized.connect(func():
+		if is_instance_valid(sc):
+			sc.custom_minimum_size.y = minf(content.size.y, max_h))
 
 
 # ---------------------------------------------------------------------------

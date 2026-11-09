@@ -128,8 +128,9 @@ func load_layout(id: String, report: LayoutIO.LoadReport) -> FarmLayout:
 	var l := LayoutIO.load_file(path_for(id), db, report, map)
 	if l and l.id.is_empty():
 		l.id = id
-	if l and report.migrated_from >= 0 and report.recovered_from.is_empty():
-		# Saving writes over this file: its pre-v2 original is kept next to it.
+	if l and report.migrated_from >= 0:
+		# Saving writes over this file: its pre-v3 original (or the intact .tmp /
+		# .bak this load recovered from) is kept next to it (LayoutIO.backup_original).
 		report.backup_path = LayoutIO.backup_path_for(path_for(id), report.migrated_from)
 	return l
 

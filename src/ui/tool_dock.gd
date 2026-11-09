@@ -35,6 +35,9 @@ var _cols: SpinBox
 var _rows: SpinBox
 var _gap_x: SpinBox
 var _gap_y: SpinBox
+var _pill: PanelContainer
+var _compact_hidden: Array = []   ## zoom buttons + label: dropped when the dock is narrow
+var compact := false
 
 
 func _ready() -> void:
@@ -43,12 +46,27 @@ func _ready() -> void:
 	# The contextual rows make the dock taller: it must grow upwards.
 	grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_build_context_rows()
+	# Status text sits above the tool pill, so the pill alone is what the
+	# canvas has to keep clear at the bottom (main.gd reads pill_height()).
+	var status_row := UI.hbox(12)
+	status_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status = UI.label("", "Faint")
+	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_status.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	_status.add_theme_constant_override("shadow_offset_y", 1)
+	_status.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
+	status_row.add_child(_status)
+	add_child(status_row)
 	var center := CenterContainer.new()
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
 	var pill := PanelContainer.new()
 	pill.theme_type_variation = "Pill"
 	center.add_child(pill)
+	_pill = pill
 	var h := UI.hbox(4)
 	pill.add_child(h)
 	var group := ButtonGroup.new()
@@ -87,28 +105,24 @@ func _ready() -> void:
 	var zi := UI.icon_button("zoom-in", "Zoom in (+)", "Ghost")
 	zi.pressed.connect(func(): action.emit("zoom_in"))
 	h.add_child(zi)
+	_compact_hidden = [zo, _zoom_lbl, zi]
 	var fit := UI.icon_button("scan", "Fit farm (F / Home)", "Ghost")
 	fit.pressed.connect(func(): action.emit("fit"))
 	h.add_child(fit)
-	var status_row := UI.hbox(12)
-	status_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_status = UI.label("", "Faint")
-	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
-	_status.add_theme_constant_override("shadow_offset_y", 1)
-	_status.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
-	status_row.add_child(_status)
-	add_child(status_row)
 
 
-func _pill_row() -> HBoxContainer:
-	## A centred floating row above the tools; starts hidden.
-	var c := CenterContainer.new()
-	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	c.visible = false
-	add_child(c)
+func _pill_row(holder: HFlowContainer = null) -> HBoxContainer:
+	## A centred floating row above the tools; starts hidden. Pills sharing a
+	## holder wrap onto a second line when the canvas is narrow.
+	var c := holder
+	if c == null:
+		c = HFlowContainer.new()
+		c.alignment = FlowContainer.ALIGNMENT_CENTER
+		c.add_theme_constant_override("h_separation", 8)
+		c.add_theme_constant_override("v_separation", 8)
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		c.visible = false
+		add_child(c)
 	var p := PanelContainer.new()
 	p.theme_type_variation = "Pill"
 	c.add_child(p)
@@ -131,7 +145,7 @@ func _spin(prefix: String, lo: int, hi: int, value: int, tip: String) -> SpinBox
 	s.value = value
 	s.prefix = prefix
 	s.tooltip_text = tip
-	s.custom_minimum_size.x = 120
+	s.custom_minimum_size.x = 112
 	s.value_changed.connect(func(_v: float): _emit_repeat())
 	return s
 
@@ -158,7 +172,7 @@ func _build_context_rows() -> void:
 	_repeat_btn.toggled.connect(func(on: bool): tool_action.emit("repeat", on))
 	sel.add_child(_repeat_btn)
 	sel.add_child(_text_button("Save stamp", "Keep the selection as a reusable group", func(): tool_action.emit("save_stamp", null)))
-	sel.add_child(VSeparator.new())
+	sel = _pill_row(_sel_row as HFlowContainer)
 	sel.add_child(UI.label("Align", "Dim"))
 	for a in [["left", "Left", "Along the road: to the lowest end"], ["right", "Right", "Along the road: to the highest end"],
 			["center_along", "Mid ↔", "Centre along the road"], ["top", "Top", "Across the road: to the far side"],
@@ -177,16 +191,60 @@ func _build_context_rows() -> void:
 	var rep := _pill_row()
 	_repeat_row = rep.get_meta("holder")
 	_cols = _spin("Columns ", 1, LayoutTools.MAX_REPEAT_AXIS, 3, "Columns (along the road)")
+	_cols.custom_minimum_size.x = 132
 	_rows = _spin("Rows ", 1, LayoutTools.MAX_REPEAT_AXIS, 1, "Rows (across the road)")
 	_gap_x = _spin("gap ", 0, 40, 0, "Empty tiles between columns")
 	_gap_y = _spin("gap ", 0, 40, 0, "Empty tiles between rows")
-	for s: SpinBox in [_cols, _gap_x, _rows, _gap_y]:
-		rep.add_child(s)
-	rep.add_child(_text_button("Apply", "Place the copies (one undo step)", func(): tool_action.emit("repeat_apply", null)))
+	rep.add_child(_cols)
+	rep.add_child(_gap_x)
+	var rep2 := _pill_row(_repeat_row as HFlowContainer)
+	rep2.add_child(_rows)
+	rep2.add_child(_gap_y)
+	var rep3 := _pill_row(_repeat_row as HFlowContainer)
+	rep3.add_child(_text_button("Apply", "Place the copies (one undo step)", func(): tool_action.emit("repeat_apply", null)))
 
 
 func _emit_repeat() -> void:
 	tool_action.emit("repeat_params", {"cols": int(_cols.value), "rows": int(_rows.value), "gap": Vector2i(int(_gap_x.value), int(_gap_y.value))})
+
+
+func set_repeat_values(p: Dictionary) -> void:
+	## Repeat parameters changed elsewhere (code, tests, a restored state): show
+	## them without echoing a change back.
+	var gap: Vector2i = p.get("gap", Vector2i.ZERO)
+	_cols.set_value_no_signal(int(p.get("cols", _cols.value)))
+	_rows.set_value_no_signal(int(p.get("rows", _rows.value)))
+	_gap_x.set_value_no_signal(gap.x)
+	_gap_y.set_value_no_signal(gap.y)
+
+
+func repeat_values() -> Dictionary:
+	return {"cols": int(_cols.value), "rows": int(_rows.value), "gap": Vector2i(int(_gap_x.value), int(_gap_y.value))}
+
+
+func pill_height() -> float:
+	## Height of the tool pill: the part of the dock that always covers the canvas.
+	return _pill.get_combined_minimum_size().y if _pill else 56.0
+
+
+func pill_width(compact_layout: bool) -> float:
+	var w := _pill.get_combined_minimum_size().x if _pill else 640.0
+	if compact_layout and not compact:
+		for c: Control in _compact_hidden:
+			w -= c.get_combined_minimum_size().x + 4.0
+	elif not compact_layout and compact:
+		for c: Control in _compact_hidden:
+			w += c.get_combined_minimum_size().x + 4.0
+	return w
+
+
+func set_compact(on: bool) -> void:
+	## Narrow canvas: drop the zoom buttons (wheel, +/- and pinch still zoom).
+	if on == compact:
+		return
+	compact = on
+	for c: Control in _compact_hidden:
+		c.visible = not on
 
 
 func update_context(selected: int, movable: int, repeat_open: bool) -> void:

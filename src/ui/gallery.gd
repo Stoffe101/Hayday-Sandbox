@@ -12,11 +12,16 @@ var modal: Modal
 var _grid: GridContainer
 var _parent: Control
 var _search: LineEdit
+var _empty_w := 980.0
 
 
 func show(parent: Control) -> void:
 	_parent = parent
-	modal = Modal.open(parent, "Your farm layouts", 1060, "layout-grid")
+	# Fits the window: as many 250 px card columns as there is room for (max 4).
+	var vs := parent.get_viewport_rect().size
+	var w := minf(1060.0, vs.x - 48.0)
+	var inner := w - 60.0
+	modal = Modal.open(parent, "Your farm layouts", w, "layout-grid")
 	var bar := UI.hbox(8)
 	_search = LineEdit.new()
 	_search.placeholder_text = "Filter layouts…"
@@ -32,10 +37,11 @@ func show(parent: Control) -> void:
 	bar.add_child(ib)
 	modal.body.add_child(bar)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(1000, 560)
+	scroll.custom_minimum_size = Vector2(inner, clampf(vs.y - 360.0, 180.0, 560.0))
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_grid = GridContainer.new()
-	_grid.columns = 4
+	_grid.columns = clampi(int((inner + 14.0) / 250.0), 1, 4)
+	_empty_w = inner - 20.0
 	_grid.add_theme_constant_override("h_separation", 14)
 	_grid.add_theme_constant_override("v_separation", 14)
 	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -57,7 +63,7 @@ func _fill() -> void:
 		shown += 1
 	if shown == 0:
 		var empty := UI.vbox(6)
-		empty.custom_minimum_size = Vector2(980, 120)
+		empty.custom_minimum_size = Vector2(_empty_w, 120)
 		empty.add_child(UI.label("No saved layouts yet" if q.is_empty() else "No layouts match “%s”" % q, "Heading"))
 		empty.add_child(UI.label("Create one with “New layout”, or start from a template below.", "Dim"))
 		_grid.add_child(empty)

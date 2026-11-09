@@ -356,7 +356,7 @@ func _integration() -> void:
 				print("  info sample %s with private data: %d collision(s), %d footprint change(s) reported" % [f, rep2.collisions.size(), rep2.footprint_changes.size()])
 			nsamples += 1
 	check(nsamples >= 5, "%d sample layouts" % nsamples)
-	_migration_check()
+	await _migration_check()
 
 	print("Editing")
 	App.open_layout(App.new_layout("Selftest farm", "starter"))
@@ -540,6 +540,8 @@ func _integration() -> void:
 	await _load_report_check()
 	await _layout_tools_check()
 	App.library.delete(s.layout.id)
+	await _session_wiring_check()
+	await _ui_panels_check()
 
 
 func _importer_check() -> void:
@@ -814,6 +816,18 @@ func _template_check() -> void:
 	if App.has_initial_objects():
 		var nf := App.new_layout("t", "new_farm")
 		check(nf.count() > 0 and _landmark_items_in(nf) == 0 and PlacementRules.find_conflicts(nf, App.map).is_empty(), "fresh game farm template: objects from the world data, no landmarks, no conflicts")
+	# A world whose landmark replaces an item listed among the fresh-farm objects
+	# (synthetic): the template never places that landmark copy.
+	var world := App.map
+	App.map = FarmMap.from_data({"format": "hayday-sandbox-map", "schema_version": 2, "id": "selftest_world", "frame": "game",
+		"size": [24, 24], "regions": [{"id": "start", "kind": "buildable", "rects": [[0, 0, 24, 24]]}],
+		"landmarks": [{"id": "bake_stand", "name": "Bake Stand", "origin": [20, 20], "footprint": [1, 1],
+			"replaces_items": ["bakery"], "confidence": "approximate"}],
+		"initial_objects": [{"item": "bakery", "x": 2, "y": 2}, {"item": "barn", "x": 8, "y": 2}]})
+	var fresh := App.new_layout("t", "new_farm")
+	App.map = world
+	var fresh_items: Array = fresh.objects.values().map(func(o): return o.item_id)
+	check(not "bakery" in fresh_items and "barn" in fresh_items, "fresh-farm template skips items a world landmark replaces (%s)" % str(fresh_items))
 	var lvl: Variant = App.settings.get_v("default_farm_level")
 	App.settings.set_v("default_farm_level", 60, false)
 	check(int(App.new_layout("t", "empty").profile["level"]) == 60, "default farm level setting applies to new layouts")
@@ -906,6 +920,166 @@ func _migration_check() -> void:
 	var again := App.library.load_layout("selftest_v1", rep2)
 	check(again != null and rep2.migrated_from < 0 and again.count() == 3 and (again.migration.get("migrated_landmarks", []) as Array).size() == 4, "saved as v2; migration record kept")
 	App.library.delete("selftest_v1")
+	await _migration_v2_reference_check()
+
+
+func _migration_v2_reference_check() -> void:
+	## A v2 layout with one (missing) reference image, opened through the app:
+	## nothing is lost, the report is about this upgrade only, the original is
+	## kept, and undo / redo work straight away.
+	var v2 := {"format": LayoutIO.FORMAT, "schema_version": 2, "app_version": "0.1.0",
+		"meta": {"id": "selftest_v2", "name": "v2 farm", "mode": "creative"},
+		"map": {"id": "hayday_farm", "unlocked_plots": []},
+		"objects": [{"uid": 1, "item": "bakery", "x": 4, "y": 4, "w": 3, "h": 3}],
+		"reference": {"file": "user://references/selftest_missing.png", "opacity": 0.35, "x": 12.0, "y": -40.0,
+			"scale": 1.25, "rotation": 0.0, "visible": true, "locked": false, "above": true},
+		"migration": {"from": 1, "at": "2026-01-01T00:00:00Z", "shifted_by": [-5, -3], "from_map": "hayday_farm",
+			"migrated_landmarks": [{"record": {"uid": 9, "item": "farmhouse", "x": 19, "y": 15, "w": 4, "h": 4}, "landmark": "farmhouse", "reason": "test"}],
+			"review_uids": [], "notes": []},
+		"world": FarmLayout.default_world_state()}
+	var text := JSON.stringify(v2, "\t")
+	JsonUtil.write_atomic(App.library.path_for("selftest_v2"), text, false)
+	var rep := LayoutIO.LoadReport.new()
+	var l := App.library.load_layout("selftest_v2", rep)
+	check(l != null and rep.migrated_from == 2 and rep.shifted == Vector2i.ZERO and rep.migrated_landmarks.is_empty()
+		and l.count() == 1 and l.get_obj(1).origin == Vector2i(4, 4), "v2 file: no second shift, old landmark record not reported again (%s)" % rep.summary())
+	if l == null:
+		return
+	App.open_layout(l, rep)
+	await _frames(2)
+	var s := _s()
+	var imgs: Array = s.layout.reference.get("images", [])
+	check(imgs.size() == 1 and str(imgs[0].get("file", "")) == "user://references/selftest_missing.png" and is_equal_approx(float(imgs[0]["opacity"]), 0.35)
+		and bool(s.layout.reference.get("above", false)), "the single v2 reference becomes a one-image list %s" % str(s.layout.reference))
+	check(str(main._view_state.get("ref_status", "")).contains("missing"), "a missing reference image is reported, not dropped (%s)" % str(main._view_state.get("ref_status", "")))
+	var steps := s.stack.size()
+	s.select([1])
+	var d := Vector2i.ZERO
+	for c in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		if d == Vector2i.ZERO and PlacementRules.check_group_move(s.layout, s.map, [1], c).ok:
+			d = c
+	check(d != Vector2i.ZERO and s.nudge(d) and s.layout.get_obj(1).origin == Vector2i(4, 4) + d, "edit right after the upgrade")
+	_key(KEY_Z, true)
+	check(s.layout.get_obj(1).origin == Vector2i(4, 4) and s.stack.size() == steps, "undo right after the upgrade")
+	_key(KEY_Z, true, true)
+	check(s.layout.get_obj(1).origin == Vector2i(4, 4) + d, "redo too")
+	var serr := App.save_current(false)
+	var bk2 := LayoutIO.backup_path_for(App.library.path_for("selftest_v2"), 2)
+	check(serr == OK and JsonUtil.read_text(bk2) == text, "first save keeps the v2 original (%s, backup exists: %s, session layout id %s)" % [error_string(serr), str(FileAccess.file_exists(bk2)), s.layout.id])
+	var rep2 := LayoutIO.LoadReport.new()
+	var back := App.library.load_layout("selftest_v2", rep2)
+	check(back != null and rep2.migrated_from < 0 and back.reference == s.layout.reference and (back.migration.get("migrated_landmarks", []) as Array).size() == 1,
+		"v3 reload: reference and migration record kept")
+	App.library.delete("selftest_v2")
+
+
+func _conn_counts(objs: Dictionary) -> Dictionary:
+	## "<name>.<signal>" -> number of connections, for every signal of each object.
+	var out := {}
+	for name in objs:
+		var o: Object = objs[name]
+		for sg: Dictionary in o.get_signal_list():
+			out["%s.%s" % [name, sg["name"]]] = o.get_signal_connection_list(sg["name"]).size()
+	return out
+
+
+func _session_counts() -> Dictionary:
+	return _conn_counts({"session": _s(), "layout": _s().layout, "stack": _s().stack})
+
+
+func _app_counts() -> Dictionary:
+	## Long-lived emitters: their connections must not grow with every layout opened.
+	return _conn_counts({"app": App, "settings": App.settings, "controller": main.controller, "camera": main.camera,
+		"dock": main.dock, "top_bar": main.top_bar, "catalog": main.catalog, "inspector": main.inspector})
+
+
+func _toasts_with(text: String) -> int:
+	var n := 0
+	var stack: Array = [main.toasts]
+	while not stack.is_empty():
+		var nd: Node = stack.pop_back()
+		if nd is Label and (nd as Label).text == text and not nd.is_queued_for_deletion():
+			n += 1
+		stack.append_array(nd.get_children())
+	return n
+
+
+func _conflicts_fresh(s: EditorSession) -> bool:
+	var a: Array = s.conflicts().keys()
+	var b: Array = PlacementRules.find_conflicts(s.layout, s.map).keys()
+	a.sort()
+	b.sort()
+	return a == b
+
+
+func _session_wiring_check() -> void:
+	## Opening layouts one after another (and rebuilding the UI) must not stack
+	## up signal handlers, leak old sessions, or leave caches pointing at the old
+	## document / world.
+	print("Session wiring")
+	var app0 := _app_counts()
+	var per: Array = []
+	var first: WeakRef = null
+	var templates := ["empty", "starter", "expanded"]
+	for i in 3:
+		var l := App.new_layout("Wiring %d" % i, templates[i])
+		l.id = ""   # not a library layout
+		App.open_layout(l)
+		await _frames(2)
+		if i == 0:
+			first = weakref(_s())
+		per.append(_session_counts())
+		var probe := "wiring probe %d" % i
+		_s().message.emit(probe, "info")
+		check(_toasts_with(probe) == 1, "layout %d: a session message shows exactly one toast" % (i + 1))
+		check(_conflicts_fresh(_s()), "layout %d: conflict index matches a full scan" % (i + 1))
+	check(per[0] == per[1] and per[1] == per[2], "three layouts in a row: the same handlers per session")
+	var app1 := _app_counts()
+	var grew: Array = []
+	for k in app1:
+		if int(app1[k]) != int(app0.get(k, 0)):
+			grew.append("%s %d->%d" % [k, int(app0.get(k, 0)), int(app1[k])])
+	check(grew.is_empty(), "long-lived signals keep their handler count across layout switches %s" % str(grew))
+	check(first != null and first.get_ref() == null, "an earlier session is freed after switching layouts")
+	# Rebuilding the UI (theme / UI scale change) re-runs the session wiring.
+	var s := _s()
+	var before := _session_counts()
+	await main._rebuild_ui()
+	await _frames(2)
+	check(_session_counts() == before, "rebuilding the UI doesn't connect the session's handlers twice")
+	s.message.emit("wiring probe rebuilt", "info")
+	check(_toasts_with("wiring probe rebuilt") == 1, "after a UI rebuild a message still shows exactly one toast")
+	var lt: LayoutToolController = main.layout_tools
+	check(lt.dock == main.dock and is_instance_valid(lt.panel) and lt.panel.is_inside_tree() and main.dock.tool_action.is_connected(lt._on_dock),
+		"layout tools follow the rebuilt dock and stamps panel")
+	main.dock.tool_action.emit("symmetry", true)
+	check(bool(s.symmetry["enabled"]), "the rebuilt dock's symmetry switch reaches the session")
+	main.dock.tool_action.emit("symmetry", false)
+	# Caches after a world swap and a catalogue footprint correction.
+	var at := _free_block(Vector2i(6, 6))
+	if at.x >= 0:
+		var bk := App.db.get_item("bakery")
+		var uids := s.place_objects([s.make_object(bk, at)], "t")
+		var fence := App.db.get_item("fence")
+		var f_uids := s.place_objects([s.make_object(fence, at + Vector2i(4, 0))], "t")
+		check(_conflicts_fresh(s) and not s.conflicts().has(uids[0]), "bakery fits")
+		s.execute(EditCommands.SetGeometry.new(uids, [{"size": Vector2i(5, 3), "flipped": false}], "Apply corrected footprints"))
+		check(_conflicts_fresh(s) and s.conflicts().has(uids[0]) and s.conflicts().has(f_uids[0]), "a corrected footprint updates the conflict index (both overlapping objects)")
+		s.stack.undo()
+		check(_conflicts_fresh(s) and not s.conflicts().has(uids[0]), "undo of the correction too")
+		var other := FarmMap.from_data({"format": "hayday-sandbox-map", "schema_version": 2, "id": s.map.id, "frame": "game",
+			"size": [2, 2], "regions": [{"id": "start", "kind": "buildable", "rects": [[0, 0, 2, 2]]}]})
+		var old_map := s.map
+		var r0 := s.analysis()
+		s.set_map(other)
+		check(_conflicts_fresh(s) and s.conflicts().has(uids[0]) and s.analysis() != r0, "a world swap rechecks conflicts and the analysis")
+		s.set_map(old_map)
+		check(_conflicts_fresh(s), "…and back")
+		App.reload_assets()
+		await _frames(1)
+		check(_conflicts_fresh(_s()), "a pack reload leaves the conflict index current")
+	App.open_layout(App.new_layout("Wiring end", "starter"))
+	await _frames(2)
 
 
 # --- performance -----------------------------------------------------------------
@@ -1999,12 +2173,19 @@ func _world_ui_check() -> void:
 		s.clear_selection()
 	else:
 		check(true, "box selection check skipped (no empty corner around the farmhouse)")
-	# Visibility of a landmark is per layout, undoable, and hides it from picking.
+	# A permanent landmark can't be hidden (that would remove it from the farm).
+	var vsteps := s.stack.size()
+	check(not s.set_landmark_visible("farmhouse", false) and s.stack.size() == vsteps and bool(main.renderer.world_entry(key).get("visible", false)),
+		"the farmhouse can't be hidden")
+	# Visibility of a transient landmark is per layout, undoable, and hides it from picking.
+	var fh_lm := s.map.landmark("farmhouse")
+	fh_lm.transient = true
 	s.set_landmark_visible("farmhouse", false)
 	check(not bool(main.renderer.world_entry(key).get("visible", true)) and (main.renderer.pick_any(Iso.tile_center(pt)) as Dictionary).get("key", "") != key,
-		"hiding a landmark hides it in the renderer (not pickable)")
+		"hiding a transient landmark hides it in the renderer (not pickable)")
 	_key(KEY_Z, true)
 	check(bool(main.renderer.world_entry(key).get("visible", false)), "Ctrl+Z shows it again")
+	fh_lm.transient = false
 	# Season selector: only themes with art (public build: Default only).
 	var themes := LandmarkView.themes_with_art(s.map, App.assets)
 	check(themes[0] == FarmLayout.DEFAULT_THEME and (themes.size() == 1 or App.map.is_game_data() or App.assets.has_art("lm_farmhouse")),
@@ -2274,3 +2455,132 @@ func _reference_check() -> void:
 	check(s.layout.reference == before, "reference state restored")
 	for f in files:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(f))
+
+
+func _ui_panels_check() -> void:
+	## Side panels: auto-hiding inspector, collapse / resize remembered in the
+	## settings, wrapped catalogue names, grouped issues, help keys, repeat spinboxes.
+	print("Panels")
+	App.open_layout(App.new_layout("Panels", "starter"))
+	await _frames(2)
+	var s := _s()
+	var st: AppSettings = App.settings
+	var keep := {}
+	for k in ["inspector_auto_hide", "catalog_width", "inspector_width", "left_panel"]:
+		keep[k] = st.get_v(k)
+	st.set_v("inspector_auto_hide", true)
+	s.clear_selection()
+	s.set_tool("select")
+	main.inspector.show_tab(0)
+	main._update_view_rect()
+	check(not main.inspector.visible, "inspector hides itself when nothing needs it")
+	var share_free: float = main.canvas_share()
+	var o: PlacedObject = s.layout.objects.values()[0]
+	s.select([o.uid])
+	check(main.inspector.visible, "selecting an object shows the inspector")
+	var share_sel: float = main.canvas_share()
+	check(share_free > share_sel + 0.02, "the canvas grows when the inspector hides (%.1f%% vs %.1f%%)" % [share_free * 100.0, share_sel * 100.0])
+	var vr: Rect2 = main.camera.view_rect
+	check(is_equal_approx(vr.end.x, main.root.get_viewport_rect().size.x + main.inspector.offset_left - 4.0), "the camera's view stops at the inspector")
+	main.toggle_inspector()
+	check(not main.inspector.visible, "] closes the inspector for this selection")
+	var o2: PlacedObject = s.layout.objects.values()[1]
+	s.select([o2.uid])
+	check(main.inspector.visible, "…and it comes back for the next selection")
+	s.clear_selection()
+	check(not main.inspector.visible, "clearing the selection hides it again")
+	main.toggle_inspector()
+	check(main.inspector.visible and main.inspector_shown(), "] pins it open with nothing selected")
+	main.toggle_inspector()
+	check(not main.inspector.visible, "] again unpins it")
+	main.inspector.show_tab(1)
+	check(main.inspector.visible, "opening the Farm tab shows the inspector")
+	main.toggle_inspector()
+	check(not main.inspector.visible and main.inspector.current_tab() == 0, "closing it returns to the Selection tab")
+	s.set_active_item("bakery")
+	s.set_tool("place")
+	check(main.inspector.visible, "the brush shows the inspector (placing card)")
+	s.set_tool("select")
+	s.set_active_item("")
+	st.set_v("inspector_auto_hide", false)
+	check(main.inspector.visible == bool(st.get_v("right_panel")), "auto-hide off: the inspector follows its toggle")
+	st.set_v("inspector_auto_hide", true)
+	# Catalogue: collapse to the rail, remembered.
+	var left0: float = main.camera.view_rect.position.x
+	main.set_catalog_expanded(false)
+	check(main.catalog.is_collapsed() and not bool(st.get_v("left_panel")), "the catalogue collapses to its rail (remembered)")
+	check(is_equal_approx(main.catalog.offset_right - main.catalog.offset_left, main.catalog.rail_width()) and main.camera.view_rect.position.x < left0,
+		"collapsed catalogue is only the rail wide; the canvas grows")
+	var rails := 0
+	for k in main.catalog._rail_btns:
+		rails += 1
+	check(rails >= 10, "the rail lists scopes and categories (%d)" % rails)
+	main.catalog._on_rail("cat:fence")
+	check(not main.catalog.is_collapsed() and bool(st.get_v("left_panel")) and main.catalog._category == "fence", "a rail category expands the catalogue and filters it")
+	main.catalog._on_rail("scope:all")
+	# Widths: drag result kept in the settings file, double-click resets.
+	var path := ProjectSettings.globalize_path(AppSettings.PATH)
+	var win_w: float = main.root.get_viewport_rect().size.x
+	var cw := minf(330.0, main._side_max(win_w, main.CATALOG_MIN))
+	st.set_v("catalog_width", cw, false)
+	main._catalog_grip.released.emit()
+	main._update_view_rect()
+	check(is_equal_approx(main.catalog.offset_right, main.MARGIN + cw), "a resized catalogue keeps its width (%d px)" % int(cw))
+	var fresh := AppSettings.new()
+	fresh.load_settings()
+	check(is_equal_approx(float(fresh.get_v("catalog_width")), cw), "the width is saved when the drag ends (%s)" % path.get_file())
+	var iw := minf(320.0, main._side_max(win_w, main.INSPECTOR_MIN))
+	st.set_v("inspector_width", iw)
+	s.select([o.uid])
+	check(is_equal_approx(-main.inspector.offset_left, main.MARGIN + iw), "a resized inspector keeps its width")
+	main._inspector_grip.reset.emit()
+	check(float(st.get_v("inspector_width")) == 0.0, "double-click on the grip returns to the automatic width")
+	s.clear_selection()
+	# Catalogue names wrap between words only.
+	var cat: CatalogPanel = main.catalog
+	var split := 0
+	var n := 0
+	for i in mini(cat._ids.size(), 400):
+		var it := App.db.get_item(cat._ids[i])
+		if it == null:
+			continue
+		n += 1
+		var words := {}
+		for w in it.name.split(" ", false):
+			words[w] = true
+		for ln in cat._list.get_item_text(i).split("\n"):
+			for w in ln.split(" ", false):
+				if not words.has(w) and not w.ends_with("…"):
+					split += 1
+	check(n > 50 and split == 0, "catalogue names break only between words (%d names, %d split words)" % [n, split])
+	var wrapped: String = cat._wrap_text("Enchanted Workshop Deluxe Edition", 70.0, 2)
+	check(wrapped.split("\n").size() == 2 and wrapped.ends_with("…") and not wrapped.contains("Work\n"), "long names end in an ellipsis on the second line")
+	# Repeat parameters set from code show in the dock.
+	main.layout_tools.set_repeat_params({"cols": 5, "rows": 2, "gap": Vector2i(2, 1)})
+	var rv: Dictionary = main.dock.repeat_values()
+	check(rv["cols"] == 5 and rv["rows"] == 2 and rv["gap"] == Vector2i(2, 1), "repeat spinboxes follow parameters set from code")
+	main.layout_tools.set_repeat_params({"cols": 3, "rows": 1, "gap": Vector2i.ZERO})
+	# Many problems: a grouped list, outlines only for the selection.
+	var bush := App.db.get_item("fence")
+	var at := _free_block(Vector2i(2, 2))
+	var objs: Array = []
+	for i in main.ISSUE_OUTLINE_MAX + 6:
+		objs.append(s.make_object(bush, at))
+	s.layout.add_objects(objs)
+	main._refresh_issues()
+	var groups: Array = main.inspector.issue_groups()
+	check(not groups.is_empty() and main.top_bar.issues_count() >= main.ISSUE_OUTLINE_MAX + 6, "issues are grouped (%s)" % str(groups.map(func(g): return "%d × %s" % [(g["uids"] as Array).size(), g["label"]])))
+	check(main.overlay.issues.is_empty(), "with many problems nothing is outlined until selected")
+	main._on_inspector_action("select_uids", groups[0]["uids"])
+	check(not s.selection.is_empty() and main.overlay.issues.size() == s.selection.size(), "picking a group selects and outlines it")
+	# Help lists this wave's keys.
+	var keys := {}
+	for e in Dialogs.SHORTCUTS:
+		keys[e[0]] = true
+	var want := ["F / Shift+F", "H / Home", "1 … 9 / Ctrl+1 … 9", "D", "Click again on the same spot", "Right-click", "Alt while dragging",
+		"Symmetry (dock)", "Repeat (selection row)", "Align (selection row)", "Equal ↔ / Equal ↕", "Stamps (dock) / Save stamp", "[ / ]"]
+	var missing: Array = want.filter(func(k): return not keys.has(k))
+	check(missing.is_empty(), "help lists the new tools and keys %s" % str(missing))
+	for k in keep:
+		st.set_v(k, keep[k])
+	main._update_view_rect()

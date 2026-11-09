@@ -49,6 +49,10 @@ static func skin_of(lm: Landmark, layout: FarmLayout) -> String:
 
 
 static func is_visible(lm: Landmark, layout: FarmLayout) -> bool:
+	## A permanent landmark is always shown: a saved "hidden" value for it (e.g.
+	## in an imported file) is kept in the file but ignored (Landmark.can_hide).
+	if not lm.can_hide():
+		return true
 	return layout.is_landmark_visible(lm.id, not lm.hidden_by_default) if layout else not lm.hidden_by_default
 
 

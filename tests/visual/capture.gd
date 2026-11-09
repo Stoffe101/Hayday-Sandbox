@@ -19,9 +19,10 @@ extends Node
 
 const ALL := ["overview", "place_valid", "place_invalid", "selection", "search", "realistic", "land", "zoomed",
 	"gallery", "help", "settings", "welcome", "reference", "compare", "export", "light",
-	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty", "landmarks", "migration"]
+	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty", "landmarks", "migration",
+	"drag_blocked", "tools_symmetry", "tools_repeat", "winter"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
-const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "winter", "anim_perf"]
+const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "anim_perf"]
 ## Asset scenarios install a synthetic pack generated from the built-in
 ## placeholders (never real artwork); it is removed again before the next scenario.
 const SyntheticPack := preload("res://tests/fixtures/synthetic_pack.gd")
@@ -92,6 +93,9 @@ func _run() -> void:
 		if dump_objects:
 			_dump_objects(path.get_basename() + ".objects.json", Vector2(img.get_size()) / size)
 		print(("SHOT " if ok else "FAIL ") + path + " logical=" + str(size))
+		# Share of the window the camera treats as unobstructed canvas.
+		var vr: Rect2 = main.camera.view_rect
+		print("CANVAS %s share=%.1f%% view=%s" % [sc, 100.0 * vr.get_area() / maxf(1.0, size.x * size.y), str(vr)])
 	get_tree().quit(0)
 
 
@@ -140,6 +144,7 @@ func _reset() -> void:
 		main.controller.cancel()
 		s.clear_selection()
 		s.set_tool("select")
+		main.inspector.show_tab(0)   # the auto-hiding inspector starts closed
 	if hide_panels and not main._panels_hidden:
 		main._panels_hidden = true
 		main._update_view_rect()

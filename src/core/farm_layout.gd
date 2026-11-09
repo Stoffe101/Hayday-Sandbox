@@ -82,12 +82,14 @@ func count() -> int:
 	return objects.size()
 
 
-func add_objects(list: Array, emit: bool = true) -> Array:
+func add_objects(list: Array, emit: bool = true, restore: bool = false) -> Array:
 	## Adds PlacedObjects (uids assigned if 0). Returns their uids. Objects
-	## whose item is in `fixed_items` (landmark duplicates) are refused.
+	## whose item is in `fixed_items` (landmark duplicates) are refused, except
+	## with `restore` (undoing a removal puts back exactly what was there, e.g.
+	## an object whose item a world change made a landmark copy).
 	var uids: Array = []
 	for o: PlacedObject in list:
-		if fixed_items.has(o.item_id):
+		if fixed_items.has(o.item_id) and not restore:
 			push_warning("FarmLayout: '%s' is a fixed landmark and can't be placed as an object" % o.item_id)
 			continue
 		if o.uid <= 0 or objects.has(o.uid):

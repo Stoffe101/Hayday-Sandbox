@@ -490,6 +490,134 @@ func test_first_save_over_v1_file_keeps_backup() -> void:
 		DirAccess.remove_absolute(f)
 
 
+func test_v2_file_reports_only_its_own_upgrade() -> void:
+	## Regression: a v2 file (made by an earlier v1 -> v2 upgrade) was reported
+	## as "positions converted" + "N landmarks taken out" again when read as v3,
+	## and its saved migration.review_uids were wiped.
+	var wdb := world_db()
+	var h1 := {"format": LayoutIO.FORMAT, "schema_version": 1, "map": {"id": "hayday_farm_h1"},
+		"objects": [{"uid": 1, "item": "farmhouse", "x": 19, "y": 15, "w": 4, "h": 4},
+			{"uid": 2, "item": "barn", "x": 9, "y": 7, "w": 4, "h": 4, "locked": true, "note": LayoutIO.V1_STARTER_NOTE},
+			{"uid": 3, "item": "t_lamp", "x": 60, "y": 10, "w": 1, "h": 1}]}
+	var first := LayoutIO.LoadReport.new()
+	var l := LayoutIO.from_dict(h1, wdb, first, world_map())
+	assert_eq(first.migrated_landmarks.size(), 1)
+	assert_eq(first.review_uids, [3])
+	var v2 := LayoutIO.to_dict(l)
+	v2["schema_version"] = 2
+	v2["reference"] = {"file": "user://references/gone.png", "opacity": 0.4, "x": 1.0, "y": 2.0, "above": true}
+	var rep := LayoutIO.LoadReport.new()
+	var back := LayoutIO.from_dict(JsonUtil.parse(JsonUtil.stringify(v2)), wdb, rep, world_map())
+	assert_eq(rep.migrated_from, 2)
+	assert_eq(rep.shifted, Vector2i.ZERO, "no frame shift happens when reading a v2 file")
+	assert_eq(rep.migrated_landmarks.size(), 0, "landmarks taken out by the earlier upgrade are not reported again")
+	assert_eq(rep.starter_unlocked, 0)
+	assert_true(rep.review_uids.is_empty())
+	assert_eq((back.migration.get("review_uids", []) as Array).map(func(u): return int(u)), [3], "the saved review list survives v2 -> v3")
+	assert_eq((back.migration["migrated_landmarks"] as Array).size(), 1, "migration record kept")
+	var sm := rep.summary()
+	assert_has(sm, "upgraded from format v2")
+	assert_false(sm.contains("positions converted"), sm)
+	assert_false(sm.contains("now belong to the farm"), sm)
+	assert_false(sm.contains("starter building"), sm)
+	assert_eq(back.get_obj(2).origin, l.get_obj(2).origin, "no second shift")
+	# The single reference of a v2 file becomes a one-image list, nothing lost.
+	var imgs: Array = back.reference["images"]
+	assert_eq(imgs.size(), 1)
+	assert_eq(imgs[0]["file"], "user://references/gone.png")
+	assert_almost(float(imgs[0]["opacity"]), 0.4)
+	assert_true(bool(back.reference["above"]))
+	var again := LayoutIO.from_dict(JsonUtil.parse(JsonUtil.stringify(LayoutIO.to_dict(back))), wdb, null, world_map())
+	assert_eq(again.reference, back.reference, "reference survives v3 -> v3")
+
+
+func test_recovered_v1_original_is_backed_up() -> void:
+	## Regression: when a v1 file was unreadable (or missing) and the load
+	## recovered from its .bak, saving rotated that .bak away: the v1 original
+	## was lost and no .v1-backup was written.
+	var wdb := world_db()
+	var original := JsonUtil.stringify(v1_fixture(), true)
+	for broken in [true, false]:
+		var path := tmp_dir.path_join(("rec_corrupt" if broken else "rec_missing") + LayoutIO.FILE_EXT)
+		var f := FileAccess.open(path + ".bak", FileAccess.WRITE)
+		f.store_string(original)
+		f.close()
+		if broken:
+			# Truncated: the head still sniffs as schema 1.
+			f = FileAccess.open(path, FileAccess.WRITE)
+			f.store_string(original.left(200))
+			f.close()
+		var rep := LayoutIO.LoadReport.new()
+		var l := LayoutIO.load_file(path, wdb, rep, world_map())
+		assert_not_null(l, "recovered (%s)" % path.get_file())
+		assert_has(rep.recovered_from, ".bak")
+		assert_eq(rep.migrated_from, 1)
+		assert_eq(LayoutIO.save_file(l, path), OK)
+		var bk := LayoutIO.backup_path_for(path, 1)
+		assert_eq(JsonUtil.read_text(bk), original, "the intact v1 original is kept (%s)" % path.get_file())
+		assert_eq(LayoutIO.save_file(l, path), OK)
+		assert_eq(JsonUtil.read_text(bk), original, "…and later saves leave it alone")
+	var nothing := tmp_dir.path_join("fresh" + LayoutIO.FILE_EXT)
+	assert_eq(LayoutIO.save_file(_sample(), nothing), OK)
+	assert_false(FileAccess.file_exists(LayoutIO.backup_path_for(nothing, 1)), "a new file needs no backup")
+
+
+func test_v1_sample_layout_migrates_without_loss() -> void:
+	## The v1 "Minimal starter" sample as it shipped (tests/fixtures, from the
+	## repository's own history) with the old starter objects, read with the
+	## public catalogue and map: objects = kept + migrated landmarks, every kept
+	## object shifted by (-5, -3), backup on first save, undo/redo right after.
+	var pdb := ItemDatabase.new()
+	pdb.load_default()
+	var pub := WorldLoader.load("res://data/maps/hayday_farm.json", [], "")
+	var text := JsonUtil.read_text("res://tests/fixtures/v1_sample_minimal_starter.hdlayout")
+	var src: Dictionary = JsonUtil.parse(text)
+	var path := tmp_dir.path_join("v1sample" + LayoutIO.FILE_EXT)
+	JsonUtil.write_atomic(path, text, false)
+	var rep := LayoutIO.LoadReport.new()
+	var l := LayoutIO.load_file(path, pdb, rep, pub)
+	assert_not_null(l)
+	var ml: Array = l.migration.get("migrated_landmarks", [])
+	assert_eq((src["objects"] as Array).size(), 23)
+	assert_eq(l.count() + ml.size(), 23, "nothing silently lost")
+	var taken := {}
+	for e: Dictionary in ml:
+		taken[str(e["record"]["item"])] = true
+	assert_eq(taken.keys().size(), 4)
+	for id in ["farmhouse", "truck_and_order_board", "roadside_shop", "mailbox"]:
+		assert_true(taken.has(id), "%s became world data" % id)
+	for rec: Dictionary in src["objects"]:
+		if taken.has(str(rec["item"])):
+			continue
+		var o := l.get_obj(int(rec["uid"]))
+		assert_true(o != null and o.item_id == rec["item"] and o.origin == Vector2i(int(rec["x"]) - 5, int(rec["y"]) - 3),
+			"uid %d (%s) shifted by (-5, -3)" % [int(rec["uid"]), rec["item"]])
+	assert_eq(rep.shifted, Vector2i(-5, -3))
+	assert_eq(rep.migrated_landmarks.size(), 4)
+	assert_true(rep.missing_items.is_empty() and rep.footprint_changes.is_empty() and rep.collisions.is_empty())
+	assert_has(rep.summary(), "4 fixed landmarks")
+	assert_eq(LayoutIO.save_file(l, path), OK)
+	assert_eq(JsonUtil.read_text(LayoutIO.backup_path_for(path, 1)), text, "v1 original kept byte for byte")
+	var rep2 := LayoutIO.LoadReport.new()
+	var back := LayoutIO.load_file(path, pdb, rep2, pub)
+	assert_eq(rep2.migrated_from, -1)
+	assert_eq(back.count(), l.count())
+	assert_eq((back.migration["migrated_landmarks"] as Array).size(), 4)
+	# Undo / redo straight after the migration.
+	var s := EditorSession.new(back, pdb, pub)
+	var before := JsonUtil.stringify(LayoutIO.to_dict(back)["objects"])
+	s.select_all()
+	s.delete_selection()
+	s.nudge(Vector2i(1, 0))
+	assert_eq(back.count(), 2, "only the two locked buildings stay")
+	s.stack.undo()
+	assert_eq(JsonUtil.stringify(LayoutIO.to_dict(back)["objects"]), before, "undo restores the migrated layout exactly")
+	s.stack.redo()
+	assert_eq(back.count(), 2)
+	s.stack.undo()
+	assert_false(s.stack.can_undo(), "the migration itself is not an undo step")
+
+
 func test_v0_file_backup_name() -> void:
 	var path := tmp_dir.path_join("proto" + LayoutIO.FILE_EXT)
 	JsonUtil.write_atomic(path, JsonUtil.stringify({"version": 0, "name": "P", "items": []}), false)

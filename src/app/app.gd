@@ -255,6 +255,8 @@ func new_layout(name: String = "New farm", template: String = "starter") -> Farm
 	l.created = Time.get_datetime_string_from_system(true) + "Z"
 	l.profile["level"] = default_farm_level()
 	l.footprint_source = LayoutIO.footprint_source_of(db)
+	# Landmark copies (also items a world landmark replaces) never become objects.
+	l.fixed_items = EditorSession.fixed_item_ids(db, map)
 	l.touch()
 	match template:
 		"expanded":
@@ -340,6 +342,8 @@ func _add_initial_objects(l: FarmLayout) -> bool:
 			continue
 		any = true
 		var it := db.get_item(str(io.get("item", "")))
+		if it != null and l.fixed_items.has(it.id):
+			continue   # a fixed landmark: the world layer draws it
 		if it == null or not it.can_place():
 			skipped += 1
 			continue

@@ -3,7 +3,11 @@ extends PanelContainer
 ## Right-hand inspector: Selection / Farm planning / View tabs.
 
 signal action(name: String, arg: Variant)
+## The shown tab changed (user or code): main.gd shows / auto-hides the panel.
+signal tab_switched(index: int)
 
+## Research notes of an item open in place (per item id; view state only).
+var _notes_open: Dictionary = {}
 var _tabs: TabBar
 var _scroll: ScrollContainer
 var _body: VBoxContainer
@@ -24,7 +28,8 @@ func _ready() -> void:
 	_tabs.add_tab("View", Icons.get_icon("layers", 16))
 	_tabs.tab_changed.connect(func(i):
 		_tab = i
-		rebuild())
+		rebuild()
+		tab_switched.emit(i))
 	_tabs.focus_mode = Control.FOCUS_NONE
 	_tabs.clip_tabs = false
 	v.add_child(_tabs)
@@ -43,6 +48,8 @@ func _ready() -> void:
 
 
 func show_tab(i: int) -> void:
+	if _tabs.current_tab == i:
+		tab_switched.emit(i)
 	_tabs.current_tab = i
 
 
@@ -190,15 +197,18 @@ func _build_landmark(s: EditorSession, lm: Landmark) -> void:
 	v.add_child(UI.kv("Position", "%d, %d" % [lm.origin.x, lm.origin.y]))
 	if lm.unlock_level > 0:
 		v.add_child(UI.kv("Unlocks", "Level %d" % lm.unlock_level))
-	var src := UI.kv("Source", LandmarkView.source_label(s.map, lm))
+	var src_row := UI.hbox(6)
+	var sk := UI.label("World data", "Dim")
+	sk.custom_minimum_size.x = 96
+	src_row.add_child(sk)
+	src_row.add_child(world_badge(s.map))
+	v.add_child(src_row)
+	var src := UI.label(LandmarkView.source_label(s.map, lm), "Faint", true)
 	v.add_child(src)
-	if not lm.evidence.is_empty():
-		var ev := UI.label("Evidence: " + lm.evidence.left(180) + ("…" if lm.evidence.length() > 180 else ""), "Faint", true)
-		ev.tooltip_text = lm.evidence
-		ev.mouse_filter = Control.MOUSE_FILTER_STOP
-		v.add_child(ev)
 	if not lm.note.is_empty():
 		v.add_child(UI.label(lm.note, "Faint", true))
+	if not lm.evidence.is_empty():
+		v.add_child(_fold("lm:" + lm.id, "Why this position?", _research_lines(lm.evidence)))
 	_body.add_child(card)
 	_landmark_look(s, lm)
 
@@ -359,8 +369,44 @@ func _empty_state() -> void:
 	sv.add_child(UI.kv("Used", "%s tiles (%d%%)" % [UI.fmt_int(used), int(100.0 * used / maxi(1, land))]))
 	sv.add_child(UI.kv("Mode", s.layout.mode.capitalize()))
 	_body.add_child(stats)
+	_issues_card()
 	var hint := UI.label("Tip: press F1 for all keyboard shortcuts.", "Faint", true)
 	_body.add_child(hint)
+
+
+func issue_groups() -> Array:
+	## Grouped problems of the design (filled by main.gd): [{label, severity, uids}].
+	return view_state.get("issues", [])
+
+
+func _issues_card() -> void:
+	## Problems grouped by reason, each row selecting (and showing) its objects —
+	## instead of outlining every problem object on the farm in red.
+	var groups := issue_groups()
+	if groups.is_empty():
+		return
+	var total := 0
+	for g: Dictionary in groups:
+		total += (g["uids"] as Array).size()
+	_body.add_child(UI.section("Issues (%s)" % UI.fmt_int(total)))
+	var card := UI.card()
+	var v := UI.vbox(4)
+	card.add_child(v)
+	if bool(view_state.get("issues_condensed", false)):
+		v.add_child(UI.label("Many objects have problems, so they aren't all outlined on the farm. Pick a group to select and outline it.", "Faint", true))
+	for g: Dictionary in groups:
+		var uids: Array = g["uids"]
+		var row := UI.hbox(6)
+		row.add_child(UI.icon_rect("circle-x" if int(g["severity"]) >= 2 else "info", 16, UiTheme.c("danger") if int(g["severity"]) >= 2 else UiTheme.c("warn")))
+		var b := UI.button("%s × %s" % [UI.fmt_int(uids.size()), str(g["label"])], "", "Select these and show them (F)", "Ghost")
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.clip_text = true
+		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.pressed.connect(func(): action.emit("select_uids", uids))
+		row.add_child(b)
+		v.add_child(row)
+	_body.add_child(card)
 
 
 func _item_card(it: ItemDef, o: PlacedObject) -> void:
@@ -370,11 +416,13 @@ func _item_card(it: ItemDef, o: PlacedObject) -> void:
 	var top := UI.hbox(10)
 	var tex := TextureRect.new()
 	var key := it.art_key if it else ""
-	var spr: AssetLibrary.SpriteInfo = null
-	if it:
-		spr = App.assets.get_sprite(key, o.variant if o else "", UI.preview_mask(it))
-	tex.texture = spr.texture if spr else Icons.get_icon("box", 48)
-	tex.flip_h = o != null and o.flipped
+	var s := App.session
+	# Same art as on the farm: the season's theme variant and hand-drawn mirror art.
+	var flipped := o.flipped if o else (it != null and it.flippable and s != null and s.place_flipped)
+	var variant := o.variant if o else (s.place_variant if s else "")
+	var look := UI.resolve_sprite(App.assets, it, variant, flipped, s.layout.theme() if s else "")
+	tex.texture = look["texture"] if look["texture"] else Icons.get_icon("box", 48)
+	tex.flip_h = bool(look["flip"])
 	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tex.custom_minimum_size = Vector2(96, 84)
@@ -419,16 +467,91 @@ func _item_card(it: ItemDef, o: PlacedObject) -> void:
 	v.add_child(UI.kv("Rotate", "Yes (mirror)" if it.flippable else "No"))
 	if not it.movable:
 		v.add_child(UI.label("Fixed in place in the game.", "Faint", true))
-	if not it.notes.is_empty():
-		var n := UI.label("Research notes: " + it.notes.left(240) + ("…" if it.notes.length() > 240 else ""), "Faint", true)
-		v.add_child(n)
-	if not it.sources.is_empty():
-		var src := LinkButton.new()
-		src.text = "Source"
-		src.uri = it.sources[0]
-		src.tooltip_text = it.sources[0]
-		v.add_child(src)
 	_body.add_child(card)
+	_data_card(it)
+
+
+func _data_card(it: ItemDef) -> void:
+	## Where the item's facts come from: size confidence, sources as links, and
+	## the research notes folded away as a list (never one raw string).
+	_body.add_child(UI.section("Data"))
+	var card := UI.card()
+	var v := UI.vbox(6)
+	card.add_child(v)
+	var row := UI.hbox(6)
+	var k := UI.label("Size", "Dim")
+	k.custom_minimum_size.x = 96
+	row.add_child(k)
+	row.add_child(UI.badge(UI.status_text(it.footprint_status), UI.status_color(it.footprint_status)))
+	v.add_child(row)
+	v.add_child(UI.label(UI.status_explain(it.footprint_status, not it.footprint_source.is_empty()), "Faint", true))
+	if not it.sources.is_empty():
+		var links := HFlowContainer.new()
+		links.add_theme_constant_override("h_separation", 10)
+		links.add_theme_constant_override("v_separation", 2)
+		for src: String in it.sources.slice(0, 4):
+			var lb := LinkButton.new()
+			lb.text = UI.source_name(src)
+			lb.uri = src
+			lb.tooltip_text = src
+			lb.underline = LinkButton.UNDERLINE_MODE_ON_HOVER
+			lb.add_theme_color_override("font_color", UiTheme.c("info"))
+			lb.add_theme_font_size_override("font_size", 13)
+			links.add_child(lb)
+		var srow := UI.hbox(6)
+		var sk := UI.label("Sources", "Dim")
+		sk.custom_minimum_size.x = 96
+		srow.add_child(sk)
+		links.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		srow.add_child(links)
+		v.add_child(srow)
+	var notes := _research_lines(it.notes)
+	if not notes.is_empty():
+		v.add_child(_fold("item:" + it.id, "Research notes (%d)" % notes.size(), notes))
+	_body.add_child(card)
+
+
+static func _research_lines(text: String) -> PackedStringArray:
+	## "a; b; c" research text → readable lines (first letter capitalised).
+	var out := PackedStringArray()
+	for part in text.split(";", false):
+		var p := part.strip_edges()
+		if p.is_empty():
+			continue
+		out.append(p.left(1).to_upper() + p.substr(1))
+	return out
+
+
+func _fold(key: String, title: String, lines: PackedStringArray) -> Control:
+	## A collapsed "▸ title" row that opens a bulleted list in place.
+	var box := UI.vbox(4)
+	var open := bool(_notes_open.get(key, false))
+	var b := UI.button(title, "list-checks", "Show or hide", "Ghost")
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.add_theme_font_size_override("font_size", 13)
+	b.toggle_mode = true
+	b.button_pressed = open
+	box.add_child(b)
+	var list := UI.vbox(3)
+	list.visible = open
+	for ln in lines:
+		list.add_child(UI.label("•  " + ln, "Faint", true))
+	box.add_child(list)
+	b.toggled.connect(func(on: bool):
+		_notes_open[key] = on
+		list.visible = on)
+	return box
+
+
+static func world_badge(map: FarmMap) -> Control:
+	## Which world data the farm uses: game data from a private pack, or the
+	## public approximation shipped with the app.
+	var game := map != null and map.is_game_data()
+	var b := UI.badge("Game data" if game else "Public approximation", UiTheme.c("accent") if game else UiTheme.c("warn"))
+	b.tooltip_text = (map.provenance_label() + " — positions and plot shapes read from your own game files.") if game \
+		else "Public approximation — plot shapes and landmark positions are estimates, not read from the game."
+	b.mouse_filter = Control.MOUSE_FILTER_STOP
+	return b
 
 
 func _issue_list(o: PlacedObject) -> void:
@@ -518,6 +641,7 @@ func _build_farm(s: EditorSession) -> void:
 	mbtn.pressed.connect(func(): action.emit("toggle_mode", null))
 	mv.add_child(mbtn)
 	_body.add_child(mode_card)
+	_issues_card()
 	# Land
 	_body.add_child(UI.section("Land"))
 	var land := UI.card()
@@ -537,8 +661,14 @@ func _build_farm(s: EditorSession) -> void:
 	none.pressed.connect(func(): action.emit("land_all", false))
 	lrow.add_child(none)
 	lv.add_child(lrow)
-	var note_txt := "Map: %s (%s). Plot shapes and positions come from your game data." % [s.map.name, s.map.provenance_label()] if s.map.is_game_data() \
-		else "Map: %s. Plot shapes are approximate; %d further sections across the road aren't mapped yet." % [s.map.name, _unmapped(s)]
+	var wrow := UI.hbox(6)
+	var wk := UI.label("World data", "Dim")
+	wk.custom_minimum_size.x = 96
+	wrow.add_child(wk)
+	wrow.add_child(world_badge(s.map))
+	lv.add_child(wrow)
+	var note_txt := "%s: plot shapes and positions come from your game data." % s.map.name if s.map.is_game_data() \
+		else "%s: plot shapes are approximate; %d further sections across the road aren't mapped yet." % [s.map.name, s.map.unmapped_sections.size()]
 	var mapnote := UI.label(note_txt, "Faint", true)
 	lv.add_child(mapnote)
 	_body.add_child(land)
@@ -601,7 +731,14 @@ func _build_world_section(s: EditorSession) -> void:
 	var card := UI.card()
 	var v := UI.vbox(6)
 	card.add_child(v)
-	v.add_child(UI.kv("World data", s.map.provenance_label()))
+	var wrow := UI.hbox(6)
+	var wk := UI.label("World data", "Dim")
+	wk.custom_minimum_size.x = 96
+	wrow.add_child(wk)
+	wrow.add_child(world_badge(s.map))
+	v.add_child(wrow)
+	if s.map.is_game_data() and s.map.provenance_label() != "Game data (private pack)":
+		v.add_child(UI.label(s.map.provenance_label(), "Faint", true))
 	var row := UI.hbox(8)
 	row.add_child(UI.label("Season", "Dim"))
 	var ob := OptionButton.new()
@@ -661,11 +798,6 @@ func _build_world_section(s: EditorSession) -> void:
 	home.pressed.connect(func(): action.emit("home", null))
 	v.add_child(home)
 	_body.add_child(card)
-
-
-func _unmapped(s: EditorSession) -> int:
-	var data: Variant = JsonUtil.read_json("res://data/maps/%s.json" % s.map.id)
-	return (data.get("unmapped_sections", []) as Array).size() if data is Dictionary else 0
 
 
 func _report_card(s: EditorSession) -> void:

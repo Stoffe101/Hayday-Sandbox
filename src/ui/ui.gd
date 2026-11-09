@@ -130,6 +130,43 @@ static func status_text(status: String) -> String:
 	return status.capitalize()
 
 
+static func status_explain(status: String, from_pack: bool = false) -> String:
+	## One plain sentence about how far a footprint can be trusted.
+	match status:
+		"confirmed": return "Size confirmed in the game."
+		"game_data": return "Size read from your own game files%s." % (" (private pack)" if from_pack else "")
+		"community": return "Size from community research; not checked in the game by this app."
+		"approximation": return "Approximate size — check it in the game before relying on it."
+		"unverified": return "Unverified size — check it in the game before relying on it."
+		"unknown": return "Size unknown — a provisional footprint keeps its space. Check it in the game."
+		"original": return "Planning item of this editor (not a game object)."
+	return "Size source: %s." % status
+
+
+static func source_name(url: String) -> String:
+	## "https://hayday.fandom.com/wiki/Alpaca_House" -> "hayday.fandom.com · Alpaca House".
+	var rest := url.get_slice("://", 1) if url.contains("://") else url
+	var host := rest.get_slice("/", 0).trim_prefix("www.")
+	var page := rest.get_slice("?", 0).get_slice("#", 0).rstrip("/").get_file().uri_decode().replace("_", " ")
+	if page.is_empty() or page == host:
+		return host
+	return "%s · %s" % [host, page]
+
+
+static func resolve_sprite(assets: AssetLibrary, it: ItemDef, variant: String, flipped: bool, theme: String) -> Dictionary:
+	## The look an object has on the farm, for previews: the world theme's
+	## variant ("theme_<season>") and hand-drawn mirror art, as ObjectRenderer
+	## does. {texture: Texture2D (the static image), flip: bool}.
+	if it == null or assets == null:
+		return {"texture": null, "flip": false}
+	var spr := assets.get_sprite(it.art_key, assets.themed_variant(it.art_key, variant, theme), preview_mask(it))
+	var flip := flipped
+	if spr and flip and spr.mirror:
+		spr = spr.mirror
+		flip = false
+	return {"texture": spr.texture if spr else null, "flip": flip}
+
+
 static func art_badge(status: String) -> PanelContainer:
 	## "Original art" (from an installed pack) / "Placeholder art" / "No art".
 	match status:

@@ -23,8 +23,11 @@ const DEFAULTS := {
 	"recent_layouts": [],
 	"last_layout": "",
 	"onboarding_done": false,
-	"left_panel": true,
-	"right_panel": true,
+	"left_panel": true,         ## catalogue expanded (false = collapsed to its category rail)
+	"right_panel": true,        ## inspector shown (when it doesn't auto-hide)
+	"catalog_width": 0.0,       ## remembered panel widths in logical px (0 = automatic)
+	"inspector_width": 0.0,
+	"inspector_auto_hide": true, ## the inspector only appears when something needs it
 	"smooth_zoom": true,
 	"wheel_zoom_factor": 1.15,  ## zoom per mouse-wheel notch
 	"drag_snap_valid": false,   ## dragged objects jump to the nearest free spot

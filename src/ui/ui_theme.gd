@@ -155,6 +155,18 @@ static func build(dark: bool) -> Theme:
 	t.set_stylebox("hover_pressed", "Ghost", box(P["accent_soft"], 10, Color.TRANSPARENT, 0, gpad))
 	t.set_stylebox("disabled", "Ghost", box(Color.TRANSPARENT, 10, Color.TRANSPARENT, 0, gpad))
 	t.set_stylebox("focus", "Ghost", box(Color.TRANSPARENT, 10, P["accent"], 1, gpad))
+	# Catalogue category rail: quiet icons, the current one on an accent tint.
+	t.set_type_variation("Rail", "Button")
+	var rpad := Vector4(6, 6, 6, 6)
+	t.set_stylebox("normal", "Rail", box(Color.TRANSPARENT, 10, Color.TRANSPARENT, 0, rpad))
+	t.set_stylebox("hover", "Rail", box(P["elevated"], 10, Color.TRANSPARENT, 0, rpad))
+	t.set_stylebox("pressed", "Rail", box(P["accent_soft"], 10, Color.TRANSPARENT, 0, rpad))
+	t.set_stylebox("hover_pressed", "Rail", box(P["accent_soft"], 10, P["accent"], 1, rpad))
+	t.set_stylebox("disabled", "Rail", box(Color.TRANSPARENT, 10, Color.TRANSPARENT, 0, rpad))
+	t.set_stylebox("focus", "Rail", box(Color.TRANSPARENT, 10, P["accent"], 1, rpad))
+	t.set_constant("icon_max_width", "Rail", 18)
+	for k in ["icon_normal_color", "icon_focus_color"]:
+		t.set_color(k, "Rail", P["text_dim"])
 	# Tool buttons (bigger, accent when pressed)
 	t.set_type_variation("Tool", "Button")
 	var tpad := Vector4(10, 8, 10, 8)

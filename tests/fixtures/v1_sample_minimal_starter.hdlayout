@@ -1,0 +1,226 @@
+{
+	"format": "hayday-sandbox-layout",
+	"schema_version": 1,
+	"app_version": "sample",
+	"meta": {
+		"id": "",
+		"name": "Minimal starter",
+		"description": "Just the essentials with room reserved for future buildings.",
+		"tags": [
+			"sample",
+			"original"
+		],
+		"created": "2026-11-09T00:00:00Z",
+		"modified": "2026-11-09T00:00:00Z",
+		"mode": "creative"
+	},
+	"map": {
+		"id": "hayday_farm",
+		"unlocked_plots": []
+	},
+	"next_uid": 24,
+	"next_group": 1,
+	"objects": [
+		{
+			"uid": 1,
+			"item": "farmhouse",
+			"x": 19,
+			"y": 14,
+			"w": 4,
+			"h": 4,
+			"locked": true
+		},
+		{
+			"uid": 2,
+			"item": "barn",
+			"x": 7,
+			"y": 5,
+			"w": 4,
+			"h": 4,
+			"locked": true
+		},
+		{
+			"uid": 3,
+			"item": "silo",
+			"x": 12,
+			"y": 5,
+			"w": 3,
+			"h": 3,
+			"locked": true
+		},
+		{
+			"uid": 4,
+			"item": "truck_and_order_board",
+			"x": 17,
+			"y": 31,
+			"w": 4,
+			"h": 3,
+			"locked": true
+		},
+		{
+			"uid": 5,
+			"item": "roadside_shop",
+			"x": 22,
+			"y": 31,
+			"w": 3,
+			"h": 3,
+			"locked": true
+		},
+		{
+			"uid": 6,
+			"item": "mailbox",
+			"x": 23,
+			"y": 16,
+			"w": 1,
+			"h": 1,
+			"locked": true
+		},
+		{
+			"uid": 7,
+			"item": "bakery",
+			"x": 7,
+			"y": 18,
+			"w": 3,
+			"h": 3
+		},
+		{
+			"uid": 8,
+			"item": "feed_mill",
+			"x": 11,
+			"y": 18,
+			"w": 3,
+			"h": 3
+		},
+		{
+			"uid": 9,
+			"item": "chicken_coop",
+			"x": 7,
+			"y": 23,
+			"w": 3,
+			"h": 3
+		},
+		{
+			"uid": 10,
+			"item": "field",
+			"x": 7,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 11,
+			"item": "field",
+			"x": 8,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 12,
+			"item": "field",
+			"x": 9,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 13,
+			"item": "field",
+			"x": 10,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 14,
+			"item": "field",
+			"x": 11,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 15,
+			"item": "field",
+			"x": 12,
+			"y": 28,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 16,
+			"item": "field",
+			"x": 7,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 17,
+			"item": "field",
+			"x": 8,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 18,
+			"item": "field",
+			"x": 9,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 19,
+			"item": "field",
+			"x": 10,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 20,
+			"item": "field",
+			"x": 11,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 21,
+			"item": "field",
+			"x": 12,
+			"y": 29,
+			"w": 1,
+			"h": 1
+		},
+		{
+			"uid": 22,
+			"item": "plan_reserve_3x3",
+			"x": 15,
+			"y": 18,
+			"w": 3,
+			"h": 3
+		},
+		{
+			"uid": 23,
+			"item": "plan_reserve_4x4",
+			"x": 11,
+			"y": 23,
+			"w": 4,
+			"h": 4
+		}
+	],
+	"groups": {},
+	"annotations": [],
+	"profile": {
+		"level": 1,
+		"owned": {},
+		"budget_coins": -1,
+		"budget_diamonds": -1,
+		"treat_unknown_as_owned": true
+	},
+	"reference": {},
+	"camera": {}
+}

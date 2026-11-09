@@ -26,9 +26,25 @@ var layout_tools: LayoutToolController
 var toasts: Toasts
 var modal_layer: Control
 
-var _left_visible := true
-var _right_visible := true
+var _left_visible := true             ## catalogue expanded (else collapsed to its rail)
+var _right_visible := true            ## inspector shown when auto-hide is off
 var _panels_hidden := false
+## Side panels: margins, gaps and width limits (logical px).
+const MARGIN := 12.0
+const GAP := 8.0
+const CATALOG_MIN := 240.0
+const INSPECTOR_MIN := 280.0
+## Auto-hiding inspector: pinned open by the user, or dismissed until what it
+## would show changes (selection, landmark, brush, tab).
+var _inspector_pinned := false
+var _inspector_dismissed := false
+var _inspector_need_sig := ""
+var _catalog_grip: PanelGrip
+var _inspector_grip: PanelGrip
+## Above this many objects with problems, the farm outlines only the selected
+## ones; the grouped issues list (inspector, top bar) shows the rest.
+const ISSUE_OUTLINE_MAX := 24
+var _issue_levels: Dictionary = {}   ## uid -> severity of every object with a problem
 var _diff: LayoutDiff.Result
 var _view_state := {}
 var _calib_world: Array = []
@@ -51,6 +67,7 @@ const HINT_REPEAT_MS := 1500
 var hint_hold_s := 1.8                ## how long the hint stays (visual tests raise it)
 var _lm_hover := ""
 var _reported_session: EditorSession
+var _wired_session: EditorSession     ## session whose signals _connect_session() wired
 var _suppress_open_toast := false
 var _ref_drag_before: Dictionary = {}
 var load_report_modal: Modal
@@ -224,7 +241,9 @@ func _build_ui() -> void:
 		overlay.ghosts = [] if controller.session and controller.session.tool != "place" and not controller.stamp_mode else overlay.ghosts
 		overlay.refresh())
 	root.add_child(canvas_area)
-	var m := 14
+	var m := MARGIN
+	_left_visible = bool(App.settings.get_v("left_panel"))
+	_right_visible = bool(App.settings.get_v("right_panel"))
 	top_bar = TopBar.new()
 	top_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	top_bar.offset_left = m
@@ -244,6 +263,7 @@ func _build_ui() -> void:
 	catalog.farm_level_requested.connect(_set_farm_level)
 	catalog.mode_requested.connect(func(m: String):
 		_on_top_action("mode_creative" if m == FarmLayout.MODE_CREATIVE else "mode_realistic"))
+	catalog.expand_requested.connect(set_catalog_expanded)
 	root.add_child(catalog)
 	inspector = InspectorPanel.new()
 	inspector.anchor_left = 1
@@ -253,8 +273,11 @@ func _build_ui() -> void:
 	inspector.offset_bottom = -m
 	inspector.offset_right = -m
 	inspector.action.connect(_on_inspector_action)
+	inspector.tab_switched.connect(_on_inspector_tab)
 	inspector.renderer = renderer
 	root.add_child(inspector)
+	_catalog_grip = _make_grip("catalog_width")
+	_inspector_grip = _make_grip("inspector_width")
 	dock = ToolDock.new()
 	dock.anchor_left = 0
 	dock.anchor_right = 1
@@ -277,6 +300,8 @@ func _build_ui() -> void:
 	toasts.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	toasts.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	root.add_child(toasts)
+	# Above the dock including its contextual rows (repeat, symmetry, …).
+	dock.resized.connect(_place_toasts)
 	_build_hint()
 	_add_home_button()
 	modal_layer = Control.new()
@@ -372,32 +397,219 @@ func _fixed_refusal(action: String) -> bool:
 	return true
 
 
+func catalog_width(win_w: float) -> float:
+	## Expanded catalogue width: the remembered one (settings), else ~17.5 % of the window.
+	var saved := float(App.settings.get_v("catalog_width"))
+	var auto := clampf(win_w * 0.175, 272.0, 380.0)
+	return clampf(saved if saved > 0.0 else auto, CATALOG_MIN, _side_max(win_w, CATALOG_MIN))
+
+
+func inspector_width(win_w: float) -> float:
+	var saved := float(App.settings.get_v("inspector_width"))
+	var auto := clampf(win_w * 0.19, 296.0, 400.0)
+	return clampf(saved if saved > 0.0 else auto, INSPECTOR_MIN, _side_max(win_w, INSPECTOR_MIN))
+
+
+static func _side_max(win_w: float, lo: float) -> float:
+	return maxf(lo, minf(640.0, win_w * 0.36))
+
+
+func _inspector_needed() -> bool:
+	## Something for the inspector to show: a selection, a landmark, the brush,
+	## a tab the user opened (Farm / View), screenshot alignment.
+	var s := App.session
+	if s == null or inspector == null:
+		return false
+	if inspector.current_tab() != 0:
+		return true
+	if not s.selection.is_empty() or not s.selected_landmark.is_empty():
+		return true
+	if s.tool == "place" and not s.active_item.is_empty():
+		return true
+	return _ref_drag or (controller != null and controller.calibrating)
+
+
+func _inspector_need_key() -> String:
+	var s := App.session
+	if s == null or inspector == null:
+		return ""
+	return "%d|%d|%s|%s|%d" % [s.selection.size(), s.selection.hash(), s.selected_landmark,
+		s.active_item if s.tool == "place" else "", inspector.current_tab()]
+
+
+func inspector_shown() -> bool:
+	## Whether the inspector is on screen. With auto-hide (default) it appears
+	## when something needs it, unless the user closed it for that thing, or
+	## stays when the user opened it (top bar / ]).
+	if _panels_hidden or inspector == null:
+		return false
+	if not bool(App.settings.get_v("inspector_auto_hide")):
+		return _right_visible
+	var key := _inspector_need_key()
+	if key != _inspector_need_sig:
+		_inspector_need_sig = key
+		_inspector_dismissed = false
+	return _inspector_pinned or (_inspector_needed() and not _inspector_dismissed)
+
+
+func toggle_inspector() -> void:
+	if not bool(App.settings.get_v("inspector_auto_hide")):
+		_right_visible = not _right_visible
+		App.settings.set_v("right_panel", _right_visible)
+	elif inspector_shown():
+		_inspector_pinned = false
+		if inspector.current_tab() != 0:
+			inspector.show_tab(0)
+		_inspector_need_sig = _inspector_need_key()
+		_inspector_dismissed = true
+	else:
+		_inspector_pinned = true
+		_inspector_dismissed = false
+	_update_view_rect()
+
+
+func set_catalog_expanded(on: bool) -> void:
+	## Expanded catalogue, or collapsed to its category rail (remembered).
+	if _left_visible != on:
+		_left_visible = on
+		App.settings.set_v("left_panel", on)
+	_update_view_rect()
+
+
+func _on_inspector_tab(i: int) -> void:
+	if i != 0:
+		_inspector_dismissed = false
+	_update_view_rect()
+
+
+func _make_grip(setting: String) -> PanelGrip:
+	## Drag handle on a side panel's inner edge; the width follows the pointer
+	## and is remembered when the drag ends (double-click: automatic width).
+	var g := PanelGrip.new()
+	g.anchor_top = 0
+	g.anchor_bottom = 1
+	g.dragged.connect(func(_dx: float):
+		var vs := root.get_viewport_rect().size
+		var x := root.get_local_mouse_position().x
+		var w := (x - MARGIN) if setting == "catalog_width" else (vs.x - MARGIN - x)
+		var lo := CATALOG_MIN if setting == "catalog_width" else INSPECTOR_MIN
+		App.settings.set_v(setting, roundf(clampf(w, lo, _side_max(vs.x, lo))), false)
+		_update_view_rect())
+	g.released.connect(func(): App.settings.save_settings())
+	g.reset.connect(func():
+		App.settings.set_v(setting, 0.0)
+		_update_view_rect())
+	root.add_child(g)
+	return g
+
+
 func _layout_panels() -> void:
-	var w := root.get_viewport_rect().size.x
-	var side := clampf(w * 0.2, 290.0, 380.0)
-	catalog.offset_right = catalog.offset_left + side
-	inspector.offset_left = -14 - clampf(w * 0.2, 300.0, 380.0)
-	catalog.visible = _left_visible and not _panels_hidden
-	inspector.visible = _right_visible and not _panels_hidden
+	var vs := root.get_viewport_rect().size
+	var m := MARGIN
 	top_bar.visible = not _panels_hidden
-	var left_edge := (catalog.offset_right + 14) if catalog.visible else 14.0
-	var right_edge := (-inspector.offset_left + 14) if inspector.visible else 14.0
-	dock.offset_left = left_edge
-	dock.offset_right = -right_edge
+	# Narrow window / big UI scale: drop the brand, then shorten the mode switch.
+	top_bar.fit_width(vs.x - 2.0 * m)
+	var top := m + top_bar.get_combined_minimum_size().y + GAP if top_bar.visible else m
+	catalog.visible = not _panels_hidden
+	var shown := inspector_shown()
+	var iw := inspector_width(vs.x)
+	# Very narrow (e.g. 1080p at 200 %): while the inspector is open the
+	# catalogue shows only its rail, without changing the remembered state.
+	var expanded := _left_visible
+	if expanded and shown and vs.x - 2.0 * m - catalog_width(vs.x) - iw - 2.0 * GAP < dock.pill_width(true) + 16.0:
+		expanded = false
+	catalog.set_collapsed(not expanded)
+	var cw := catalog_width(vs.x) if expanded else catalog.rail_width()
+	catalog.offset_left = m
+	catalog.offset_right = m + cw
+	catalog.offset_top = top
+	catalog.offset_bottom = -m
+	inspector.visible = shown
+	inspector.offset_left = -m - iw
+	inspector.offset_right = -m
+	inspector.offset_top = top
+	inspector.offset_bottom = -m
+	_catalog_grip.visible = catalog.visible and expanded
+	_catalog_grip.offset_left = catalog.offset_right - 4.0
+	_catalog_grip.offset_right = catalog.offset_right + 4.0
+	_catalog_grip.offset_top = top + 16.0
+	_catalog_grip.offset_bottom = -m - 16.0
+	_inspector_grip.visible = shown
+	_inspector_grip.anchor_left = 1
+	_inspector_grip.anchor_right = 1
+	_inspector_grip.offset_left = inspector.offset_left - 4.0
+	_inspector_grip.offset_right = inspector.offset_left + 4.0
+	_inspector_grip.offset_top = top + 16.0
+	_inspector_grip.offset_bottom = -m - 16.0
+	var left_edge := (catalog.offset_right + GAP) if catalog.visible else m
+	var right_edge := (iw + m + GAP) if shown else m
+	# Judged with the inspector open, so the dock doesn't change as it comes and goes.
+	var between := vs.x - left_edge - (iw + m + GAP)
+	dock.set_compact(between < dock.pill_width(false) + 16.0)
+	# Too narrow even for the compact dock (small window, big UI scale): the
+	# panels end above it and the dock spans the window.
+	var narrow := between < dock.pill_width(true) + 16.0
+	var bottom := -(m + dock.pill_height() + GAP) if narrow else -m
+	catalog.offset_bottom = bottom
+	inspector.offset_bottom = bottom
+	_catalog_grip.offset_bottom = bottom - 16.0
+	_inspector_grip.offset_bottom = bottom - 16.0
+	dock.offset_left = m if narrow else left_edge
+	dock.offset_right = -m if narrow else -right_edge
+	dock.offset_bottom = -m
+	_fit_stamps_panel(vs, top, left_edge, right_edge)
 	toasts.offset_right = -right_edge
-	toasts.offset_left = toasts.offset_right - 360
-	toasts.offset_bottom = -104
-	toasts.offset_top = toasts.offset_bottom - 300
-	top_bar.set_panels(_left_visible, _right_visible)
+	toasts.offset_left = toasts.offset_right - minf(360.0, vs.x - left_edge - right_edge)
+	_place_toasts()
+	top_bar.set_panels(_left_visible, shown, bool(App.settings.get_v("inspector_auto_hide")))
+
+
+func _fit_stamps_panel(vs: Vector2, top: float, left_edge: float, right_edge: float) -> void:
+	## The stamps panel (LayoutToolController) floats at the top of the canvas,
+	## centred between the side panels and never wider or taller than it.
+	var sp: Control = layout_tools.panel if layout_tools != null and is_instance_valid(layout_tools.panel) else null
+	if sp == null:
+		return
+	var w := clampf(vs.x - left_edge - right_edge - 16.0, 200.0, 540.0)
+	var cx := (left_edge + vs.x - right_edge) * 0.5 - vs.x * 0.5   # the panel is anchored at the window's centre
+	sp.offset_left = cx - w * 0.5
+	sp.offset_right = cx + w * 0.5
+	sp.offset_top = top
+	sp.offset_bottom = top + clampf(vs.y - top - dock.pill_height() - 140.0, 160.0, 310.0)
+
+
+func _raise_toasts() -> void:
+	## Toasts above the floating panels (stamps), below dialogs.
+	# move_child() removes first: with toasts before the modal layer this lands
+	# them right below it.
+	if toasts.get_index() < modal_layer.get_index():
+		root.move_child(toasts, modal_layer.get_index() - 1)
+
+
+func _place_toasts() -> void:
+	if toasts == null or dock == null:
+		return
+	toasts.offset_bottom = -(MARGIN + maxf(dock.size.y, dock.pill_height()) + 10.0)
+	toasts.offset_top = toasts.offset_bottom - 300.0
 
 
 func _update_view_rect() -> void:
+	## The canvas the camera treats as unobstructed: between the side panels,
+	## under the top bar and above the tool pill (the dock's status line and
+	## contextual rows float over the farm).
 	_layout_panels()
 	var vs := root.get_viewport_rect().size
-	var l := (catalog.offset_right + 10) if catalog.visible else 0.0
-	var r := (-inspector.offset_left + 10) if inspector.visible else 0.0
-	var t := 80.0 if top_bar.visible else 0.0
-	camera.view_rect = Rect2(Vector2(l, t), Vector2(vs.x - l - r, vs.y - t - 100))
+	var l := (catalog.offset_right + 4.0) if catalog.visible else 0.0
+	var r := (-inspector.offset_left + 4.0) if inspector.visible else 0.0
+	var t := (MARGIN + top_bar.get_combined_minimum_size().y + 4.0) if top_bar.visible else 0.0
+	var b := MARGIN + dock.pill_height() + 4.0
+	camera.view_rect = Rect2(Vector2(l, t), Vector2(maxf(1.0, vs.x - l - r), maxf(1.0, vs.y - t - b)))
+
+
+func canvas_share() -> float:
+	## Fraction of the window the unobstructed canvas covers (view_rect).
+	var vs := root.get_viewport_rect().size
+	return camera.view_rect.get_area() / maxf(1.0, vs.x * vs.y)
 
 
 func _apply_ui_scale() -> void:
@@ -428,6 +640,8 @@ func _rebuild_ui() -> void:
 	await get_tree().process_frame
 	_apply_ui_scale()
 	_build_ui()
+	layout_tools.attach_ui(dock, root, modal_layer)   # the old dock and stamps panel were freed
+	_raise_toasts()
 	_on_session_changed()
 	_update_view_rect()
 
@@ -519,37 +733,11 @@ func _on_session_changed() -> void:
 	controller.bind(s)
 	layout_tools.bind(s)
 	_load_reference()
-	s.selection_changed.connect(_on_selection_changed)
-	s.tool_changed.connect(_on_tool_changed)
-	s.history_changed.connect(_on_history_changed)
-	s.active_item_changed.connect(func():
-		catalog.select_item(s.active_item)
-		inspector.queue_rebuild())
-	s.message.connect(func(t, k): toasts.show_toast(t, k))
-	s.mode_changed.connect(func():
-		_refresh_issues()
-		_refresh_level_blocks()
-		inspector.queue_rebuild()
-		top_bar.update_state(s)
-		catalog.on_level_context_changed())
-	s.layout.land_changed.connect(func():
-		ground.setup(s.map, s.layout.unlocked_plots)
-		_refresh_level_blocks()
-		grid.queue_redraw())
-	if not s.layout.world_changed.is_connected(_on_world_changed):
-		s.layout.world_changed.connect(_on_world_changed)
-	if not s.landmark_selected.is_connected(_on_landmark_selected):
-		s.landmark_selected.connect(_on_landmark_selected)
-	s.layout.annotations_changed.connect(overlay.refresh)
-	s.layout.meta_changed.connect(func():
-		top_bar.update_state(s)
-		_update_title())
-	s.layout.reference_changed.connect(_on_reference_changed)
-	s.layout.planning_changed.connect(func():
-		_refresh_issues()
-		_refresh_level_blocks()
-		inspector.queue_rebuild()
-		catalog.on_level_context_changed())
+	# Once per session: _rebuild_ui() runs this function again for the same
+	# session, and the lambdas below would otherwise be connected twice.
+	if _wired_session != s:
+		_wired_session = s
+		_connect_session(s)
 	_on_tool_changed()
 	_on_history_changed()
 	_refresh_level_blocks()
@@ -559,6 +747,44 @@ func _on_session_changed() -> void:
 	catalog.refresh()
 	_update_title()
 	_maybe_report_load(s)
+
+
+func _connect_session(s: EditorSession) -> void:
+	## The session's and its layout's signals -> UI. The lambdas read App.session
+	## instead of capturing `s`: a session whose own signal holds a lambda that
+	## references it would never be freed after switching layouts.
+	s.selection_changed.connect(_on_selection_changed)
+	s.tool_changed.connect(_on_tool_changed)
+	s.history_changed.connect(_on_history_changed)
+	s.active_item_changed.connect(func():
+		catalog.select_item(App.session.active_item)
+		inspector.queue_rebuild()
+		_update_view_rect())
+	s.message.connect(func(t, k): toasts.show_toast(t, k))
+	s.mode_changed.connect(func():
+		_refresh_issues()
+		_refresh_level_blocks()
+		inspector.queue_rebuild()
+		top_bar.update_state(App.session)
+		catalog.on_level_context_changed())
+	s.layout.land_changed.connect(func():
+		ground.setup(App.session.map, App.session.layout.unlocked_plots)
+		_refresh_level_blocks()
+		grid.queue_redraw())
+	if not s.layout.world_changed.is_connected(_on_world_changed):
+		s.layout.world_changed.connect(_on_world_changed)
+	if not s.landmark_selected.is_connected(_on_landmark_selected):
+		s.landmark_selected.connect(_on_landmark_selected)
+	s.layout.annotations_changed.connect(overlay.refresh)
+	s.layout.meta_changed.connect(func():
+		top_bar.update_state(App.session)
+		_update_title())
+	s.layout.reference_changed.connect(_on_reference_changed)
+	s.layout.planning_changed.connect(func():
+		_refresh_issues()
+		_refresh_level_blocks()
+		inspector.queue_rebuild()
+		catalog.on_level_context_changed())
 
 
 # ---------------------------------------------------------------------------
@@ -718,6 +944,7 @@ func _on_landmark_selected(id: String) -> void:
 		if inspector.current_tab() != 0:
 			inspector.show_tab(0)
 	inspector.queue_rebuild()
+	_update_view_rect()
 
 
 func _update_landmark_overlay() -> void:
@@ -831,10 +1058,13 @@ func _fit() -> void:
 
 func _on_selection_changed() -> void:
 	overlay.selection = App.session.selection
+	if _issue_levels.size() > ISSUE_OUTLINE_MAX:
+		_apply_issue_marks()
 	overlay.refresh()
 	if inspector.current_tab() != 0 and not App.session.selection.is_empty():
 		inspector.show_tab(0)
 	inspector.queue_rebuild()
+	_update_view_rect()
 
 
 func _on_tool_changed() -> void:
@@ -854,6 +1084,7 @@ func _on_tool_changed() -> void:
 		overlay.ghost_result = null
 	controller.refresh_hover()
 	inspector.queue_rebuild()
+	_update_view_rect()
 
 
 func _on_history_changed() -> void:
@@ -863,25 +1094,85 @@ func _on_history_changed() -> void:
 	_update_title()
 
 
+## Placement conflict -> short reason, most telling first.
+const CONFLICT_REASONS := [
+	[PlacementRules.LANDMARK, "On a fixed landmark"], [PlacementRules.OCCUPIED, "Overlaps another object"],
+	[PlacementRules.OUT_OF_BOUNDS, "Outside the farm"], [PlacementRules.ROAD, "On the road"],
+	[PlacementRules.WATER, "In the water"], [PlacementRules.BLOCKED, "On blocked ground"],
+	[PlacementRules.LOCKED_LAND, "On locked land"], [PlacementRules.NOT_PLACEABLE, "Can't be placed here"],
+]
+
+
+static func _conflict_reason(res: PlacementRules.Result) -> String:
+	if res == null:
+		return "Invalid placement"
+	for e in CONFLICT_REASONS:
+		if res.codes.has(e[0]):
+			return e[1]
+	return "Invalid placement"
+
+
 func _refresh_issues() -> void:
+	## Every object with a problem, grouped by reason for the issues list. A few
+	## are outlined on the farm; many are only listed (and outlined once selected).
 	var s := App.session
 	var issues := {}
+	var groups := {}
 	var conflicts := s.conflicts()
 	for u in conflicts:
 		issues[u] = 2
+		_issue_group(groups, _conflict_reason(conflicts[u]), 2, u)
 	if s.layout.mode == FarmLayout.MODE_REALISTIC:
 		var r := s.analysis()
 		for u in r.issues:
 			var sev := 0
 			for c in r.issues[u]:
-				sev = maxi(sev, RealisticAnalyzer.SEVERITY.get(c, 0))
+				var cs: int = RealisticAnalyzer.SEVERITY.get(c, 0)
+				sev = maxi(sev, cs)
+				if cs > 0 and c != RealisticAnalyzer.PLACEMENT:
+					_issue_group(groups, RealisticAnalyzer.issue_text(c), cs, u)
 			if sev > 0:
 				issues[u] = maxi(issues.get(u, 0), sev)
-	overlay.issues = issues
+	_issue_levels = issues
+	var list: Array = groups.values()
+	list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["severity"] != b["severity"]:
+			return a["severity"] > b["severity"]
+		return (a["uids"] as Array).size() > (b["uids"] as Array).size())
+	_view_state["issues"] = list
+	_view_state["issues_condensed"] = issues.size() > ISSUE_OUTLINE_MAX
+	var blocking := 0
+	var tip := PackedStringArray()
+	for g: Dictionary in list:
+		tip.append("%s × %s" % [UI.fmt_int((g["uids"] as Array).size()), g["label"]])
+	for u in issues:
+		blocking += 1 if issues[u] >= 2 else 0
+	top_bar.set_issues(blocking, "Objects with problems — click for the list\n" + "\n".join(tip.slice(0, 8)))
+	top_bar.fit_width(root.get_viewport_rect().size.x - 2.0 * MARGIN)
+	_apply_issue_marks()
+
+
+static func _issue_group(groups: Dictionary, label: String, severity: int, uid: int) -> void:
+	if not groups.has(label):
+		groups[label] = {"label": label, "severity": severity, "uids": []}
+	(groups[label]["uids"] as Array).append(uid)
+
+
+func _apply_issue_marks() -> void:
+	## Red outlines (and Realistic tints) for objects with problems: all of them
+	## while there are few, else only the selected ones.
+	var s := App.session
+	var shown := _issue_levels
+	if _issue_levels.size() > ISSUE_OUTLINE_MAX:
+		shown = {}
+		for u in s.selection:
+			if _issue_levels.has(u):
+				shown[u] = _issue_levels[u]
+	overlay.issues = shown
 	var tints := {}
 	if s.layout.mode == FarmLayout.MODE_REALISTIC:
-		for u in issues:
-			if issues[u] >= 2:
+		for u in shown:
+			if shown[u] >= 2:
 				tints[u] = Color(1.0, 0.82, 0.8)
 	renderer.set_tints(tints)
 	overlay.refresh()
@@ -946,6 +1237,7 @@ func _setup_layout_tools() -> void:
 	layout_tools.name = "LayoutTools"
 	add_child(layout_tools)
 	layout_tools.setup(controller, overlay, dock, world, root, modal_layer)
+	_raise_toasts()
 
 
 func _unhandled_input(e: InputEvent) -> void:
@@ -1030,6 +1322,8 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_TAB:
 			_panels_hidden = not _panels_hidden
 			_update_view_rect()
+		KEY_BRACKETLEFT: set_catalog_expanded(not _left_visible)
+		KEY_BRACKETRIGHT: toggle_inspector()
 		KEY_F1, KEY_QUESTION: Dialogs.help(modal_layer)
 		KEY_EQUAL, KEY_KP_ADD: camera.zoom_at(camera.view_rect.get_center(), 1.2)
 		KEY_MINUS, KEY_KP_SUBTRACT: camera.zoom_at(camera.view_rect.get_center(), 1.0 / 1.2)
@@ -1076,11 +1370,9 @@ func _toggle_selection_flag(prop: String, label: String) -> void:
 
 
 func _copy(cut: bool) -> int:
-	var n := App.session.copy_selection()
+	var n := App.session.cut_selection() if cut else App.session.copy_selection()
 	if n == 0:
 		return 0
-	if cut:
-		App.session.delete_selection()
 	App.toast("%s %d object%s — Ctrl+V to paste" % ["Cut" if cut else "Copied", n, "" if n == 1 else "s"], "info")
 	return n
 
@@ -1236,14 +1528,13 @@ func _on_top_action(a: String) -> void:
 			App.session.set_mode(FarmLayout.MODE_REALISTIC)
 			top_bar.update_state(App.session)
 			inspector.show_tab(1)
-		"toggle_left":
-			_left_visible = not _left_visible
-			App.settings.set_v("left_panel", _left_visible)
-			_update_view_rect()
-		"toggle_right":
-			_right_visible = not _right_visible
-			App.settings.set_v("right_panel", _right_visible)
-			_update_view_rect()
+		"toggle_left": set_catalog_expanded(not _left_visible)
+		"toggle_right": toggle_inspector()
+		"issues":
+			# The grouped list: Farm tab (it also lists them in Creative mode).
+			_inspector_dismissed = false
+			inspector.show_tab(1)
+			inspector.rebuild()
 
 
 func _set_farm_level(level: int) -> void:
@@ -1289,6 +1580,15 @@ func _on_inspector_action(a: String, arg: Variant) -> void:
 		"landmark_skin": s.set_landmark_skin(str(arg[0]), str(arg[1]))
 		"landmark_visible": s.set_landmark_visible(str(arg[0]), bool(arg[1]))
 		"landmark_focus": focus_landmark(str(arg))
+		"select_uids":
+			# Issues list: select one group and show it.
+			var live: Array = []
+			for u in arg:
+				if s.layout.get_obj(int(u)) != null:
+					live.append(int(u))
+			if not live.is_empty():
+				s.select(live, false, false)
+				_fit_selection_or_farm()
 		"theme": set_theme(str(arg))
 		"home": go_home()
 		"place_flip": _inspector_place_flip()
@@ -1394,6 +1694,10 @@ func _on_setting_changed(key: String) -> void:
 		"smooth_zoom": camera.smooth = bool(App.settings.get_v(key))
 		"ambient_animation": renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
 		"wheel_zoom_factor": camera.wheel_factor = float(App.settings.get_v(key))
+		"inspector_auto_hide":
+			_inspector_pinned = false
+			_inspector_dismissed = false
+			_update_view_rect()
 
 
 func _on_settings_dialog(what: String) -> void:

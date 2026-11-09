@@ -18,7 +18,8 @@ $results = New-Object System.Collections.ArrayList
 $iso = New-IsolatedDataDir
 
 function Step {
-	param([string] $Name, [string] $Exe, [string[]] $Arguments, [string] $MustMatch = '', [switch] $Isolate, [int] $Timeout = 900)
+	# A script that fails to parse can leave a selftest waiting forever, so keep timeouts short.
+	param([string] $Name, [string] $Exe, [string[]] $Arguments, [string] $MustMatch = '', [switch] $Isolate, [int] $Timeout = 300)
 	$log = Join-Path $logs "$Name.log"
 	$sw = [Diagnostics.Stopwatch]::StartNew()
 	$data = ''

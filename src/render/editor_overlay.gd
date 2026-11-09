@@ -319,12 +319,21 @@ func _draw_ghost(g: Dictionary) -> void:
 	var mask := -1
 	if not it.connect_group.is_empty() and g.has("mask"):
 		mask = g["mask"]
-	var spr := assets.get_sprite(it.art_key, str(g.get("variant", "")), mask)
+	# The art the object will have once placed (as ObjectRenderer draws it): the
+	# world theme's variant and, when flipped, hand-drawn mirror art unflipped.
+	var variant := str(g.get("variant", ""))
+	if layout:
+		variant = assets.themed_variant(it.art_key, variant, layout.theme())
+	var spr := assets.get_sprite(it.art_key, variant, mask)
+	var draw_flip := flipped
+	if spr and draw_flip and spr.mirror:
+		spr = spr.mirror
+		draw_flip = false
 	var tint := Color(1, 1, 1, ghost_alpha)
 	if ghost_result and not ghost_result.ok:
 		tint = Color(1.0, 0.75, 0.72, ghost_alpha * 0.85)
 	if spr:
-		draw_set_transform(center, 0.0, Vector2(-1.0 if flipped else 1.0, 1.0))
+		draw_set_transform(center, 0.0, Vector2(-1.0 if draw_flip else 1.0, 1.0))
 		draw_texture_rect(spr.texture, Rect2(-spr.anchor * spr.scale, spr.texture.get_size() * spr.scale), false, tint)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	else:

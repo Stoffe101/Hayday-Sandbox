@@ -292,8 +292,14 @@ func set_landmark_skin(landmark_id: String, skin_id: String) -> bool:
 
 
 func set_landmark_visible(landmark_id: String, visible: bool) -> bool:
+	## Only transient / hidden-by-default landmarks can be hidden (Landmark.can_hide):
+	## hiding a permanent one would remove it from the farm.
 	var lm: Landmark = map.landmark(landmark_id) if map else null
 	if lm == null:
+		return false
+	if not lm.can_hide():
+		if not visible:
+			message.emit(explain_fixed(landmark_id, "delete"), "info")
 		return false
 	var v: Variant = null if visible == (not lm.hidden_by_default) else visible
 	execute(SetWorldStateCommand.for_landmark(layout, "landmark_visible", landmark_id, v, "%s %s" % ["Show" if visible else "Hide", lm.name]))
@@ -559,6 +565,23 @@ func copy_selection() -> int:
 			"variant": o.variant, "planned": o.planned, "note": o.note, "size": o.size,
 			"group": o.group_id})
 	return clipboard.size()
+
+
+func cut_selection() -> int:
+	## Ctrl+X: copies, then removes exactly the objects that reached the
+	## clipboard (one undo step). Objects that can't be copied stay on the farm.
+	if _refuse_if_landmark("cut"):
+		return 0
+	var n := copy_selection()
+	if n == 0:
+		return 0
+	var uids: Array = []
+	for o: PlacedObject in selected_objects():
+		if can_copy_object(o) and can_remove_object(o):
+			uids.append(o.uid)
+	if not uids.is_empty():
+		execute(EditCommands.RemoveObjects.new(uids, "Cut %d object%s" % [uids.size(), "" if uids.size() == 1 else "s"]))
+	return n
 
 
 func clipboard_objects(at: Vector2i) -> Array:

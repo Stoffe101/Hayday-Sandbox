@@ -218,6 +218,13 @@ func is_customizable() -> bool:
 	return not skin_kind.is_empty()
 
 
+func can_hide() -> bool:
+	## Only landmarks that are not always there in the game (transient, or
+	## hidden by default) may be shown / hidden per design; a permanent one is
+	## always drawn, whatever a layout file says (hiding = removing it).
+	return transient or hidden_by_default
+
+
 static func _valid_id(s: String) -> bool:
 	var re := RegEx.create_from_string("^[a-z0-9][a-z0-9_]*$")
 	return re.search(s) != null

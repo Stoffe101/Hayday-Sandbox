@@ -25,6 +25,11 @@ Output (default root ``/root/hayday-sandbox-private-assets``, override with ``--
                                                         pixels), scale, frame count, warnings
   <root>/raw/apk_sprites/<version>/extract_report.json  what was processed, skipped, failed and why
 
+Huge exports (e.g. background.sc bg_edge_* / deco_layer_01, > 64 megapixels at the default scale) fail by default
+(``--huge error``, recorded in index.json). ``--huge downscale`` renders them at the largest scale that fits
+``--max-pixels``; ``--huge chunk`` renders them at full scale as ``<export>__chunks/r<row>_c<col>.png`` tiles
+(``--chunk-size``, default 2048) whose pixel offsets are listed in the index entry's ``chunks`` (no ``file`` key).
+
 Every rendered PNG is proprietary Supercell art: personal use only, never commit, never redistribute.
 
 What is TESTED (2026-11-09) on three Supercell-signed builds (signer SHA-256 2265e901...0cc1bab):
@@ -97,6 +102,8 @@ SC_EXTS = (".sc", ".sctx", ".ktx", ".zktx")
 # its footprint (1x1 paths/fields span x -64..64, y 0..64; 2x2/3x3/4x4 buildings end at y = 128/192/~256).
 # The app's world tile is 64 x 32 px, so 1 SC unit = 0.5 world px.
 SC_UNITS_PER_WORLD_PX = 2.0
+# Largest canvas rendered in one piece (RGBA float32 working layers: 16 bytes per pixel per layer).
+MAX_CANVAS_PIXELS = 64_000_000
 
 
 class ToolError(RuntimeError):
@@ -1159,15 +1166,28 @@ class Renderer:
 		return vals[len(vals) // 2]
 
 	# ---- raster ---------------------------------------------------------------------------------
-	def render(self, ops, scale: float = 1.0, pad: int = 2):
-		import numpy as np
-		from PIL import Image, ImageDraw
+	def canvas(self, ops, scale: float = 1.0, pad: int = 2):
+		"""Full canvas (x0, y0, x1, y1) in output pixels (registration point = (0, 0)) or None if empty."""
 		bb = self.bounds(ops, scale)
 		if bb is None:
-			return None, None
-		x0, y0, x1, y1 = bb[0] - pad, bb[1] - pad, bb[2] + pad, bb[3] + pad
+			return None
+		return bb[0] - pad, bb[1] - pad, bb[2] + pad, bb[3] + pad
+
+	def render(self, ops, scale: float = 1.0, pad: int = 2, window=None, max_pixels: int = MAX_CANVAS_PIXELS):
+		"""Rasterise ``ops``. ``window`` = (x0, y0, x1, y1) in output pixels (registration point = (0, 0)) renders
+		only that part of the canvas (chunked rendering of huge exports); default = the whole bounding box.
+		Returns (PIL RGBA image, origin = registration point in image pixels)."""
+		import numpy as np
+		from PIL import Image, ImageDraw
+		if window is None:
+			bb = self.canvas(ops, scale, pad)
+			if bb is None:
+				return None, None
+			x0, y0, x1, y1 = bb
+		else:
+			x0, y0, x1, y1 = (int(v) for v in window)
 		W, H = x1 - x0, y1 - y0
-		if W <= 0 or H <= 0 or W * H > 64_000_000:
+		if W <= 0 or H <= 0 or W * H > max_pixels:
 			raise ToolError(f"unreasonable canvas size {W}x{H}")
 		layers = [np.zeros((H, W, 4), np.float32)]  # premultiplied, 0..1
 		mask_stack: list = []
@@ -1199,11 +1219,7 @@ class Renderer:
 			world = [(px * scale - x0, py * scale - y0) for px, py in _world(cmd.xy, m)]
 			uv = self._uv_px(cmd, tex)
 			pieces = _pieces(world, uv)
-			for poly_xy, poly_uv in pieces:
-				A = _affine_from(poly_uv[:3], poly_xy[:3])  # uv -> xy
-				if A is None:
-					continue
-				inv = _invert(A)  # xy -> uv
+			for poly_xy, poly_uv, inv in pieces:  # inv: xy -> uv
 				if inv is None:
 					continue
 				bx0 = max(0, math.floor(min(p[0] for p in poly_xy)))
@@ -1247,6 +1263,46 @@ class Renderer:
 		return Image.fromarray(img, "RGBA"), (-x0, -y0)
 
 
+def render_chunked(rend: Renderer, ops, scale: float, out_dir: Path, chunk: int = 2048, pad: int = 2) -> dict | None:
+	"""Render a (huge) display list as a grid of ``chunk`` x ``chunk`` PNG tiles named ``r<row>_c<col>.png`` in
+	``out_dir``. Fully transparent tiles are not written. Returns the manifest (canvas size, registration point in
+	canvas pixels, tile list with pixel offsets) or None when there is nothing to draw. Placing every tile at its
+	``offset`` reproduces exactly the single image ``render`` would return."""
+	bb = rend.canvas(ops, scale, pad)
+	if bb is None:
+		return None
+	x0, y0, x1, y1 = bb
+	W, H = x1 - x0, y1 - y0
+	cols, rows = math.ceil(W / chunk), math.ceil(H / chunk)
+	out_dir.mkdir(parents=True, exist_ok=True)
+	tiles = []
+	for r in range(rows):
+		for c in range(cols):
+			wx0, wy0 = x0 + c * chunk, y0 + r * chunk
+			win = (wx0, wy0, min(x1, wx0 + chunk), min(y1, wy0 + chunk))
+			img, _ = rend.render(ops, scale, pad, window=win)
+			if img is None or img.getbbox() is None:
+				continue
+			name = f"r{r:02d}_c{c:02d}.png"
+			img.save(out_dir / name, optimize=False)
+			tiles.append({"file": name, "offset": [c * chunk, r * chunk], "size": list(img.size)})
+	return {"size": [W, H], "origin": [-x0, -y0], "chunk": chunk, "grid": [cols, rows], "tiles": tiles}
+
+
+def fit_scale(rend: Renderer, ops, scale: float, max_pixels: int = MAX_CANVAS_PIXELS, pad: int = 2) -> float:
+	"""Largest scale <= ``scale`` (on a 1/64 grid) whose canvas fits in ``max_pixels``."""
+	s = scale
+	for _ in range(64):
+		bb = rend.canvas(ops, s, pad)
+		if bb is None or (bb[2] - bb[0]) * (bb[3] - bb[1]) <= max_pixels:
+			return s
+		W, H = bb[2] - bb[0], bb[3] - bb[1]
+		s = math.floor(s * math.sqrt(max_pixels / (W * H)) * 0.98 * 64) / 64
+		if s <= 0:
+			break
+	raise ToolError("cannot fit the canvas into the pixel budget")
+
+
 def _world(xy, m):
 	return [(m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]) for x, y in xy]
 
@@ -1275,27 +1331,35 @@ def _invert(A):
 
 
 def _pieces(xy, uv):
-	"""Split a draw command into pieces that each have ONE affine uv->xy map (whole polygon when consistent)."""
+	"""Split a draw command into pieces that each have ONE affine xy->uv map (whole polygon when consistent).
+
+	Returns (piece_xy, piece_uv, xy_to_uv). The map is solved from the xy side, so commands whose uv points are
+	degenerate also render: Supercell draws solid-colour fills (e.g. the river water in background.sc
+	bg_edge_west) as polygons whose uv points all name ONE texel, and 1-D gradients as uv lines."""
 	n = len(xy)
 	if n < 3:
 		return []
 	tri = None
 	for k in range(1, n - 1):
-		if _affine_from(uv[0:1] + uv[k:k + 2], xy[0:1] + xy[k:k + 2]) is not None:
+		if _affine_from(xy[0:1] + xy[k:k + 2], uv[0:1] + uv[k:k + 2]) is not None:
 			tri = (0, k, k + 1)
 			break
 	if tri is None:
 		return []
-	A = _affine_from([uv[i] for i in tri], [xy[i] for i in tri])
+	A = _affine_from([xy[i] for i in tri], [uv[i] for i in tri])
 	ok = True
 	for (u, v), (x, y) in zip(uv, xy):
-		px, py = A[0] * u + A[1] * v + A[2], A[3] * u + A[4] * v + A[5]
-		if abs(px - x) > 0.75 or abs(py - y) > 0.75:
+		pu, pv = A[0] * x + A[1] * y + A[2], A[3] * x + A[4] * y + A[5]
+		if abs(pu - u) > 0.75 or abs(pv - v) > 0.75:
 			ok = False
 			break
 	if ok:
-		return [(xy, uv)]
-	return [([xy[0], xy[k], xy[k + 1]], [uv[0], uv[k], uv[k + 1]]) for k in range(1, n - 1)]
+		return [(xy, uv, A)]
+	out = []
+	for k in range(1, n - 1):
+		pxy, puv = [xy[0], xy[k], xy[k + 1]], [uv[0], uv[k], uv[k + 1]]
+		out.append((pxy, puv, _affine_from(pxy, puv)))
+	return out
 
 
 # =====================================================================================================
@@ -1492,7 +1556,29 @@ def cmd_extract(args) -> int:
 									break
 						ops, warns = rend.display_list(oid, frame)
 						scale = args.scale if args.scale else round(max(0.25, rend.texel_scale(ops)) * 4) / 4
-						img, origin = rend.render(ops, scale)
+						huge = getattr(args, "huge", "error")
+						bb = rend.canvas(ops, scale)
+						too_big = bb is not None and (bb[2] - bb[0]) * (bb[3] - bb[1]) > args.max_pixels
+						if too_big and huge == "chunk":
+							fname = re.sub(r"[^A-Za-z0-9_.-]+", "_", ename) or f"id{oid}"
+							cdir = f"{fname}__chunks"
+							man = render_chunked(rend, ops, scale, sdir / cdir, args.chunk_size)
+							# no "file" key on purpose: consumers that expect one PNG per export skip this entry
+							entry.update({"chunks": {"dir": cdir, **{k: man[k] for k in ("chunk", "grid", "tiles")}},
+								"size": man["size"], "origin": man["origin"], "scale": scale,
+								"pixels_per_world_px": scale * SC_UNITS_PER_WORLD_PX,
+								"frames": len(clip.frames) if clip is not None else 1, "frame_rendered": frame,
+								"frame_label": label, "draw_ops": sum(1 for o in ops if o[0] == "draw")})
+							if warns:
+								entry["warnings"] = sorted(set(warns))
+							index[ename] = entry
+							done += 1
+							continue
+						if too_big and huge == "downscale":
+							full = scale
+							scale = fit_scale(rend, ops, scale, args.max_pixels)
+							entry["downscaled_from"] = full
+						img, origin = rend.render(ops, scale, max_pixels=args.max_pixels)
 						if img is None:
 							entry["skipped"] = "nothing to draw"
 						else:
@@ -1551,6 +1637,13 @@ def main(argv=None) -> int:
 				"0 = per-export native density)")
 			p.add_argument("--frame-label", default="IdleStart,Idle,idle",
 				help="comma-separated frame labels to try before --frame (empty string disables)")
+			p.add_argument("--huge", choices=("error", "downscale", "chunk"), default="error",
+				help="exports whose canvas exceeds --max-pixels: 'error' (default, reported in index.json), "
+				"'downscale' (largest scale that fits; index records scale + downscaled_from) or 'chunk' (full "
+				"scale as <export>__chunks/r<row>_c<col>.png tiles; index entry has 'chunks' and no 'file')")
+			p.add_argument("--max-pixels", type=int, default=MAX_CANVAS_PIXELS,
+				help=f"single-canvas pixel budget (default {MAX_CANVAS_PIXELS})")
+			p.add_argument("--chunk-size", type=int, default=2048, help="tile size in px for --huge chunk")
 			p.add_argument("--atlases", action="store_true", help="also save decoded atlases")
 			p.add_argument("--include-lowres", action="store_true", help="also render *_lowres.sc files (old builds)")
 			p.add_argument("--premultiplied", choices=("auto", "yes", "no"), default="auto")

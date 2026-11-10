@@ -1,16 +1,18 @@
 # Testing
 
 All layers run locally (Windows or Linux) and in CI (`.github/workflows/ci.yml`). The static, unit and
-integration counts are **as of a511d0c** (Windows development PC, Godot 4.7.2) and will be refreshed for the final
-commit of this wave. Rows marked † are from the earlier run with `tools\ci\windows_checks.ps1 -SkipImport -Tag docs`
+integration counts are from the end of the farm-planning wave (Windows development PC, Godot 4.7.2, 2026-11-10,
+`tools\ci\windows_checks.ps1 -Tag final`). The Windows build (`tools\build\build.ps1`) also smoke-tests the
+exported exe headless: start-up, `--smoke-plan` (opens all seven Plan tabs and the three planning dialogs; a
+release export compiles scripts more strictly than the editor) and installing a synthetic pack. Rows marked † are from the earlier run with `tools\ci\windows_checks.ps1 -SkipImport -Tag docs`
 on 2026-11-09 at HEAD 8c93360 (logs in `artifacts\checks\docs\`) and were not re-counted for this update.
 
 | Layer | Command (Linux form) | What it covers | Result |
 |---|---|---|---|
-| Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 148 scripts, 0 failed (a511d0c) |
+| Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 147 scripts, 0 failed (end of the planning wave) |
 | Data | `python3 tools/ci/validate_data.py` | manifests, maps, asset pack refs, samples, price file (`data/prices/`), **licence guard** | 1,967 items, 0 errors, 0 warnings † |
-| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 417 tests / 15,149 assertions, 0 failed (a511d0c) |
-| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 404 checks, 0 failed (a511d0c) |
+| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 427 tests / 15,243 assertions, 0 failed (end of the planning wave) |
+| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 506 checks, 0 failed (end of the planning wave; adds the "QA journeys" section) |
 | Performance | `godot --headless --path . -- --selftest=perf` | synthetic farms 2k/5k/10k, densely packed real map, world layer, thumbnails | 7 checks, 0 failed (numbers below) † |
 | Planning perf | `godot --headless --path . --script res://tests/perf/perf_planning.gd [-- --sizes=2000,5000,10000 --reps=30]` | budget engine, scopes, phases, checklist, shopping list, guide + exports on 2k/5k/10k real-item farms | table of mean / p95 / max (numbers below) |
 | Budget perf | `godot --headless --path . --script res://tests/perf/perf_budget.gd [-- --sizes=... --reps=20]` | `BudgetEngine` alone: full recompute, incremental edits | not part of the runners; run by hand |

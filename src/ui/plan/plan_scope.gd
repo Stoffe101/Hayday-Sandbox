@@ -33,6 +33,8 @@ const CORNER_NAMES := {"bl": "Bottom left", "br": "Bottom right", "tl": "Top lef
 
 ## Mode texts (labels + the tooltips that explain them, docs/PLANNING.md §4).
 const MODE_LABELS := {"design": "Design cost", "to_buy": "To buy", "remaining": "Remaining"}
+## Button labels where space is tight (segmented mode switches).
+const MODE_SHORT := {"design": "Design", "to_buy": "To buy", "remaining": "Remaining"}
 const MODE_HELP := {
 	"design": "Design cost: every object priced as a purchase (copy #1, #2, … in build order), ignoring your inventory. What the whole design would cost from scratch.",
 	"to_buy": "To buy: objects not covered by the copies you own, plus the land the design needs. What you still have to buy.",

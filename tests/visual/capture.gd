@@ -121,6 +121,11 @@ func _reset() -> void:
 		c.queue_free()
 	for c in main.toasts.get_children():
 		c.queue_free()
+	# The "light" scenario switches the theme; every later scenario starts from the default.
+	if str(_app().settings.get_v("theme")) != str(AppSettings.DEFAULTS["theme"]):
+		_app().settings.set_v("theme", AppSettings.DEFAULTS["theme"], false)
+		await main._rebuild_ui()
+		await _frames(6)
 	main.hint_hold_s = 60.0   # slow software rendering: keep the cursor hint for the shot
 	if main._hint_panel:
 		main._hint_panel.visible = false

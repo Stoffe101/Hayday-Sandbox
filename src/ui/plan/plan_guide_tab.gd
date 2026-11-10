@@ -92,7 +92,7 @@ func _build() -> void:
 	cv.add_child(nav)
 	add_child(_card)
 	_unfinished = CheckButton.new()
-	_unfinished.text = "Unfinished steps only"
+	_unfinished.text = "Unfinished only"
 	_unfinished.focus_mode = Control.FOCUS_NONE
 	_unfinished.toggled.connect(func(_on: bool): _render_list(true))
 	add_child(_unfinished)
@@ -148,7 +148,9 @@ func _build_export() -> Control:
 	row.add_child(_export_btn)
 	box.add_child(row)
 	_phase_pics = CheckBox.new()
-	_phase_pics.text = "HTML: add a picture per phase"
+	_phase_pics.text = "Picture per phase (HTML)"
+	_phase_pics.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_phase_pics.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_phase_pics.focus_mode = Control.FOCUS_NONE
 	box.add_child(_phase_pics)
 	_art_warn = PlanUiKit.wrap_label("Pictures with installed game art are private: keep them on this PC and don't share or upload them.", "Faint")

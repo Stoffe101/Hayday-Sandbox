@@ -84,6 +84,12 @@ static func segmented(options: Array, selected: String, on_pick: Callable) -> Pa
 		b.set_meta("id", str(o[0]))
 		b.button_pressed = str(o[0]) == selected
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# Share the bar's width instead of forcing the panel wider (1080p at 200 %).
+		b.clip_text = true
+		b.custom_minimum_size.x = 48
+		# Share the width roughly by label length (+ padding), so the longest
+		# label isn't the one clipped when the panel is narrow.
+		b.size_flags_stretch_ratio = float(str(o[1]).length() + 3)
 		var id := str(o[0])
 		b.pressed.connect(func(): on_pick.call(id))
 		h.add_child(b)

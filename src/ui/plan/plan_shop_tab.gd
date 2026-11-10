@@ -81,6 +81,10 @@ func _build() -> void:
 	sr.add_child(_search)
 	_sort_opt = OptionButton.new()
 	_sort_opt.focus_mode = Control.FOCUS_NONE
+	# Narrow panels (1080p at 200 %): the menu may shrink and clip its label.
+	_sort_opt.fit_to_longest_item = false
+	_sort_opt.clip_text = true
+	_sort_opt.custom_minimum_size.x = 104
 	_sort_opt.tooltip_text = "Sort"
 	for k in PlanUiModels.SORTS:
 		_sort_opt.add_item(str(PlanUiModels.SORT_NAMES[k]))
@@ -124,8 +128,10 @@ func _build() -> void:
 	_supplies_box = UI.vbox(2)
 	fv.add_child(_supplies_box)
 	var btns := PlanUiKit.flow(6, 6)
-	_apply_btn = UI.button("Add bought items to my inventory", "package-open",
+	_apply_btn = UI.button("Add bought items to inventory", "package-open",
 		"Moves the copies you marked as bought into your inventory (owned), in one undo step")
+	_apply_btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_apply_btn.custom_minimum_size.x = 160
 	_apply_btn.pressed.connect(_apply_to_inventory)
 	btns.add_child(_apply_btn)
 	var inv := UI.button("Inventory…", "package-open", "What you own: items, coins, diamonds, vouchers and supplies")
@@ -240,7 +246,7 @@ func _apply_view(reset_paging: bool = false) -> void:
 	for k in acq:
 		n += int(acq[k])
 	_apply_btn.disabled = n == 0
-	_apply_btn.text = "Add %d bought cop%s to my inventory" % [n, "y" if n == 1 else "ies"] if n > 0 else "Add bought items to my inventory"
+	_apply_btn.text = "Add %d bought cop%s to inventory" % [n, "y" if n == 1 else "ies"] if n > 0 else "Add bought items to inventory"
 
 
 # --- row widgets -----------------------------------------------------------------------------

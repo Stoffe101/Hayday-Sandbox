@@ -19,7 +19,7 @@ func _build() -> void:
 	tools.add_child(PlanUI.small_button("From selection", "scan", "A rectangle around the selected objects", func(): ctx.request_area_tool.emit("selection")))
 	add_child(tools)
 	var show_cb := CheckButton.new()
-	show_cb.text = "Show areas on the farm"
+	show_cb.text = "Show on the farm"
 	show_cb.set_meta("layer", "areas")
 	show_cb.toggled.connect(func(on: bool): ctx.set_layer("areas", on))
 	add_child(show_cb)

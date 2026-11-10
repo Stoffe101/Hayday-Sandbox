@@ -205,7 +205,7 @@ static func build(dark: bool) -> Theme:
 		t.set_color(k, "Chip", P["accent_text"])
 	# Segmented control
 	t.set_type_variation("Segment", "Button")
-	var spad := Vector4(14, 6, 14, 6)
+	var spad := Vector4(10, 6, 10, 6)
 	t.set_stylebox("normal", "Segment", box(Color.TRANSPARENT, 999, Color.TRANSPARENT, 0, spad))
 	t.set_stylebox("hover", "Segment", box(P["elevated_hover"], 999, Color.TRANSPARENT, 0, spad))
 	t.set_stylebox("pressed", "Segment", box(P["accent"], 999, Color.TRANSPARENT, 0, spad))

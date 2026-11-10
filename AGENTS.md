@@ -23,12 +23,12 @@ these layouts in the real game, so **never invent facts** — unknown data stays
    `python3 tools/ci/check_private_leaks.py` must pass. See `docs/PRIVATE_ASSETS.md`.
 
 ## Commands
-Linux / cloud box (counts as of a511d0c; refreshed at the end of each wave):
+Linux / cloud box (counts at the end of the farm-planning wave, 2026-11-10; refreshed at the end of each wave):
 ```bash
 godot --headless --path . --import                                   # after adding class_name scripts / assets
 godot --headless --path . --script res://tools/ci/check_scripts.gd   # compile every script (148)
-godot --headless --path . --script res://tests/run_tests.gd          # unit tests (417 tests / 15,149 assertions)
-godot --headless --path . -- --selftest                              # in-app integration test (404 checks)
+godot --headless --path . --script res://tests/run_tests.gd          # unit tests (427 tests / 15,243 assertions)
+godot --headless --path . -- --selftest                              # in-app integration test (506 checks)
 godot --headless --path . -- --selftest=perf                         # benchmarks (7 checks)
 godot --headless --path . --script res://tests/perf/perf_planning.gd # planning benchmarks (2k/5k/10k)
 godot --path . -- --install-pack=<zip> [--quit-after-install]        # install an asset pack into user://asset_packs

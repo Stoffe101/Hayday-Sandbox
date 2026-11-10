@@ -147,6 +147,31 @@ func _ready() -> void:
 			else:
 				print("SELFTEST UNAVAILABLE (tests not packaged)")
 				get_tree().quit(3)
+	if OS.get_cmdline_user_args().has("--smoke-plan"):
+		_smoke_plan.call_deferred()
+
+
+func _smoke_plan() -> void:
+	## `-- --smoke-plan` (exported-build smoke test, tools/build/build.ps1): opens
+	## every Plan tab and the three planning dialogs once, prints SMOKE-PLAN and
+	## quits. Script errors in any of them show up in the log.
+	for i in 10:
+		await get_tree().process_frame
+	var tabs := ["budget", "areas", "phases", "shop", "build", "guide", "accuracy"]
+	for t in tabs:
+		open_plan(t)
+		for i in 3:
+			await get_tree().process_frame
+	_plan_inventory()
+	await get_tree().process_frame
+	var item := "bakery" if App.db.get_item("bakery") != null else str(App.db.items.keys()[0])
+	_plan_price(item)
+	await get_tree().process_frame
+	_plan_baseline()
+	for i in 5:
+		await get_tree().process_frame
+	print("SMOKE-PLAN OK tabs=%d dialogs=%d" % [tabs.size(), modal_layer.get_child_count()])
+	get_tree().quit(0)
 
 
 func _handle_install_args() -> bool:
@@ -2485,8 +2510,11 @@ func _plan_price(item_id: String) -> void:
 
 func _plan_baseline() -> void:
 	## "My real farm" (BaselineDialog): the snapshot the comparison and budgets use.
+	# Loaded at run time like the other planning dialogs: naming the class here made
+	# main.gd compile it (and its PlanDialog base) too early, which an exported build
+	# can't resolve ("Could not resolve class PlanDialog").
 	if App.session != null:
-		BaselineDialog.open(App.plan_ctx)
+		load("res://src/ui/baseline_dialog.gd").open(App.plan_ctx)
 
 
 func area_to_stamp(area_id: String, stamp_name: String = "") -> Dictionary:

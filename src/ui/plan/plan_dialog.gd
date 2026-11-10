@@ -47,7 +47,8 @@ func present(c: PlanContext, title_text: String) -> bool:
 	if c == null or c.request_dialog.get_connections().is_empty():
 		if c != null:
 			c.toast("Dialogs are not available here", "error")
-		free()
+		# queue_free(): a release export won't compile a script calling free() on itself.
+		queue_free()
 		return false
 	c.request_dialog.emit(self, title_text)
 	return true

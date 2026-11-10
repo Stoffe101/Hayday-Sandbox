@@ -61,6 +61,13 @@ try {
 	$errs = @(Select-String -LiteralPath "$logs\smoke_start.log" -Pattern 'SCRIPT ERROR|Parse Error|Failed to load').Count
 	Check 'smoke_start' ($rc -eq 0 -and $errs -eq 0) "exit $rc, $errs script errors"
 
+	# Smoke test 1b: every Plan tab and planning dialog loads in the exported build (class
+	# resolution differs from the editor: a class used too early broke main.gd once).
+	$rc = Invoke-Logged -Exe $exe -Arguments @('--headless', '--', '--smoke-plan') -Log "$logs\smoke_plan.log" -AppData $iso -TimeoutSec 180
+	$errs = @(Select-String -LiteralPath "$logs\smoke_plan.log" -Pattern 'SCRIPT ERROR|Parse Error|Failed to load').Count
+	$line = (Select-String -LiteralPath "$logs\smoke_plan.log" -Pattern '^SMOKE-PLAN ' | Select-Object -First 1).Line
+	Check 'smoke_plan' ($rc -eq 0 -and $errs -eq 0 -and $line) "exit $rc, $errs script errors; $line"
+
 	# Smoke test 2: the exported app installs an asset pack (synthetic, built from CC0 placeholders).
 	$pack = (Resolve-Path 'build\smoke').Path + '\synthetic_pack.zip'
 	[void] (Invoke-Logged -Exe $godot -Arguments @('--headless', '--path', '.', '--script', 'res://tools/build/make_synthetic_pack.gd', '--', $pack) -Log "$logs\synthetic_pack.log" -AppData $iso)

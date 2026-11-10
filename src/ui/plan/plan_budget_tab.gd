@@ -26,7 +26,7 @@ func _build() -> void:
 	seg.add_child(sh)
 	var group := ButtonGroup.new()
 	for m: String in BudgetEngine.MODES:
-		var b := UI.button(str(PlanScope.MODE_LABELS[m]), "", str(PlanScope.MODE_HELP[m]), "Segment")
+		var b := UI.button(str(PlanScope.MODE_SHORT[m]), "", "%s: %s" % [str(PlanScope.MODE_LABELS[m]), str(PlanScope.MODE_HELP[m])], "Segment")
 		b.toggle_mode = true
 		b.button_group = group
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL

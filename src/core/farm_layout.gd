@@ -41,10 +41,16 @@ var next_uid: int = 1
 var next_group: int = 1
 var unlocked_plots: Dictionary = {}     ## plot id -> true
 var groups: Dictionary = {}             ## group id -> {name, locked}
-var annotations: Array[Dictionary] = [] ## {id, kind: "label"|"zone", rect:[x,y,w,h], text, color}
+## {id, kind: "label"|"zone", rect:[x,y,w,h], text, color}. Since schema 4,
+## loading an older file turns its "zone" annotations into planning areas.
+var annotations: Array[Dictionary] = []
 var next_annotation: int = 1
 ## Realistic-mode profile: what the player actually owns.
 var profile: Dictionary = {"level": 1, "owned": {}, "budget_coins": -1, "budget_diamonds": -1, "treat_unknown_as_owned": true}
+## Planning document (schema 4, docs/PLANNING.md §3): areas, phases, phase
+## assignments, placed/acquired progress, baseline. Pure data, see PlanDoc.
+## Edited only through EditCommands.SetPlanning (emits planning_changed).
+var planning: Dictionary = PlanDoc.empty()
 var reference: Dictionary = {}          ## screenshot overlay settings
 var camera: Dictionary = {}             ## last view {x, y, zoom}
 var extra: Dictionary = {}              ## unknown top-level keys preserved
@@ -64,7 +70,7 @@ var footprint_source: Dictionary = {}
 ## can put a landmark copy into `objects`. Not saved.
 var fixed_items: Dictionary = {}
 ## Schema version of the file this layout was read from (-1 = created in this
-## session). LayoutIO.save_file backs up a pre-v2 file before overwriting it.
+## session). LayoutIO.save_file backs up an older-schema file before overwriting it.
 var loaded_schema: int = -1
 
 
@@ -306,6 +312,14 @@ func landmark_skin(landmark_id: String, fallback: String = "") -> String:
 func is_landmark_visible(landmark_id: String, fallback: bool = true) -> bool:
 	var v: Variant = world_value("landmark_visible", landmark_id)
 	return fallback if v == null else bool(v)
+
+
+func set_planning(plan: Dictionary, emit: bool = true) -> void:
+	## Replaces the planning document with a deep copy of `plan`. Use
+	## EditCommands.SetPlanning so the change is undoable.
+	planning = plan.duplicate(true)
+	if emit:
+		planning_changed.emit()
 
 
 func clear_all() -> void:

@@ -1,0 +1,10 @@
+{"schema": "hayday-sandbox-items", "schema_version": 1, "items": [
+  {"id": "g_mill", "name": "Test Mill", "category": "production", "footprint": [3, 3], "footprint_status": "confirmed"},
+  {"id": "g_coop", "name": "Test Coop", "category": "animal_home", "footprint": [2, 2], "footprint_status": "confirmed"},
+  {"id": "g_pond", "name": "Test Pond", "category": "water", "footprint": [2, 2], "footprint_status": "confirmed"},
+  {"id": "g_bench", "name": "Test Bench", "category": "structures", "footprint": [1, 2], "footprint_status": "confirmed", "flippable": true},
+  {"id": "g_apple", "name": "Test Apple Tree", "category": "fruit_tree", "footprint": [1, 1], "footprint_status": "confirmed"},
+  {"id": "g_rose", "name": "Test Rose", "category": "flowers", "footprint": [1, 1], "footprint_status": "confirmed"},
+  {"id": "g_rock", "name": "Test Rock", "category": "obstacle", "footprint": [1, 1], "footprint_status": "confirmed"},
+  {"id": "g_marker", "name": "Reserved 1x1", "category": "planning", "footprint": [1, 1], "footprint_status": "original"}
+]}

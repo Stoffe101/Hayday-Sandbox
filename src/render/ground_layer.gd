@@ -225,8 +225,17 @@ func _locked_veil(plot_id: String) -> Color:
 func _draw_offgrid_roads() -> void:
 	## Road / driveway tiles of the ground layer that lie outside the placement
 	## grid (e.g. the road continuing past the farm): drawn as road, never land.
-	var gr := map.ground_rect
 	var road := TerrainTextures.get_tex("road")
+	for r in offgrid_road_runs():
+		_poly(Iso.grid_rect_polygon(r), road, Color.WHITE)
+
+
+func offgrid_road_runs() -> Array[Rect2i]:
+	## Row runs (1 tile high) of ground-layer road tiles outside the placement grid.
+	var out: Array[Rect2i] = []
+	if map == null or not map.has_ground():
+		return out
+	var gr := map.ground_rect
 	for y in range(gr.position.y, gr.end.y):
 		var x := gr.position.x
 		while x < gr.end.x:
@@ -237,8 +246,27 @@ func _draw_offgrid_roads() -> void:
 			var x1 := x + 1
 			while x1 < gr.end.x and not map.in_bounds(Vector2i(x1, y)) and _ground_is_road(Vector2i(x1, y)):
 				x1 += 1
-			_poly(Iso.grid_rect_polygon(Rect2i(x, y, x1 - x, 1)), road, Color.WHITE)
+			out.append(Rect2i(x, y, x1 - x, 1))
 			x = x1
+	return out
+
+
+func tile_class(t: Vector2i) -> int:
+	## Visual class of a grid tile as drawn: a FarmMap.Kind, or PLOT_BASE + plot
+	## index (-1 off the grid). Ground-layer road tiles off the land draw as ROAD.
+	if map == null or not map.in_bounds(t):
+		return -1
+	if _cls_grid.size() != map.size.x * map.size.y:
+		_build_static()
+	return _cls_grid[t.y * map.size.x + t.x]
+
+
+func is_road_tile(t: Vector2i) -> bool:
+	if map == null or not map.in_bounds(t):
+		return false
+	if _road_grid.size() != map.size.x * map.size.y:
+		_build_static()
+	return _road_grid[t.y * map.size.x + t.x] == 1
 
 
 func _is_land_i(i: int) -> bool:
@@ -287,8 +315,12 @@ func _triangles(pts: PackedVector2Array, col: Color) -> void:
 
 
 func _draw_plot_borders(open: PackedByteArray) -> void:
+	## Thin lines between owned plots, stronger ones around locked plots, and a
+	## two-tone "frontier" where the land you own meets locked land (the line
+	## that tells you how far you can build).
 	var segs := PackedVector2Array()
 	var locked_segs := PackedVector2Array()
+	var frontier := PackedVector2Array()
 	var w := map.size.x
 	var h := map.size.y
 	var po := map.plot_of
@@ -301,9 +333,12 @@ func _draw_plot_borders(open: PackedByteArray) -> void:
 			for d in 4:
 				var nx := x + (1 if d == 0 else (-1 if d == 2 else 0))
 				var ny := y + (1 if d == 1 else (-1 if d == 3 else 0))
-				var np := po[ny * w + nx] if nx >= 0 and ny >= 0 and nx < w and ny < h else -1
+				var inside := nx >= 0 and ny >= 0 and nx < w and ny < h
+				var np := po[ny * w + nx] if inside else -1
 				if np == p:
 					continue
+				if not p_open and inside and ((np >= 0 and open[np] == 1) or (np < 0 and map.kinds[ny * w + nx] == FarmMap.Kind.BUILDABLE)):
+					frontier.append_array(_edge(x, y, d))
 				var a: Vector2
 				var b: Vector2
 				match d:
@@ -323,6 +358,49 @@ func _draw_plot_borders(open: PackedByteArray) -> void:
 		draw_multiline(segs, Color(1, 1, 1, 0.12), 1.0)
 	if not locked_segs.is_empty() and not hide_locked:
 		draw_multiline(locked_segs, Color(1, 1, 1, 0.55), 2.0)
+	if not frontier.is_empty():
+		var down := PackedVector2Array()
+		down.resize(frontier.size())
+		for i in frontier.size():
+			down[i] = frontier[i] + Vector2(0.0, 1.5)
+		draw_multiline(down, Color(0.08, 0.1, 0.05, 0.45), 4.0)
+		draw_multiline(frontier, Color(1.0, 0.96, 0.78, 0.9), 2.5)
+
+
+static func _edge(x: int, y: int, d: int) -> PackedVector2Array:
+	## World segment of tile (x, y)'s edge towards direction d (0 = +x, 1 = +y, 2 = -x, 3 = -y).
+	match d:
+		0:
+			return PackedVector2Array([Iso.grid_to_world(Vector2(x + 1, y)), Iso.grid_to_world(Vector2(x + 1, y + 1))])
+		1:
+			return PackedVector2Array([Iso.grid_to_world(Vector2(x, y + 1)), Iso.grid_to_world(Vector2(x + 1, y + 1))])
+		2:
+			return PackedVector2Array([Iso.grid_to_world(Vector2(x, y)), Iso.grid_to_world(Vector2(x, y + 1))])
+	return PackedVector2Array([Iso.grid_to_world(Vector2(x, y)), Iso.grid_to_world(Vector2(x + 1, y))])
+
+
+func frontier_edges() -> int:
+	## Number of tile edges on the owned/locked frontier (tests).
+	if map == null:
+		return 0
+	var open := _plot_open()
+	var n := 0
+	var w := map.size.x
+	var h := map.size.y
+	for y in h:
+		for x in w:
+			var p := map.plot_of[y * w + x]
+			if p < 0 or open[p] == 1:
+				continue
+			for d in 4:
+				var nx := x + (1 if d == 0 else (-1 if d == 2 else 0))
+				var ny := y + (1 if d == 1 else (-1 if d == 3 else 0))
+				if nx < 0 or ny < 0 or nx >= w or ny >= h:
+					continue
+				var np := map.plot_of[ny * w + nx]
+				if (np >= 0 and np != p and open[np] == 1) or (np < 0 and map.kinds[ny * w + nx] == FarmMap.Kind.BUILDABLE):
+					n += 1
+	return n
 
 
 func _draw_labels() -> void:

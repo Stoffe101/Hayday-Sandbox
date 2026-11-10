@@ -49,6 +49,8 @@ var _diff: LayoutDiff.Result
 var _view_state := {}
 var _calib_world: Array = []
 var _calib_points := 3
+var _calib_grid: Array = []     ## grid-side clicks: CalibrationMath.snap_grid_point() results
+var _calib_add := false         ## the clicks add one pair to the active image's calibration
 var _ref_ui_sig := ""
 var _ref_drag := false
 var _ref_drag_last := Vector2.ZERO
@@ -1653,6 +1655,12 @@ func _on_inspector_action(a: String, arg: Variant) -> void:
 		"ref_import": _ref_import()
 		"ref": _ref_update(arg)
 		"ref_calibrate": _ref_calibrate(int(arg))
+		"ref_cal_add": _ref_calibrate_add()
+		"ref_cal_remove": _ref_cal_remove_point(int(arg))
+		"ref_cal_refit": _ref_cal_refit()
+		"ref_cal_show":
+			reference.set_show_calibration(bool(arg))
+			_sync_reference_view_state()
 		"ref_select": _ref_select(str(arg))
 		"ref_order": _ref_reorder(str(arg[0]), int(arg[1]))
 		"ref_remove":
@@ -1889,7 +1897,29 @@ func _sync_reference_view_state() -> void:
 	_view_state["ref_opacity"] = float(a.get("opacity", 0.5))
 	_view_state["ref_scale"] = float(a.get("scale", 1.0))
 	_view_state["ref_rotation"] = float(a.get("rotation", 0.0))
+	_view_state["ref_grid"] = bool(a.get("grid", false))
+	_view_state["ref_cal_show"] = reference.show_calibration
+	_view_state["ref_cal"] = _ref_cal_view(a)
 	_place_reference_layer(above)
+
+
+func _ref_cal_view(im: Dictionary) -> Dictionary:
+	## What the inspector shows about the active image's calibration ({} = none).
+	if im.is_empty():
+		return {}
+	var sm := CalibrationMath.summary(im, App.session.map if App.session else null)
+	var rec := CalibrationMath.record_of(im)
+	var rows: Array = []
+	if not rec.is_empty():
+		var res: Array = (rec.get("fit", {}) as Dictionary).get("residuals", []) if rec.get("fit") is Dictionary else []
+		var pts := CalibrationMath.refresh_anchor_flags(rec.get("points", []), App.session.map if App.session else null)
+		for i in pts.size():
+			var p: Dictionary = pts[i]
+			rows.append({"index": i, "tiles": float(res[i]["tiles"]) if i < res.size() else -1.0,
+				"px": float(res[i]["px"]) if i < res.size() else -1.0, "landmark": str(p.get("landmark", "")),
+				"spot": str(p.get("spot", "")), "approximate": bool(p.get("approximate", false))})
+	sm["rows"] = rows
+	return sm
 
 
 func _place_reference_layer(above: bool) -> void:
@@ -1990,7 +2020,10 @@ func _on_reference_changed() -> void:
 	## files are read, so sliders stay smooth; the inspector is rebuilt only
 	## when what its list shows changed (never in the middle of a slider drag).
 	_load_reference()
-	var sig := str(_view_state.get("ref_images", [])) + str(_view_state.get("ref_above", false))
+	var cal: Dictionary = _view_state.get("ref_cal", {})
+	var sig := str(_view_state.get("ref_images", [])) + str(_view_state.get("ref_above", false)) \
+		+ str(_view_state.get("ref_grid", false)) + str(cal.get("verdict", "")) + str(cal.get("rms_tiles", 0.0)) \
+		+ str((cal.get("rows", []) as Array).size())   # not "applied": that flips during a scale slider drag
 	if sig != _ref_ui_sig:
 		_ref_ui_sig = sig
 		inspector.queue_rebuild()
@@ -2007,13 +2040,28 @@ func _save_reference_settings() -> void:
 
 
 func _ref_calibrate(points: int = 3) -> void:
+	## Starts a calibration of the active image from `points` new pairs: click
+	## the points on the screenshot, then the same tile corners (or landmark
+	## corners / centres) on the grid, in the same order. Replaces its points.
 	if reference.active_image().is_empty():
 		return
-	_calib_points = clampi(points, 2, 3)
+	_calib_points = clampi(points, 2, CalibrationMath.MAX_POINTS)
+	_calib_add = false
 	_calib_world = []
+	_calib_grid = []
 	overlay.calibration_points = []
 	controller.calibrating = true
 	App.toast("Calibration: click %d recognisable points on the screenshot…" % _calib_points, "info")
+
+
+func _ref_calibrate_add() -> void:
+	## One more pair for the active image's calibration (refit with all points).
+	if reference.active_image().is_empty():
+		return
+	_ref_calibrate(1)
+	_calib_points = 1
+	_calib_add = true
+	App.toast("Add a point: click it on the screenshot, then the matching tile corner on the grid", "info")
 
 
 func _on_calibration_point(w: Vector2) -> void:
@@ -2023,30 +2071,76 @@ func _on_calibration_point(w: Vector2) -> void:
 	if n <= k:
 		overlay.calibration_points = _calib_world.duplicate()
 		if n == k:
-			App.toast("…now click the matching %d tile corners on the grid, in the same order" % k, "info")
+			App.toast("…now click the matching %d tile corner%s on the grid, in the same order" % [k, "" if k == 1 else "s"], "info")
 	else:
-		var g := Iso.world_to_grid(w)
-		var snapped := Iso.grid_to_world(Vector2(roundf(g.x), roundf(g.y)))
-		_calib_world[n - 1] = snapped
+		# Grid side: a landmark corner / centre nearby wins, else the nearest tile corner.
+		var snap := CalibrationMath.snap_grid_point(App.session.map, Iso.world_to_grid(w))
+		_calib_grid.append(snap)
+		_calib_world[n - 1] = Iso.grid_to_world(snap["grid"])
 		overlay.calibration_points = _calib_world.duplicate()
+		if bool(snap["approximate"]):
+			App.toast("That point is on %s, whose position on this map is approximate" % str(snap["landmark"]), "warn")
 	overlay.refresh()
 	if n == k * 2:
 		controller.calibrating = false
-		var img_pts: Array = []
-		for i in k:
-			img_pts.append(reference.world_to_image(_calib_world[i]))
-		var aff: Variant = ReferenceLayer.solve_calibration(img_pts, _calib_world.slice(k, k * 2))
 		overlay.calibration_points = []
-		if aff == null:
-			App.toast("Those points are too close or in a line — pick spread-out points", "warn")
-			return
-		var doc := LayoutIO.normalize_reference(App.session.layout.reference)
-		var target := ReferenceLayer.image_by_id(doc, reference.active_id)
-		target["affine"] = aff
-		_set_reference(doc, "Calibrate reference")
-		_view_state["ref_status"] = "Calibrated with %d points (%s). Perspective in screenshots isn't corrected." % [k, "affine" if k == 3 else "position, rotation and scale"]
-		inspector.rebuild()
-		App.toast("Reference aligned to the grid", "success")
+		var pts: Array = []
+		var im := reference.active_image()
+		if _calib_add:
+			pts = CalibrationMath.clean_points(CalibrationMath.record_of(im).get("points", []))
+		for i in k:
+			var g: Dictionary = _calib_grid[i]
+			pts.append(CalibrationMath.make_point(reference.world_to_image(_calib_world[i]), g["grid"],
+				str(g["landmark"]), str(g["spot"]), bool(g["approximate"])))
+		_ref_apply_points(pts, "Calibrate reference" if not _calib_add else "Add calibration point")
+
+
+func _ref_apply_points(pts: Array, text: String) -> bool:
+	## Fits the active image to `pts` and stores the result (image "affine" and
+	## its "calibration" record) as one undoable SetReference.
+	var f := CalibrationMath.fit(pts)
+	if not bool(f["ok"]):
+		App.toast("Can't calibrate: %s. Pick spread-out points." % str(f["error"]), "warn")
+		return false
+	var doc := LayoutIO.normalize_reference(App.session.layout.reference)
+	var target := ReferenceLayer.image_by_id(doc, reference.active_id)
+	if target.is_empty():
+		return false
+	target["affine"] = f["image_to_world"]
+	target["calibration"] = CalibrationMath.to_record(pts, f, Time.get_datetime_string_from_system(true))
+	_set_reference(doc, text)
+	var iso: Dictionary = f["iso"]
+	var msg := "%s with %d points (%s)." % [CalibrationMath.VERDICT_TEXT[f["verdict"]], int(f["n"]),
+		"position, rotation and scale" if f["model"] == "similarity" else "affine"]
+	if f["verdict"] in ["good", "fair", "poor"]:
+		msg = "%s: RMS %.2f tile, max %.2f tile over %d points." % [CalibrationMath.VERDICT_TEXT[f["verdict"]],
+			float(f["rms_tiles"]), float(f["max_tiles"]), int(f["n"])]
+	else:
+		msg += " Add another point to measure the error."
+	_view_state["ref_status"] = msg + " " + str(iso.get("text", ""))
+	_sync_reference_view_state()
+	inspector.rebuild()
+	App.toast("Reference aligned to the grid", "success")
+	return true
+
+
+func _ref_cal_remove_point(i: int) -> void:
+	var rec := CalibrationMath.record_of(reference.active_image())
+	var pts := CalibrationMath.clean_points(rec.get("points", []))
+	if i < 0 or i >= pts.size():
+		return
+	if pts.size() <= 2:
+		App.toast("A calibration needs at least 2 points", "info")
+		return
+	pts.remove_at(i)
+	_ref_apply_points(pts, "Remove calibration point")
+
+
+func _ref_cal_refit() -> void:
+	## Puts the active image back where its stored points say (after a drag).
+	var pts := CalibrationMath.clean_points(CalibrationMath.record_of(reference.active_image()).get("points", []))
+	if pts.size() >= 2:
+		_ref_apply_points(pts, "Re-apply calibration")
 
 
 # ---------------------------------------------------------------------------

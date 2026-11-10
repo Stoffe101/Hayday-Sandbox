@@ -1,0 +1,264 @@
+{
+ "format": "hayday-sandbox-map",
+ "schema_version": 2,
+ "id": "test_world",
+ "name": "Synthetic ground world",
+ "frame": "game",
+ "provenance": {
+  "kind": "private_game_data",
+  "source": "synthetic unit-test fixture (no game data)",
+  "client_version": "0.0.2",
+  "generated": "2026-11-10T00:00:00Z",
+  "confidence": "verified-in-data"
+ },
+ "geometry_status": "game_data",
+ "size": [
+  12,
+  10
+ ],
+ "world_bounds": [
+  -3,
+  -2,
+  18,
+  14
+ ],
+ "regions": [
+  {
+   "id": "start",
+   "kind": "buildable",
+   "name": "Start",
+   "status": "game_data",
+   "rects": [
+    [
+     0,
+     0,
+     8,
+     6
+    ]
+   ]
+  },
+  {
+   "id": "plot_a",
+   "kind": "plot",
+   "name": "Plot A",
+   "section": "main",
+   "number": 1,
+   "status": "game_data",
+   "cost": {
+    "land_deed": 1
+   },
+   "rects": [
+    [
+     8,
+     0,
+     4,
+     3
+    ]
+   ]
+  },
+  {
+   "id": "plot_b",
+   "kind": "plot",
+   "name": "Plot B",
+   "section": "main",
+   "number": 2,
+   "status": "game_data",
+   "rects": [
+    [
+     8,
+     3,
+     4,
+     3
+    ]
+   ]
+  },
+  {
+   "id": "road",
+   "kind": "road",
+   "name": "Road",
+   "rects": [
+    [
+     0,
+     6,
+     12,
+     2
+    ]
+   ]
+  },
+  {
+   "id": "verge",
+   "kind": "blocked",
+   "name": "Verge",
+   "rects": [
+    [
+     0,
+     8,
+     12,
+     2
+    ]
+   ]
+  }
+ ],
+ "sections": [
+  {
+   "id": "main",
+   "name": "Main",
+   "side": "main",
+   "plots": [
+    "plot_a",
+    "plot_b"
+   ],
+   "status": "game_data"
+  }
+ ],
+ "landmarks": [],
+ "scenery": [
+  {
+   "id": "river",
+   "kind": "river",
+   "rect": [
+    -3,
+    -2,
+    3,
+    14
+   ]
+  }
+ ],
+ "tile_types": {
+  "0": {
+   "name": "Grass",
+   "kind": "buildable",
+   "art": null
+  },
+  "1": {
+   "name": "Road",
+   "kind": "road",
+   "art": null
+  },
+  "2": {
+   "name": "Driveway",
+   "kind": "road_blocked",
+   "art": null
+  }
+ },
+ "ground": {
+  "encoding": "rle-rows",
+  "rect": [
+   -3,
+   -2,
+   18,
+   14
+  ],
+  "rows": [
+   [
+    [
+     0,
+     18
+    ]
+   ],
+   [
+    [
+     1,
+     3
+    ],
+    [
+     0,
+     15
+    ]
+   ],
+   [
+    [
+     0,
+     18
+    ]
+   ],
+   [
+    [
+     0,
+     18
+    ]
+   ],
+   [
+    [
+     0,
+     18
+    ]
+   ],
+   [
+    [
+     0,
+     18
+    ]
+   ],
+   [
+    [
+     0,
+     18
+    ]
+   ],
+   [
+    [
+     0,
+     5
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     0,
+     12
+    ]
+   ],
+   [
+    [
+     1,
+     18
+    ]
+   ],
+   [
+    [
+     1,
+     18
+    ]
+   ],
+   [
+    [
+     0,
+     6
+    ],
+    [
+     2,
+     1
+    ],
+    [
+     0,
+     11
+    ]
+   ],
+   [
+    [
+     0,
+     18
+    ]
+   ],
+   [
+    [
+     0,
+     18
+    ]
+   ],
+   [
+    [
+     0,
+     18
+    ]
+   ]
+  ]
+ },
+ "unmapped_sections": [],
+ "labels": [],
+ "notes": [
+  "Synthetic fixture: no real game data."
+ ]
+}

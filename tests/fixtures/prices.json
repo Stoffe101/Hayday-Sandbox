@@ -1,0 +1,19 @@
+{
+  "format": "hayday-sandbox-prices", "schema_version": 1,
+  "generated": "2026-11-10", "game_version": "",
+  "sources": [{"id": "synthetic", "url": "", "accessed": "2026-11-10", "license": "synthetic test data (not game data)"}],
+  "currencies": {"coins": {"name": "Coins"}, "voucher_green": {"name": "Green vouchers"}, "film": {"name": "Film"}},
+  "items": {
+    "t_bakery": {"method": "shop", "price": {"coins": 50}, "max_count": 1, "availability": "current", "confidence": "confirmed", "sources": ["synthetic"]},
+    "t_long": {"method": "shop", "price": {"coins": 10}, "step": {"coins": 5}, "step_basis": "copies_owned", "confidence": "community", "sources": ["synthetic"]},
+    "t_fence": {"method": "shop", "schedule": [{"coins": 5}, {"coins": 7}, {"coins": 9}], "confidence": "community", "sources": ["synthetic"]},
+    "t_fence_stone": {"method": "shop", "schedule": [{"coins": 20}, {"coins": 30}], "schedule_repeats_last": true, "confidence": "unverified"},
+    "t_voucher": {"method": "vouchers", "price": {"voucher_green": 5, "voucher_purple": 1}, "availability": "current", "confidence": "community"},
+    "t_film": {"method": "event_currency", "price": {"film": 400}, "availability": "event", "confidence": "community"},
+    "t_prize": {"method": "reward", "routes": ["derby"], "availability": "event", "confidence": "community"},
+    "t_rare": {"method": "not_in_shop", "price": {"diamonds": 999}, "placeholder": true, "notes": "source lists a 999-diamond placeholder"},
+    "t_free": {"method": "free", "confidence": "confirmed"},
+    "t_limited": {"method": "shop", "price": {"diamonds": 3}, "max_count": 2, "confidence": "community"},
+    "t_odd": {"method": "shop", "price": {"coins": 100, "moon_rocks": 2}, "confidence": "unverified"}
+  }
+}

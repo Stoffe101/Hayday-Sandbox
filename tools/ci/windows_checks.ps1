@@ -16,6 +16,7 @@ if (-not (Test-Path 'artifacts\.gdignore')) { New-Item -ItemType File -Path 'art
 
 $results = New-Object System.Collections.ArrayList
 $iso = New-IsolatedDataDir
+$lock = Enter-GodotLock
 
 function Step {
 	# A script that fails to parse can leave a selftest waiting forever, so keep timeouts short.
@@ -59,6 +60,7 @@ try {
 	Step 'coverage_diff' 'git' @('diff', '--exit-code', '--ignore-space-at-eol', 'docs/CATALOG_COVERAGE.md')
 }
 finally {
+	Exit-GodotLock $lock
 	Remove-Item -LiteralPath $iso -Recurse -Force -ErrorAction SilentlyContinue
 }
 

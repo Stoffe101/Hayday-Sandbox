@@ -28,6 +28,23 @@ function New-IsolatedDataDir {
 	return $dir
 }
 
+function Enter-GodotLock {
+	## Serialises Godot runs from parallel shells (an import rewrites the .godot cache that every
+	## other run reads). Returns the held mutex; pass it to Exit-GodotLock.
+	param([int] $TimeoutSec = 3600)
+	$m = New-Object System.Threading.Mutex($false, 'Local\HaydaySandboxGodot')
+	try {
+		if (-not $m.WaitOne($TimeoutSec * 1000)) { $m.Dispose(); throw "Timed out after $TimeoutSec s waiting for another Godot run to finish." }
+	} catch [System.Threading.AbandonedMutexException] {
+		# The previous holder exited without releasing it; we own it now.
+	}
+	return $m
+}
+
+function Exit-GodotLock($m) {
+	if ($m) { try { $m.ReleaseMutex() } catch { }; $m.Dispose() }
+}
+
 function Invoke-Logged {
 	## Runs an executable with stdout+stderr captured to $Log. Returns the exit code,
 	## or 124 on timeout. $AppData, when given, overrides APPDATA for the child only.

@@ -983,14 +983,68 @@ func _build_reference_section(rv: VBoxContainer) -> void:
 		sb.value_changed.connect(func(x): action.emit("ref", {f[5]: x}))
 		hr.add_child(sb)
 		rv.add_child(hr)
-	rv.add_child(UI.label("Line it up roughly by dragging, then calibrate: click 2 or 3 points on the screenshot, then the same tile corners on the grid. Two points set position, rotation and scale; three also fix a stretched image.", "Faint", true))
+	var grid := CheckButton.new()
+	grid.text = "Tile grid over this screenshot"
+	grid.button_pressed = bool(view_state.get("ref_grid", false))
+	grid.toggled.connect(func(on): action.emit("ref", {"id": id, "grid": on}))
+	rv.add_child(grid)
+	_build_calibration_section(rv, locked)
+
+
+func _build_calibration_section(rv: VBoxContainer, locked: bool) -> void:
+	## Calibration of the active image: start (2-4 points), add / remove points,
+	## per-point errors, quality verdict and the 2:1 isometric check.
+	rv.add_child(UI.label("Calibrate: click points on the screenshot, then the same tile corners on the grid, in the same order. A corner or centre of a landmark snaps to it. Two points set position, rotation and scale; three or more also fix a stretched image, and four or more measure the error.", "Faint", true))
 	var row2 := UI.hbox(6)
-	for n in [2, 3]:
-		var cal := UI.button("%d points" % n, "crosshair", "Calibrate from %d points" % n)
+	for n in [2, 3, 4]:
+		var cal := UI.button("%d points" % n, "crosshair", "Calibrate from %d new points (replaces this image's points)" % n)
 		cal.disabled = locked
 		cal.pressed.connect(func(): action.emit("ref_calibrate", n))
 		row2.add_child(cal)
 	rv.add_child(row2)
+	var cal_v: Dictionary = view_state.get("ref_cal", {})
+	if bool(cal_v.get("calibrated", false)):
+		var verdict := str(cal_v.get("verdict", ""))
+		var style := "Faint"
+		if verdict == "good":
+			style = "Dim"
+		rv.add_child(UI.label(str(cal_v.get("text", "")), style, true))
+		if not str(cal_v.get("iso_text", "")).is_empty():
+			rv.add_child(UI.label(str(cal_v.get("iso_text", "")), "Faint", true))
+		var rows: Array = cal_v.get("rows", [])
+		for r: Dictionary in rows:
+			var pr := UI.hbox(4)
+			var t := "#%d" % (int(r["index"]) + 1)
+			if float(r["tiles"]) >= 0.0:
+				t += "  %.2f tile · %.1f px" % [float(r["tiles"]), float(r["px"])]
+			if not str(r["landmark"]).is_empty():
+				t += "  · %s %s%s" % [str(r["landmark"]), str(r["spot"]), " (approximate)" if bool(r["approximate"]) else ""]
+			var lb := UI.label(t, "Dim")
+			lb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			pr.add_child(lb)
+			var rm := UI.icon_button("x", "Remove this point and refit")
+			rm.disabled = locked or rows.size() <= 2
+			rm.pressed.connect(func(): action.emit("ref_cal_remove", int(r["index"])))
+			pr.add_child(rm)
+			rv.add_child(pr)
+		var row3 := UI.hbox(6)
+		var add := UI.button("Add point", "plus", "Click one more point on the screenshot, then its tile corner")
+		add.disabled = locked
+		add.pressed.connect(func(): action.emit("ref_cal_add", null))
+		row3.add_child(add)
+		if not bool(cal_v.get("applied", true)):
+			var re := UI.button("Re-apply", "undo-2", "Put the image back where its points say")
+			re.disabled = locked
+			re.pressed.connect(func(): action.emit("ref_cal_refit", null))
+			row3.add_child(re)
+		rv.add_child(row3)
+		var show := CheckButton.new()
+		show.text = "Show points and errors on the farm"
+		show.button_pressed = bool(view_state.get("ref_cal_show", true))
+		show.toggled.connect(func(on): action.emit("ref_cal_show", on))
+		rv.add_child(show)
+	elif str(cal_v.get("verdict", "")) == "legacy":
+		rv.add_child(UI.label(str(cal_v.get("text", "")), "Faint", true))
 	var status := str(view_state.get("ref_status", ""))
 	if not status.is_empty():
 		rv.add_child(UI.label(status, "Faint", true))

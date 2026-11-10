@@ -13,6 +13,9 @@ Checks
   * built-in asset pack: every referenced file exists, no orphan images,
     every catalogue item resolves to art
   * sample layouts: format, all items exist, no overlaps
+  * price data (data/prices/*.json): format, method/availability/confidence/route values, currency ids,
+    non-negative integer amounts, step and schedule shape, every item id exists in the catalogue, every
+    referenced source exists (docs/PLANNING.md section 1)
   * LICENSE GUARD: nothing but README/.gdignore in assets/original/, no
     game-archive file types anywhere, no images outside the allowed folders,
     no unexpectedly large files
@@ -344,6 +347,148 @@ def check_samples(items: dict) -> None:
                     occ[(x, y)] = o["uid"]
 
 
+PRICE_METHODS = {"shop", "vouchers", "event_currency", "reward", "not_in_shop", "free", "unknown"}
+PRICE_AVAILABILITY = {"current", "seasonal", "event", "retired", "unknown"}
+PRICE_CONFIDENCE = {"confirmed", "community", "unverified", "unknown"}
+PRICE_ROUTES = {"derby", "event", "package", "secret", "reward", "collection", "expansion", "season_pass", "other"}
+PRICE_STEP_BASIS = {"copies_owned", "copies_bought", "unknown"}
+PRICE_CURRENCIES = {"coins", "diamonds", "voucher_green", "voucher_blue", "voucher_purple", "voucher_gold", "film",
+                    "golden_keys", "land_deed", "mallet", "marker_stake", "expansion_permit"}
+PRICE_KEYS = {"method", "price", "step", "step_basis", "step_confidence", "schedule", "schedule_repeats_last",
+              "copy_levels", "max_count", "availability", "confidence", "routes", "removal", "repair", "sources",
+              "notes"}
+
+
+def check_prices(items: dict) -> None:
+    """data/prices/*.json (docs/PLANNING.md section 1): schema, enums, amounts, item and source references."""
+    for f in sorted((ROOT / "data/prices").glob("*.json")):
+        name = f"prices/{f.name}"
+        try:
+            doc = json.loads(f.read_text(encoding="utf-8"))
+        except ValueError as e:
+            err(f"{name}: invalid JSON ({e})")
+            continue
+        if doc.get("format") != "hayday-sandbox-prices" or doc.get("schema_version") != 1:
+            err(f"{name}: format must be 'hayday-sandbox-prices', schema_version 1")
+        if not isinstance(doc.get("game_version", ""), str):
+            err(f"{name}: game_version must be a string")
+        src_ids: set[str] = set()
+        for s in doc.get("sources", []):
+            sid = s.get("id", "")
+            if not is_slug(sid) or sid in src_ids:
+                err(f"{name}: bad or duplicate source id {sid!r}")
+            src_ids.add(sid)
+            if not str(s.get("url", "")).startswith("https://") or not s.get("accessed") or not s.get("license"):
+                err(f"{name}: source {sid} needs an https url, an accessed date and a license")
+        currencies = doc.get("currencies", {})
+        for cid in currencies:
+            if not is_slug(cid):
+                err(f"{name}: bad currency id {cid!r}")
+        known_cur = PRICE_CURRENCIES | set(currencies)
+
+        def amounts(tag: str, d, allow_empty: bool = False) -> bool:
+            if not isinstance(d, dict) or (not d and not allow_empty):
+                err(f"{tag}: must be a non-empty {{currency: amount}} object")
+                return False
+            ok = True
+            for k, v in d.items():
+                if k not in known_cur:
+                    err(f"{tag}: unknown currency id {k!r}")
+                    ok = False
+                if not (is_int(v) and v >= 0):
+                    err(f"{tag}: amount for {k} must be a non-negative integer, got {v!r}")
+                    ok = False
+            return ok
+
+        def check_refs(tag: str, refs) -> None:
+            if not isinstance(refs, list):
+                err(f"{tag}: sources must be a list of source ids")
+                return
+            for s in refs:
+                if s not in src_ids:
+                    err(f"{tag}: references unknown source {s!r}")
+
+        for cid, c in currencies.items():
+            check_refs(f"{name}: currency {cid}", c.get("sources", []))
+        for rid, r in (doc.get("rules") or {}).items():
+            check_refs(f"{name}: rule {rid}", r.get("sources", []))
+        recs = doc.get("items")
+        if not isinstance(recs, dict):
+            err(f"{name}: 'items' must be an object keyed by catalogue item id")
+            continue
+        for iid, r in recs.items():
+            tag = f"{name}: {iid}"
+            if iid not in items:
+                err(f"{tag}: not a catalogue item id")
+            extra = set(r) - PRICE_KEYS
+            if extra:
+                err(f"{tag}: unknown fields {sorted(extra)}")
+            m = r.get("method")
+            if m not in PRICE_METHODS:
+                err(f"{tag}: bad method {m!r}")
+            price = r.get("price")
+            if price is not None:
+                amounts(f"{tag}.price", price)
+                if m in ("reward", "not_in_shop"):
+                    err(f"{tag}: method {m} cannot have a price (use notes/removal/repair)")
+                if m == "free" and any(v != 0 for v in price.values() if is_int(v)):
+                    err(f"{tag}: method free must have a zero price")
+                if m == "vouchers" and not any(str(k).startswith("voucher_") for k in price):
+                    err(f"{tag}: method vouchers needs a voucher currency")
+                if price.get("diamonds") == 999:
+                    warnings.append(f"{tag}: 999 diamonds is the ru-wiki 'not sold' placeholder; check the price")
+            if "step" in r:
+                amounts(f"{tag}.step", r["step"])
+                if price is None:
+                    err(f"{tag}: step without price")
+                if r.get("step_basis") not in PRICE_STEP_BASIS:
+                    err(f"{tag}: step needs step_basis in {sorted(PRICE_STEP_BASIS)}")
+                if r.get("step_confidence", "unknown") not in PRICE_CONFIDENCE:
+                    err(f"{tag}: bad step_confidence {r.get('step_confidence')!r}")
+            elif "step_basis" in r or "step_confidence" in r:
+                err(f"{tag}: step_basis/step_confidence without step")
+            sched = r.get("schedule")
+            if sched is not None:
+                if not (isinstance(sched, list) and sched):
+                    err(f"{tag}: schedule must be a non-empty list of per-copy prices")
+                else:
+                    for k, e in enumerate(sched):
+                        amounts(f"{tag}.schedule[{k}]", e)
+                    if price is not None and sched[0] != price:
+                        err(f"{tag}: price must equal schedule[0] (copy #1)")
+                    mc = r.get("max_count")
+                    if is_int(mc) and len(sched) > mc:
+                        err(f"{tag}: schedule has {len(sched)} copies but max_count is {mc}")
+                if not isinstance(r.get("schedule_repeats_last", False), bool):
+                    err(f"{tag}: schedule_repeats_last must be true/false")
+            elif "schedule_repeats_last" in r or "copy_levels" in r:
+                err(f"{tag}: schedule_repeats_last/copy_levels without schedule")
+            cl = r.get("copy_levels")
+            if cl is not None and not (isinstance(cl, list) and sched and len(cl) == len(sched)
+                                       and all(is_int(x) and x >= 0 for x in cl)):
+                err(f"{tag}: copy_levels must be one non-negative level per schedule entry")
+            mc = r.get("max_count")
+            if mc is not None and not (is_int(mc) and mc > 0):
+                err(f"{tag}: max_count must be a positive integer or null")
+            if r.get("availability") not in PRICE_AVAILABILITY:
+                err(f"{tag}: bad availability {r.get('availability')!r}")
+            if r.get("confidence") not in PRICE_CONFIDENCE:
+                err(f"{tag}: bad confidence {r.get('confidence')!r}")
+            routes = r.get("routes", [])
+            if not isinstance(routes, list) or any(x not in PRICE_ROUTES for x in routes) \
+                    or len(set(routes)) != len(routes):
+                err(f"{tag}: routes must be distinct values of {sorted(PRICE_ROUTES)}")
+            if "removal" in r and not (isinstance(r["removal"], dict) and is_slug(r["removal"].get("tool", ""))):
+                err(f"{tag}: removal must be {{'tool': '<tool id>'}}")
+            if "repair" in r:
+                amounts(f"{tag}.repair", r["repair"])
+            if m in ("shop", "vouchers", "event_currency", "free") and price is None and sched is None:
+                warnings.append(f"{tag}: method {m} without a price (counted as unknown)")
+            check_refs(tag, r.get("sources", []))
+            if not isinstance(r.get("notes", ""), str):
+                err(f"{tag}: notes must be a string")
+
+
 def license_guard() -> None:
     for rel in tracked_files():
         p = ROOT / rel
@@ -369,6 +514,7 @@ def main() -> int:
         check_maps(items, pack_sprites)
     check_pack(items)
     check_samples(items)
+    check_prices(items)
     license_guard()
     for w in warnings:
         print("warning:", w)

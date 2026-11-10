@@ -20,11 +20,20 @@ const WATER_INSET := 0.75     ## tiles of bank between a river's edge and its wa
 const UV_TILE := 256.0
 const UV_PATCH := 1500.0
 const UV_DETAIL := 720.0
+const UV_TONE := 4200.0       ## broad tone variation: one texture repeat spans many plots
+const UV_PEBBLE := 300.0
+## Layers at the start of the build that only colour the ground (backdrop,
+## land grass, patches, tufts, broad tone); everything after them keeps off land.
+const GREEN_LAYERS := 6
 
 ## Season -> tint per layer group, and the veil laid over the green ground.
+## "<group>_set" replaces a group's colour (flat, untextured) instead of tinting
+## it: grass drawn above the veil (verges, bank and cliff lips) becomes snow.
 const SEASONS := {
-	"winter": {"veil": Color(0.95, 0.97, 1.0, 0.74), "water": Color(0.82, 0.92, 1.0), "road": Color(0.93, 0.94, 0.98), "rock": Color(0.95, 0.97, 1.0)},
-	"autumn": {"veil": Color(0.86, 0.56, 0.2, 0.24), "water": Color(0.88, 0.94, 0.92), "road": Color(0.97, 0.92, 0.84), "rock": Color.WHITE},
+	"winter": {"veil": Color(0.95, 0.97, 1.0, 0.74), "water": Color(0.82, 0.92, 1.0), "road": Color(0.93, 0.94, 0.98), "rock": Color(0.95, 0.97, 1.0),
+		"turf_set": Color(0.84, 0.9, 0.84)},   # ≈ grass under the winter veil
+	"autumn": {"veil": Color(0.86, 0.56, 0.2, 0.24), "water": Color(0.88, 0.94, 0.92), "road": Color(0.97, 0.92, 0.84), "rock": Color.WHITE,
+		"turf": Color(1.0, 0.86, 0.66)},
 	"spring": {"veil": Color(0.9, 1.0, 0.72, 0.1), "water": Color.WHITE, "road": Color.WHITE, "rock": Color.WHITE},
 	"summer": {"veil": Color(1.0, 0.9, 0.5, 0.08), "water": Color.WHITE, "road": Color.WHITE, "rock": Color.WHITE},
 }
@@ -242,6 +251,9 @@ func _build_green(b: Rect2i) -> void:
 			_rect_quad(patch, run)
 			_rect_quad(detail, run)
 			x = x1
+	# Broad sunny / shaded tone over everything green (one quad): big lawns and
+	# the backdrop get a gentle large-scale variation instead of one flat colour.
+	_rect_quad(_layer("grass_tone", "", Color.WHITE, UV_TONE), b)
 
 
 func _build_forests() -> void:
@@ -325,7 +337,7 @@ func _build_cliff(b: Rect2i) -> void:
 	var lip := PackedVector2Array()
 	for i in top.size():
 		lip.append(top[i] + Vector2(0.0, 7.0 + 6.0 * _wob(i * 1.9, 6.0)))
-	_strip(_layer("grass", "", Color(0.82, 0.88, 0.74)), top, lip)
+	_strip(_layer("grass", "turf", Color(0.82, 0.88, 0.74)), top, lip)
 	_strip(_layer("", "", Color(0.2, 0.16, 0.1)), lip, _shifted(lip, 4.0), 0.3, 0.0)
 
 
@@ -359,6 +371,18 @@ func _river_span(r: Rect2i, along_y: bool, s0: float, s1: float, lift: float) ->
 	var sand_a: PackedVector2Array = ribbon.call(func(s: float) -> float: return t0 - 0.3 * _wob(s * 0.6, 11.0))
 	var sand_z: PackedVector2Array = ribbon.call(func(s: float) -> float: return t1 - 0.22 * _wob(s * 0.6, 13.0))
 	_strip(_layer("sand", "road"), sand_a, sand_z)
+	# Bank edges: a crisp turf lip where the grass ends, and its soft shadow on
+	# the sand below (both inside the sand ribbon, so the land is never painted).
+	var lip_a: PackedVector2Array = ribbon.call(func(s: float) -> float: return t0 - 0.3 * _wob(s * 0.6, 11.0) + 0.08)
+	var lip_z: PackedVector2Array = ribbon.call(func(s: float) -> float: return t1 - 0.22 * _wob(s * 0.6, 13.0) - 0.08)
+	var shade_a: PackedVector2Array = ribbon.call(func(s: float) -> float: return t0 - 0.3 * _wob(s * 0.6, 11.0) + 0.34)
+	var shade_z: PackedVector2Array = ribbon.call(func(s: float) -> float: return t1 - 0.22 * _wob(s * 0.6, 13.0) - 0.34)
+	var turf := _layer("grass", "turf", Color(0.86, 0.92, 0.78))
+	_strip(turf, sand_a, lip_a)
+	_strip(turf, lip_z, sand_z)
+	var bank_shade := _layer("", "road", Color(0.36, 0.3, 0.16))
+	_strip(bank_shade, lip_a, shade_a, 0.38, 0.0)
+	_strip(bank_shade, shade_z, lip_z, 0.0, 0.38)
 	var wa := func(s: float) -> float: return t0 + WATER_INSET + 0.45 * _wob(s * 0.8, 17.0)
 	var wz := func(s: float) -> float: return t1 - WATER_INSET - 0.45 * _wob(s * 0.8, 23.0)
 	var bank := _layer("", "road", Color(0.44, 0.34, 0.2))
@@ -368,6 +392,9 @@ func _river_span(r: Rect2i, along_y: bool, s0: float, s1: float, lift: float) ->
 	var edge_z: PackedVector2Array = ribbon.call(wz)
 	_strip(bank, wet_a, edge_a, 0.0, 0.5)
 	_strip(bank, wet_z, edge_z, 0.0, 0.5)
+	var stones := _layer("pebbles", "road", Color(1, 1, 1, 0.85), UV_PEBBLE)
+	_strip(stones, wet_a, edge_a, 0.0, 0.9)
+	_strip(stones, edge_z, wet_z, 0.9, 0.0)
 	_strip(_layer("water", "water"), edge_a, edge_z)
 	var deep := _layer("", "water", Color(0.16, 0.42, 0.66))
 	var d0 := func(s: float) -> float: return mid - 0.75 - 0.3 * _wob(s * 0.5, 29.0)
@@ -450,13 +477,26 @@ func _road_span(rd: Rect2i, x0: float, x1: float) -> void:
 	var y1 := float(rd.end.y)
 	var vn := _along(x0, x1, false, func(_x: float) -> float: return y0, 1.0)
 	var vs := _along(x0, x1, false, func(_x: float) -> float: return y1, 1.0)
-	_strip(_layer("grass", "", Color(0.84, 0.9, 0.76)), vn, vs)
+	_strip(_layer("grass", "turf", Color(0.84, 0.9, 0.76)), vn, vs)
 	# The dirt winds inside its strip: it never spills onto land next to the road.
 	var north := func(x: float) -> float: return y0 + 0.08 + 0.28 * _wob(x * 0.7, 61.0)
 	var south := func(x: float) -> float: return y1 - 0.08 - 0.28 * _wob(x * 0.7, 67.0)
 	var edge_n := _along(x0, x1, false, north, 1.0)
 	var edge_s := _along(x0, x1, false, south, 1.0)
+	# Shoulders: worn, sun-dried verge between the grass and the dirt, inside
+	# the road strip (the land next to the road is never painted).
+	var verge_n := _along(x0, x1, false, func(_x: float) -> float: return y0 + 0.02, 1.0)
+	var verge_s := _along(x0, x1, false, func(_x: float) -> float: return y1 - 0.02, 1.0)
+	var worn := _layer("", "road", Color(0.62, 0.56, 0.3))
+	_strip(worn, verge_n, edge_n, 0.0, 0.5)
+	_strip(worn, edge_s, verge_s, 0.5, 0.0)
 	_strip(_layer("road", "road"), edge_n, edge_s)
+	# Loose stones along both dirt edges.
+	var peb := _layer("pebbles", "road", Color(1, 1, 1, 0.9), UV_PEBBLE)
+	var peb_n := _along(x0, x1, false, func(x: float) -> float: return north.call(x) + 0.22, 1.0)
+	var peb_s := _along(x0, x1, false, func(x: float) -> float: return south.call(x) - 0.22, 1.0)
+	_strip(peb, verge_n, peb_n, 0.6, 0.0)
+	_strip(peb, peb_s, verge_s, 0.0, 0.6)
 	var dark := _layer("", "road", Color(0.42, 0.3, 0.16))
 	var in_n := _along(x0, x1, false, func(x: float) -> float: return north.call(x) + 0.32, 1.0)
 	var in_s := _along(x0, x1, false, func(x: float) -> float: return south.call(x) - 0.32, 1.0)
@@ -533,11 +573,17 @@ func _draw_layer(ci: RID, l: Layer, tints: Dictionary) -> void:
 	if l.pts.is_empty():
 		return
 	var c := l.tint
+	var tex_kind := l.tex
 	if not l.group.is_empty() and tints.has(l.group):
 		c *= tints[l.group] as Color
+	elif not l.group.is_empty() and tints.has(l.group + "_set"):
+		# Replaced outright (e.g. turf drawn above the veil turns to snow): flat colour.
+		var s: Color = tints[l.group + "_set"]
+		c = Color(s.r, s.g, s.b, c.a)
+		tex_kind = ""
 	var cols := PackedColorArray()
 	cols.resize(l.pts.size())
 	for i in l.pts.size():
 		cols[i] = Color(c.r, c.g, c.b, c.a * l.alpha[i])
-	var tex := TerrainTextures.get_tex(l.tex).get_rid() if not l.tex.is_empty() else RID()
+	var tex := TerrainTextures.get_tex(tex_kind).get_rid() if not tex_kind.is_empty() else RID()
 	RenderingServer.canvas_item_add_triangle_array(ci, l.idx, l.pts, cols, l.uvs, PackedInt32Array(), PackedFloat32Array(), tex)

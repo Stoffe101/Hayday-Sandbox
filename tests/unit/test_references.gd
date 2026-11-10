@@ -112,6 +112,54 @@ func test_every_edit_is_one_undo_step() -> void:
 	assert_eq(seen[0], 6, "renderers are told every time")
 
 
+func test_each_image_keeps_its_own_calibration_and_edits_undo() -> void:
+	## Calibration records live on the image dictionaries, are saved with the
+	## layout and change only through SetReference (one undo step each).
+	var l := FarmLayout.new()
+	l.id = "cal"
+	var stack := CommandStack.new()
+	stack.layout = l
+	var cam_a := Transform2D(0.0, Vector2(0.5, 0.5), 0.0, Vector2(300, 100))
+	var cam_b := Transform2D(deg_to_rad(2.0), Vector2(0.8, 0.8), 0.0, Vector2(-50, 20))
+	var grids := [Vector2(0, 0), Vector2(10, 0), Vector2(10, 10), Vector2(0, 10)]
+	var docs: Array = []
+	var base := {"images": [{"id": "r1", "file": "user://a.png"}, {"id": "r2", "file": "user://b.png"}], "above": false}
+	stack.execute(EditCommands.SetReference.new({}, base, "Add"))
+	var doc := LayoutIO.normalize_reference(l.reference)
+	for k in 2:
+		var cam: Transform2D = [cam_a, cam_b][k]
+		var pts: Array = []
+		for g: Vector2 in grids:
+			pts.append(CalibrationMath.make_point(cam * Iso.grid_to_world(g) + Vector2(0.3 * k, -0.2), g))
+		var f := CalibrationMath.fit(pts)
+		var im := ReferenceLayer.image_by_id(doc, "r%d" % (k + 1))
+		im["affine"] = f["image_to_world"]
+		im["calibration"] = CalibrationMath.to_record(pts, f, "t%d" % k)
+		var before := l.reference.duplicate(true)
+		stack.execute(EditCommands.SetReference.new(before, doc.duplicate(true), "Calibrate reference"))
+		docs.append(l.reference.duplicate(true))
+	var a := ReferenceLayer.image_by_id(l.reference, "r1")
+	var b := ReferenceLayer.image_by_id(l.reference, "r2")
+	assert_eq(a["calibration"]["at"], "t0")
+	assert_eq(b["calibration"]["at"], "t1")
+	assert_ne(a["affine"], b["affine"], "each image has its own fit")
+	assert_true(CalibrationMath.record_applied(a) and CalibrationMath.record_applied(b))
+	# Saved and loaded with the layout.
+	var back := LayoutIO.from_dict(JsonUtil.parse(JsonUtil.stringify(LayoutIO.to_dict(l))), fixture_db())
+	var a2 := ReferenceLayer.image_by_id(back.reference, "r1")
+	assert_eq((a2["calibration"]["points"] as Array).size(), 4)
+	assert_almost(float(a2["calibration"]["rms_tiles"]), float(a["calibration"]["rms_tiles"]), 1e-6)
+	assert_true(CalibrationMath.record_applied(a2))
+	stack.undo()
+	assert_false(ReferenceLayer.image_by_id(l.reference, "r2").has("calibration"), "undo removes the second calibration only")
+	assert_true(ReferenceLayer.image_by_id(l.reference, "r1").has("calibration"))
+	stack.undo()
+	assert_eq(l.reference, base)
+	stack.redo()
+	stack.redo()
+	assert_eq(l.reference, docs[1])
+
+
 func test_image_lookup_and_new_ids() -> void:
 	var doc := {"images": [{"id": "r1"}, {"id": "r3"}]}
 	assert_eq(ReferenceLayer.image_by_id(doc, "r3"), {"id": "r3"})

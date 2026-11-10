@@ -23,8 +23,9 @@ if (-not (Test-Path 'artifacts\.gdignore')) { New-Item -ItemType File -Path 'art
 # Keep the capture window out of the user's way: it never takes focus, opens tiny, and
 # capture.gd moves it off-screen at startup (Godot clamps new windows onto a monitor).
 # It can't be minimized instead, because a minimized Godot window stops drawing.
+$lock = Enter-GodotLock
 $overrideCfg = Join-Path (Get-Location).Path 'override.cfg'
-if (Test-Path -LiteralPath $overrideCfg) { throw 'override.cfg already exists in the project folder; remove it first.' }
+if (Test-Path -LiteralPath $overrideCfg) { Exit-GodotLock $lock; throw 'override.cfg already exists in the project folder; remove it first.' }
 [IO.File]::WriteAllText($overrideCfg, @'
 [display]
 
@@ -59,5 +60,6 @@ foreach ($cfg in $Configs) {
 }
 finally {
 	Remove-Item -LiteralPath $overrideCfg -Force -ErrorAction SilentlyContinue
+	Exit-GodotLock $lock
 }
 exit $fail

@@ -207,6 +207,39 @@ class SetProfile extends Command:
 		return false
 
 
+class SetPlanning extends Command:
+	## Replaces the planning document (layout.planning, docs/PLANNING.md §3):
+	## areas, phases, assignments, placed / acquired progress, baseline, guide
+	## ticks. Build `new_plan` with the PlanDoc.with_* helpers. Deep copies both
+	## ways and emits layout.planning_changed (the budget engine listens to it).
+	## Consecutive commands merge into one undo step only when they carry the
+	## same non-empty merge key (rapid checklist ticks, slider drags), within
+	## CommandStack.MERGE_WINDOW_MS.
+	var _old: Dictionary
+	var _new: Dictionary
+
+	func _init(old_plan: Dictionary, new_plan: Dictionary, text: String = "Edit plan", key: String = "") -> void:
+		_old = old_plan.duplicate(true)
+		_new = new_plan.duplicate(true)
+		label = text
+		merge_key = key
+
+	func do(layout: FarmLayout) -> void:
+		layout.set_planning(_new)
+
+	func undo(layout: FarmLayout) -> void:
+		layout.set_planning(_old)
+
+	func is_noop() -> bool:
+		return _old == _new
+
+	func merge(other: Command) -> bool:
+		if not other is SetPlanning or merge_key.is_empty() or other.merge_key != merge_key:
+			return false
+		_new = (other as SetPlanning)._new.duplicate(true)
+		return true
+
+
 class SetCameraBookmark extends Command:
 	## Stores a saved view in layout.camera.bookmarks[slot]; leaves the current
 	## view and the other slots alone.

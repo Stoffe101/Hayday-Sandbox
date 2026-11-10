@@ -18,7 +18,7 @@ extends RefCounted
 ##    `migration.migrated_landmarks` with a reason — never silently dropped.
 ##  * Older schema versions are migrated step by step (see migrate()).
 ##  * Unknown keys are preserved.
-##  * Saving over a pre-v2 file first keeps its original bytes as
+##  * Saving over a file of an older schema first keeps its original bytes as
 ##    `<file>.v<N>-backup` (see save_file()).
 ##
 ## Schema 2 (W2 design s6) adds the game tile frame and the keys
@@ -30,9 +30,16 @@ extends RefCounted
 ##   "reference": {"images": [{id, name, file, opacity, visible, locked,
 ##                             x, y, scale, rotation | affine}, ...], "above": bool}
 ## Earlier files hold one image directly in "reference"; first in the list = bottom.
+##
+## Schema 4 adds the planning document (docs/PLANNING.md §3, see PlanDoc):
+##   "planning": {next_id, areas, phases, assign, placed, acquired, baseline, ...}
+## Unknown keys inside it are kept. Migrating 3 -> 4 turns "zone" annotations
+## (and annotations without a kind, which the editor draws as zones) into
+## rectangle areas (name = the zone's text or "Area N", colour kept); labels
+## stay annotations.
 
 const FORMAT := "hayday-sandbox-layout"
-const SCHEMA_VERSION := 3
+const SCHEMA_VERSION := 4
 const FILE_EXT := ".hdlayout"
 ## Note the v1 starter template put on its auto-locked core buildings. The 1->2
 ## migration clears that automatic lock on movable items (user locks stay).
@@ -47,7 +54,7 @@ const H1_REVIEW_MIN_X := 53
 const COLLISION_CODES := [PlacementRules.LANDMARK, PlacementRules.OUT_OF_BOUNDS, PlacementRules.ROAD,
 	PlacementRules.WATER, PlacementRules.BLOCKED]
 const KNOWN_KEYS := ["format", "schema_version", "app_version", "meta", "map", "next_uid", "next_group", "objects",
-	"groups", "annotations", "profile", "reference", "camera", "world", "migration", "footprint_source"]
+	"groups", "annotations", "profile", "reference", "camera", "world", "migration", "footprint_source", "planning"]
 
 
 class LoadReport:
@@ -72,6 +79,7 @@ class LoadReport:
 	## Where the pre-v2 original of this file is (or, before the first save, will be) kept. "" = n/a.
 	var backup_path: String = ""
 	var starter_unlocked: int = 0           ## v1 starter auto-locks cleared by the migration
+	var zones_to_areas: int = 0             ## zone annotations turned into planning areas (3 -> 4)
 
 	func summary() -> String:
 		var parts := PackedStringArray()
@@ -93,6 +101,9 @@ class LoadReport:
 				", ".join(PackedStringArray(list.slice(0, 4))) + (" +%d more" % (list.size() - 4) if list.size() > 4 else "")])
 		if starter_unlocked > 0:
 			parts.append("%d starter building%s unlocked" % [starter_unlocked, "" if starter_unlocked == 1 else "s"])
+		if zones_to_areas > 0:
+			parts.append("%d zone%s became planning area%s" % [zones_to_areas, "" if zones_to_areas == 1 else "s",
+				"" if zones_to_areas == 1 else "s"])
 		if not review_uids.is_empty():
 			parts.append("%d object(s) to check: the old map placed their land elsewhere" % review_uids.size())
 		if not collisions.is_empty():
@@ -160,6 +171,7 @@ static func to_dict(l: FarmLayout) -> Dictionary:
 		"reference": l.reference.duplicate(true),
 		"camera": l.camera.duplicate(true),
 		"world": FarmLayout.normalize_world_state(l.world_state),
+		"planning": l.planning.duplicate(true),
 	}, true)
 	if not l.migration.is_empty():
 		d["migration"] = l.migration.duplicate(true)
@@ -192,6 +204,8 @@ static func from_dict(d: Dictionary, db: ItemDatabase, report: LoadReport = null
 		return null
 	if ver < SCHEMA_VERSION:
 		report.migrated_from = ver
+		if ver <= 3:
+			report.zones_to_areas = _zone_annotations(data.get("annotations", [])).size()
 		data = migrate(data, ver, db, map)
 		var mig: Variant = data.get("migration")
 		# The "migration" record describes the 1 -> 2 upgrade: report it only when
@@ -244,6 +258,7 @@ static func from_dict(d: Dictionary, db: ItemDatabase, report: LoadReport = null
 	var cam: Variant = data.get("camera", {})
 	l.camera = cam if cam is Dictionary else {}
 	l.world_state = FarmLayout.normalize_world_state(data.get("world"))
+	l.planning = PlanDoc.normalize(data.get("planning"))
 	var migd: Variant = data.get("migration")
 	l.migration = (migd as Dictionary).duplicate(true) if migd is Dictionary else {}
 	var saved_src: Dictionary = (data.get("footprint_source") as Dictionary).duplicate(true) if data.get("footprint_source") is Dictionary else {}
@@ -423,6 +438,8 @@ static func migrate(d: Dictionary, from_version: int, db: ItemDatabase = null, m
 				data = _migrate_1_to_2(data, db, map)
 			2:
 				data["reference"] = normalize_reference(data.get("reference", {}))
+			3:
+				data = _migrate_3_to_4(data)
 		v += 1
 	data["schema_version"] = SCHEMA_VERSION
 	data["format"] = FORMAT
@@ -539,6 +556,59 @@ static func _migrate_1_to_2(d: Dictionary, db: ItemDatabase = null, map: FarmMap
 	return out
 
 
+static func _zone_annotations(anns: Variant) -> Array:
+	## The annotations that 3 -> 4 turns into areas: kind "zone" (or no kind,
+	## which the editor overlay draws as a zone) with a usable [x, y, w, h] rect.
+	var out: Array = []
+	if not anns is Array:
+		return out
+	for a in anns:
+		if not a is Dictionary:
+			continue
+		var kind := str(a.get("kind", "zone"))
+		var rc: Variant = a.get("rect")
+		if kind != "zone" or not rc is Array or (rc as Array).size() != 4:
+			continue
+		var nums := true
+		for e in rc:
+			nums = nums and _is_num(e)
+		if nums:
+			out.append(a)
+	return out
+
+
+static func _migrate_3_to_4(d: Dictionary) -> Dictionary:
+	## Schema 4 adds "planning". Zone annotations become rectangle areas (name =
+	## text or "Area N", colour kept, unknown fields kept); labels (and anything
+	## that is not a usable zone) stay annotations. A "planning" key an older
+	## file may already carry is normalised and kept.
+	var out := d
+	var plan := PlanDoc.normalize(out.get("planning"))
+	var zones := _zone_annotations(out.get("annotations", []))
+	if zones.is_empty():
+		out["planning"] = plan
+		return out
+	var keep: Array = []
+	for a in out.get("annotations", []):
+		if not zones.has(a):
+			keep.append(a)
+	for z: Dictionary in zones:
+		var rc: Array = z["rect"]
+		var area := {}
+		for k in z:
+			if not str(k) in ["id", "kind", "rect", "text"]:
+				area[str(k)] = z[k]
+		var text := str(z.get("text", "")).strip_edges() if z.get("text") != null else ""
+		area["name"] = text if not text.is_empty() else "Area %d" % (PlanDoc.areas(plan).size() + 1)
+		area["rect"] = [int(rc[0]), int(rc[1]), maxi(1, int(rc[2])), maxi(1, int(rc[3]))]
+		if area.has("color") and (area["color"] == null or str(area["color"]).is_empty()):
+			area.erase("color")
+		plan = PlanDoc.with_area(plan, area)
+	out["annotations"] = keep
+	out["planning"] = plan
+	return out
+
+
 static func normalize_reference(r: Variant) -> Dictionary:
 	## The canonical reference document, as a fresh copy: {} (no reference) or
 	## {"images": [...], "above": bool}. Accepts the single-image shape of schema
@@ -612,7 +682,8 @@ static func file_schema_version(path: String) -> int:
 
 
 static func backup_original(path: String) -> String:
-	## If `path` holds a pre-v2 layout and no backup exists yet, copies its
+	## If `path` holds a layout of an older schema (v0..v3) and no backup of
+	## that version exists yet, copies its
 	## original bytes to backup_path_for(path, <its version>). Returns the backup
 	## path (existing or new), "" when no backup is needed, or "error:<message>"
 	## when the copy failed. When `path` is missing or unreadable, the intact
@@ -639,9 +710,10 @@ static func backup_original(path: String) -> String:
 
 
 static func save_file(l: FarmLayout, path: String) -> Error:
-	## Atomic save. A pre-v2 layout file is never overwritten without keeping
-	## its original bytes as `<file>.v<N>-backup` first (the first save over a
-	## migrated file); if that copy fails nothing is written.
+	## Atomic save. A layout file of an older schema is never overwritten
+	## without keeping its original bytes as `<file>.v<N>-backup` first (the
+	## first save over a migrated file, e.g. `.v3-backup`); if that copy fails
+	## nothing is written.
 	if FileAccess.file_exists(path) or FileAccess.file_exists(path + ".bak") or FileAccess.file_exists(path + ".tmp"):
 		var bk := backup_original(path)
 		if bk.begins_with("error:"):

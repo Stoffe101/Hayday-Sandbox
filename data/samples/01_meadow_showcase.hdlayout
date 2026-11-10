@@ -1,6 +1,6 @@
 {
 	"format": "hayday-sandbox-layout",
-	"schema_version": 3,
+	"schema_version": 4,
 	"app_version": "sample",
 	"meta": {
 		"id": "",
@@ -2114,6 +2114,14 @@
 	],
 	"groups": {},
 	"annotations": [],
+	"planning": {
+		"acquired": {},
+		"areas": [],
+		"assign": {},
+		"next_id": 1,
+		"phases": [],
+		"placed": {}
+	},
 	"profile": {
 		"level": 1,
 		"owned": {},

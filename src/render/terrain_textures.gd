@@ -18,7 +18,9 @@ static func get_tex(kind: String) -> Texture2D:
 		"sand": tex = _noise_tex(Color("#e2cd98"), Color("#cfb780"), Color("#efdfb2"), 19, 0.03, false)
 		"rock": tex = _noise_tex(Color("#a39a86"), Color("#80776a"), Color("#bdb4a0"), 23, 0.035, false)
 		"grass_patch": tex = _patch_tex()
+		"grass_tone": tex = _tone_tex()
 		"grass_detail": tex = _detail_tex()
+		"pebbles": tex = _pebble_tex()
 		"hatch": tex = _hatch_tex()
 		_: tex = _noise_tex(Color.GRAY, Color.DIM_GRAY, Color.LIGHT_GRAY, 1, 0.02, false)
 	_cache[kind] = tex
@@ -79,6 +81,58 @@ static func _patch_tex() -> Texture2D:
 				img.set_pixel(x, y, Color(dark.r, dark.g, dark.b, clampf((0.5 - a) * 1.5, 0.0, 0.5)))
 			else:
 				img.set_pixel(x, y, Color(light.r, light.g, light.b, clampf((a - 0.5) * 1.3, 0.0, 0.45)))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
+
+static func _tone_tex() -> Texture2D:
+	## Very broad, soft tone variation (alpha): sunny yellow-green and cool
+	## deep-green areas several plots wide, so large lawns don't read as one flat
+	## colour. Drawn stretched over thousands of world px (TerrainLayer.UV_TONE).
+	var size := 128
+	var n := FastNoiseLite.new()
+	n.seed = 53
+	n.frequency = 0.03
+	n.fractal_octaves = 2
+	var src := n.get_seamless_image(size, size, false, false, 0.25)
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var warm := Color("#d9e27a")
+	var cool := Color("#2f6b3a")
+	for y in size:
+		for x in size:
+			var a := src.get_pixel(x, y).r
+			if a < 0.5:
+				img.set_pixel(x, y, Color(cool.r, cool.g, cool.b, clampf((0.5 - a) * 0.9, 0.0, 0.22)))
+			else:
+				img.set_pixel(x, y, Color(warm.r, warm.g, warm.b, clampf((a - 0.5) * 0.8, 0.0, 0.2)))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
+
+static func _pebble_tex() -> Texture2D:
+	## Sparse small stones on transparent ground (road shoulders, river banks).
+	var size := 256
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.6, 0.55, 0.45, 0.0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 67
+	var tones: Array[Color] = [Color("#b8ab95"), Color("#9d917c"), Color("#cfc4ae"), Color("#8a7e6b")]
+	for i in 110:
+		var cx := rng.randi_range(0, size - 1)
+		var cy := rng.randi_range(0, size - 1)
+		var rx := rng.randi_range(2, 4)
+		var ry := maxi(1, rx - rng.randi_range(0, 2))
+		var col: Color = tones[rng.randi() % tones.size()]
+		for dy in range(-ry - 1, ry + 2):
+			for dx in range(-rx - 1, rx + 2):
+				var d := (float(dx) / (rx + 0.5)) ** 2 + (float(dy) / (ry + 0.5)) ** 2
+				var px := posmod(cx + dx, size)
+				var py := posmod(cy + dy, size)
+				if d <= 1.0:
+					var lit := col.lightened(0.25) if dy < 0 and dx < 0 else col
+					img.set_pixel(px, py, Color(lit.r, lit.g, lit.b, 0.95))
+				elif d <= 1.7 and dy > 0 and img.get_pixel(px, py).a < 0.1:
+					img.set_pixel(px, py, Color(0.15, 0.12, 0.08, 0.3))   # contact shadow below the stone
 	img.generate_mipmaps()
 	return ImageTexture.create_from_image(img)
 

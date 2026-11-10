@@ -5,6 +5,8 @@ Verified: 2026-11-09
 Dataset: [`data/research/items_research.json`](../../data/research/items_research.json) (1,962 records).
 Everything in it comes from public community sources (fan wikis and a fan calculator site), read through their APIs or pre-rendered HTML. No game files were decompiled, and no images or artwork were downloaded.
 
+Prices are structured separately in [`data/prices/hayday_prices.json`](../../data/prices/hayday_prices.json) (generated from this dataset plus hand checks by `tools/catalog/build_prices.py`); see [`PRICING_RESEARCH.md`](PRICING_RESEARCH.md) for methods, per-copy schedules, the price-step rule and coverage counts. Same licence: CC BY-SA 3.0, Hay Day Wiki (Fandom) contributors.
+
 ## TL;DR
 
 - Production buildings are well covered. 58 of the 60 have a footprint, and for 50 of them the English and Russian fan wikis give the same size. Most are 2x2 (46). The early-game bakery-style ovens and bars are 3x3 (10). The Dairy is 4x4, and the Ice Cream Maker is 3x2.

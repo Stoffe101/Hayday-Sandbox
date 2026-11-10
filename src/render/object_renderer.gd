@@ -276,13 +276,20 @@ func _draw_block(v: Vis, origin: Vector2i, size: Vector2i, flipped: bool, col: C
 		var font := ThemeDB.fallback_font
 		var fs := int(clampf(10.0 + 6.0 * mini(size.x, size.y), 12, 40))
 		font.draw_string(ci, Vector2(-fs * 0.3, -h * 0.5 + fs * 0.35), label, HORIZONTAL_ALIGNMENT_CENTER, -1, fs, Color(1, 1, 1, 0.95))
+	# Bounds and the picking hull are in world space, where the canvas item's
+	# own mirror (see _apply_transform) has undone the flip above: use the
+	# footprint as it is drawn, not the pre-mirrored polygons.
+	var shape := local + top
+	if flipped:
+		for i in shape.size():
+			shape[i].x = -shape[i].x
 	var mn := Vector2(INF, INF)
 	var mx := Vector2(-INF, -INF)
-	for p in local + top:
+	for p in shape:
 		mn = mn.min(p)
 		mx = mx.max(p)
 	v.bounds = Rect2(mn + v.center, mx - mn)
-	var hull := Geometry2D.convex_hull(local + top)
+	var hull := Geometry2D.convex_hull(shape)
 	v.fallback_poly = PackedVector2Array()
 	for p in hull:
 		v.fallback_poly.append(p + v.center)

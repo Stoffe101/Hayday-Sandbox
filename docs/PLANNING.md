@@ -61,7 +61,9 @@ sources}}`, informational: the step rule and what is known about its basis). Cur
 regenerate with `python3 tools/catalog/build_prices.py [--report]`.
 
 **Layering** (`PriceBook`, one shared instance `App.prices`): catalogue `cost` fields (used only when the price
-file has no record for the item) < `hayday_prices.json` < user overrides. The override file is `user://price_overrides.json`
+file has no record for the item) < `hayday_prices.json` < the private client-price supplement
+(`user://private_data/client_prices.json`, built from the user's own game files by `ClientPrices`; see
+`docs/research/CLIENT_PRICES.md`; `origin: client`, confidence `game_data`) < user overrides. The override file is `user://price_overrides.json`
 (`{"format": "hayday-sandbox-price-overrides", "schema_version": 1, "items": {id: record}}`, each record in the
 price-file shape plus `"origin": "user"`); it is never written to the repository. Keys an override leaves out fall
 back to the lower layers, except that setting any of `price`, `step`, `schedule`, `schedule_repeats_last`
@@ -71,9 +73,13 @@ no `max_count`, the catalogue's maximum is used (an item fact, not a price). Eac
 came from (`origin`: `catalogue`, `price_db`, `user`, `none`).
 
 **Progressive prices:** copy *k* (1-based) costs `schedule[k-1]` if present (the last entry repeats only if the
-record says `"schedule_repeats_last": true`, otherwise copies past the table are unknown), else `price + step×(k-1)`.
+record says `"schedule_repeats_last": true`, otherwise copies past the table are unknown), else
+`price + step×floor((k-1)/step_every)` (`step_every` defaults to 1; the client data's `DoPriceIncreaseEveryNObject`).
 Which *k* the next purchase is: `profile.purchased[item]` if recorded, else the copies owned. Both the step rule
-and its basis are community data and flagged as such (`rules.step_basis` is `unverified`).
+and its basis are community data and flagged as such (`rules.step_basis` is `unverified`). The client data has
+the rise but not the counter the game uses, so that stays unverified. The price dialog's "Price your shop shows
+now" turns the price the game shows into `profile.purchased[item]` (`PriceBook.copy_index_for_price`, one undoable
+`SetProfile`), so later copies are priced from the player's real counter.
 
 ## 2. Inventory (`layout.profile`)
 

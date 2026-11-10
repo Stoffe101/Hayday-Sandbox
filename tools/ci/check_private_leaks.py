@@ -86,6 +86,14 @@ FFY_SIGNED_RE = re.compile(r"media\.ffycdn\.net/[^\s\"'<>]*[?&](token|signature|
 TOKEN_FIELD_RE = re.compile(r"\"token\"\s*:\s*\"[^\"\s<>{}]{8,}\"")
 PRIVATE_INDEX_RE = re.compile(r"\"(private_use_only|download_method|sha1_local)\"\s*:")
 FFY_INDEX_THRESHOLD = 20
+# Private game-data documents written by the app / tools into user://private_data (docs/research/CLIENT_PRICES.md):
+# never part of the repository, whatever they are called.
+PRIVATE_FORMAT_RE = re.compile(r"\"format\"\s*:\s*\"(hayday-sandbox-client-prices|hayday-client-price-reference|"
+                               r"hayday-sandbox-client-price-report|hayday-sandbox-client-price-mapping)\"")
+PRIVATE_REPORT_RE = re.compile(r"^# Client price import report", re.M)
+# A client data table: "Name,..." header, a type row ("String,int,...") and many rows. Synthetic test tables are tiny.
+CLIENT_TABLE_TYPES_RE = re.compile(r"^(String|int|boolean)(,(String|int|boolean)?)+\s*$")
+CLIENT_TABLE_MIN_ROWS = 40
 HEX_RE = re.compile(r"^[0-9a-fA-F]{40}$|^[0-9a-fA-F]{64}$")
 SWEEP_SKIP_DIRS = {".leakcheck", ".venv", "venv", "__pycache__", ".git"}
 CACHE_DIR = ".leakcheck"
@@ -592,6 +600,15 @@ def check_content_rules(e: Entry, data: bytes, artifact: bool) -> list[Finding]:
         if len(urls) >= FFY_INDEX_THRESHOLD:
             f.append(Finding("fankit-token", e.path, f"contains {len(urls)} media.ffycdn.net URLs (looks like a "
                              "private Fan Kit index dump)"))
+        if ext == ".json" and PRIVATE_FORMAT_RE.search(text):
+            f.append(Finding("private-game-data", e.path, "is a private client-price document (supplement, reference, "
+                             "report or mapping) from your game files"))
+        if ext == ".md" and PRIVATE_REPORT_RE.search(text):
+            f.append(Finding("private-game-data", e.path, "is a private client price import report"))
+        if ext in (".csv", ".txt", ""):
+            lines = text.splitlines()
+            if len(lines) >= CLIENT_TABLE_MIN_ROWS and CLIENT_TABLE_TYPES_RE.match(lines[1].strip() if len(lines) > 1 else ""):
+                f.append(Finding("private-game-data", e.path, "looks like a game client data table (typed header row)"))
         if ext == ".json" and PRIVATE_INDEX_RE.search(text):
             f.append(Finding("private-index", e.path, "looks like a private acquisition index (private_use_only / "
                              "download_method / sha1_local fields)"))

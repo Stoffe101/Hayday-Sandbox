@@ -23,7 +23,7 @@ var map: FarmMap                  ## world of the open layout / new layouts; see
 var assets: AssetLibrary
 var library: LayoutLibrary
 var session: EditorSession
-## Resolved item prices (catalogue < data/prices < user://price_overrides.json).
+## Resolved item prices (catalogue < data/prices < private client supplement < user://price_overrides.json).
 var prices: PriceBook
 ## The one planning context of the app: Plan panel tabs, planning dialogs and the
 ## budget widget read it; rebound to every new session (docs/PLANNING.md §5).
@@ -425,6 +425,23 @@ func _on_autosave_tick() -> void:
 
 
 var _last_autosave_ms := 0
+
+
+func reload_client_prices() -> void:
+	## Re-reads the private client-price supplement (after an import, rollback or removal).
+	if FileAccess.file_exists(PriceBook.DEFAULT_CLIENT):
+		prices.load_client(PriceBook.DEFAULT_CLIENT)
+	else:
+		prices.clear_client()
+
+
+func client_build() -> String:
+	## The game version of the installed art pack / private world ("" = none).
+	for p in assets.pack_list():
+		var prov: Variant = p.get("provenance")
+		if prov is Dictionary and not str(prov.get("client_build", "")).is_empty():
+			return str(prov["client_build"])
+	return ""
 
 
 func toast(text: String, kind: String = "info") -> void:

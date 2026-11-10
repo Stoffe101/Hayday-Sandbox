@@ -124,7 +124,7 @@ static func _item_row(engine: BudgetEngine, id: String, e: Dictionary) -> Dictio
 		"buyable": known_item and method_s in PriceBook.COST_METHODS,
 		"routes": rec.get("routes", []), "unlock_level": it.unlock_level if it != null else -1,
 		"availability": rec.get("availability", "unknown"), "confidence": rec.get("confidence", "unknown"),
-		"verified": str(rec.get("confidence", "")) == "confirmed", "origin": rec.get("origin", PriceBook.ORIGIN_NONE),
+		"verified": str(rec.get("confidence", "")) in ["confirmed", "game_data"], "origin": rec.get("origin", PriceBook.ORIGIN_NONE),
 		"max_count": mc, "count_total": st["count"], "over_max": mc > 0 and int(st["count"]) > mc,
 		"sources": rec.get("sources", []), "notes": rec.get("notes", ""), "info": rec.get("info", ""),
 	}

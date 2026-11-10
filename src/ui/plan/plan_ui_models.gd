@@ -294,6 +294,7 @@ static func row_badges(r: Dictionary, farm_level: int) -> Array:
 
 static func confidence_badge(conf: String) -> Array:
 	match conf:
+		"game_data": return ["From your game files", "accent"]
 		"confirmed": return ["Verified", "accent"]
 		"community": return ["Community data", "info"]
 		"unverified": return ["Unverified", "warn"]
@@ -313,6 +314,7 @@ static func origin_text(origin: String) -> String:
 	match origin:
 		PriceBook.ORIGIN_CATALOGUE: return "Item catalogue"
 		PriceBook.ORIGIN_PRICE_DB: return "Researched price file"
+		PriceBook.ORIGIN_CLIENT: return "Your game files"
 		PriceBook.ORIGIN_USER: return "Your override"
 	return "No price information"
 
@@ -846,9 +848,31 @@ static func _list(a: Array, max_n: int = 8) -> String:
 # --- price dialog --------------------------------------------------------------------------
 
 ## Currencies offered in the override form (others stay readable, shown by id).
-const FORM_CURRENCIES := ["coins", "diamonds", "voucher_green", "voucher_blue", "voucher_purple", "voucher_gold", "film", "golden_keys"]
+const FORM_CURRENCIES := ["coins", "diamonds", "voucher_green", "voucher_blue", "voucher_purple", "voucher_gold", "pearls", "film", "golden_keys"]
 const STEP_CURRENCIES := ["coins", "diamonds"]
 const FORM_METHODS := ["shop", "vouchers", "event_currency", "free", "reward", "not_in_shop", "unknown"]
+
+
+static func price_summary(pb: PriceBook, item_id: String) -> String:
+	## One line for item cards and the inspector, from the same price book as
+	## every budget: "500 coins (+2 coins per copy)", "Can't be bought: derby
+	## reward", "Price unknown". Never the raw catalogue figure.
+	if pb == null:
+		return "Price unknown"
+	var rec := pb.resolved(item_id)
+	var m := str(rec["method"])
+	if m in PriceBook.NOT_BUYABLE_METHODS or m == PriceBook.METHOD_UNKNOWN:
+		return pb.method_text(item_id)
+	var first: Variant = pb.copy_price(item_id, 1)
+	var t := Currency.format_line(first)
+	if rec["schedule"] is Array and (rec["schedule"] as Array).size() > 1:
+		t += " (first copy; dearer later)"
+	elif rec["step"] is Dictionary and not Currency.is_zero(rec["step"]):
+		var every := int(rec.get("step_every", 1))
+		t += " (+%s %s)" % [Currency.format_line(rec["step"]), "per copy" if every <= 1 else "every %d copies" % every]
+	if m == PriceBook.METHOD_EVENT:
+		t += " · event"
+	return t
 
 
 static func copy_price_of(rec: Dictionary, k: int) -> Variant:
@@ -873,8 +897,12 @@ static func copy_price_of(rec: Dictionary, k: int) -> Variant:
 	var st: Variant = rec.get("step")
 	if not st is Dictionary or k == 1:
 		return p
+	@warning_ignore("integer_division")
+	var steps := (k - 1) / maxi(1, int(rec.get("step_every", 1)))
+	if steps == 0:
+		return p
 	var out: Dictionary = (p as Dictionary).duplicate()
-	Currency.add_into(out, st, k - 1)
+	Currency.add_into(out, st, steps)
 	return out
 
 
@@ -893,7 +921,9 @@ static func base_record(pb: PriceBook, item: String) -> Dictionary:
 	var r := pb.layer(item, PriceBook.ORIGIN_PRICE_DB)
 	if r.is_empty():
 		r = pb.layer(item, PriceBook.ORIGIN_CATALOGUE)
-	return r if not r.is_empty() else PriceBook.empty_record()
+	r = r if not r.is_empty() else PriceBook.empty_record()
+	var c := pb.layer(item, PriceBook.ORIGIN_CLIENT)
+	return PriceBook.merge_client(r, c) if not c.is_empty() else r
 
 
 static func resolve_with_override(base: Dictionary, ov: Dictionary) -> Dictionary:
@@ -969,9 +999,33 @@ static func record_lines(rec: Dictionary, pb: PriceBook = null) -> Array:
 		else:
 			out.append(["First copy", Currency.format_line(rec.get("price"))])
 			if rec.get("step") is Dictionary and not Currency.is_zero(rec["step"]):
-				out.append(["Each extra copy", "+ %s" % Currency.format_line(rec["step"])])
+				var every := int(rec.get("step_every", 1))
+				out.append(["Each extra copy", "+ %s%s" % [Currency.format_line(rec["step"]),
+					(" every %d copies" % every) if every > 1 else ""]])
+				if str(rec.get("step_confidence", "")) == "unverified":
+					out.append(["Price rise", "counts your purchases (assumed: the game data has the rise, not the counter it uses); enter the price your shop shows to set the counter"])
 	if int(rec.get("max_count", -1)) > 0:
 		out.append(["Purchase limit", str(int(rec["max_count"]))])
+		if rec.get("copy_levels") is Array and (rec["copy_levels"] as Array).size() > 1:
+			var lv: PackedStringArray = []
+			for x in rec["copy_levels"]:
+				lv.append(str(int(x)))
+			out.append(["Copies by level", "copy %s at level %s" % ["/".join(PackedStringArray(range(1, lv.size() + 1).map(func(i): return str(i)))), "/".join(lv)]])
+	var cl: Variant = rec.get("client")
+	if cl is Dictionary and not (cl as Dictionary).is_empty():
+		var bits: PackedStringArray = ["%s (%s)" % [str(cl.get("name", "")), str(cl.get("table", ""))]]
+		if int(cl.get("unlock_level", -1)) > 0:
+			bits.append("level %d" % int(cl["unlock_level"]))
+		if cl.get("can_buy") is bool:
+			bits.append("CanBuy %s" % ("yes" if cl["can_buy"] else "no"))
+		if bool(cl.get("sentinel_999", false)):
+			bits.append("999-diamond placeholder (not a price)")
+		if cl.get("footprint") is Array:
+			bits.append("%d×%d tiles" % [int(cl["footprint"][0]), int(cl["footprint"][1])])
+		bits.append("matched by %s" % str(cl.get("rule", "?")).replace("_", " "))
+		out.append(["Game files", ", ".join(bits)])
+	if not str(rec.get("client_conflict", "")).is_empty():
+		out.append(["Disagreement", str(rec["client_conflict"])])
 	out.append(["Availability", availability_text(str(rec.get("availability", "unknown")))])
 	out.append(["Confidence", str(rec.get("confidence", "unknown")).capitalize()])
 	var srcs: PackedStringArray = []

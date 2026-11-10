@@ -33,6 +33,7 @@ the safety mechanisms.
 | Client-file extraction (optional) | `<root>/raw/apk_extracted/`, `raw/apk_sprites/<version>/` | same |
 | Built pack(s) | `<root>/packs/<id>/` (written by `build_pack.py`; may include `hashes.json`) | same |
 | **Installed pack (what the app reads)** | `~/.local/share/HaydaySandbox/asset_packs/hayday_original/` | `%APPDATA%\HaydaySandbox\asset_packs\hayday_original\` |
+| **Private game data the app reads** (client prices, its report and your matching decisions, world check report) | `~/.local/share/HaydaySandbox/private_data/` | `%APPDATA%\HaydaySandbox\private_data\` |
 | Acquisition state, logs, Python venv | `<root>/acquire_state.json`, `<root>/logs/`, `<root>/.venv/` | same |
 | Leak-guard cache (hashes of private images) | `<root>/.leakcheck/` | same |
 | Screenshots or QA images that show original art | under `<root>` only (e.g. `<root>/screens/`) | same |

@@ -3,7 +3,8 @@ extends VBoxContainer
 ## Asset Manager: browse which items have original art, compare it with the
 ## placeholder on the item's real footprint, fine-tune anchor/scale, pick the
 ## default variant, mark art verified or reject wrong matches, work through a
-## pack's review queue, and inspect installed packs.
+## pack's review queue, inspect installed packs, and manage private game data
+## (client prices, world check: GameDataPage).
 ##
 ## Every edit is written to the pack's overrides.json through
 ## AssetLibrary.save_overrides()/assign_image() (pack.json is never touched)
@@ -74,6 +75,7 @@ var _review_result_ids: Array = []
 var _review_pack_btn: OptionButton
 var _review_progress: Label
 var _packs_box: VBoxContainer
+var game_data: GameDataPage
 
 
 static func open(parent: Control, item_id: String = "") -> AssetManager:
@@ -106,6 +108,7 @@ func _ready() -> void:
 	tabs.add_tab("Items", Icons.get_icon("package-open", 16))
 	tabs.add_tab("Review queue", Icons.get_icon("list-checks", 16))
 	tabs.add_tab("Packs", Icons.get_icon("layers", 16))
+	tabs.add_tab("Game data", Icons.get_icon("coins", 16))
 	tabs.focus_mode = Control.FOCUS_NONE
 	tabs.clip_tabs = false
 	tabs.tab_changed.connect(_on_tab)
@@ -121,7 +124,8 @@ func _ready() -> void:
 	stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(stack)
-	for page: Control in [_build_items_page(), _build_review_page(), _build_packs_page()]:
+	game_data = GameDataPage.new()
+	for page: Control in [_build_items_page(), _build_review_page(), _build_packs_page(), game_data]:
 		stack.add_child(page)
 		page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		_pages.append(page)
@@ -166,6 +170,8 @@ func _on_tab(i: int) -> void:
 		_refresh_review()
 	elif i == 2:
 		_refresh_packs()
+	elif i == 3:
+		game_data.refresh()
 	_update_summary()
 
 

@@ -172,9 +172,14 @@ static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflict
 		var placed: int = counts[id]
 		if it.unlock_level > level:
 			r.level_locked.append({"item": id, "name": it.name, "level": it.unlock_level, "count": placed})
-		if it.max_count > 0 and placed > it.max_count:
-			r.over_max.append({"item": id, "name": it.name, "placed": placed, "max": it.max_count})
-			var extra_uids: Array = by_item[id].slice(it.max_count)
+		var mx := it.max_count
+		if budget != null and budget.prices != null:
+			var rm := int(budget.prices.resolved(id).get("max_count", -1))   # same limit as the budget (client data, research)
+			if rm > 0:
+				mx = rm
+		if mx > 0 and placed > mx:
+			r.over_max.append({"item": id, "name": it.name, "placed": placed, "max": mx})
+			var extra_uids: Array = by_item[id].slice(mx)
 			for u in extra_uids:
 				_add(r, u, OVER_MAX)
 		var have := placed if (unknown_owned and not owned.has(id)) else int(owned.get(id, 0))

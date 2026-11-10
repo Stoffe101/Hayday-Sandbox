@@ -3018,6 +3018,7 @@ func _qa_journeys() -> void:
 	await _qa_modes_and_switching()
 	await _qa_migration()
 	await _qa_prices()
+	await _qa_client_prices()
 	await _qa_layers_and_scale()
 	for k in keep:
 		st.set_v(k, keep[k], false)
@@ -3751,6 +3752,73 @@ func _qa_prices() -> void:
 	await _frames(2)
 	check(_qa_coins(w.last_totals) == c0 and Currency.equal(App.prices.copy_price(item, 1), researched), "QA9: removing it restores the researched value")
 	check(not PriceBook.load_default(App.db, App.prices.overrides_path).has_override(item), "QA9: …also after a restart")
+	ctx.set_scope_pin("auto")
+
+
+func _qa_client_prices() -> void:
+	## A (synthetic) client-price supplement: installed through the private data
+	## folder, priced by the same engine everywhere, the Game data tab shows it,
+	## the shop price sets the purchase counter (undoable), removal restores research.
+	print("QA 9b: client prices")
+	var ctx: PlanContext = App.plan_ctx
+	var s: EditorSession = await _qa_open("QA client prices", "empty")
+	var w: BudgetWidget = main.budget
+	var item := "fence"
+	var blk := _free_block(Vector2i(8, 3))
+	var uids := _qa_line(s, item, blk + Vector2i.ONE, 5)
+	var p := s.layout.profile.duplicate(true)
+	p["owned"] = {item: 0}
+	p["purchased"] = {}
+	ctx.set_profile(p, "None owned")
+	ctx.set_scope_pin("farm")
+	await _frames(2)
+	var researched := _qa_coins(w.last_totals)
+	var doc := {"format": PriceBook.CLIENT_FORMAT, "schema_version": 1, "game_version": "0.0.1-synthetic",
+		"source": {"kind": "selftest"}, "stats": {"records": 1, "item_records": 1, "component_records": 0},
+		"items": {item: {"client_status": "priced", "method": "shop", "price": {"coins": 5}, "step": {"coins": 2},
+			"step_every": 3, "client": {"table": "deco_fences", "name": "SyntheticFence", "rule": "asset_export"}}},
+		"components": {}, "review": []}
+	var rep := ClientPrices.build_report(doc, App.prices.derived(null), App.db)
+	var res := ClientPrices.install(doc, rep)
+	check(bool(res["ok"]) and not PlanUiKit.is_inside_repo(ProjectSettings.globalize_path(PriceBook.DEFAULT_CLIENT)),
+		"QA9b: the supplement is installed in the private data folder (%s)" % str(res["error"]))
+	App.reload_client_prices()
+	await _frames(2)
+	var expect := 5 + 5 + 5 + 7 + 7
+	check(uids.size() == 5 and _qa_coins(w.last_totals) == expect, "QA9b: the chip uses the client price, +2 every 3 copies (%d → %d, expected %d)" % [researched, _qa_coins(w.last_totals), expect])
+	check(App.prices.resolved(item)["origin"] == PriceBook.ORIGIN_CLIENT and App.prices.resolved(item)["confidence"] == "game_data", "QA9b: the record says it comes from the game files")
+	var rows := ShoppingList.build(s.budget, null, BudgetEngine.MODE_TO_BUY)
+	var row := {}
+	for r in rows:
+		if r.get("item") == item:
+			row = r
+	check(Currency.equal(row.get("total"), {"coins": expect}), "QA9b: the shopping list agrees (%s)" % str(row.get("total")))
+	var am := AssetManager.open(main.modal_layer)
+	await _frames(2)
+	am.show_tab(3)
+	await _frames(2)
+	var txt := "
+".join(_qa_texts(am.game_data))
+	check(txt.contains("Prices from your game files") and txt.contains("0.0.1-synthetic"), "QA9b: the Game data tab shows the installed supplement")
+	am.modal.close()
+	await _frames(2)
+	var d := PriceDialog.open(ctx, item)
+	var r9 := d.apply_shop_price({"coins": 7})
+	await _frames(2)
+	check(int(r9["copy"]) == 4 and int((s.layout.profile.get("purchased", {}) as Dictionary).get(item, -1)) == 3,
+		"QA9b: the shop price 7 is copy #4 → 3 bought (%s)" % str(r9))
+	check(_qa_coins(w.last_totals) == 7 + 7 + 7 + 9 + 9, "QA9b: copies 4-8 cost 7, 7, 7, 9, 9 from the counter are priced from the counter (%d)" % _qa_coins(w.last_totals))
+	d.request_close()
+	s.stack.undo()
+	await _frames(2)
+	check(_qa_coins(w.last_totals) == expect, "QA9b: setting the counter is undoable")
+	ClientPrices.remove()
+	for f in [PriceBook.DEFAULT_CLIENT.get_basename() + ClientPrices.PREVIOUS_SUFFIX, ClientPrices.REPORT_PATH, ClientPrices.REPORT_PATH.get_basename() + ".md"]:
+		if FileAccess.file_exists(f):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(f))
+	App.reload_client_prices()
+	await _frames(2)
+	check(not App.prices.has_client_data() and _qa_coins(w.last_totals) == researched, "QA9b: removing it restores the researched prices (%d)" % _qa_coins(w.last_totals))
 	ctx.set_scope_pin("auto")
 
 

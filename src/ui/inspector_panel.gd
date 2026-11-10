@@ -283,6 +283,9 @@ func _landmark_look(s: EditorSession, lm: Landmark) -> void:
 		row2.add_child(sk)
 		rows.add_child(row2)
 		landmark_skin_option = sk
+		var sc := skin_cost_text(lm, cur)
+		if not sc.is_empty():
+			rows.add_child(UI.label(sc, "Faint", true))
 		if lm.states.size() > 1 and state != lm.default_state:
 			rows.add_child(UI.label("Skins show on the “%s” look." % LandmarkView.state_name(lm.default_state), "Faint", true))
 	if lm.hidden_by_default or lm.transient:
@@ -480,16 +483,10 @@ func _item_card(it: ItemDef, o: PlacedObject) -> void:
 	if o:
 		v.add_child(UI.kv("Position", "%d, %d" % [o.origin.x, o.origin.y]))
 	v.add_child(UI.kv("Unlocks", "Level %d" % it.unlock_level if it.unlock_level > 0 else "Unknown"))
-	var cost := PackedStringArray()
-	if it.cost_coins >= 0:
-		cost.append("%s coins" % UI.fmt_int(it.cost_coins))
-	if it.cost_diamonds >= 0:
-		cost.append("%d diamonds" % it.cost_diamonds)
-	if not it.cost_other.is_empty():
-		cost.append(it.cost_other)
-	v.add_child(UI.kv("Cost", ", ".join(cost) if not cost.is_empty() else "Unknown"))
-	if it.max_count > 0:
-		v.add_child(UI.kv("Max", "%d per farm" % it.max_count))
+	v.add_child(UI.kv("Cost", PlanUiModels.price_summary(App.prices, it.id)))
+	var mx := int(App.prices.resolved(it.id).get("max_count", -1)) if App.prices != null else it.max_count
+	if mx > 0:
+		v.add_child(UI.kv("Max", "%d per farm" % mx))
 	v.add_child(UI.kv("Rotate", "Yes (mirror)" if it.flippable else "No"))
 	if not it.movable:
 		v.add_child(UI.label("Fixed in place in the game.", "Faint", true))
@@ -1238,3 +1235,22 @@ func _build_view(s: EditorSession) -> void:
 		clr.pressed.connect(func(): action.emit("compare_clear", null))
 		cv.add_child(clr)
 	_body.add_child(cc)
+
+
+static func skin_cost_text(lm: Landmark, skin_id: String) -> String:
+	## "Appearance parts: 250,000 coins (from your game files)" for the chosen skin
+	## preset; "" when no client data covers this kind or the skin has no parts.
+	## Cosmetic only: never a second building, never part of the object budget.
+	if App.prices == null or lm.skin_kind.is_empty() or App.prices.components(lm.skin_kind).is_empty():
+		return ""
+	var parts := {}
+	for sk in lm.skins:
+		if str(sk.get("id", "")) == skin_id and sk.get("parts") is Dictionary:
+			parts = sk["parts"]
+	if parts.is_empty():
+		return ""
+	var c := App.prices.skin_cost(lm.skin_kind, parts)
+	var t := "Appearance parts: %s" % Currency.format_line(c["cost"], "nothing to buy (original parts)")
+	if not (c["unknown"] as Array).is_empty():
+		t += " + %d part%s without a price" % [(c["unknown"] as Array).size(), "" if (c["unknown"] as Array).size() == 1 else "s"]
+	return t + " (from your game files; cosmetic, not in the budget)"

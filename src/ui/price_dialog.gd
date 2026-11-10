@@ -25,6 +25,8 @@ var _error: Label
 var _preview_l: Label
 var _remove_btn: Button
 var _scroll: ScrollContainer
+var _shop_edits: Dictionary = {}
+var _shop_msg: Label
 ## Confidence / availability go into the override only when the user picked
 ## them (or the override already had them): a note alone never changes them.
 var _conf_set := false
@@ -63,6 +65,16 @@ func _build() -> void:
 	body.add_child(card)
 	_layers_box = UI.vbox(2)
 	body.add_child(_layers_box)
+	body.add_child(UI.section("Price your shop shows now"))
+	body.add_child(PlanUiKit.wrap_label("For items that get dearer with every purchase: enter the price the game shows for your next copy and the planner sets your purchase count to match, so later copies are priced from there.", "Faint"))
+	var sh := UI.hbox(8)
+	sh.add_child(_currency_grid(PlanUiModels.STEP_CURRENCIES, _shop_edits, false))
+	var use := UI.button("Use this price", "check")
+	use.pressed.connect(func(): apply_shop_price())
+	sh.add_child(use)
+	body.add_child(sh)
+	_shop_msg = PlanUiKit.wrap_label("", "Dim")
+	body.add_child(_shop_msg)
 	body.add_child(UI.section("Your override"))
 	body.add_child(PlanUiKit.wrap_label("Stored only on this PC, separate from the researched data. Leave the price empty to keep the researched price; setting a price replaces the researched price and step.", "Faint"))
 	var g := GridContainer.new()
@@ -135,7 +147,7 @@ func _key_label(t: String) -> Label:
 	return l
 
 
-func _currency_grid(ids: Array, into: Dictionary) -> Control:
+func _currency_grid(ids: Array, into: Dictionary, preview: bool = true) -> Control:
 	var f := PlanUiKit.flow(8, 6)
 	f.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for cur: String in ids:
@@ -145,7 +157,8 @@ func _currency_grid(ids: Array, into: Dictionary) -> Control:
 		e.alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		e.placeholder_text = "–"
 		e.select_all_on_focus = true
-		e.text_changed.connect(func(_t: String): _update_preview())
+		if preview:
+			e.text_changed.connect(func(_t: String): _update_preview())
 		h.add_child(e)
 		h.add_child(UI.label(Currency.name_of(cur).to_lower(), "Faint"))
 		f.add_child(h)
@@ -170,16 +183,56 @@ func _render_current() -> void:
 	_current_box.add_child(PlanUiKit.wrap_label(_preview_text(rec, "Copies 1–%d" % PREVIEW), "Faint"))
 	UI.clear(_layers_box)
 	var any := false
-	for o in [[PriceBook.ORIGIN_CATALOGUE, "Item catalogue"], [PriceBook.ORIGIN_PRICE_DB, "Researched price file"], [PriceBook.ORIGIN_USER, "Your override"]]:
+	for o in [[PriceBook.ORIGIN_CATALOGUE, "Item catalogue"], [PriceBook.ORIGIN_PRICE_DB, "Researched price file"],
+			[PriceBook.ORIGIN_CLIENT, "Your game files (game %s)" % str(pb.client_info.get("game_version", "?"))], [PriceBook.ORIGIN_USER, "Your override"]]:
 		var layer := pb.layer(item, str(o[0]))
 		if layer.is_empty():
 			continue
 		any = true
 		var n := PriceBook.normalize_record(layer, str(o[0])) if str(o[0]) == PriceBook.ORIGIN_USER else layer
+		if str(o[0]) == PriceBook.ORIGIN_CLIENT and str(layer.get("client_status", "")) != PriceBook.CLIENT_PRICED:
+			_layers_box.add_child(PlanUiKit.wrap_label("%s: %s" % [str(o[1]), "not sold in the regular shop" if str(layer.get("client_status")) == PriceBook.CLIENT_NOT_SOLD else "no price"], "Faint"))
+			continue
 		_layers_box.add_child(PlanUiKit.wrap_label("%s: %s" % [str(o[1]), _short(n)], "Faint"))
 	if not any:
 		_layers_box.add_child(PlanUiKit.wrap_label("No source has a price for this item: it stays unknown until you enter one.", "Faint"))
 	_remove_btn.disabled = not pb.has_override(item)
+
+
+func apply_shop_price(price: Variant = null) -> Dictionary:
+	## Sets the purchase counter (profile.purchased) from the price the game shows
+	## for the next copy (`price`, or the "Price your shop shows now" fields).
+	## Returns PriceBook.copy_index_for_price()'s result.
+	var cur := {}
+	if price is Dictionary:
+		cur = price
+	else:
+		for c in _shop_edits:
+			var v := PlanUiModels.parse_count((_shop_edits[c] as LineEdit).text)
+			if v > 0:
+				cur[c] = v
+	var r := ctx.prices.copy_index_for_price(item, cur)
+	if cur.is_empty():
+		_shop_msg.text = "Enter the price first."
+		return r
+	if int(r["copy"]) < 0:
+		_shop_msg.text = "No copy of this item costs %s with the current price data. If the game's price really differs, enter it as your own price below." % Currency.format_line(cur)
+		return r
+	var lay := ctx.layout()
+	if lay == null:
+		return r
+	var prof: Dictionary = lay.profile.duplicate(true)
+	var purchased: Dictionary = (prof.get("purchased", {}) as Dictionary).duplicate()
+	purchased[item] = int(r["purchases"])
+	prof["purchased"] = purchased
+	ctx.set_profile(prof, "Set purchase count of %s" % _name)
+	if int(r["last"]) > int(r["copy"]):
+		_shop_msg.text = "That is the price of copies %d–%s, so the game's counter is somewhere in that range; the planner now assumes %d bought (the cheapest case)." % [int(r["copy"]),
+			"∞" if int(r["last"]) >= 100000 else str(int(r["last"])), int(r["purchases"])]
+	else:
+		_shop_msg.text = "That is copy #%d: the planner now counts %d bought, and prices your next copies from there." % [int(r["copy"]), int(r["purchases"])]
+	_render_current()
+	return r
 
 
 func _short(rec: Dictionary) -> String:

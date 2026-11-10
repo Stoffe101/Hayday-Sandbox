@@ -14,30 +14,48 @@ const VOUCHER_PURPLE := "voucher_purple"
 const VOUCHER_GOLD := "voucher_gold"
 const FILM := "film"
 const GOLDEN_KEYS := "golden_keys"
+const PEARLS := "pearls"
 const LAND_DEED := "land_deed"
 const MALLET := "mallet"
 const MARKER_STAKE := "marker_stake"
 const EXPANSION_PERMIT := "expansion_permit"
 
 ## Display order; ids not listed sort after these, alphabetically.
-const ORDER := [COINS, DIAMONDS, VOUCHER_GREEN, VOUCHER_BLUE, VOUCHER_PURPLE, VOUCHER_GOLD, FILM, GOLDEN_KEYS,
+const ORDER := [COINS, DIAMONDS, VOUCHER_GREEN, VOUCHER_BLUE, VOUCHER_PURPLE, VOUCHER_GOLD, PEARLS, FILM, GOLDEN_KEYS,
 	LAND_DEED, MALLET, MARKER_STAKE, EXPANSION_PERMIT]
 const NAMES := {
 	COINS: "Coins", DIAMONDS: "Diamonds",
 	VOUCHER_GREEN: "Green vouchers", VOUCHER_BLUE: "Blue vouchers", VOUCHER_PURPLE: "Purple vouchers",
-	VOUCHER_GOLD: "Gold vouchers", FILM: "Film", GOLDEN_KEYS: "Golden keys",
+	VOUCHER_GOLD: "Gold vouchers", PEARLS: "Pearls", FILM: "Film", GOLDEN_KEYS: "Golden keys",
 	LAND_DEED: "Land deeds", MALLET: "Mallets", MARKER_STAKE: "Marker stakes", EXPANSION_PERMIT: "Expansion permits",
 }
 ## Singular names ("1 land deed").
 const SINGULAR := {
 	COINS: "coin", DIAMONDS: "diamond",
 	VOUCHER_GREEN: "green voucher", VOUCHER_BLUE: "blue voucher", VOUCHER_PURPLE: "purple voucher",
-	VOUCHER_GOLD: "gold voucher", FILM: "film", GOLDEN_KEYS: "golden key",
+	VOUCHER_GOLD: "gold voucher", PEARLS: "pearl", FILM: "film", GOLDEN_KEYS: "golden key",
 	LAND_DEED: "land deed", MALLET: "mallet", MARKER_STAKE: "marker stake", EXPANSION_PERMIT: "expansion permit",
 }
 const VOUCHERS := [VOUCHER_GREEN, VOUCHER_BLUE, VOUCHER_PURPLE, VOUCHER_GOLD]
 const EXPANSION_SUPPLIES := [LAND_DEED, MALLET, MARKER_STAKE, EXPANSION_PERMIT]
 const EVENT_CURRENCIES := [FILM, GOLDEN_KEYS]
+
+## The client's numbered vouchers (vouchers.csv VoucherType 1..4 = common, uncommon,
+## rare, epic) and the voucher colours players and the wiki use. Established by
+## comparison, not assumed: over the items both sources price in vouchers, the
+## amounts agree as Voucher1 = green (43 items), Voucher2 = blue (23), Voucher3 =
+## purple (38), Voucher4 = gold (15); the few cross-pairs are amount coincidences
+## (<= 2 each). Voucher5 ("black", a Farm Pass reward) has no colour name and no
+## item uses it in 1.73.89, so it keeps its own id. See docs/research/CLIENT_PRICES.md.
+const GAME_VOUCHERS := {"Voucher1": VOUCHER_GREEN, "Voucher2": VOUCHER_BLUE, "Voucher3": VOUCHER_PURPLE,
+	"Voucher4": VOUCHER_GOLD}
+## The client's own currency field names (decorations.csv etc.) -> currency ids.
+const GAME_FIELDS := {"Price": COINS, "DiamondPrice": DIAMONDS, "PearlPrice": PEARLS}
+
+
+static func from_game_voucher(game_id: String) -> String:
+	## "Voucher3" -> "voucher_purple"; unmapped ones keep a stable id ("voucher5").
+	return str(GAME_VOUCHERS.get(game_id, game_id.to_lower()))
 
 
 # --- ids and names ------------------------------------------------------------------------

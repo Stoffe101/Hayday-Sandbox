@@ -756,10 +756,7 @@ func _show_detail(id: String) -> void:
 	var meta := PackedStringArray(["%d×%d tiles" % [it.footprint.x, it.footprint.y]])
 	if it.unlock_level > 0:
 		meta.append("Lv %d" % it.unlock_level)
-	if it.cost_coins >= 0:
-		meta.append("%s coins" % UI.fmt_int(it.cost_coins))
-	if it.cost_diamonds >= 0:
-		meta.append("%s diamonds" % UI.fmt_int(it.cost_diamonds))
+	meta.append(PlanUiModels.price_summary(App.prices, it.id))
 	info.add_child(UI.label(" · ".join(meta), "Dim", true))
 	var badges := HFlowContainer.new()
 	badges.add_theme_constant_override("h_separation", 4)

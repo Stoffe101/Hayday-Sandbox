@@ -1,10 +1,14 @@
 class_name PriceBook
 extends RefCounted
-## Resolved item prices (docs/PLANNING.md §1). Three layers, later ones win:
+## Resolved item prices (docs/PLANNING.md §1). Four layers, later ones win:
 ##   1. the catalogue's own `cost` fields (ItemDef.cost_coins / cost_diamonds and
 ##      the free text cost_other, parsed),
 ##   2. data/prices/hayday_prices.json (researched, with sources and confidence),
-##   3. the user's overrides (user://price_overrides.json, never in the repository).
+##   3. the private client-price supplement (user://private_data/client_prices.json,
+##      built by ClientPrices from the user's own game files; never in the
+##      repository): the base client configuration of one game version,
+##   4. the user's overrides (user://price_overrides.json, never in the repository):
+##      prices seen in the live game, offers, corrections.
 ## Every resolved record says where it came from (`origin`). Unknown prices stay
 ## unknown: copy_price() returns null, never 0, and a placeholder never counts.
 
@@ -15,6 +19,8 @@ const OVERRIDES_FORMAT := "hayday-sandbox-price-overrides"
 const SCHEMA_VERSION := 1
 const DEFAULT_PATH := "res://data/prices/hayday_prices.json"
 const DEFAULT_OVERRIDES := "user://price_overrides.json"
+const CLIENT_FORMAT := "hayday-sandbox-client-prices"
+const DEFAULT_CLIENT := "user://private_data/client_prices.json"
 
 const METHOD_SHOP := "shop"
 const METHOD_VOUCHERS := "vouchers"
@@ -33,7 +39,8 @@ const METHOD_NAMES := {
 	METHOD_NOT_IN_SHOP: "Not sold in the shop", METHOD_FREE: "Free", METHOD_UNKNOWN: "Unknown",
 }
 const AVAILABILITY := ["current", "seasonal", "event", "retired", "unknown"]
-const CONFIDENCE := ["confirmed", "community", "unverified", "unknown"]
+## game_data: read from the user's own game client files (private supplement).
+const CONFIDENCE := ["game_data", "confirmed", "community", "unverified", "unknown"]
 const ROUTES := ["derby", "event", "package", "secret", "reward", "collection", "expansion", "season_pass", "other"]
 const ROUTE_NAMES := {
 	"derby": "derby reward", "event": "event reward", "package": "special package", "secret": "secret item",
@@ -43,10 +50,17 @@ const ROUTE_NAMES := {
 const ORIGIN_NONE := "none"
 const ORIGIN_CATALOGUE := "catalogue"
 const ORIGIN_PRICE_DB := "price_db"
+const ORIGIN_CLIENT := "client"
 const ORIGIN_USER := "user"
+## Client-record status (see merge_client()).
+const CLIENT_PRICED := "priced"        ## the client lists a purchase price
+const CLIENT_NOT_SOLD := "not_sold"    ## CanBuy=FALSE or only the 999-diamond placeholder
+const CLIENT_NO_PRICE := "no_price"    ## the client says nothing about a price
+## Appearance (customization) part kinds.
+const COMPONENT_KINDS := ["house", "truck", "roadside_shop"]
 ## Keys that describe the price itself: an override that sets any of them
 ## replaces all of them (so an old schedule never hides a user's new price).
-const PRICE_KEYS := ["price", "step", "schedule", "schedule_repeats_last"]
+const PRICE_KEYS := ["price", "step", "step_every", "schedule", "schedule_repeats_last"]
 
 var version: int = 0
 var overrides_path: String = DEFAULT_OVERRIDES
@@ -61,6 +75,10 @@ var _db: ItemDatabase = null
 var _catalogue: Dictionary = {}     ## item -> normalized record (origin catalogue)
 var _price_db: Dictionary = {}      ## item -> normalized record (origin price_db)
 var _overrides: Dictionary = {}     ## item -> raw user record (as saved)
+var _client: Dictionary = {}        ## item -> normalized client record (origin client)
+var _components: Dictionary = {}    ## kind -> {part name -> component record}
+## Client supplement metadata: {format, schema_version, game_version, generated, source, items, components, path}.
+var client_info: Dictionary = {}
 var _resolved: Dictionary = {}      ## item -> resolved record (cache, cleared on change)
 
 
@@ -71,6 +89,8 @@ static func load_default(db: ItemDatabase, overrides: String = DEFAULT_OVERRIDES
 	pb.set_catalogue(db)
 	if FileAccess.file_exists(price_path):
 		pb.load_file(price_path)
+	if FileAccess.file_exists(DEFAULT_CLIENT):
+		pb.load_client(DEFAULT_CLIENT)
 	pb.load_overrides()
 	return pb
 
@@ -130,6 +150,99 @@ func load_data(d: Dictionary) -> int:
 			warnings.append("price data: %s: %s" % [str(id), m])
 	_bump()
 	return _price_db.size()
+
+
+func load_client(path: String = DEFAULT_CLIENT) -> bool:
+	## Layer 3 from a client-price supplement file (replaces the previous layer 3).
+	var data: Variant = JsonUtil.read_json(path)
+	if not data is Dictionary:
+		errors.append("client price supplement missing or invalid: %s" % path)
+		return false
+	var n := load_client_data(data)
+	if n >= 0:
+		client_info["path"] = path
+	return n >= 0
+
+
+func load_client_data(d: Dictionary) -> int:
+	## Layer 3 from parsed supplement data; returns the number of item records
+	## (-1 = rejected, the layer is left empty).
+	_client.clear()
+	_components.clear()
+	client_info = {}
+	if str(d.get("format", "")) != CLIENT_FORMAT:
+		errors.append("client price supplement: format must be '%s'" % CLIENT_FORMAT)
+		_bump()
+		return -1
+	if int(d.get("schema_version", 0)) > SCHEMA_VERSION:
+		warnings.append("client price supplement: schema_version %s is newer than this app (%d)" % [str(d.get("schema_version")), SCHEMA_VERSION])
+	var items: Variant = d.get("items", {})
+	if not items is Dictionary:
+		errors.append("client price supplement: 'items' must be an object")
+		_bump()
+		return -1
+	for id in items:
+		if not items[id] is Dictionary:
+			warnings.append("client price supplement: record for %s is not an object" % str(id))
+			continue
+		var w: Array = []
+		var rec := normalize_record(items[id], ORIGIN_CLIENT, w)
+		var st := str((items[id] as Dictionary).get("client_status", CLIENT_NO_PRICE))
+		rec["client_status"] = st if st in [CLIENT_PRICED, CLIENT_NOT_SOLD, CLIENT_NO_PRICE] else CLIENT_NO_PRICE
+		_client[str(id)] = rec
+		for m in w:
+			warnings.append("client price supplement: %s: %s" % [str(id), m])
+	var n_comp := 0
+	var comps: Variant = d.get("components", {})
+	if comps is Dictionary:
+		for kind in comps:
+			if not str(kind) in COMPONENT_KINDS or not comps[kind] is Dictionary:
+				continue
+			var parts := {}
+			for part in comps[kind]:
+				var c: Variant = comps[kind][part]
+				if c is Dictionary:
+					parts[str(part)] = normalize_component(c)
+			_components[str(kind)] = parts
+			n_comp += parts.size()
+	client_info = {"format": CLIENT_FORMAT, "schema_version": d.get("schema_version"),
+		"game_version": str(d.get("game_version", "")), "generated": str(d.get("generated", "")),
+		"source": d.get("source", {}), "items": _client.size(), "components": n_comp}
+	_bump()
+	return _client.size()
+
+
+func derived(client_doc: Variant) -> PriceBook:
+	## A book sharing this one's catalogue, price file and override layers (read
+	## only), with `client_doc` (a supplement Dictionary, or null for none) as layer 3.
+	var pb := PriceBook.new()
+	pb._db = _db
+	pb._catalogue = _catalogue
+	pb._price_db = _price_db
+	pb._overrides = _overrides
+	pb.file_info = file_info
+	pb.sources = sources
+	pb.currencies = currencies
+	pb.overrides_path = overrides_path
+	if client_doc is Dictionary:
+		pb.load_client_data(client_doc)
+	return pb
+
+
+func clear_client() -> void:
+	if not _client.is_empty() or not _components.is_empty() or not client_info.is_empty():
+		_client.clear()
+		_components.clear()
+		client_info = {}
+		_bump()
+
+
+func client_count() -> int:
+	return _client.size()
+
+
+func has_client_data() -> bool:
+	return not _client.is_empty() or not _components.is_empty()
 
 
 func load_overrides(path: String = "") -> int:
@@ -197,6 +310,7 @@ func layer(item_id: String, origin: String) -> Dictionary:
 	match origin:
 		ORIGIN_CATALOGUE: return (_catalogue.get(id, {}) as Dictionary).duplicate(true)
 		ORIGIN_PRICE_DB: return (_price_db.get(id, {}) as Dictionary).duplicate(true)
+		ORIGIN_CLIENT: return (_client.get(id, {}) as Dictionary).duplicate(true)
 		ORIGIN_USER: return override(id)
 	return {}
 
@@ -209,9 +323,11 @@ func price_db_count() -> int:
 
 func resolved(item_id: String) -> Dictionary:
 	## The effective record (shared, read-only: duplicate before changing it):
-	## {item, method, price, step, step_basis, schedule, schedule_repeats_last,
-	##  max_count (-1 none known), availability, confidence, routes, origin,
-	##  sources, notes, info, progressive}. price/step/schedule entries are Costs or null.
+	## {item, method, price, step, step_every, step_basis, schedule,
+	##  schedule_repeats_last, max_count (-1 none known), availability, confidence,
+	##  routes, origin, sources, notes, info, progressive}; with client data also
+	##  client_status, client (provenance) and maybe client_conflict.
+	##  price/step/schedule entries are Costs or null.
 	var id := _key(item_id)
 	var r: Variant = _resolved.get(id)
 	if r != null:
@@ -220,6 +336,8 @@ func resolved(item_id: String) -> Dictionary:
 	rec = rec.duplicate(true)
 	if _price_db.has(id) and int(rec.get("max_count", -1)) < 0 and _catalogue.has(id):
 		rec["max_count"] = int(_catalogue[id].get("max_count", -1))   # an item fact, not a price
+	if _client.has(id):
+		rec = merge_client(rec, _client[id])
 	if _overrides.has(id):
 		var ov: Dictionary = _overrides[id]
 		var w: Array = []
@@ -293,9 +411,26 @@ static func record_copy_price(r: Dictionary, k: int) -> Variant:
 	var st: Variant = r["step"]
 	if st == null or k == 1:
 		return p
+	@warning_ignore("integer_division")
+	var steps := (k - 1) / maxi(1, int(r.get("step_every", 1)))
+	if steps == 0:
+		return p
 	var out: Dictionary = (p as Dictionary).duplicate()
-	Currency.add_into(out, st, k - 1)
+	Currency.add_into(out, st, steps)
 	return out
+
+
+static func steps_before(x: int, every: int) -> int:
+	## Sum of floor(i / every) for i in 0 .. x-1: how many price steps copies
+	## 1..x add up to when the price rises every `every` copies.
+	var n := maxi(1, every)
+	if x <= 0:
+		return 0
+	@warning_ignore("integer_division")
+	var q := x / n
+	var rm := x % n
+	@warning_ignore("integer_division")
+	return n * q * (q - 1) / 2 + q * rm
 
 
 func price_of_copies(item_id: String, first_k: int, count: int) -> Dictionary:
@@ -310,12 +445,12 @@ func price_of_copies(item_id: String, first_k: int, count: int) -> Dictionary:
 		if r["method"] == METHOD_FREE:
 			out["known"] = count
 			return out
-		# price × count + step × (sum of (k-1)) in closed form.
+		# price × count + step × (sum of floor((k-1) / every)) in closed form.
 		Currency.add_into(cost, r["price"], count)
 		if r["step"] != null:
 			var a := first_k - 1
-			@warning_ignore("integer_division")
-			var steps := count * a + (count * (count - 1)) / 2
+			var every := maxi(1, int(r.get("step_every", 1)))
+			var steps := steps_before(a + count, every) - steps_before(a, every)
 			Currency.add_into(cost, r["step"], steps)
 		out["known"] = count
 		return out
@@ -327,6 +462,174 @@ func price_of_copies(item_id: String, first_k: int, count: int) -> Dictionary:
 			Currency.add_into(cost, c)
 			out["known"] = int(out["known"]) + 1
 	return out
+
+
+func copy_index_for_price(item_id: String, current: Dictionary, limit: int = 100000) -> Dictionary:
+	## The copy number whose price equals `current` (the price the game shows now
+	## for the next purchase): {copy (1-based, -1 = no copy has that price),
+	## last (the last copy with that price; > copy when the price rises only every
+	## N copies or never), purchases (copies bought before it = copy - 1)}. Sets
+	## the purchase counter from the price the player sees in the shop.
+	var r := resolved(item_id)
+	var out := {"copy": -1, "last": -1, "purchases": -1}
+	if not r["method"] in COST_METHODS or current.is_empty():
+		return out
+	var first := -1
+	var last := -1
+	var p: Variant = r["price"]
+	var st: Variant = r["step"]
+	if r["schedule"] == null and p is Dictionary and st is Dictionary and not Currency.is_zero(st):
+		# Arithmetic: price + step * floor((k-1)/N) == current in every currency.
+		var every := maxi(1, int(r.get("step_every", 1)))
+		var t := -1
+		var keys: Array = (st as Dictionary).keys() + (current as Dictionary).keys() + (p as Dictionary).keys()
+		for cur in keys:
+			var s := int((st as Dictionary).get(cur, 0))
+			var diff := int(current.get(cur, 0)) - int((p as Dictionary).get(cur, 0))
+			if s == 0:
+				if diff != 0:
+					return out
+				continue
+			if diff < 0 or diff % s != 0:
+				return out
+			@warning_ignore("integer_division")
+			var tt := diff / s
+			if t >= 0 and tt != t:
+				return out
+			t = tt
+		if t < 0:
+			return out
+		first = t * every + 1
+		last = first + every - 1
+	else:
+		for k in range(1, limit + 1):
+			var c: Variant = record_copy_price(r, k)
+			if c == null:
+				break
+			if Currency.equal(c, current):
+				if first < 0:
+					first = k
+				last = k
+			elif first >= 0:
+				break
+			if r["schedule"] == null and not bool(r["progressive"]):
+				if first >= 0:
+					last = limit   # every copy costs the same: the counter cannot be told
+				break
+	if first < 0:
+		return out
+	return {"copy": first, "last": last, "purchases": first - 1}
+
+
+# --- appearance parts (customization) -------------------------------------------------------
+
+func components(kind: String) -> Dictionary:
+	## part name -> component record for "house" / "truck" / "roadside_shop" ({} without client data).
+	return (_components.get(kind, {}) as Dictionary)
+
+
+func component(kind: String, part: String) -> Dictionary:
+	return (components(kind).get(part, {}) as Dictionary)
+
+
+func skin_cost(kind: String, parts: Dictionary) -> Dictionary:
+	## Cost of the appearance parts `parts` (slot -> part name, as in a landmark
+	## skin preset). Default parts come with the farm, so they cost nothing.
+	## {cost (known part), unknown: [part names without a price or record],
+	##  rows: [{slot, part, name, cost (Cost|null), default, disabled, event}],
+	##  known: bool (data for this kind is installed)}.
+	var comp := components(kind)
+	var out := {"cost": {}, "unknown": [], "rows": [], "known": not comp.is_empty()}
+	var slots := parts.keys()
+	slots.sort()
+	for slot in slots:
+		var part := str(parts[slot])
+		var c: Dictionary = comp.get(part, {})
+		var row := {"slot": str(slot), "part": part, "name": str(c.get("name", part)), "cost": null,
+			"default": bool(c.get("default", false)), "disabled": bool(c.get("disabled", false)),
+			"event": bool(c.get("event", false))}
+		if c.is_empty():
+			(out["unknown"] as Array).append(part)
+		elif bool(row["default"]):
+			row["cost"] = {}
+		elif c.get("price") is Dictionary:
+			row["cost"] = c["price"]
+			Currency.add_into(out["cost"], c["price"])
+		else:
+			(out["unknown"] as Array).append(part)
+		(out["rows"] as Array).append(row)
+	return out
+
+
+static func normalize_component(v: Dictionary) -> Dictionary:
+	## {name, slot, price (Cost|null), default, disabled, event, tid, unlock_level}.
+	var price: Variant = Currency.normalize(v.get("price")) if v.get("price") != null else null
+	return {"name": str(v.get("name", "")), "slot": str(v.get("slot", "")), "price": price,
+		"default": bool(v.get("default", false)), "disabled": bool(v.get("disabled", false)),
+		"event": bool(v.get("event", false)), "tid": str(v.get("tid", "")),
+		"unlock_level": int(v.get("unlock_level")) if (v.get("unlock_level") is int or v.get("unlock_level") is float) else -1}
+
+
+# --- client layer merge ---------------------------------------------------------------------
+
+static func merge_client(base: Dictionary, c: Dictionary) -> Dictionary:
+	## The client record `c` (normalized, with client_status) on top of the
+	## researched / catalogue record `base`:
+	## * priced: the client's base price, step and step_every replace the lower
+	##   ones. A researched per-copy schedule is kept when the client gives no
+	##   rise and agrees on copy 1 (it only knows the base price then).
+	## * not_sold (CanBuy=FALSE or only the 999-diamond placeholder): unknown
+	##   records become "not sold in the shop"; reward / event / not-in-shop records
+	##   keep their route; a researched shop price is kept (it is usually an offer
+	##   price) but marked unverified, with `client_conflict` saying why.
+	## * no_price: provenance only.
+	## Availability stays from research: CanBuy=TRUE in the client does not prove
+	## that the live shop sells the item today.
+	var rec := base.duplicate(true)
+	var st := str(c.get("client_status", CLIENT_NO_PRICE))
+	rec["client_status"] = st
+	rec["client"] = c.get("client", {})
+	if int(c.get("max_count", -1)) > 0:
+		rec["max_count"] = int(c["max_count"])   # exp_levels.csv: the most copies any level allows
+		if c.get("copy_levels") is Array:
+			rec["copy_levels"] = c["copy_levels"]
+	match st:
+		CLIENT_PRICED:
+			var lower: Variant = rec.get("schedule")
+			var keep_schedule: bool = lower is Array and not (lower as Array).is_empty() and c.get("step") == null \
+				and c.get("schedule") == null and Currency.equal((lower as Array)[0], c.get("price"))
+			var was: Variant = record_copy_price(rec, 1) if rec.get("method") in COST_METHODS else null
+			rec["method"] = str(c.get("method", METHOD_SHOP))
+			rec["price"] = c.get("price")
+			rec["step"] = c.get("step")
+			rec["step_every"] = maxi(1, int(c.get("step_every", 1)))
+			rec["step_basis"] = str(c.get("step_basis", ""))
+			if c.get("step") != null:
+				rec["step_confidence"] = str(c.get("step_confidence", "unverified"))
+			if not keep_schedule:
+				rec["schedule"] = c.get("schedule")
+				rec["schedule_repeats_last"] = bool(c.get("schedule_repeats_last", false))
+			if was != null and not Currency.equal(was, rec["price"]):
+				rec["client_conflict"] = "research said %s" % Currency.format_line(was)
+			rec["confidence"] = "game_data"
+			rec["origin"] = ORIGIN_CLIENT
+		CLIENT_NOT_SOLD:
+			var m := str(rec.get("method", METHOD_UNKNOWN))
+			if m in [METHOD_SHOP, METHOD_VOUCHERS, METHOD_FREE]:
+				# Research has a price the client's shop table does not: usually a
+				# server-side offer. Keep it (a known-cost subtotal stays useful) but
+				# say so and stop calling it confirmed.
+				rec["client_conflict"] = "your game files list no regular shop price for this item (%s); the researched price may be a limited offer" % [
+					"marked not for sale" if (c.get("client", {}) as Dictionary).get("can_buy") == false else "999-diamond placeholder"]
+				if str(rec.get("confidence", "")) in ["confirmed", "community"]:
+					rec["confidence"] = "unverified"
+				if str(rec.get("availability", "unknown")) == "current":
+					rec["availability"] = "unknown"
+			elif m == METHOD_UNKNOWN:
+				rec["method"] = METHOD_NOT_IN_SHOP
+				rec["confidence"] = "game_data"
+				rec["origin"] = ORIGIN_CLIENT
+	return rec
 
 
 func method_text(item_id: String) -> String:
@@ -352,7 +655,7 @@ static func record_method_text(r: Dictionary) -> String:
 # --- parsing --------------------------------------------------------------------------------
 
 static func empty_record() -> Dictionary:
-	return {"method": METHOD_UNKNOWN, "price": null, "step": null, "step_basis": "", "schedule": null,
+	return {"method": METHOD_UNKNOWN, "price": null, "step": null, "step_every": 1, "step_basis": "", "schedule": null,
 		"schedule_repeats_last": false, "max_count": -1, "availability": "unknown", "confidence": "unknown",
 		"routes": [], "origin": ORIGIN_NONE, "sources": [], "notes": "", "info": ""}
 
@@ -380,6 +683,8 @@ static func normalize_record(v: Dictionary, origin: String, warn: Array = []) ->
 			sch.append(c)
 		r["schedule"] = sch if not sch.is_empty() else null
 	r["schedule_repeats_last"] = bool(v.get("schedule_repeats_last", false))
+	var se: Variant = v.get("step_every")
+	r["step_every"] = maxi(1, int(se)) if (se is int or se is float) else 1
 	if placeholder:
 		r["price"] = null
 		r["schedule"] = null

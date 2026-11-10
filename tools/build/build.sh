@@ -39,4 +39,9 @@ fi
 file build/windows/HaydaySandbox.exe
 ls -la build/windows build/*.zip
 echo "Verifying exported Linux build with the in-app self-test…"
-"./build/linux/HaydaySandbox.x86_64" --headless -- --selftest | tail -3
+status=0
+"./build/linux/HaydaySandbox.x86_64" --headless -- --selftest > build/selftest_export.log 2>&1 || status=$?
+grep -E '^\s*FAIL|SCRIPT ERROR' build/selftest_export.log || true   # name what failed, not just the count
+tail -3 build/selftest_export.log
+grep -q "SELFTEST PASS" build/selftest_export.log || status=1
+exit $status

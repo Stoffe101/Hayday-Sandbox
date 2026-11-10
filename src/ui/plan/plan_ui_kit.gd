@@ -118,6 +118,10 @@ static func documents_dir() -> String:
 
 
 static func repo_dir() -> String:
+	## The program folder: the project folder when run from the editor / source,
+	## the folder of the .exe in an exported build (where res:// has no folder).
+	if OS.has_feature("template"):
+		return OS.get_executable_path().get_base_dir().simplify_path()
 	return ProjectSettings.globalize_path("res://").simplify_path()
 
 

@@ -3536,10 +3536,11 @@ func _qa_checklist_resume() -> void:
 		imgs_ok = imgs_ok and str(o["path"]).begins_with(dir) and not PlanUiKit.is_inside_repo(str(o["path"]))
 	check(imgs_ok, "QA10: its pictures go next to the page, never into the program folder")
 	var before := int(main.export_refused)
-	main._plan_export({"scope": "farm", "id": "", "guide_numbers": true, "path": ProjectSettings.globalize_path("res://qa_plan.png")})
+	# The program folder as the app sees it (an exported build has no res:// folder).
+	main._plan_export({"scope": "farm", "id": "", "guide_numbers": true, "path": PlanUiKit.repo_dir().path_join("qa_plan.png")})
 	main._plan_export({"scope": "farm", "id": "", "path": "res://qa_plan2.png", "art": "installed"})
 	check(int(main.export_refused) == before + 2 and not FileAccess.file_exists("res://qa_plan.png") and not FileAccess.file_exists("res://qa_plan2.png"),
-		"QA10: picture requests into the program folder are refused (any art)")
+		"QA10: picture requests into the program folder are refused (any art) (refused %d of 2; program folder %s)" % [int(main.export_refused) - before, PlanUiKit.repo_dir()])
 	check(not bool(gt.call("_request_image", {"scope": "farm", "id": "", "path": "res://qa_plan3.png"})), "QA10: the Guide tab refuses them too")
 	var req: Dictionary = main.plan_export_request({"scope": "area", "id": "a1", "path": dir.path_join("x.png")})
 	check(str(req.get("art")) == "placeholder", "QA10: picture requests default to placeholder art")
@@ -3773,7 +3774,8 @@ func _qa_layers_and_scale() -> void:
 	_key(KEY_A, true)
 	check(hidden and not bench in s.selection and fence in s.selection, "QA: Ctrl+A leaves out objects hidden by an object layer")
 	check(not bench in main.overlay.shown_issue_uids(), "QA: no issue outline on a hidden object")
-	check(not bench in main.plan_overlay.heat_drawn_uids() and fence in main.plan_overlay.heat_drawn_uids(), "QA: no heatmap tile on a hidden object")
+	var drawn: Array = main.plan_overlay.heat_drawn_uids()
+	check(not bench in drawn and fence in drawn, "QA: no heatmap tile on a hidden object (bench %d, fence %d, drawn %s)" % [bench, fence, str(drawn)])
 	main.set_object_layer("decorations", ObjectLayers.SHOW)
 	await _frames(1)
 	_key(KEY_A, true)

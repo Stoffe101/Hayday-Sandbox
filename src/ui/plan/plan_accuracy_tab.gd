@@ -2,8 +2,11 @@ class_name PlanAccuracyTab
 extends PlanTab
 ## Farm Accuracy Report (AccuracyReport): how far the farm on screen can be
 ## trusted when it is rebuilt in Hay Day. A plain-language headline, then one
-## card per section with a status chip, the calibration result of every
-## reference screenshot (RMS / max error, verdict) and what is still uncertain.
+## card per section with a status chip: the evidence ladder (client ground and
+## expansion data, landmark coordinates, footprints, rendering anchors,
+## calibration, terrain, game version; from user://private_data/world_validation.json
+## when present), the calibration result of every reference screenshot (RMS /
+## max error, verdict) and what is still uncertain.
 ## Never upgrades the data: the wording comes from AccuracyReport itself.
 
 ## Optional PlanContext signal that opens the inspector's screenshot
@@ -80,6 +83,7 @@ func refresh() -> void:
 func _level_tone(level: String) -> Array:
 	match level:
 		"game_data_calibrated": return ["Game data, calibrated", "accent"]
+		"game_data_validated": return ["Game data, checked against the client", "accent"]
 		"game_data_unverified": return ["Game data, not verified", "info"]
 		"public_approximation": return ["Approximate map", "warn"]
 	return ["Unknown origin", "danger"]
@@ -103,6 +107,18 @@ func _section_card(s: Dictionary) -> Control:
 	var st := str(s.get("status", "unknown"))
 	h.add_child(PlanUiKit.badge(str(PlanUiModels.STATUS_WORDS.get(st, st)), str(PlanUiModels.STATUS_TONES.get(st, "faint"))))
 	v.add_child(h)
+	if str(s.get("id", "")) == "evidence" and not (s.get("rows", []) as Array).is_empty():
+		# Evidence ladder: one row per kind of evidence, each with its own chip.
+		var rows: Array = s["rows"]
+		for i in rows.size():
+			var e: Dictionary = rows[i]
+			var est := str(e.get("status", "unknown"))
+			var row := UI.hbox(6)
+			row.add_child(PlanUiKit.wrap_label("%d. %s" % [i + 1, str(e.get("title", ""))]))
+			row.add_child(PlanUiKit.badge(str(AccuracyReport.EVIDENCE_WORDS.get(est, est)), str(PlanUiModels.STATUS_TONES.get(est, "faint"))))
+			v.add_child(row)
+			v.add_child(PlanUiKit.wrap_label(str(e.get("text", "")), "Faint"))
+		return card
 	if str(s.get("id", "")) == "calibration" and not (report.get("calibration", []) as Array).is_empty():
 		for c: Dictionary in PlanUiModels.calibration_rows(report):
 			var row := UI.hbox(6)

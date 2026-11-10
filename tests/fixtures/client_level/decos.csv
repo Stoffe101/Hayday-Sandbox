@@ -1,0 +1,8 @@
+Name,FileName,ExportName,TileWidth,TileHeight,Note
+String,String,String,int,int,String
+Bakery,sc/b.sc,bakery_art,3,3,"plain, with a comma"
+,,,,,"level 2 row ""quoted"""
+LongThing,sc/b.sc,long_art,4,1,
+Lamp,sc/b.sc,lamp_art,2,1,
+Twin,sc/b.sc,twin_art,1,1,
+Twin2,sc/b.sc,twin_art,2,2,

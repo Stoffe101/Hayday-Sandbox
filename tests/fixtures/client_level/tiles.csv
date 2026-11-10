@@ -1,0 +1,7 @@
+Name,ExportName,FileName,BlocksBuilding,GreenTile,Passable
+String,String,String,boolean,String,boolean
+Plain,plain_tile,sc/synthetic.sc,,,TRUE
+Road_A,road_tile,sc/synthetic.sc,TRUE,,TRUE
+Road_A_Parked,road_tile,sc/synthetic.sc,TRUE,,
+LockedPlain,plain_tile_locked,sc/synthetic.sc,,Plain,TRUE
+Wall,plain_tile,sc/synthetic.sc,TRUE,,

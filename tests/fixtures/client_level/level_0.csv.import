@@ -1,0 +1,16 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dgaqd1nugxy28"
+
+[deps]
+
+source_file="res://tests/fixtures/client_level/level_0.csv"
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

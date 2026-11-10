@@ -1,0 +1,12 @@
+Name,CollectionTool,CollectionToolAmount,TapSound,LimitedCollectionTool,LimitedCollectionToolAmount,Disabled,Locked,LockedTextTID
+String,String,int,String,String,int,boolean,boolean,String
+10,Spade,3,Tap,Key,1,,,
+,Rake,3,,,
+20,Spade,4,Tap,Key,2,,,
+,Rake,4,,,
+30,Spade,1000,Tap,Key,,,,
+,Rake,1000,,,
+40,Spade,6,Tap,Key,3,,,
+,Rake,6,,,
+50,Spade,6,Tap,Key,3,,,
+,Rake,6,,,

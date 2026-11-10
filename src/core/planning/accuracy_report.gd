@@ -18,8 +18,32 @@ extends RefCounted
 ##
 ## `references` is a list of reference image dictionaries (layout.reference
 ## "images"); when empty, the layout's own images are used.
+##
+## `validation` is a WorldValidator report (the private world compared with the
+## game client's own level tables, tools/private_assets/validate_world.gd).
+## null reads VALIDATION_PATH when it exists; {} means none. It only counts when
+## it was made for the active world (same client version and generation time).
+## The report then carries an evidence ladder ("evidence": 8 rows, each with its
+## own status): client ground data, client expansion assignments, logical
+## landmark coordinates, item footprints, rendering anchors, screenshot
+## calibration, visual terrain and live game-version uncertainty.
 
-const LEVELS := ["public_approximation", "game_data_unverified", "game_data_calibrated", "unknown"]
+const LEVELS := ["public_approximation", "game_data_unverified", "game_data_validated", "game_data_calibrated", "unknown"]
+const VALIDATION_PATH := "user://private_data/world_validation.json"
+const VALIDATION_FORMAT := "hayday-sandbox-world-validation"
+## Evidence ladder rows, in order.
+const EVIDENCE_ROWS := [
+	["ground", "Exact match to client ground data"],
+	["expansion", "Exact match to client expansion assignments"],
+	["landmarks", "Verified logical landmark coordinates"],
+	["footprints", "Verified item footprints"],
+	["anchors", "Verified rendering anchors"],
+	["calibration", "Screenshot calibration"],
+	["terrain", "Visual terrain"],
+	["version", "Live game version"],
+]
+## Status words of the ladder (statuses are the section statuses).
+const EVIDENCE_WORDS := {"ok": "Verified", "warn": "Check", "info": "Info", "unknown": "Not verified"}
 ## Plot / region statuses that are not approximations.
 const SOLID_STATUSES := ["game_data", "verified", "verified-in-data", "confirmed"]
 ## Tiles around an approximate landmark in which an object counts as "near" it.
@@ -27,10 +51,12 @@ const NEAR_TILES := 2
 const MAX_LISTED := 12
 
 
-static func build(map: FarmMap, db: ItemDatabase, layout: FarmLayout = null, references: Array = []) -> Dictionary:
+static func build(map: FarmMap, db: ItemDatabase, layout: FarmLayout = null, references: Array = [],
+		validation: Variant = null) -> Dictionary:
 	var refs: Array = references
 	if refs.is_empty() and layout != null:
 		refs = (LayoutIO.normalize_reference(layout.reference).get("images", []) as Array)
+	var val: Dictionary = load_validation() if validation == null else (validation as Dictionary if validation is Dictionary else {})
 	var r := {
 		"source": _source(map),
 		"version": _version(map),
@@ -41,12 +67,184 @@ static func build(map: FarmMap, db: ItemDatabase, layout: FarmLayout = null, ref
 		"layout": _layout_use(map, db, layout),
 		"calibration": _calibration(refs, map),
 		"uncertainties": _uncertainties(map, db),
+		"validation": validation_state(val, map),
 	}
+	r["evidence"] = _evidence(r, val)
 	var hl := headline(r)
 	r["headline"] = hl[0]
 	r["level"] = hl[1]
 	r["sections"] = _sections(r)
 	return r
+
+
+# --- client-data validation (WorldValidator report) ------------------------------------------
+
+static func load_validation(path: String = VALIDATION_PATH) -> Dictionary:
+	## The latest world validation report, {} when absent or not a report.
+	if not FileAccess.file_exists(path):
+		return {}
+	var d: Variant = JsonUtil.read_json(path)
+	if not d is Dictionary or str((d as Dictionary).get("format", "")) != VALIDATION_FORMAT:
+		return {}
+	return d
+
+
+static func validation_state(val: Dictionary, map: FarmMap) -> Dictionary:
+	## Does the validation report describe the active world? {present, applies,
+	## status, game_version, generated, reason}.
+	var out := {"present": not val.is_empty(), "applies": false, "status": str(val.get("status", "")),
+		"game_version": str(val.get("game_version", "")), "generated": str(val.get("generated", "")), "reason": ""}
+	if val.is_empty():
+		out["reason"] = "no validation report"
+		return out
+	if map == null or not map.is_game_data():
+		out["reason"] = "the active map is not a game-derived world"
+		return out
+	var w: Dictionary = val.get("world", {}) if val.get("world") is Dictionary else {}
+	var cv := str(map.provenance.get("client_version", ""))
+	var gen := str(map.provenance.get("generated", ""))
+	if str(w.get("client_version", "")) != cv:
+		out["reason"] = "the report is for client %s, the world is from client %s" % [str(w.get("client_version", "?")), cv if not cv.is_empty() else "?"]
+		return out
+	if not gen.is_empty() and not str(w.get("generated", "")).is_empty() and str(w["generated"]) != gen:
+		out["reason"] = "the report was made for an earlier build of this world (%s); run the validator again" % str(w["generated"])
+		return out
+	out["applies"] = true
+	return out
+
+
+static func _vcheck(val: Dictionary, id: String) -> Dictionary:
+	for c in val.get("checks", []):
+		if c is Dictionary and str(c.get("id", "")) == id:
+			return c
+	return {}
+
+
+static func _moved(d: Variant) -> bool:
+	## [dx, dy] from JSON (ints or floats) other than [0, 0].
+	return d is Array and (d as Array).size() == 2 and (int(d[0]) != 0 or int(d[1]) != 0)
+
+
+static func _n(v: Variant) -> String:
+	## 9976 -> "9,976".
+	var s := str(int(v))
+	var out := ""
+	var k := 0
+	for i in range(s.length() - 1, -1, -1):
+		out = s[i] + out
+		k += 1
+		if k % 3 == 0 and i > 0 and s[i - 1] != "-":
+			out = "," + out
+	return out
+
+
+static func _evidence(r: Dictionary, val: Dictionary) -> Array:
+	## The evidence ladder: one row per kind of evidence, each with its own
+	## honest status. Data-verified rows say so; nothing is called pixel-exact.
+	var src: Dictionary = r["source"]
+	var kind := str(src.get("kind", "unknown"))
+	var vs: Dictionary = r["validation"]
+	var ok := bool(vs.get("applies", false))
+	var cv := str(r["version"].get("client_version", ""))
+	var rows: Array = []
+	var not_checked := "Game-derived world, not yet compared with the client's level tables (run tools/private_assets/validate_world.gd)."
+	if bool(vs.get("present", false)) and not ok and kind == "private_game_data":
+		not_checked = "Game-derived world; the validation report does not apply: %s." % str(vs.get("reason", ""))
+	var public_text := "Public approximate map: reconstructed from wiki images, not from client data."
+	var unknown_text := "Map of unknown origin: not compared with the client."
+	var base_text := public_text if kind == "public_approximation" else (not_checked if kind == "private_game_data" else unknown_text)
+	var base_status := "warn" if kind == "public_approximation" else "unknown"
+	for spec: Array in EVIDENCE_ROWS:
+		rows.append({"id": spec[0], "title": spec[1], "status": base_status, "text": base_text})
+	# 1 ground, 2 expansion assignments
+	if ok:
+		var g := _vcheck(val, "ground")
+		if not g.is_empty():
+			rows[0]["status"] = "ok" if str(g.get("status", "")) == "pass" else "warn"
+			rows[0]["text"] = ("All %s tiles match the client's ground types exactly (client %s)." % [_n(g.get("compared", 0)), cv]) \
+				if rows[0]["status"] == "ok" else ("%s of %s tiles differ from the client's ground data." % [_n(g.get("mismatches", 0)), _n(g.get("compared", 0))])
+		var e := _vcheck(val, "expansion_tiles")
+		var ov := _vcheck(val, "plot_overlaps")
+		if not e.is_empty():
+			var e_ok := str(e.get("status", "")) == "pass" and (ov.is_empty() or str(ov.get("status", "")) == "pass")
+			rows[1]["status"] = "ok" if e_ok else "warn"
+			if e_ok:
+				var dfc := _vcheck(val, "expansion_definitions")
+				rows[1]["text"] = "All %s expansion tiles carry the client's expansion id; no plot overlaps.%s" % [_n(e.get("compared", 0)),
+					(" %d client definition(s) have no land on the map (not missing land)." % (dfc.get("not_on_map", []) as Array).size()) if not (dfc.get("not_on_map", []) as Array).is_empty() else ""]
+			else:
+				rows[1]["text"] = "%s expansion tile(s) differ from the client; %s overlapping plot tile(s)." % [_n(e.get("mismatches", 0)), _n(ov.get("mismatches", 0))]
+	# 3 landmark coordinates
+	if ok:
+		var lp := _vcheck(val, "landmark_positions")
+		var pr := _vcheck(val, "landmarks_present")
+		if not lp.is_empty():
+			var l_ok := str(lp.get("status", "")) == "pass" and str(pr.get("status", "pass")) == "pass"
+			rows[2]["status"] = "ok" if l_ok else "warn"
+			var ruled := 0
+			var weak: Array = []
+			for lr in val.get("landmarks", []):
+				if lr is Dictionary and _moved(lr.get("delta_from_source")):
+					ruled += 1
+					if str(lr.get("rule_confidence", "")) != "verified-in-data":
+						weak.append("%s (%s)" % [str(lr.get("landmark", "")), str(lr.get("rule_confidence", ""))])
+			if l_ok:
+				rows[2]["text"] = "%d of %d landmarks sit where the client's level data puts them%s." % [int(lp.get("compared", 0)), int(pr.get("client_rows", lp.get("compared", 0))),
+					("; %d through a per-object registration rule: %s" % [ruled, ", ".join(PackedStringArray(weak))]) if ruled > 0 else ""]
+			else:
+				rows[2]["text"] = "%d landmark(s) are not where the client puts them, %d missing or extra." % [int(lp.get("mismatches", 0)), int(pr.get("mismatches", 0))]
+			if bool(src.get("overrides", false)):
+				rows[2]["status"] = "warn"
+				rows[2]["text"] = str(rows[2]["text"]) + " Your own corrections move %s; those positions are not the client's." % \
+					", ".join(PackedStringArray(src.get("override_landmarks", [])))
+	elif kind == "private_game_data":
+		var lm: Dictionary = r["landmarks"]
+		rows[2]["text"] = "%d landmarks from the client's level data (%s); not re-checked against the client tables." % [int(lm.get("total", 0)), _counts_text(lm.get("by_confidence", {}))]
+	# 4 item footprints
+	var fpr: Dictionary = r["footprints"]
+	var fpc := _vcheck(val, "item_footprints") if ok else {}
+	if not fpc.is_empty():
+		var corr := _vcheck(val, "footprint_corrections")
+		var f_ok := str(fpc.get("status", "")) == "pass" and (corr.is_empty() or str(corr.get("status", "")) != "fail")
+		rows[3]["status"] = "ok" if f_ok else "warn"
+		rows[3]["text"] = "%s catalogue items match the client's tile sizes%s; %s differ, %s could not be linked to a client row." % [_n(fpc.get("matched", 0)),
+			(" after the pack's %d corrections" % int(corr.get("present", 0))) if not corr.is_empty() else "", _n(int(fpc.get("mismatches", 0)) + int(fpc.get("axis_swapped", 0))), _n(fpc.get("unlinked", 0))]
+	else:
+		rows[3]["status"] = "unknown"
+		rows[3]["text"] = "Catalogue: %d trusted, %d unverified of %d; not compared with the client's tables." % [int(fpr.get("trusted", 0)), int(fpr.get("unverified", 0)), int(fpr.get("catalogue_total", 0))]
+	# 5 rendering anchors: unverified unless evidence exists (the validator never verifies them).
+	rows[4]["status"] = "unknown"
+	rows[4]["text"] = "Sprite anchors are not verified against the game."
+	if ok:
+		var an := _vcheck(val, "rendering_anchors")
+		if not an.is_empty():
+			var parts: Array = []
+			for ex in an.get("examples", []):
+				if ex is Dictionary:
+					parts.append("%s drawn %.0f world px from the client's registration point" % [str(ex.get("landmark", "")), float(ex.get("distance_px", 0.0))])
+			rows[4]["text"] = "Sprite anchors are not verified against the game%s." % ((": " + "; ".join(PackedStringArray(parts))) if not parts.is_empty() else "")
+	# 6 screenshot calibration (existing results)
+	var best := best_calibration(r)
+	var cal: Array = r.get("calibration", [])
+	if not best.is_empty():
+		var good := str(best["verdict"]) == "good" and int(best.get("approximate_points", 0)) == 0
+		rows[5]["status"] = "ok" if good else "warn"
+		rows[5]["text"] = "Best screenshot fit: %.2f tile RMS over %d points (%s)." % [float(best["rms_tiles"]), int(best["points"]), str(best["verdict"])]
+	else:
+		rows[5]["status"] = "unknown"
+		rows[5]["text"] = "No measured screenshot calibration." if cal.is_empty() else "Screenshot references are not measured (at least 4 points needed)."
+	# 7 visual terrain: never verified here.
+	rows[6]["status"] = "unknown"
+	rows[6]["text"] = "Ground textures, edges, river and cliff art are not compared with the game."
+	# 8 live game version
+	if cv.is_empty():
+		rows[7]["status"] = "unknown"
+		rows[7]["text"] = "Not tied to a game version."
+	else:
+		rows[7]["status"] = "warn"
+		rows[7]["text"] = "Data from game client %s%s; the live game may have changed since (new land, moved landmarks, server-side unlocks)." % [cv,
+			(", validated %s" % str(vs.get("generated", "")).substr(0, 10)) if ok else ""]
+	return rows
 
 
 # --- parts -------------------------------------------------------------------------------
@@ -299,11 +497,22 @@ static func headline(report: Dictionary) -> Array:
 	var kind := str(src.get("kind", "unknown"))
 	var best := best_calibration(report)
 	var good := not best.is_empty() and str(best["verdict"]) == "good" and int(best.get("approximate_points", 0)) == 0
+	# Tiles checked against the client's own level tables (evidence rows 1 and 2).
+	var tiles_ok := false
+	for e in report.get("evidence", []):
+		if e is Dictionary and str(e.get("id", "")) == "ground":
+			tiles_ok = str(e.get("status", "")) == "ok"
+		if e is Dictionary and str(e.get("id", "")) == "expansion":
+			tiles_ok = tiles_ok and str(e.get("status", "")) == "ok"
 	match kind:
 		"private_game_data":
 			if good:
-				return ["Game-derived map; a screenshot calibration matches it within %.2f tile RMS over %d points." % [float(best["rms_tiles"]), int(best["points"])],
+				return ["Game-derived map%s; a screenshot calibration matches it within %.2f tile RMS over %d points." % [
+					", tiles match the client's level data" if tiles_ok else "", float(best["rms_tiles"]), int(best["points"])],
 					"game_data_calibrated"]
+			if tiles_ok:
+				return ["Game-derived map: ground and expansion tiles match the client's level data exactly; placement not yet visually verified.",
+					"game_data_validated"]
 			return ["Game-derived map, placement correspondence not yet visually verified.", "game_data_unverified"]
 		"public_approximation":
 			return ["Public approximate map: positions are approximations reconstructed from wiki images.", "public_approximation"]
@@ -314,6 +523,20 @@ static func headline(report: Dictionary) -> Array:
 
 static func _sections(r: Dictionary) -> Array:
 	var out: Array = []
+	var ev: Array = r.get("evidence", [])
+	if not ev.is_empty():
+		var ev_lines: Array = []
+		var n_ok := 0
+		for i in ev.size():
+			var e: Dictionary = ev[i]
+			ev_lines.append("%d. %s: %s. %s" % [i + 1, e["title"], EVIDENCE_WORDS.get(e["status"], e["status"]), e["text"]])
+			if e["status"] == "ok":
+				n_ok += 1
+		var vs: Dictionary = r.get("validation", {})
+		if bool(vs.get("applies", false)):
+			ev_lines.append("Client-data check: %s, generated %s." % [str(vs.get("status", "")), str(vs.get("generated", ""))])
+		out.append({"id": "evidence", "title": "Evidence ladder", "lines": ev_lines, "rows": ev.duplicate(true),
+			"status": "info" if n_ok > 0 else ("warn" if str(r["source"].get("kind", "")) == "public_approximation" else "unknown")})
 	var src: Dictionary = r["source"]
 	var lines: Array = [str(src["kind_text"]), "Active: %s" % str(src.get("label", ""))]
 	if not str(src.get("pack_id", "")).is_empty():

@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dpwgo37fpxli1"
+
+[deps]
+
+files=["res://tests/fixtures/client_level/tiles.ExportName.translation", "res://tests/fixtures/client_level/tiles.FileName.translation", "res://tests/fixtures/client_level/tiles.BlocksBuilding.translation", "res://tests/fixtures/client_level/tiles.GreenTile.translation", "res://tests/fixtures/client_level/tiles.Passable.translation"]
+
+source_file="res://tests/fixtures/client_level/tiles.csv"
+dest_files=["res://tests/fixtures/client_level/tiles.ExportName.translation", "res://tests/fixtures/client_level/tiles.FileName.translation", "res://tests/fixtures/client_level/tiles.BlocksBuilding.translation", "res://tests/fixtures/client_level/tiles.GreenTile.translation", "res://tests/fixtures/client_level/tiles.Passable.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

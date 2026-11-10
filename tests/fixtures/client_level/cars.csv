@@ -1,0 +1,3 @@
+Name,FileName,ExportName,TileWidth,TileHeight
+String,String,String,int,int
+Truck,sc/synthetic.sc,truck_art,1,2

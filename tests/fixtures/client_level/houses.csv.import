@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bmam3skwrufgr"
+
+[deps]
+
+files=["res://tests/fixtures/client_level/houses.FileName.translation", "res://tests/fixtures/client_level/houses.ExportName.translation", "res://tests/fixtures/client_level/houses.TileWidth.translation", "res://tests/fixtures/client_level/houses.TileHeight.translation"]
+
+source_file="res://tests/fixtures/client_level/houses.csv"
+dest_files=["res://tests/fixtures/client_level/houses.FileName.translation", "res://tests/fixtures/client_level/houses.ExportName.translation", "res://tests/fixtures/client_level/houses.TileWidth.translation", "res://tests/fixtures/client_level/houses.TileHeight.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

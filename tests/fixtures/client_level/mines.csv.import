@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bicuxsealnngu"
+
+[deps]
+
+files=["res://tests/fixtures/client_level/mines.FileName.translation", "res://tests/fixtures/client_level/mines.ExportName.translation", "res://tests/fixtures/client_level/mines.TileWidth.translation", "res://tests/fixtures/client_level/mines.TileHeight.translation"]
+
+source_file="res://tests/fixtures/client_level/mines.csv"
+dest_files=["res://tests/fixtures/client_level/mines.FileName.translation", "res://tests/fixtures/client_level/mines.ExportName.translation", "res://tests/fixtures/client_level/mines.TileWidth.translation", "res://tests/fixtures/client_level/mines.TileHeight.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

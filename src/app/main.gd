@@ -14,6 +14,8 @@ var overlay: EditorOverlay
 var underlay: SelectionUnderlay
 var controller: EditorController
 var exporter: Exporter
+var plan_overlay: PlanOverlay
+var plan_controller: PlanController
 
 var ui_layer: CanvasLayer
 var root: Control
@@ -25,6 +27,8 @@ var dock: ToolDock
 var layout_tools: LayoutToolController
 var toasts: Toasts
 var modal_layer: Control
+var plan_panel: PlanPanel
+var budget: BudgetWidget
 
 var _left_visible := true             ## catalogue expanded (else collapsed to its rail)
 var _right_visible := true            ## inspector shown when auto-hide is off
@@ -41,6 +45,18 @@ var _inspector_dismissed := false
 var _inspector_need_sig := ""
 var _catalog_grip: PanelGrip
 var _inspector_grip: PanelGrip
+var _plan_grip: PanelGrip
+## Plan panel (docs/PLANNING.md): open in the inspector's place.
+var _plan_open := false
+const PLAN_MIN := 300.0
+## Free canvas between the panels (logical px): where the budget widget sits.
+var _canvas_rect := Rect2()
+## Image exports asked for by the Plan tabs run one after another.
+var _export_queue: Array = []
+var _exporting := false
+var _placeholder_lib: AssetLibrary
+## Planning layers <-> settings keys.
+const PLAN_LAYER_KEYS := {"plan_show_areas": "areas", "plan_show_progress": "progress", "plan_show_heatmap": "heatmap", "plan_show_guide": "guide"}
 ## Above this many objects with problems, the farm outlines only the selected
 ## ones; the grouped issues list (inspector, top bar) shows the rest.
 const ISSUE_OUTLINE_MAX := 24
@@ -188,9 +204,15 @@ func _build_world() -> void:
 	underlay = SelectionUnderlay.new()
 	underlay.visibility_layer = Exporter.LAYER_OVERLAY
 	world.add_child(underlay)
+	# Planning marks: fills / heatmap under the objects, names / numbers above them.
+	plan_overlay = PlanOverlay.new()
+	plan_overlay.name = "PlanOverlay"
+	plan_overlay.ctx = App.plan_ctx
+	world.add_child(plan_overlay.under)
 	renderer = ObjectRenderer.new()
 	renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
 	world.add_child(renderer)
+	world.add_child(plan_overlay)
 	overlay = EditorOverlay.new()
 	overlay.visibility_layer = Exporter.LAYER_OVERLAY
 	world.add_child(overlay)
@@ -217,6 +239,13 @@ func _build_world() -> void:
 	controller.calibration_point.connect(_on_calibration_point)
 	controller.fixed_refused.connect(show_fixed_hint)
 	controller.landmark_hovered.connect(_on_landmark_hovered)
+	controller.area_created.connect(func(id: String): App.plan_ctx.set_active_area(id))
+	plan_controller = PlanController.new()
+	plan_controller.name = "PlanController"
+	add_child(plan_controller)
+	plan_controller.setup(App.plan_ctx, plan_overlay, controller)
+	plan_controller.status.connect(func(t: String): dock.set_status(t))
+	_wire_plan_context()
 
 
 func _build_ui() -> void:
@@ -253,6 +282,7 @@ func _build_ui() -> void:
 	top_bar.offset_top = m
 	top_bar.action.connect(_on_top_action)
 	top_bar.farm_level_set.connect(_set_farm_level)
+	top_bar.plan_requested.connect(_on_plan_requested)
 	root.add_child(top_bar)
 	catalog = CatalogPanel.new()
 	catalog.anchor_top = 0
@@ -278,8 +308,24 @@ func _build_ui() -> void:
 	inspector.tab_switched.connect(_on_inspector_tab)
 	inspector.renderer = renderer
 	root.add_child(inspector)
+	plan_panel = PlanPanel.new()
+	plan_panel.anchor_left = 1
+	plan_panel.anchor_right = 1
+	plan_panel.anchor_bottom = 1
+	plan_panel.offset_top = 82
+	plan_panel.offset_bottom = -m
+	plan_panel.offset_right = -m
+	plan_panel.visible = false
+	root.add_child(plan_panel)
+	plan_panel.setup(App.plan_ctx)
+	plan_panel.close_requested.connect(func(): set_plan_open(false))
+	plan_panel.tab_changed.connect(func(id: String):
+		App.settings.set_v("plan_tab", id)
+		_sync_guide_marks()
+		top_bar.set_plan_state(_plan_open, id))
 	_catalog_grip = _make_grip("catalog_width")
 	_inspector_grip = _make_grip("inspector_width")
+	_plan_grip = _make_grip("plan_width")
 	dock = ToolDock.new()
 	dock.anchor_left = 0
 	dock.anchor_right = 1
@@ -294,6 +340,14 @@ func _build_ui() -> void:
 			App.session.set_tool(t))
 	dock.action.connect(_on_dock_action)
 	root.add_child(dock)
+	budget = BudgetWidget.new()
+	budget.name = "Budget"
+	root.add_child(budget)
+	budget.setup(App.plan_ctx)
+	budget.configure(str(App.settings.get_v("budget_corner")), bool(App.settings.get_v("budget_collapsed")), bool(App.settings.get_v("budget_expanded")))
+	budget.open_tab.connect(open_plan)
+	budget.layout_changed.connect(_place_budget)
+	budget.setting.connect(func(k: String, v: Variant): App.settings.set_v(k, v))
 	toasts = Toasts.new()
 	toasts.anchor_left = 1
 	toasts.anchor_right = 1
@@ -304,6 +358,8 @@ func _build_ui() -> void:
 	root.add_child(toasts)
 	# Above the dock including its contextual rows (repeat, symmetry, …).
 	dock.resized.connect(_place_toasts)
+	dock.resized.connect(_on_dock_resized)
+	dock.resized.connect(_place_budget)
 	_build_hint()
 	_add_home_button()
 	modal_layer = Control.new()
@@ -443,7 +499,7 @@ func inspector_shown() -> bool:
 	## Whether the inspector is on screen. With auto-hide (default) it appears
 	## when something needs it, unless the user closed it for that thing, or
 	## stays when the user opened it (top bar / ]).
-	if _panels_hidden or inspector == null:
+	if _panels_hidden or inspector == null or _plan_open:
 		return false
 	if not bool(App.settings.get_v("inspector_auto_hide")):
 		return _right_visible
@@ -455,6 +511,14 @@ func inspector_shown() -> bool:
 
 
 func toggle_inspector() -> void:
+	if _plan_open:
+		# ] while planning: back to the inspector.
+		set_plan_open(false)
+		if not inspector_shown():
+			_inspector_pinned = true
+			_inspector_dismissed = false
+		_update_view_rect()
+		return
 	if not bool(App.settings.get_v("inspector_auto_hide")):
 		_right_visible = not _right_visible
 		App.settings.set_v("right_panel", _right_visible)
@@ -494,7 +558,7 @@ func _make_grip(setting: String) -> PanelGrip:
 		var vs := root.get_viewport_rect().size
 		var x := root.get_local_mouse_position().x
 		var w := (x - MARGIN) if setting == "catalog_width" else (vs.x - MARGIN - x)
-		var lo := CATALOG_MIN if setting == "catalog_width" else INSPECTOR_MIN
+		var lo := CATALOG_MIN if setting == "catalog_width" else (PLAN_MIN if setting == "plan_width" else INSPECTOR_MIN)
 		App.settings.set_v(setting, roundf(clampf(w, lo, _side_max(vs.x, lo))), false)
 		_update_view_rect())
 	g.released.connect(func(): App.settings.save_settings())
@@ -514,11 +578,16 @@ func _layout_panels() -> void:
 	var top := m + top_bar.get_combined_minimum_size().y + GAP if top_bar.visible else m
 	catalog.visible = not _panels_hidden
 	var shown := inspector_shown()
+	var plan_shown := _plan_open and not _panels_hidden
 	var iw := inspector_width(vs.x)
+	var pw := plan_width(vs.x)
+	# The right-hand slot: the Plan panel while it is open, else the inspector.
+	var rw := pw if plan_shown else iw
+	var right_open := shown or plan_shown
 	# Very narrow (e.g. 1080p at 200 %): while the inspector is open the
 	# catalogue shows only its rail, without changing the remembered state.
 	var expanded := _left_visible
-	if expanded and shown and vs.x - 2.0 * m - catalog_width(vs.x) - iw - 2.0 * GAP < dock.pill_width(true) + 16.0:
+	if expanded and right_open and vs.x - 2.0 * m - catalog_width(vs.x) - rw - 2.0 * GAP < dock.pill_width(true) + 16.0:
 		expanded = false
 	catalog.set_collapsed(not expanded)
 	var cw := catalog_width(vs.x) if expanded else catalog.rail_width()
@@ -543,19 +612,38 @@ func _layout_panels() -> void:
 	_inspector_grip.offset_right = inspector.offset_left + 4.0
 	_inspector_grip.offset_top = top + 16.0
 	_inspector_grip.offset_bottom = -m - 16.0
+	plan_panel.visible = plan_shown
+	plan_panel.set_compact(pw < 400.0)
+	plan_panel.offset_left = -m - pw
+	plan_panel.offset_right = -m
+	plan_panel.offset_top = top
+	plan_panel.offset_bottom = -m
+	_plan_grip.visible = plan_shown
+	_plan_grip.anchor_left = 1
+	_plan_grip.anchor_right = 1
+	_plan_grip.offset_left = plan_panel.offset_left - 4.0
+	_plan_grip.offset_right = plan_panel.offset_left + 4.0
+	_plan_grip.offset_top = top + 16.0
+	_plan_grip.offset_bottom = -m - 16.0
 	var left_edge := (catalog.offset_right + GAP) if catalog.visible else m
-	var right_edge := (iw + m + GAP) if shown else m
+	var right_edge := (rw + m + GAP) if right_open else m
 	# Judged with the inspector open, so the dock doesn't change as it comes and goes.
-	var between := vs.x - left_edge - (iw + m + GAP)
+	var between := vs.x - left_edge - (rw + m + GAP)
 	dock.set_compact(between < dock.pill_width(false) + 16.0)
 	# Too narrow even for the compact dock (small window, big UI scale): the
 	# panels end above it and the dock spans the window.
 	var narrow := between < dock.pill_width(true) + 16.0
-	var bottom := -(m + dock.pill_height() + GAP) if narrow else -m
+	# Narrow: the dock spans the window, and so do its contextual rows (selection
+	# tools, symmetry, repeat): the side panels end above all of it, so those
+	# rows never cover the inspector's buttons (1080p at 200 %).
+	_dock_narrow_h = maxf(dock.pill_height(), dock.get_combined_minimum_size().y) if narrow else 0.0
+	var bottom := -(m + _dock_narrow_h + GAP) if narrow else -m
 	catalog.offset_bottom = bottom
 	inspector.offset_bottom = bottom
+	plan_panel.offset_bottom = bottom
 	_catalog_grip.offset_bottom = bottom - 16.0
 	_inspector_grip.offset_bottom = bottom - 16.0
+	_plan_grip.offset_bottom = bottom - 16.0
 	dock.offset_left = m if narrow else left_edge
 	dock.offset_right = -m if narrow else -right_edge
 	dock.offset_bottom = -m
@@ -564,6 +652,72 @@ func _layout_panels() -> void:
 	toasts.offset_left = toasts.offset_right - minf(360.0, vs.x - left_edge - right_edge)
 	_place_toasts()
 	top_bar.set_panels(_left_visible, shown, bool(App.settings.get_v("inspector_auto_hide")))
+	top_bar.set_plan_state(_plan_open, plan_panel.current)
+	var canvas_bottom := vs.y - (m + dock.pill_height() + GAP)
+	_canvas_rect = Rect2(Vector2(left_edge, top), Vector2(maxf(1.0, vs.x - right_edge - left_edge), maxf(1.0, canvas_bottom - top)))
+	_place_budget()
+
+
+var _dock_narrow_h := 0.0
+
+
+func _on_dock_resized() -> void:
+	## The dock grew or shrank (contextual rows): in the narrow layout the side
+	## panels follow its height (once per change; no layout loop).
+	if _dock_narrow_h <= 0.0 or dock == null:
+		return
+	var h := maxf(dock.pill_height(), dock.get_combined_minimum_size().y)
+	if not is_equal_approx(h, _dock_narrow_h):
+		_update_view_rect.call_deferred()
+
+
+func plan_width(win_w: float) -> float:
+	var saved := float(App.settings.get_v("plan_width"))
+	var auto := clampf(win_w * 0.22, 340.0, 440.0)
+	return clampf(saved if saved > 0.0 else auto, PLAN_MIN, _side_max(win_w, PLAN_MIN))
+
+
+func _place_budget() -> void:
+	## The budget chip in its corner of the free canvas (above the tool pill at the bottom).
+	if budget == null or not is_instance_valid(budget):
+		return
+	budget.visible = bool(App.settings.get_v("budget_visible")) and not _panels_hidden and App.session != null
+	if not budget.visible:
+		return
+	budget.set_tight(_canvas_rect.size.x < 760.0 or _canvas_rect.size.y < 460.0)
+	budget.reset_size()
+	var sz := budget.get_combined_minimum_size()
+	budget.size = sz
+	budget.position = PlanScope.corner_position(budget.corner, _budget_rect(), sz, 0.0)
+	# Wrapped text in the breakdown only knows its height once it has a width:
+	# settle once more after the layout pass.
+	if not _budget_settle:
+		_budget_settle = true
+		get_tree().process_frame.connect(_settle_budget, CONNECT_ONE_SHOT)
+
+
+var _budget_settle := false
+
+
+func _settle_budget() -> void:
+	_budget_settle = false
+	if budget == null or not is_instance_valid(budget) or not budget.visible:
+		return
+	budget.reset_size()
+	var sz := budget.get_combined_minimum_size()
+	budget.size = sz
+	budget.position = PlanScope.corner_position(budget.corner, _budget_rect(), sz, 0.0)
+
+
+func _budget_rect() -> Rect2:
+	## Free canvas for the chip: at the bottom it stays above the whole dock
+	## (status line and contextual rows such as the selection tools).
+	var r := _canvas_rect
+	if dock != null and is_instance_valid(dock):
+		var vs := root.get_viewport_rect().size
+		var bottom := vs.y - (MARGIN + maxf(dock.pill_height(), dock.get_combined_minimum_size().y) + 2.0)
+		r.size.y = maxf(1.0, minf(r.end.y, bottom) - r.position.y)
+	return r
 
 
 func _fit_stamps_panel(vs: Vector2, top: float, left_edge: float, right_edge: float) -> void:
@@ -603,6 +757,8 @@ func _update_view_rect() -> void:
 	var vs := root.get_viewport_rect().size
 	var l := (catalog.offset_right + 4.0) if catalog.visible else 0.0
 	var r := (-inspector.offset_left + 4.0) if inspector.visible else 0.0
+	if plan_panel.visible:
+		r = -plan_panel.offset_left + 4.0
 	var t := (MARGIN + top_bar.get_combined_minimum_size().y + 4.0) if top_bar.visible else 0.0
 	var b := MARGIN + dock.pill_height() + 4.0
 	camera.view_rect = Rect2(Vector2(l, t), Vector2(maxf(1.0, vs.x - l - r), maxf(1.0, vs.y - t - b)))
@@ -645,6 +801,8 @@ func _rebuild_ui() -> void:
 	layout_tools.attach_ui(dock, root, modal_layer)   # the old dock and stamps panel were freed
 	_raise_toasts()
 	_on_session_changed()
+	if _plan_open:
+		plan_panel.open(str(App.settings.get_v("plan_tab")))
 	_update_view_rect()
 
 
@@ -734,6 +892,10 @@ func _on_session_changed() -> void:
 	_view_state.erase("diff_summary")
 	controller.bind(s)
 	layout_tools.bind(s)
+	plan_controller.cancel()
+	plan_overlay.highlight_uids = []
+	plan_overlay.zoom = camera.zoom.x
+	plan_overlay.refresh()
 	_load_reference()
 	# Once per session: _rebuild_ui() runs this function again for the same
 	# session, and the lambdas below would otherwise be connected twice.
@@ -1195,6 +1357,10 @@ func _on_view_changed() -> void:
 	overlay.zoom = z
 	overlay.visible_rect = camera.visible_world_rect()
 	overlay.refresh()
+	if plan_overlay != null and not _exporting:
+		plan_overlay.zoom = z
+		plan_overlay.visible_rect = overlay.visible_rect
+		plan_overlay.refresh()
 	if App.session:
 		# In place: the saved views (camera.bookmarks) live in the same dictionary.
 		var cam: Dictionary = App.session.layout.camera
@@ -1228,6 +1394,8 @@ func _on_canvas_input(e: InputEvent) -> void:
 		return
 	if e is InputEventMouseButton and e.pressed:
 		canvas_area.grab_focus()
+	if plan_controller.handle_input(e):
+		return
 	if layout_tools.handle_input(e):
 		return
 	controller.handle_input(e)
@@ -1286,10 +1454,16 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_G when ctrl and k.shift_pressed: s.ungroup_selection()
 		KEY_G when ctrl: s.group_selection()
 		KEY_ESCAPE:
-			if not controller.cancel():
-				handled = false
+			if plan_controller.cancel():
+				pass
+			elif not controller.cancel():
+				if _plan_open:
+					set_plan_open(false)
+				else:
+					handled = false
 			overlay.calibration_points = []
 			overlay.refresh()
+		KEY_J: toggle_plan()
 		KEY_DELETE, KEY_BACKSPACE: s.delete_selection()
 		KEY_V: s.set_tool("select")
 		KEY_B:
@@ -1670,6 +1844,15 @@ func _on_inspector_action(a: String, arg: Variant) -> void:
 			_ref_drag = bool(arg)
 			_view_state["ref_move"] = _ref_drag
 		"compare": _compare_pick()
+		"plan": open_plan(str(arg))
+		"selection_cost":
+			# Budget of the selection: follow it, show the breakdown.
+			App.plan_ctx.set_scope_pin("auto")
+			App.settings.set_v("budget_visible", true)
+			if budget != null and not budget.expanded:
+				budget.set_expanded(true)
+			_place_budget()
+		"edit_price": _plan_price(str(arg))
 		"compare_clear":
 			overlay.diff = {}
 			_view_state.erase("diff_summary")
@@ -1706,6 +1889,14 @@ func _on_setting_changed(key: String) -> void:
 			_inspector_pinned = false
 			_inspector_dismissed = false
 			_update_view_rect()
+		"budget_visible", "budget_corner":
+			if budget != null:
+				budget.corner = str(App.settings.get_v("budget_corner"))
+			_place_budget()
+			if key == "budget_visible":
+				inspector.queue_rebuild()
+		"plan_show_areas", "plan_show_progress", "plan_show_heatmap", "plan_show_guide":
+			App.plan_ctx.set_layer(PLAN_LAYER_KEYS[key], bool(App.settings.get_v(key)))
 
 
 func _on_settings_dialog(what: String) -> void:
@@ -1858,13 +2049,380 @@ func _do_export(path: String, opts: Dictionary) -> void:
 		r = camera.visible_world_rect()
 	else:
 		r = Exporter.farm_world_rect(s.map, s.layout, opts["area"])
+	var art := str(opts.get("art", "placeholder"))
+	if not _export_path_ok(path, art):
+		return
 	App.toast("Rendering image…", "info")
-	var img: Image = await exporter.capture(r, float(opts["scale"]), bool(opts["transparent"]), bool(opts["grid"]), bool(opts["overlay"]))
+	var plan := {}
+	if bool(opts.get("plan_areas", false)) or bool(opts.get("guide_numbers", false)):
+		plan = {"areas": bool(opts.get("plan_areas", false)), "area_ids": [], "guide": bool(opts.get("guide_numbers", false)),
+			"steps": _guide_step_numbers("farm", "") if bool(opts.get("guide_numbers", false)) else []}
+	var img: Image = await render_export(r, float(opts["scale"]), bool(opts["transparent"]), bool(opts["grid"]), bool(opts["overlay"]), plan, art)
 	if img == null:
 		App.toast("Export failed (image too large?)", "error")
 		return
 	var err := img.save_png(path)
 	App.toast("Exported %d×%d image to %s" % [img.get_width(), img.get_height(), path] if err == OK else "Could not write file: %s" % error_string(err), "success" if err == OK else "error")
+	if err == OK and art == "installed" and has_private_art():
+		App.toast("This picture uses your installed art: keep it on this PC, don't share it.", "warn")
+
+
+func has_private_art() -> bool:
+	## An asset pack other than the built-in placeholders is installed.
+	for p in App.assets.packs:
+		if not bool(p.get("builtin", false)):
+			return true
+	return false
+
+
+func _export_path_ok(path: String, art: String) -> bool:
+	## Pictures with installed (private) art are never written inside the program folder.
+	if art != "installed" or not has_private_art():
+		return true
+	var repo := ProjectSettings.globalize_path("res://").replace("\\", "/").to_lower().trim_suffix("/")
+	var p := path.replace("\\", "/").to_lower()
+	if not repo.is_empty() and (p == repo or p.begins_with(repo + "/")):
+		App.toast("Pictures with your installed art can't be saved in the program folder — pick another folder.", "error")
+		return false
+	return true
+
+
+func render_export(r: Rect2, scale: float, transparent: bool, grid_on: bool, overlay_on: bool, plan: Dictionary, art: String) -> Image:
+	## Renders the farm (Exporter) with placeholder art unless `art` is
+	## "installed", and with the planning marks in `plan` ({} = none; see
+	## PlanOverlay.export_opts). The on-screen view is restored afterwards.
+	var swap := art != "installed" and has_private_art()
+	if swap:
+		_use_art(_placeholder_assets())
+	if not plan.is_empty():
+		plan_overlay.zoom = scale
+		plan_overlay.visible_rect = Rect2()
+		plan_overlay.set_exporting(plan, Exporter.LAYER_WORLD)
+	var img: Image = await exporter.capture(r, scale, transparent, grid_on, overlay_on)
+	if not plan.is_empty():
+		plan_overlay.set_exporting({}, PlanOverlay.LAYER)
+		plan_overlay.zoom = camera.zoom.x
+		plan_overlay.visible_rect = camera.visible_world_rect()
+		plan_overlay.refresh()
+	if swap:
+		_use_art(App.assets)
+	return img
+
+
+func _placeholder_assets() -> AssetLibrary:
+	## The built-in placeholder art only (no user or developer packs).
+	if _placeholder_lib == null:
+		_placeholder_lib = AssetLibrary.new()
+		_placeholder_lib.user_packs_dir = "user://__no_packs__"
+		_placeholder_lib.dev_packs_dir = "res://__no_packs__"
+		_placeholder_lib.load_all(App.db)
+	return _placeholder_lib
+
+
+func _use_art(lib: AssetLibrary) -> void:
+	var s := App.session
+	if s == null:
+		return
+	renderer.bind(s.layout, s.db, lib)
+	renderer.set_world_entries(LandmarkView.entries_for(s.map, s.layout, lib, _landmark_tints()))
+	scenery.setup(s.map, lib, s.db)
+	if lib == App.assets:
+		_apply_issue_marks()
+
+
+# ---------------------------------------------------------------------------
+# Planning: Plan panel, budget widget, area tool, plan exports
+# ---------------------------------------------------------------------------
+
+func _wire_plan_context() -> void:
+	## Once (main and the context live as long as the app): the Plan tabs'
+	## requests, and the shared view state <-> settings.
+	var ctx := App.plan_ctx
+	ctx.mode = str(App.settings.get_v("budget_mode")) if str(App.settings.get_v("budget_mode")) in BudgetEngine.MODES else BudgetEngine.MODE_TO_BUY
+	ctx.scope_pin = "farm" if str(App.settings.get_v("budget_scope")) == "farm" else "auto"
+	for k: String in PLAN_LAYER_KEYS:
+		ctx.layers[PLAN_LAYER_KEYS[k]] = bool(App.settings.get_v(k))
+	ctx.request_focus.connect(_plan_focus)
+	ctx.request_focus_rect.connect(_plan_focus_rect)
+	ctx.request_highlight.connect(_plan_highlight)
+	ctx.request_dialog.connect(_plan_dialog)
+	ctx.request_export_image.connect(_plan_export)
+	ctx.request_tab.connect(open_plan)
+	ctx.request_area_tool.connect(_plan_area_tool)
+	ctx.request_inventory.connect(_plan_inventory)
+	ctx.request_price_edit.connect(_plan_price)
+	ctx.request_calibration.connect(_plan_calibration)
+	ctx.view_changed.connect(_on_plan_view_changed)
+	ctx.changed.connect(plan_overlay.refresh)
+
+
+func _on_plan_view_changed() -> void:
+	var ctx := App.plan_ctx
+	App.settings.set_v("budget_mode", ctx.mode)
+	App.settings.set_v("budget_scope", ctx.scope_pin)
+	for k: String in PLAN_LAYER_KEYS:
+		App.settings.set_v(k, bool(ctx.layers.get(PLAN_LAYER_KEYS[k], false)))
+	plan_overlay.refresh()
+	if inspector != null and inspector.current_tab() == 2:
+		inspector.queue_rebuild()
+
+
+func set_plan_open(on: bool, tab: String = "") -> void:
+	if on:
+		plan_panel.open(tab if not tab.is_empty() else str(App.settings.get_v("plan_tab")))
+	elif _plan_open:
+		plan_controller.cancel()
+		plan_overlay.highlight_uids = []
+		plan_overlay.refresh()
+	_plan_open = on
+	_sync_guide_marks()
+	_update_view_rect()
+
+
+func _sync_guide_marks() -> void:
+	## Guide step numbers on the farm while the Guide or Build tab is open.
+	plan_overlay.guide_active = _plan_open and plan_panel.current in ["guide", "build"]
+	plan_overlay.refresh()
+
+
+func open_plan(tab: String) -> void:
+	set_plan_open(true, tab)
+
+
+func toggle_plan() -> void:
+	set_plan_open(not _plan_open)
+
+
+func plan_open() -> bool:
+	return _plan_open
+
+
+func _on_plan_requested(tab: String) -> void:
+	## Top bar: a workflow step opens that tab (again: closes the panel); "" toggles.
+	if tab.is_empty():
+		toggle_plan()
+	elif _plan_open and plan_panel.current == tab:
+		set_plan_open(false)
+	else:
+		open_plan(tab)
+
+
+func _plan_world_rect(uids: Array) -> Rect2:
+	var s := App.session
+	var r := Rect2()
+	for u in uids:
+		var o := s.layout.get_obj(int(u))
+		if o == null:
+			continue
+		var b := Iso.footprint_world_bounds(o.origin, o.size)
+		if renderer.bounds_of(o.uid).size != Vector2.ZERO:
+			b = b.merge(renderer.bounds_of(o.uid))
+		r = r.merge(b) if r.size != Vector2.ZERO else b
+	return r
+
+
+func _plan_focus(uids: Array, select: bool) -> void:
+	var s := App.session
+	if s == null:
+		return
+	var live: Array = []
+	for u in uids:
+		if s.layout.objects.has(int(u)):
+			live.append(int(u))
+	if live.is_empty():
+		App.toast("Nothing to show", "info")
+		return
+	if select:
+		s.select(live, false, false)
+	_update_view_rect()
+	camera.fly_to_rect(_plan_world_rect(live), 90.0, 1.6)
+
+
+func _plan_focus_rect(rect: Rect2i) -> void:
+	if App.session == null or rect.size == Vector2i.ZERO:
+		return
+	_update_view_rect()
+	camera.fly_to_rect(Iso.footprint_world_bounds(rect.position, rect.size).grow_individual(0, 60, 0, 0), 60.0, 1.6)
+
+
+func _plan_highlight(uids: Array, color: Color) -> void:
+	plan_overlay.highlight_uids = uids.duplicate()
+	plan_overlay.highlight_color = color
+	plan_overlay.refresh()
+
+
+func _plan_dialog(content: Control, title: String) -> void:
+	## A planning dialog (PlanDialog) in the modal layer; it closes itself
+	## through close_requested.
+	if content == null:
+		return
+	var w := 600.0
+	if "preferred_width" in content:
+		w = float(content.get("preferred_width"))
+	var m := Modal.open(modal_layer, title, w, "clipboard-check")
+	m.body.add_child(content)
+	if content.has_signal("close_requested"):
+		content.connect("close_requested", m.close)
+
+
+func _plan_area_tool(kind: String) -> void:
+	if kind == "selection":
+		plan_controller.area_from_selection()
+	else:
+		plan_controller.begin(kind)
+
+
+func _plan_inventory() -> void:
+	## The inventory dialog when this build has it; else "I own everything placed now".
+	var path := "res://src/ui/inventory_dialog.gd"
+	if ResourceLoader.exists(path):
+		var sc: Variant = load(path)
+		if sc is Script and (sc as Script).get_script_method_list().any(func(m: Dictionary) -> bool: return m["name"] == "open"):
+			sc.call("open", App.plan_ctx)
+			return
+	Modal.confirm(modal_layer, "Record inventory", "Record every object placed now (except planned ones) as what you own?", "Record", false,
+		func(): _on_inspector_action("own_all", null))
+
+
+func _plan_price(item_id: String) -> void:
+	var path := "res://src/ui/price_dialog.gd"
+	if ResourceLoader.exists(path):
+		var sc: Variant = load(path)
+		if sc is Script and (sc as Script).get_script_method_list().any(func(m: Dictionary) -> bool: return m["name"] == "open"):
+			sc.call("open", App.plan_ctx, item_id)
+			return
+	App.toast("Price editing isn't available in this build", "info")
+
+
+func _plan_calibration() -> void:
+	## Accuracy tab → calibrate a screenshot: the inspector's View tab has it.
+	set_plan_open(false)
+	_inspector_dismissed = false
+	inspector.show_tab(2)
+	inspector.rebuild()
+	App.toast("Add a screenshot under “Screenshot references”, then Calibrate", "info")
+
+
+func _plan_export(opts: Dictionary) -> void:
+	## ctx.request_export_image: queued, rendered one at a time.
+	_export_queue.append(opts.duplicate(true))
+	if not _exporting:
+		_drain_exports()
+
+
+func _drain_exports() -> void:
+	_exporting = true
+	while not _export_queue.is_empty():
+		var o: Dictionary = _export_queue.pop_front()
+		if str(o.get("path", "")).is_empty():
+			_ask_export_path(o)
+			continue
+		await export_plan_image(o)
+	_exporting = false
+
+
+func _ask_export_path(o: Dictionary) -> void:
+	var fd := FileDialog.new()
+	fd.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	fd.access = FileDialog.ACCESS_FILESYSTEM
+	fd.use_native_dialog = true
+	fd.filters = PackedStringArray(["*.png ; PNG image"])
+	var stem := App.session.layout.name.validate_filename() if App.session else "farm"
+	fd.current_file = "%s_%s%s.png" % [stem, str(o.get("scope", "farm")), "_" + str(o.get("id")) if not str(o.get("id", "")).is_empty() else ""]
+	fd.file_selected.connect(func(p: String):
+		var o2 := o.duplicate(true)
+		o2["path"] = p
+		_plan_export(o2))
+	root.add_child(fd)
+	fd.popup_centered_ratio(0.6)
+
+
+func plan_export_rect(scope: String, id: String) -> Rect2:
+	## World rectangle a plan picture shows (farm / phase / area / step), with room for the art.
+	var s := App.session
+	var tiles := Rect2i()
+	match scope:
+		"area":
+			tiles = PlanDoc.area_bounds(PlanDoc.area(s.layout.planning, id))
+		"phase":
+			var ph := PlanDoc.phase(s.layout.planning, id)
+			var uids: Array = s.budget.phase_uids(id) if s.budget != null else []
+			if not uids.is_empty():
+				tiles = s.layout.bounds_of(uids)
+			for aid in ph.get("areas", []):
+				var b := PlanDoc.area_bounds(PlanDoc.area(s.layout.planning, str(aid)))
+				if b.size != Vector2i.ZERO:
+					tiles = b if tiles.size == Vector2i.ZERO else tiles.merge(b)
+		"step":
+			var st := _guide_step(id)
+			if not st.is_empty():
+				tiles = st.get("bounds", Rect2i())
+				var fb: Variant = st.get("from_bounds")
+				if fb is Rect2i and (fb as Rect2i).size != Vector2i.ZERO:
+					tiles = tiles.merge(fb as Rect2i)
+	if tiles.size == Vector2i.ZERO:
+		var land := Exporter.farm_world_rect(s.map, s.layout, "unlocked")
+		if s.layout.count() > 0:
+			land = land.merge(Exporter.farm_world_rect(s.map, s.layout, "objects"))
+		return land
+	tiles = tiles.grow(3)
+	return Iso.footprint_world_bounds(tiles.position, tiles.size).grow_individual(48, 200, 48, 48)
+
+
+func _guide_step(id: String) -> Dictionary:
+	for st: Dictionary in App.plan_ctx.guide().get("steps", []):
+		if str(st.get("id", "")) == id or str(st.get("number", "")) == id:
+			return st
+	return {}
+
+
+func _guide_step_numbers(scope: String, id: String) -> Array:
+	## Step numbers a plan picture of this scope marks.
+	var out: Array = []
+	var s := App.session
+	var area := PlanDoc.area(s.layout.planning, id) if scope == "area" else {}
+	for st: Dictionary in App.plan_ctx.guide().get("steps", []):
+		var keep := true
+		match scope:
+			"phase":
+				keep = str(st.get("phase", "")) == id
+			"area":
+				var b: Variant = st.get("bounds")
+				keep = b is Rect2i and not area.is_empty() and PlanDoc.rect_in_area(area, b)
+			"step":
+				keep = str(st.get("id", "")) == id or str(st.get("number", "")) == id
+		if keep:
+			out.append(int(st.get("number", 0)))
+	return out
+
+
+func export_plan_image(o: Dictionary) -> Error:
+	## One plan picture: {scope, id, guide_numbers, path, art, scale?, areas?}.
+	var s := App.session
+	if s == null:
+		return ERR_UNAVAILABLE
+	var scope := str(o.get("scope", "farm"))
+	var id := str(o.get("id", ""))
+	var path := str(o.get("path", ""))
+	var art := str(o.get("art", "placeholder"))
+	if not _export_path_ok(path, art):
+		return ERR_FILE_NO_PERMISSION
+	var numbers := bool(o.get("guide_numbers", false))
+	var plan := {"areas": bool(o.get("areas", true)), "area_ids": [id] if scope == "area" else [],
+		"guide": numbers, "steps": _guide_step_numbers(scope, id) if numbers else []}
+	var img: Image = await render_export(plan_export_rect(scope, id), float(o.get("scale", 1.0)), false, false, false, plan, art)
+	if img == null:
+		App.toast("Picture export failed (too large?)", "error")
+		return FAILED
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var err := img.save_png(path)
+	if err != OK:
+		App.toast("Could not write %s: %s" % [path, error_string(err)], "error")
+	elif art == "installed" and has_private_art():
+		App.toast("Saved %s — it uses your installed art: keep it on this PC, don't share it." % path.get_file(), "warn")
+	else:
+		App.toast("Saved %s" % path.get_file(), "success")
+	return err
 
 
 # ---------------------------------------------------------------------------

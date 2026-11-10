@@ -542,6 +542,7 @@ func _integration() -> void:
 	App.library.delete(s.layout.id)
 	await _session_wiring_check()
 	await _ui_panels_check()
+	await _plan_check()
 
 
 func _importer_check() -> void:
@@ -2583,4 +2584,229 @@ func _ui_panels_check() -> void:
 	check(missing.is_empty(), "help lists the new tools and keys %s" % str(missing))
 	for k in keep:
 		st.set_v(k, keep[k])
+	main._update_view_rect()
+
+
+# --- planning (docs/PLANNING.md): budget, areas, phases, Plan panel ------------------------
+
+func _coins(t: BudgetEngine.Totals) -> int:
+	return int(t.cost.get("coins", 0)) if t != null else -1
+
+
+func _ctx_counts() -> Dictionary:
+	return _conn_counts({"ctx": App.plan_ctx, "prices": App.prices})
+
+
+func _find_modal_edit() -> LineEdit:
+	var stack: Array = [main.modal_layer]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n is LineEdit and not n.is_queued_for_deletion():
+			return n
+		stack.append_array(n.get_children())
+	return null
+
+
+func _esc() -> InputEventKey:
+	var e := InputEventKey.new()
+	e.keycode = KEY_ESCAPE
+	e.pressed = true
+	return e
+
+
+func _plan_check() -> void:
+	print("Planning")
+	var ctx: PlanContext = App.plan_ctx
+	var st: AppSettings = App.settings
+	var keep := {}
+	for k in ["budget_mode", "budget_scope", "plan_tab", "plan_show_heatmap", "budget_visible", "budget_expanded", "budget_collapsed"]:
+		keep[k] = st.get_v(k)
+	check(App.prices != null and App.prices.price_db_count() > 300, "price book loaded (%d researched records)" % (App.prices.price_db_count() if App.prices else 0))
+	App.open_layout(App.new_layout("Plan farm", "starter"))
+	main._fit_or_restore()
+	main.camera.smooth = false
+	main.camera.zoom = Vector2(1.5, 1.5)
+	main.camera.target_zoom = 1.5
+	await _frames(3)
+	var s := _s()
+	check(s.budget != null and ctx.session == s and ctx.engine == s.budget and ctx.prices == App.prices, "the planning context follows the open session and its budget engine")
+	ctx.set_mode(BudgetEngine.MODE_TO_BUY)
+	ctx.set_scope_pin("auto")
+	st.set_v("budget_visible", true)
+	main._place_budget()
+	await _frames(2)
+	var w: BudgetWidget = main.budget
+	check(w.visible and w.last_totals != null, "the budget chip is on the canvas")
+	var c0 := _coins(w.last_totals)
+	# Live updates: place, move, delete, undo, redo.
+	var apple := App.db.get_item("apple_tree")
+	var at := _free_origin(apple, Vector2i(12, 26))
+	var uids := s.place_objects([s.make_object(apple, at)], "Place apple tree")
+	await _frames(2)
+	var price := _coins(ctx.engine.totals(uids, BudgetEngine.MODE_DESIGN))
+	check(price > 0 and _coins(w.last_totals) == c0 + price, "placing updates the chip (+%d coins: %d → %d)" % [price, c0, _coins(w.last_totals)])
+	var to := _free_origin(apple, at + Vector2i(3, 0))
+	s.execute(EditCommands.MoveObjects.new(uids, to - at))
+	await _frames(2)
+	check(_coins(w.last_totals) == c0 + price, "moving keeps the cost")
+	s.select(uids)
+	await _frames(2)
+	check(ctx.scope()["kind"] == PlanScope.SCOPE_SELECTION and _coins(w.last_totals) == price, "with a selection the chip shows the selection's cost")
+	s.delete_selection()
+	await _frames(2)
+	check(_coins(w.last_totals) == c0, "deleting takes the cost away (back to the farm scope)")
+	s.stack.undo()
+	await _frames(2)
+	check(_coins(w.last_totals) == c0 + price, "undo brings it back")
+	s.stack.redo()
+	await _frames(2)
+	check(_coins(w.last_totals) == c0, "redo removes it again")
+	s.stack.undo()
+	await _frames(2)
+	# Inventory: owning the copy takes it off "To buy", not off "Design cost".
+	var p := s.layout.profile.duplicate(true)
+	p["owned"] = {"apple_tree": 1}
+	ctx.set_profile(p, "Own an apple tree")
+	await _frames(2)
+	check(_coins(w.last_totals) == c0, "recording the copy as owned removes it from To buy")
+	ctx.set_mode(BudgetEngine.MODE_DESIGN)
+	await _frames(2)
+	check(_coins(w.last_totals) == c0 + price and st.get_v("budget_mode") == "design", "Design cost ignores the inventory (mode remembered)")
+	ctx.set_mode(BudgetEngine.MODE_TO_BUY)
+	# Areas: a dragged rectangle and a clicked polygon, one undo step each.
+	s.clear_selection()
+	var n0 := s.stack.size()
+	var a := _free_block(Vector2i(8, 6))
+	main.camera.center_on(Iso.tile_center(a + Vector2i(4, 3)))
+	await _frames(2)
+	ctx.request_area_tool.emit("rect")
+	check(main.plan_controller.active(), "the area tool arms from the Plan context")
+	_drag_tiles(a, a + Vector2i(3, 2))
+	await _frames(1)
+	var areas := PlanDoc.areas(s.layout.planning)
+	check(areas.size() == 1 and PlanDoc.area_bounds(areas[0]) == Rect2i(a, Vector2i(4, 3)) and s.stack.size() == n0 + 1,
+		"dragging draws a rectangle area as one undo step (%s)" % str(areas))
+	check(not areas.is_empty() and ctx.active_area == str(areas[0].get("id")) and not main.plan_controller.active(), "the new area becomes the active one; the tool ends")
+	ctx.request_area_tool.emit("polygon")
+	for g in [a, a + Vector2i(6, 0), a + Vector2i(6, 5)]:
+		var sp: Vector2 = main.camera.world_to_screen(Iso.grid_to_world(Vector2(g)))
+		_move(sp)
+		_button(sp, true)
+		_button(sp, false)
+	main.plan_controller.close_polygon()
+	areas = PlanDoc.areas(s.layout.planning)
+	check(areas.size() == 2 and (areas[1].get("points", []) as Array).size() == 3 and s.stack.size() == n0 + 2, "clicked corners make a polygon area")
+	s.stack.undo()
+	check(PlanDoc.areas(s.layout.planning).size() == 1, "undo removes the polygon")
+	s.stack.redo()
+	check(PlanDoc.areas(s.layout.planning).size() == 2, "redo restores it")
+	ctx.request_area_tool.emit("polygon")
+	main._unhandled_input(_esc())
+	check(not main.plan_controller.active() and PlanDoc.areas(s.layout.planning).size() == 2, "Esc cancels the area tool without adding anything")
+	# The notes tool's drag makes a planning area too (named in a prompt).
+	s.set_tool("annotate")
+	_drag_tiles(a + Vector2i(0, 4), a + Vector2i(2, 5))
+	var le := _find_modal_edit()
+	if le != null:
+		le.text = "Herb Corner"
+		le.text_submitted.emit(le.text)
+	await _frames(1)
+	areas = PlanDoc.areas(s.layout.planning)
+	check(areas.size() == 3 and str(areas[areas.size() - 1].get("name")) == "Herb Corner" and s.layout.annotations.is_empty(), "a notes-tool drag adds a named planning area, not a zone note")
+	s.set_tool("select")
+	# Area from selection.
+	var bench := App.db.get_item("bench")
+	var bat := _free_origin(bench, a + Vector2i(10, 0))
+	var b_uids := s.place_objects([s.make_object(bench, bat)], "Bench")
+	s.select(b_uids)
+	ctx.request_area_tool.emit("selection")
+	areas = PlanDoc.areas(s.layout.planning)
+	check(areas.size() == 4 and PlanDoc.area_bounds(areas[3]) == s.layout.bounds_of(b_uids), "an area from the selection covers its footprints")
+	s.clear_selection()
+	ctx.set_active_area(str(areas[0].get("id")))
+	await _frames(1)
+	check(ctx.scope()["kind"] == PlanScope.SCOPE_AREA, "without a selection the active area is the budget scope")
+	ctx.set_scope_pin("farm")
+	check(ctx.scope()["kind"] == PlanScope.SCOPE_FARM and st.get_v("budget_scope") == "farm", "pinning the whole farm overrides it (remembered)")
+	ctx.set_scope_pin("auto")
+	# Plan panel: J opens it in the inspector's place, Esc closes it, the tab is remembered.
+	main.set_plan_open(false)
+	s.select(b_uids)
+	main._update_view_rect()
+	_key(KEY_J)
+	await _frames(2)
+	check(main.plan_open() and main.plan_panel.visible and not main.inspector.visible, "J opens the Plan panel in the inspector's place")
+	var vr: Rect2 = main.camera.view_rect
+	check(is_equal_approx(vr.end.x, main.root.get_viewport_rect().size.x + main.plan_panel.offset_left - 4.0), "the camera's view stops at the Plan panel")
+	main.open_plan("phases")
+	await _frames(2)
+	var tab: PlanTab = main.plan_panel.page_of("phases")
+	check(tab != null and tab.is_visible_in_tree(), "the Phases tab opens")
+	tab.call("_add_phase")
+	await _frames(1)
+	var phases := PlanDoc.phases(s.layout.planning)
+	check(phases.size() == 1 and ctx.active_phase == str(phases[0].get("id")), "Add phase creates and activates a phase")
+	var pid := str(phases[0].get("id")) if not phases.is_empty() else ""
+	tab.call("_assign", pid)
+	await _frames(1)
+	check(s.budget.primary_phase(b_uids[0]) == pid, "Assign selection puts the selected objects in that phase")
+	tab.call("_assign", "")
+	check(not (s.layout.planning.get("assign", {}) as Dictionary).has(str(b_uids[0])), "Clear manual removes the manual assignment")
+	s.clear_selection()
+	_key(KEY_ESCAPE)
+	await _frames(1)
+	check(not main.plan_open(), "Esc closes the Plan panel")
+	_key(KEY_J)
+	await _frames(1)
+	check(main.plan_open() and main.plan_panel.current == "phases" and st.get_v("plan_tab") == "phases", "the last tab is remembered")
+	for id in PlanPanel.tab_ids():
+		main.open_plan(id)
+		await _frames(1)
+		check(main.plan_panel.page_of(id) != null, "Plan tab “%s” opens" % id)
+	main.set_plan_open(false)
+	# Layers: heatmap toggle reaches the settings; exports draw the plan only when asked.
+	ctx.set_layer("heatmap", true)
+	check(bool(st.get_v("plan_show_heatmap")), "the heatmap layer is remembered")
+	ctx.set_layer("heatmap", false)
+	check(main.plan_overlay.visibility_layer == PlanOverlay.LAYER and (PlanOverlay.LAYER & (Exporter.LAYER_WORLD | Exporter.LAYER_GRID | Exporter.LAYER_OVERLAY | Exporter.LAYER_LABELS)) == 0,
+		"planning marks are on a layer no ordinary export includes")
+	var er: Rect2 = main.plan_export_rect("area", str(areas[0].get("id")))
+	var ab := PlanDoc.area_bounds(areas[0])
+	check(er.encloses(Iso.footprint_world_bounds(ab.position, ab.size)), "an area picture frames the whole area")
+	check(main.plan_export_rect("farm", "").get_area() > er.get_area(), "a farm picture shows more than an area picture")
+	if DisplayServer.get_name() != "headless":
+		# Rendering needs a real renderer (the capture runner exports one too).
+		var png := "user://selftest_plan_area.png"
+		var err: Error = await main.export_plan_image({"scope": "area", "id": str(areas[0].get("id")), "guide_numbers": true, "path": png})
+		var img := Image.load_from_file(ProjectSettings.globalize_path(png)) if err == OK else null
+		check(err == OK and img != null and img.get_width() > 50, "a plan picture of an area is exported (%s)" % (str(img.get_size()) if img else error_string(err)))
+		check(main.plan_overlay.visibility_layer == PlanOverlay.LAYER and main.plan_overlay.export_opts.is_empty(), "…and the plan overlay is back to the live view")
+	# Layout switch: the chip follows the new layout.
+	var objs_before := s.layout.count()
+	App.open_layout(App.new_layout("Plan farm 2", "empty"))
+	await _frames(2)
+	check(ctx.engine == _s().budget and w.last_totals != null and w.last_totals.objects == _s().layout.count() and _s().layout.count() != objs_before,
+		"switching layouts rebinds the chip (%d objects)" % (w.last_totals.objects if w.last_totals else -1))
+	# No doubled handlers after a UI rebuild (theme / scale change), nor across layouts.
+	var c1 := _ctx_counts()
+	App.open_layout(App.new_layout("Plan farm 3", "starter"))
+	await _frames(2)
+	check(_ctx_counts() == c1, "layout switches leave the planning context's handlers as they were")
+	await main._rebuild_ui()
+	await _frames(2)
+	var c2 := _ctx_counts()
+	var grew: Array = []
+	for k in c2:
+		if int(c2[k]) > int(c1.get(k, 0)):
+			grew.append("%s %d->%d" % [k, int(c1.get(k, 0)), int(c2[k])])
+	check(grew.is_empty(), "a UI rebuild doesn't double the planning handlers %s" % str(grew))
+	check(is_instance_valid(main.budget) and main.budget != w and main.budget.ctx == ctx, "the rebuilt UI has a fresh budget chip on the same context")
+	var keys := {}
+	for e in Dialogs.SHORTCUTS:
+		keys[e[0]] = true
+	check(keys.has("J"), "help lists the Plan panel key (J)")
+	for k in keep:
+		st.set_v(k, keep[k])
+	ctx.set_mode(str(keep["budget_mode"]))
+	ctx.set_scope_pin(str(keep["budget_scope"]))
 	main._update_view_rect()

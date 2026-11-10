@@ -39,6 +39,19 @@ const DEFAULTS := {
 	"default_farm_level": 1,
 	## "off" | "reduced" | "full", or "auto" = from the OS reduce-motion preference.
 	"ambient_animation": "auto",
+	## Planning (docs/PLANNING.md): budget widget on the canvas and the Plan panel.
+	"budget_visible": true,
+	"budget_corner": "bl",      ## bl | br | tl | tr
+	"budget_collapsed": false,  ## one line only
+	"budget_expanded": false,   ## breakdown card open
+	"budget_mode": "to_buy",    ## design | to_buy | remaining
+	"budget_scope": "auto",     ## auto (selection → area → phase → farm) | farm
+	"plan_tab": "budget",       ## last Plan panel tab
+	"plan_width": 0.0,          ## Plan panel width in logical px (0 = automatic)
+	"plan_show_areas": true,    ## planning layers on the canvas
+	"plan_show_progress": true,
+	"plan_show_heatmap": false,
+	"plan_show_guide": true,
 }
 ## Stored values of "ambient_animation", in the order the settings dialog lists them.
 const AMBIENT_CHOICES := ["off", "reduced", "full"]

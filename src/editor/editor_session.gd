@@ -53,10 +53,13 @@ var conflict_index: ConflictIndex
 ## Mirror placement: while on, placing also places the mirrored copy.
 ## {enabled, kind: LayoutTools.KIND_*, pos} (see LayoutTools for the line maths).
 var symmetry := {"enabled": false, "kind": LayoutTools.KIND_SCREEN, "pos": 0}
+## Budget of this layout (docs/PLANNING.md §4); null when the session was made
+## without a price book (some unit tests). Owned by the session: dispose() disconnects it.
+var budget: BudgetEngine
 var _analysis: RealisticAnalyzer.Cached
 
 
-func _init(l: FarmLayout, item_db: ItemDatabase, farm_map: FarmMap) -> void:
+func _init(l: FarmLayout, item_db: ItemDatabase, farm_map: FarmMap, prices: PriceBook = null) -> void:
 	layout = l
 	db = item_db
 	map = farm_map
@@ -67,6 +70,15 @@ func _init(l: FarmLayout, item_db: ItemDatabase, farm_map: FarmMap) -> void:
 	conflict_index = ConflictIndex.new(layout, map)
 	_analysis = RealisticAnalyzer.Cached.new(layout, stack, conflict_index)
 	symmetry["pos"] = default_mirror_pos(symmetry["kind"])
+	if prices != null:
+		budget = BudgetEngine.new(layout, db, prices, map)
+
+
+func dispose() -> void:
+	## The session is being replaced: its budget engine lets go of the layout and
+	## the shared price book (no handlers left behind on long-lived emitters).
+	if budget != null:
+		budget.dispose()
 
 
 static func fixed_item_ids(item_db: ItemDatabase, farm_map: FarmMap) -> Dictionary:
@@ -108,6 +120,9 @@ func set_map(m: FarmMap) -> void:
 	layout.fixed_items = fixed_item_ids(db, map)
 	conflict_index.set_map(map)
 	_analysis.invalidate()
+	if budget != null:
+		budget.map = map
+		budget.invalidate()
 	if not selected_landmark.is_empty() and (map == null or map.landmark(selected_landmark) == null):
 		clear_landmark_selection()
 

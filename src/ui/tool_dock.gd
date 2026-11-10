@@ -13,7 +13,7 @@ const TOOLS := [
 	["erase", "eraser", "Erase (Shift-drag: area)", "E"],
 	["pick", "pipette", "Eyedropper", "I"],
 	["land", "map", "Land: lock / unlock plots", "M"],
-	["annotate", "sticky-note", "Notes & zones", "N"],
+	["annotate", "sticky-note", "Notes & areas: click for a note, drag for a planning area", "N"],
 	["pan", "hand", "Pan (or hold Space / middle mouse)", "D"],
 ]
 

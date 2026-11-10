@@ -23,6 +23,8 @@ signal fixed_refused(text: String, screen_pos: Vector2)
 ## The hovered fixed landmark changed ("" = none).
 signal landmark_hovered(id: String)
 signal request_landmark_menu(screen_pos: Vector2, landmark_id: String)
+## The notes tool's drag added a planning area (its id).
+signal area_created(area_id: String)
 
 const DRAG_THRESHOLD := 5.0
 ## Up to this many dragged objects are previewed live by the renderer (depth
@@ -971,13 +973,15 @@ func _edit_annotation(idx: int) -> void:
 
 
 func _create_annotation(r: Rect2i, as_zone: bool) -> void:
-	if not as_zone:
-		var existing := annotation_at(r.position)
-		if existing >= 0:
-			_edit_annotation(existing)
-			return
-	var kind := "zone" if as_zone else "label"
-	request_text.emit("Zone name" if as_zone else "Note text", "", func(text: String):
+	if as_zone:
+		_create_area(r)
+		return
+	var existing := annotation_at(r.position)
+	if existing >= 0:
+		_edit_annotation(existing)
+		return
+	var kind := "label"
+	request_text.emit("Note text", "", func(text: String):
 		if text.strip_edges().is_empty() and not as_zone:
 			return
 		var old := session.layout.annotations.duplicate(true)
@@ -987,6 +991,19 @@ func _create_annotation(r: Rect2i, as_zone: bool) -> void:
 			"text": text.strip_edges(), "color": colors[session.layout.next_annotation % colors.size()]})
 		session.layout.next_annotation += 1
 		session.execute(EditCommands.SetAnnotations.new(old, list, "Add " + kind)))
+
+
+func _create_area(r: Rect2i) -> void:
+	## Dragging with the notes tool marks a planning area (docs/PLANNING.md §3):
+	## one undoable SetPlanning step once it has a name (empty = "Area N").
+	var plan := session.layout.planning
+	request_text.emit("Area name", PlanScope.next_area_name(plan), func(text: String):
+		var cur := session.layout.planning
+		var nm := text.strip_edges()
+		if nm.is_empty():
+			nm = PlanScope.next_area_name(cur)
+		session.execute(EditCommands.SetPlanning.new(cur, PlanDoc.with_area(cur, PlanScope.rect_area(r, nm)), "Add area “%s”" % nm))
+		area_created.emit(str(PlanDoc.areas(session.layout.planning).back().get("id", ""))))
 
 
 func _right_click(screen: Vector2) -> void:

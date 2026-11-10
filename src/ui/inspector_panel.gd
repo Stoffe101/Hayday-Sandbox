@@ -114,6 +114,7 @@ func _build_selection(s: EditorSession) -> void:
 		_variant_picker(s, [o])
 		_issue_list(o)
 		_object_actions(s, [o])
+		_plan_hooks(s, [o])
 		_note_editor(s, o)
 		return
 	# Multi-selection summary
@@ -136,6 +137,31 @@ func _build_selection(s: EditorSession) -> void:
 	_body.add_child(UI.label("Area: %d × %d tiles" % [r.size.x, r.size.y], "Dim"))
 	_variant_picker(s, objs)
 	_object_actions(s, objs)
+	_plan_hooks(s, objs)
+
+
+func _plan_hooks(s: EditorSession, objs: Array) -> void:
+	## Planning shortcuts for the selection: its cost (budget chip) and, for one
+	## item type, the price the user knows (price dialog).
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 6)
+	var cost := UI.button("Cost of selection", "coins", "Show what the selection costs in the budget chip (selection scope)", "Ghost")
+	cost.pressed.connect(func(): action.emit("selection_cost", null))
+	row.add_child(cost)
+	var items := {}
+	for o: PlacedObject in objs:
+		items[o.item_id] = true
+	if items.size() == 1:
+		var item: String = items.keys()[0]
+		var price := UI.button("Edit price…", "pencil", "Enter the price you know for this item (kept on this PC)", "Ghost")
+		price.pressed.connect(func(): action.emit("edit_price", item))
+		row.add_child(price)
+		if s.budget != null and objs.size() == 1:
+			var c: Variant = s.budget.object_cost(int(objs[0].uid), BudgetEngine.MODE_DESIGN)
+			var txt := Currency.format_line(c, "free") if c != null else App.prices.method_text(item)
+			_body.add_child(UI.label("Price (design cost of this copy): %s" % txt, "Faint", true))
+	_body.add_child(row)
 
 
 var variant_option: OptionButton    ## exposed for tests
@@ -1064,6 +1090,25 @@ func _build_view(s: EditorSession) -> void:
 		cb.toggled.connect(func(on): action.emit("view", [t[0], on]))
 		v.add_child(cb)
 	_body.add_child(card)
+	_body.add_child(UI.section("Planning layers"))
+	var pc := UI.card()
+	var pv := UI.vbox(2)
+	pc.add_child(pv)
+	for t in [["plan_show_areas", "Planning areas", "Area outlines, fills and names"],
+			["plan_show_progress", "Progress marks", "A check on objects marked placed in Hay Day"],
+			["plan_show_heatmap", "Cost heatmap", "Objects coloured by what they cost (legend in Plan › Budget)"],
+			["plan_show_guide", "Guide step numbers", "The current guide step(s) and their numbers"],
+			["budget_visible", "Budget chip", "Cost of the selection, area, phase or farm in a corner of the canvas"]]:
+		var cb := CheckButton.new()
+		cb.text = t[1]
+		cb.tooltip_text = t[2] + ". Never in exported pictures unless the export asks for it."
+		cb.button_pressed = bool(App.settings.get_v(t[0]))
+		cb.toggled.connect(func(on): action.emit("view", [t[0], on]))
+		pv.add_child(cb)
+	var open := UI.button("Open the plan", "layers", "Budget, areas, phases, shopping list, checklist and guide (J)", "Ghost")
+	open.pressed.connect(func(): action.emit("plan", "budget"))
+	pv.add_child(open)
+	_body.add_child(pc)
 	_body.add_child(UI.section("Screenshot references"))
 	var rc := UI.card()
 	var rv := UI.vbox(6)

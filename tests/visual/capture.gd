@@ -20,7 +20,8 @@ extends Node
 const ALL := ["overview", "place_valid", "place_invalid", "selection", "search", "realistic", "land", "zoomed",
 	"gallery", "help", "settings", "welcome", "reference", "compare", "export", "light",
 	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty", "landmarks", "migration",
-	"drag_blocked", "tools_symmetry", "tools_repeat", "winter"]
+	"drag_blocked", "tools_symmetry", "tools_repeat", "winter",
+	"plan_budget", "plan_areas", "plan_phases", "plan_heatmap", "plan_shop", "plan_build", "plan_guide", "plan_accuracy"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
 const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "anim_perf"]
 ## Asset scenarios install a synthetic pack generated from the built-in
@@ -39,6 +40,7 @@ var hide_panels := false   ## hide top bar + side panels (Tab) for unobstructed 
 var dump_objects := false  ## write <shot>.objects.json: id, footprint corners + sprite bounds in screen px
 var select_items: Array = ["field", "apple_tree"]   ## "selection" scenario (--select-items=a+b)
 var _migration_layout_open := false
+var _profile0: Variant = null       ## the showcase's profile before any plan scenario changed it
 
 
 func _ready() -> void:
@@ -156,6 +158,7 @@ func _reset() -> void:
 		s.set_tool("select")
 		main.dock.set_status("")   # e.g. "Select something that can be copied"
 		main.inspector.show_tab(0)   # the auto-hiding inspector starts closed
+		_reset_plan(s)
 	if hide_panels and not main._panels_hidden:
 		main._panels_hidden = true
 		main._update_view_rect()
@@ -164,6 +167,70 @@ func _reset() -> void:
 
 func _session():
 	return _app().session
+
+
+func _reset_plan(s) -> void:
+	## Planning state back to "nothing planned": no areas / phases / marks, the
+	## original inventory, the Plan panel closed, the budget chip in its default
+	## corner, default mode / scope / layers, no area tool, no highlight.
+	if _profile0 == null:
+		_profile0 = s.layout.profile.duplicate(true)
+	s.layout.profile = (_profile0 as Dictionary).duplicate(true)
+	s.layout.set_planning(PlanDoc.empty())
+	main.plan_controller.cancel()
+	main.set_plan_open(false)
+	main.plan_overlay.highlight_uids = []
+	var ctx: PlanContext = _app().plan_ctx
+	ctx.set_active_area("")
+	ctx.set_active_phase("")
+	ctx.set_guide_step(-1)
+	ctx.set_mode(BudgetEngine.MODE_TO_BUY)
+	ctx.set_scope_pin("auto")
+	for k in ["areas", "progress", "guide"]:
+		ctx.set_layer(k, true)
+	ctx.set_layer("heatmap", false)
+	for k in ["budget_corner", "budget_collapsed", "budget_expanded", "budget_visible"]:
+		_app().settings.set_v(k, AppSettings.DEFAULTS[k], false)
+	main.budget.configure("bl", false, false)
+	main._place_budget()
+
+
+func _plan_layout(with_phases: bool) -> void:
+	## A planned showcase: three named areas (the hedge garden as a polygon
+	## “Flower Garden”), optionally three phases with one in progress, and a
+	## little inventory. Made-up planning data on the public sample; prices come
+	## from data/prices as in the app.
+	var s = _session()
+	var ctx: PlanContext = _app().plan_ctx
+	var plan := PlanDoc.empty()
+	plan = PlanDoc.with_area(plan, {"name": "Flower Garden", "color": "#e58fb0",
+		"points": [[19, 1], [31, 1], [31, 8], [28, 11], [22, 11], [19, 8]], "target": {"coins": 20000}})
+	plan = PlanDoc.with_area(plan, {"name": "Orchard", "color": "#8fc46a", "rect": [0, 26, 11, 6]})
+	plan = PlanDoc.with_area(plan, {"name": "Animal Yard", "color": "#f2b84b", "rect": [13, 20, 19, 7]})
+	if with_phases:
+		plan = PlanDoc.with_area(plan, {"name": "Production Row", "color": "#6fb3e0", "rect": [0, 15, 30, 4]})
+		plan = PlanDoc.with_phase(plan, {"name": "Farm entrance", "color": "#6fb3e0", "areas": ["a4", "a3"]})
+		plan = PlanDoc.with_phase(plan, {"name": "Orchard", "color": "#8fc46a", "areas": ["a2"], "target": {"coins": 3000}})
+		plan = PlanDoc.with_phase(plan, {"name": "Flower Garden", "color": "#e58fb0", "areas": ["a1"]})
+		var placed: Array = []
+		for o: PlacedObject in s.layout.objects.values():
+			if o.item_id in ["bakery", "feed_mill", "chicken_coop"]:
+				placed.append(o.uid)
+		plan = PlanDoc.with_placed(plan, s.layout, placed, true)
+	s.execute(EditCommands.SetPlanning.new(s.layout.planning, plan, "Capture plan"))
+	var p: Dictionary = s.layout.profile.duplicate(true)
+	p["owned"] = {"barn": 1, "silo": 1, "bakery": 1, "feed_mill": 1, "chicken_coop": 1, "field": 20}
+	p["balances"] = {"coins": 25000, "diamonds": 40}
+	s.execute(EditCommands.SetProfile.new(s.layout.profile, p, "Capture inventory"))
+	await _frames(2)
+	ctx.notify_changed()
+
+
+func _plan_tab(tab: String, with_phases: bool = true) -> void:
+	await _plan_layout(with_phases)
+	main._fit()
+	main.open_plan(tab)
+	await _frames(4)
 
 
 func _dump_objects(path: String, px_per_logical: Vector2, export_rect := Rect2(), export_scale := 0.0) -> void:
@@ -633,6 +700,43 @@ func _scenario(sc: String) -> bool:
 			main._fit()
 		"anim_perf":
 			await _anim_perf()
+		"plan_budget":
+			# Budget chip expanded (selection scope) + the Budget tab.
+			await _plan_layout(false)
+			var trees: Array = []
+			for o: PlacedObject in s.layout.objects.values():
+				if o.item_id.ends_with("_tree") and o.origin.y >= 26:
+					trees.append(o.uid)
+			s.select(trees, false, false)
+			_app().plan_ctx.set_active_area("a1")
+			main.budget.set_expanded(true)
+			main._fit()
+			main.open_plan("budget")
+		"plan_areas":
+			await _plan_tab("areas", false)
+			_app().plan_ctx.set_active_area("a1")
+		"plan_phases":
+			await _plan_tab("phases")
+			var p1 := str(PlanDoc.phases(s.layout.planning)[0].get("id"))   # ids share one counter with the areas
+			_app().plan_ctx.set_active_phase(p1)
+			main._plan_highlight(s.budget.phase_uids(p1), Color("#6fb3e0"))
+			# A plan picture of the phase with its guide numbers (placeholder art).
+			var pp := out_dir.path_join("%sexport_plan_phase_1.png" % tag)
+			var perr: Error = await main.export_plan_image({"scope": "phase", "id": p1, "guide_numbers": true, "path": pp})
+			print("EXPORT plan phase %s (%d guide steps marked of %d)" % [error_string(perr), main._guide_step_numbers("phase", p1).size(),
+				(_app().plan_ctx.guide().get("steps", []) as Array).size()])
+		"plan_heatmap":
+			await _plan_tab("budget", false)
+			_app().plan_ctx.set_layer("heatmap", true)
+			_app().plan_ctx.set_layer("areas", false)
+		"plan_shop":
+			await _plan_tab("shop")
+		"plan_build":
+			await _plan_tab("build")
+		"plan_guide":
+			await _plan_tab("guide")
+		"plan_accuracy":
+			await _plan_tab("accuracy")
 		"light":
 			_app().settings.set_v("theme", "light", false)
 			await main._rebuild_ui()

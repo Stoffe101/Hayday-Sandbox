@@ -8,7 +8,7 @@ const SHORTCUTS := [
 	["Tools", ""],
 	["V", "Select & move"], ["B", "Place / paint (with a catalogue item)"], ["E", "Erase (Shift-drag clears an area)"],
 	["I / Alt+click", "Eyedropper: pick up the item under the cursor"], ["M", "Land: lock / unlock plots"],
-	["N", "Notes & zones (drag for a zone)"], ["D", "Pan tool"],
+	["N", "Notes & areas (click: a note; drag: a planning area)"], ["D", "Pan tool"],
 	["Space-drag / middle-drag / right-drag", "Pan with any tool"],
 	["Placing", ""],
 	["Click / drag", "Place / paint repeatedly"], ["Shift+drag", "Line of items"], ["Ctrl+drag", "Rectangle fill"],
@@ -34,6 +34,12 @@ const SHORTCUTS := [
 	["Align (selection row)", "Line up 2+ objects along or across the road"],
 	["Equal ↔ / Equal ↕", "Distribute 3+ objects with equal gaps"],
 	["Stamps (dock) / Save stamp", "Keep a selection as a reusable group; click to place copies, Esc stops"],
+	["Planning", ""],
+	["J", "Open / close the Plan panel (Budget · Areas · Phases · Shop · Build · Guide)"],
+	["Budget chip (canvas corner)", "Cost of the selection, area, phase or farm; ⋮ moves, shrinks or expands it"],
+	["Area tool: drag", "Rectangle area (Plan › Areas › Rectangle)"],
+	["Area tool: click corners", "Polygon area; double-click, Enter or the first corner closes it, Backspace removes a corner"],
+	["Esc (planning)", "Cancel the area tool, then close the Plan panel"],
 	["View", ""],
 	["Mouse wheel / + / -", "Zoom"], ["F / Shift+F", "Fit the selection (or the farm) / the whole world"],
 	["H / Home", "Home: centre the farmhouse"], ["1 … 9 / Ctrl+1 … 9", "Go to / save a view (saved with the layout)"],
@@ -128,16 +134,39 @@ static func export_image(parent: Control, on_export: Callable) -> void:
 		res.add_item(r[0])
 	res.item_selected.connect(func(i): opts["scale"] = [1.0, 2.0, 3.0, 0.5][i])
 	m.body.add_child(res)
-	for c in [["transparent", "Transparent background"], ["grid", "Include tile grid"], ["overlay", "Include labels, notes & selection"]]:
+	for c in [["transparent", "Transparent background"], ["grid", "Include tile grid"], ["overlay", "Include labels, notes & selection"],
+			["plan_areas", "Include planning areas"], ["guide_numbers", "Include guide step numbers"]]:
 		var cb := CheckBox.new()
 		cb.text = c[1]
 		cb.toggled.connect(func(on): opts[c[0]] = on)
 		m.body.add_child(cb)
+	opts["art"] = "placeholder"
+	if has_installed_art():
+		m.body.add_child(UI.label("Art", "Dim"))
+		var art := OptionButton.new()
+		art.add_item("Placeholder art (fine to share)")
+		art.add_item("Installed art (stays on this PC)")
+		m.body.add_child(art)
+		var warn := UI.label("Pictures with your installed art are for you only: don't share or upload them.", "Faint", true)
+		warn.add_theme_color_override("font_color", UiTheme.c("warn"))
+		warn.visible = false
+		m.body.add_child(warn)
+		art.item_selected.connect(func(i):
+			opts["art"] = "installed" if i == 1 else "placeholder"
+			warn.visible = i == 1)
 	m.body.add_child(UI.label("Large exports are rendered in tiles, so even poster sizes work. PNG files are written to the folder you choose.", "Faint", true))
 	m.add_button("Cancel", "", m.close)
 	m.add_button("Export PNG…", "Accent", func():
 		m.close()
 		on_export.call(opts), "image-down")
+
+
+static func has_installed_art() -> bool:
+	## An asset pack other than the built-in placeholders is installed.
+	for p in App.assets.packs:
+		if not bool(p.get("builtin", false)):
+			return true
+	return false
 
 
 static func settings(parent: Control, on_change: Callable) -> void:

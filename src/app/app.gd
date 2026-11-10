@@ -23,6 +23,11 @@ var map: FarmMap                  ## world of the open layout / new layouts; see
 var assets: AssetLibrary
 var library: LayoutLibrary
 var session: EditorSession
+## Resolved item prices (catalogue < data/prices < user://price_overrides.json).
+var prices: PriceBook
+## The one planning context of the app: Plan panel tabs, planning dialogs and the
+## budget widget read it; rebound to every new session (docs/PLANNING.md §5).
+var plan_ctx: PlanContext
 var boot_ms := 0.0
 var _autosave_timer: Timer
 var headless_safe := false
@@ -40,6 +45,11 @@ func _ready() -> void:
 	_load_maps()
 	library = LayoutLibrary.new(db)
 	library.map = map
+	prices = PriceBook.load_default(db)
+	for w in prices.errors:
+		push_warning(w)
+	plan_ctx = PlanContext.new()
+	prices.changed.connect(plan_ctx.notify_changed)
 	boot_ms = (Time.get_ticks_usec() - t0) / 1000.0
 	_autosave_timer = Timer.new()
 	_autosave_timer.wait_time = 15.0
@@ -146,11 +156,14 @@ func reload_assets() -> void:
 		maps = old_maps
 		map = old_map
 	library.map = map
+	if catalogue_changed and prices != null:
+		prices.set_catalogue(db)   # catalogue cost fields are the lowest price layer
 	if session:
 		if world_changed:
 			map = map_for(session.layout.map_id)
 			library.map = map
 			session.set_map(map)
+			_bind_plan()
 		if catalogue_changed:
 			_reconcile_open_layout()
 	assets_reloaded.emit()
@@ -209,14 +222,36 @@ func open_layout(l: FarmLayout, report: LayoutIO.LoadReport = null) -> void:
 	else:
 		l.map_id = map.id
 	library.map = map
-	session = EditorSession.new(l, db, map)
+	if session != null:
+		session.dispose()
+	session = EditorSession.new(l, db, map, prices)
 	session.load_report = report
+	_connect_plan(session)
+	_bind_plan()
 	if not l.id.is_empty():
 		settings.set_v("last_layout", l.id)
 		settings.push_recent("recent_layouts", l.id, 12)
 	session_changed.emit()
 	if report and not report.summary().is_empty():
 		toast("Opened “%s”: %s" % [l.name, report.summary()], "warn")
+
+
+func _connect_plan(s: EditorSession) -> void:
+	## Once per session: everything that changes a budget, the plan or the scope
+	## reaches the planning context (coalesced to one `changed` per frame). The
+	## session's own emitters hold these, so they go away with the session.
+	if plan_ctx == null:
+		return
+	if s.budget != null:
+		s.budget.changed.connect(plan_ctx.notify_changed)
+	s.layout.planning_changed.connect(plan_ctx.notify_changed)
+	s.selection_changed.connect(plan_ctx.notify_changed)
+	s.history_changed.connect(plan_ctx.notify_changed)
+
+
+func _bind_plan() -> void:
+	if plan_ctx != null and session != null:
+		plan_ctx.bind(session, session.budget, prices, db, session.map)
 
 
 func layout_templates() -> Array[Dictionary]:

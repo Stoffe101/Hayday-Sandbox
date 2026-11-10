@@ -6,6 +6,15 @@ signal action(name: String)
 ## The farm level picker changed the open layout's level (main makes it an
 ## undoable profile edit; placed objects never change).
 signal farm_level_set(level: int)
+## Plan workflow: a tab id ("budget", "areas", …) or "" = open / close the Plan panel.
+signal plan_requested(tab: String)
+
+## The workflow strip (docs/PLANNING.md): Design → Budget → Areas → Phases → Shop → Build → Guide.
+const PLAN_STEPS := [["budget", "Budget", "What the design costs"], ["areas", "Areas", "Named parts of the farm"],
+	["phases", "Phases", "Build order and what you can afford"], ["shop", "Shop", "Shopping list"],
+	["build", "Build", "Checklist: bought and placed"], ["guide", "Guide", "Step-by-step guide for the game"]]
+const PLAN_MENU := [["budget", "Budget"], ["areas", "Areas"], ["phases", "Phases"], ["shop", "Shop"], ["build", "Build"],
+	["guide", "Guide"], ["accuracy", "Accuracy"]]
 
 var _name_btn: Button
 var _dirty: Label
@@ -26,6 +35,12 @@ var _brand: Label
 var _brand_sep: VSeparator
 var _issues_btn: Button
 var _compact := -1
+var _strip: PanelContainer
+var _strip_btns: Dictionary = {}
+var _plan_btn: Button
+var _plan_pop: PopupMenu
+var _plan_open := false
+var _plan_tab := ""
 
 
 func _ready() -> void:
@@ -72,6 +87,35 @@ func _ready() -> void:
 	_level_btn.pressed.connect(_open_level_popup)
 	sh.add_child(_level_btn)
 	h.add_child(seg)
+	# Plan workflow: the steps as a strip when there is room, else one Plan menu.
+	_strip = PanelContainer.new()
+	_strip.theme_type_variation = "SegmentBar"
+	var ph := UI.hbox(0)
+	_strip.add_child(ph)
+	for st in PLAN_STEPS:
+		var b := UI.button(st[1], "", "%s — %s (J opens the plan)" % [st[1], st[2]], "Segment")
+		b.toggle_mode = true
+		b.add_theme_font_size_override("font_size", 13)
+		b.add_theme_constant_override("h_separation", 0)
+		# The Segment look with less padding (six steps must fit next to the mode switch).
+		var pad := Vector4(9, 6, 9, 6)
+		b.add_theme_stylebox_override("normal", UiTheme.box(Color.TRANSPARENT, 999, Color.TRANSPARENT, 0, pad))
+		b.add_theme_stylebox_override("hover", UiTheme.box(UiTheme.c("elevated_hover"), 999, Color.TRANSPARENT, 0, pad))
+		b.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.c("accent"), 999, Color.TRANSPARENT, 0, pad))
+		b.add_theme_stylebox_override("hover_pressed", UiTheme.box(UiTheme.c("accent_hover"), 999, Color.TRANSPARENT, 0, pad))
+		b.add_theme_stylebox_override("focus", UiTheme.box(Color.TRANSPARENT, 999, Color.TRANSPARENT, 0, pad))
+		b.pressed.connect(func(): plan_requested.emit(st[0]))
+		ph.add_child(b)
+		_strip_btns[st[0]] = b
+	h.add_child(_strip)
+	_plan_btn = UI.button("Plan", "layers", "Plan: budget, areas, phases, shopping, checklist, guide (J)", "Ghost")
+	_plan_btn.toggle_mode = true
+	_plan_btn.pressed.connect(_open_plan_menu)
+	_plan_btn.visible = false
+	h.add_child(_plan_btn)
+	_plan_pop = PopupMenu.new()
+	_plan_pop.id_pressed.connect(_on_plan_menu)
+	add_child(_plan_pop)
 	# Problems in the design (conflicts, Realistic blockers): one button that
 	# opens the grouped list instead of outlining every object in red.
 	_issues_btn = UI.button("", "circle-x", "", "Ghost")
@@ -126,6 +170,48 @@ func set_panels(left: bool, right: bool, right_auto: bool = false) -> void:
 		_right_toggle.tooltip_text = "Hide the inspector (])" if right else "Show the inspector (])"
 
 
+func set_plan_state(open: bool, tab: String) -> void:
+	## Which workflow step is open (pressed in the strip / Plan button).
+	_plan_open = open
+	_plan_tab = tab
+	for id in _strip_btns:
+		(_strip_btns[id] as Button).set_pressed_no_signal(open and id == tab)
+	_plan_btn.set_pressed_no_signal(open)
+	_plan_btn.text = "Plan" if not open else "Plan · %s" % _tab_label(tab)
+
+
+func _tab_label(tab: String) -> String:
+	for e in PLAN_MENU:
+		if e[0] == tab:
+			return e[1]
+	return ""
+
+
+func _open_plan_menu() -> void:
+	_plan_btn.set_pressed_no_signal(_plan_open)
+	_plan_pop.clear()
+	for i in PLAN_MENU.size():
+		_plan_pop.add_radio_check_item(PLAN_MENU[i][1], i)
+		_plan_pop.set_item_checked(i, _plan_open and _plan_tab == PLAN_MENU[i][0])
+	if _plan_open:
+		_plan_pop.add_separator()
+		_plan_pop.add_item("Close the plan  (Esc / J)", 100)
+	var r := _plan_btn.get_global_rect()
+	_plan_pop.reset_size()
+	_plan_pop.popup(Rect2i(Vector2i(r.position + Vector2(0, r.size.y + 6)), Vector2i.ZERO))
+
+
+func _on_plan_menu(id: int) -> void:
+	if id >= 0 and id < PLAN_MENU.size():
+		plan_requested.emit(PLAN_MENU[id][0])
+	elif id == 100:
+		plan_requested.emit("")
+
+
+func plan_strip_visible() -> bool:
+	return _strip.visible
+
+
 func set_issues(count: int, tip: String) -> void:
 	## "3 issues" button (hidden at 0).
 	_issues_btn.visible = count > 0
@@ -141,7 +227,7 @@ func issues_count() -> int:
 func fit_width(avail: float) -> void:
 	## Picks the least compact level whose content fits `avail` (re-run when the
 	## window, the layout name or the issues button change).
-	for lvl in 3:
+	for lvl in 4:
 		set_compact(lvl)
 		if get_combined_minimum_size().x <= avail:
 			return
@@ -149,7 +235,8 @@ func fit_width(avail: float) -> void:
 
 func set_compact(level: int) -> void:
 	## 0 = full; 1 = no brand text; 2 = also icon-only mode switch and a
-	## shorter name (narrow windows / large UI scales).
+	## shorter name; 3 = the plan strip becomes one Plan menu button (narrow
+	## windows / large UI scales).
 	if level == _compact:
 		return
 	_compact = level
@@ -158,6 +245,8 @@ func set_compact(level: int) -> void:
 	_name_btn.custom_minimum_size.x = 180 if level < 2 else 112
 	_mode_creative.text = "Creative" if level < 2 else ""
 	_mode_real.text = "Realistic" if level < 2 else ""
+	_strip.visible = level < 3
+	_plan_btn.visible = level >= 3
 	if _issues_btn.visible:
 		set_issues(int(_issues_btn.get_meta("count", 0)), _issues_btn.tooltip_text)
 

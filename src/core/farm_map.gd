@@ -255,7 +255,12 @@ func _parse_tile_types(tt: Variant) -> void:
 		var rec: Dictionary = (e as Dictionary).duplicate(true)
 		rec["name"] = str(e.get("name", ks))
 		rec["kind"] = str(e.get("kind", "buildable"))
-		rec["art"] = null if e.get("art") == null else str(e.get("art"))
+		# "art": a terrain-pack tile key (docs/TERRAIN_PACKS.md) or null = drawn by the app.
+		var art: Variant = e.get("art")
+		if art != null and not art is String:
+			warnings.append("map %s: tile type %s art must be a string or null (ignored)" % [id, ks])
+			art = null
+		rec["art"] = null if art == null or str(art).strip_edges().is_empty() else str(art).strip_edges()
 		tile_types[int(ks)] = rec
 
 

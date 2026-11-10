@@ -121,6 +121,7 @@ func _ready() -> void:
 	App.session_changed.connect(_on_session_changed)
 	App.assets_reloaded.connect(func():
 		renderer.refresh_all_art()
+		_refresh_pack_terrain()
 		_refresh_world()
 		overlay.refresh()
 		catalog.refresh())
@@ -224,6 +225,7 @@ func _build_world() -> void:
 	world.name = "World"
 	add_child(world)
 	ground = GroundLayer.new()
+	ground.assets = App.assets   # pack terrain (docs/TERRAIN_PACKS.md)
 	world.add_child(ground)
 	scenery = SceneryLayer.new()
 	world.add_child(scenery)
@@ -244,6 +246,7 @@ func _build_world() -> void:
 	renderer = ObjectRenderer.new()
 	plan_overlay.renderer = renderer
 	renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
+	ground.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
 	world.add_child(renderer)
 	world.add_child(plan_overlay)
 	overlay = EditorOverlay.new()
@@ -2086,7 +2089,9 @@ func _on_setting_changed(key: String) -> void:
 			overlay.show_annotations = bool(App.settings.get_v(key))
 			overlay.refresh()
 		"smooth_zoom": camera.smooth = bool(App.settings.get_v(key))
-		"ambient_animation": renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
+		"ambient_animation":
+			renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
+			ground.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
 		"wheel_zoom_factor": camera.wheel_factor = float(App.settings.get_v(key))
 		"inspector_auto_hide":
 			_inspector_pinned = false
@@ -2330,12 +2335,20 @@ func _placeholder_assets() -> AssetLibrary:
 	return _placeholder_lib
 
 
+func _refresh_pack_terrain() -> void:
+	## Packs were (re)loaded: pick up an installed / removed pack terrain.
+	ground.set_assets(App.assets)
+	if App.session:
+		scenery.setup(App.session.map, App.assets, App.session.db)
+
+
 func _use_art(lib: AssetLibrary) -> void:
 	var s := App.session
 	if s == null:
 		return
 	renderer.bind(s.layout, s.db, lib)
 	renderer.set_world_entries(LandmarkView.entries_for(s.map, s.layout, lib, _landmark_tints()))
+	ground.set_assets(lib)   # placeholder exports never show pack terrain
 	scenery.setup(s.map, lib, s.db)
 	if lib == App.assets:
 		_apply_issue_marks()

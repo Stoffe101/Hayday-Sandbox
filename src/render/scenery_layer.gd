@@ -8,7 +8,9 @@ extends Node2D
 ## placement, never covers land tiles, roads or landmarks, and is
 ## deterministic for a given map. Where a TerrainLayer draws the ground, this
 ## layer only adds the scattered sprites and keeps them off the terrain's
-## rivers and roads.
+## rivers and roads. Pack terrain (docs/TERRAIN_PACKS.md) with "scatter": false
+## brings its own forests: then nothing is scattered; with base "color" the
+## scenery areas are not painted either (the pack draws the surroundings).
 
 const ART := ["leafy_tree", "pine_tree", "big_pine_tree", "dark_leafy_tree", "pine_tree", "leafy_tree", "mossy_rock"]
 const ROCK_ART := ["mossy_rock", "small_rock", "big_rock"]
@@ -22,6 +24,7 @@ var assets: AssetLibrary
 var db: ItemDatabase
 var _items: Array = []    ## [world_pos, SpriteInfo, scale, mirrored, tint]
 var _areas: Array = []    ## [kind, Rect2i]
+var _pack_backdrop := false   ## pack terrain with base "color" draws the surroundings
 
 
 func setup(m: FarmMap, lib: AssetLibrary, item_db: ItemDatabase) -> void:
@@ -47,10 +50,16 @@ func _sprites(keys: Array) -> Array:
 func _build() -> void:
 	_items.clear()
 	_areas.clear()
+	_pack_backdrop = false
 	if map == null:
 		return
 	for s in map.scenery:
 		_areas.append([str(s["kind"]), s["rect"] as Rect2i])
+	var tp := assets.terrain_for(map) if assets else null
+	if tp:
+		_pack_backdrop = tp.base == "color"
+		if not tp.scatter:
+			return
 	var trees := _sprites(ART)
 	if trees.is_empty():
 		return
@@ -70,7 +79,7 @@ func _build() -> void:
 	var land := map.land_bounds()
 	var cands: Array = []   ## [tile, density, kind]
 	var outer := wb.grow(OUTER)
-	var procedural := TerrainLayer.applies_to(map)
+	var procedural := TerrainLayer.applies_to(map) and not _pack_backdrop
 	var bands: Array[Rect2i] = TerrainLayer.feature_bands(map) if procedural else ([] as Array[Rect2i])
 	var cliff_y := TerrainLayer.cliff_line(map) if procedural else outer.position.y - 1
 	for y in range(outer.position.y, outer.end.y):
@@ -170,7 +179,7 @@ func _poly(pts: PackedVector2Array, tex: Texture2D, mod: Color) -> void:
 
 func _draw() -> void:
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-	if not TerrainLayer.applies_to(map):
+	if not TerrainLayer.applies_to(map) and not _pack_backdrop:
 		for a in _areas:
 			_draw_area(a[0], a[1])
 	for e in _items:

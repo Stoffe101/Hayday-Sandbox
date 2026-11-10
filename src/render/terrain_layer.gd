@@ -56,6 +56,10 @@ var map: FarmMap
 var theme := ""
 var last_draw_usec := 0        ## script time of the last redraw (a season change is exactly this)
 var last_build_usec := 0
+## An asset pack's terrain replaces this one (PackTerrainLayer.backdrop_ok):
+## nothing is built or drawn until it is lifted again (e.g. a pack piece is missing).
+var suppressed := false
+var _built_for: FarmMap
 var _layers: Array[Layer] = []
 var _veil_at := 0              ## index in _layers where the season veil is drawn
 var _veil_rect := Rect2i()
@@ -74,10 +78,25 @@ func setup(m: FarmMap) -> void:
 	if m == map:
 		return
 	map = m
+	_rebuild()
+
+
+func set_suppressed(on: bool) -> void:
+	if on == suppressed:
+		return
+	suppressed = on
+	if not on and _built_for != map:
+		_rebuild()
+	queue_redraw()
+
+
+func _rebuild() -> void:
 	var t0 := Time.get_ticks_usec()
 	_layers.clear()
-	if applies_to(map):
+	_built_for = null
+	if applies_to(map) and not suppressed:
 		_build()
+		_built_for = map
 	last_build_usec = Time.get_ticks_usec() - t0
 	queue_redraw()
 
@@ -551,7 +570,7 @@ func _bridge(rd: Rect2i, cut: Vector2) -> void:
 # --- drawing ------------------------------------------------------------------------
 
 func _draw() -> void:
-	if _layers.is_empty():
+	if _layers.is_empty() or suppressed:
 		return
 	var t0 := Time.get_ticks_usec()
 	var season := season_of(theme)

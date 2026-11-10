@@ -12,6 +12,12 @@ extends Node2D
 ## Worlds without game terrain get their ground from a TerrainLayer child drawn
 ## behind this node; here they only add what depends on the layout: the
 ## locked-plot tint and hatching, blocked areas, the land edge, borders, labels.
+##
+## An installed asset pack may supply terrain art (docs/TERRAIN_PACKS.md): a
+## PackTerrainLayer child, drawn after the TerrainLayer and still behind this
+## node, draws it. Tiles it covers get only the overlays here; tiles it can't
+## draw keep the drawing above, and the procedural terrain is hidden only when
+## the pack replaces it completely (PackTerrainLayer.backdrop_ok).
 
 var map: FarmMap
 ## Unlocked plots, canonical ids (aliases resolved in setup()).
@@ -26,8 +32,16 @@ var dim_for_land_mode := false
 ## (plot id -> min level). Drawn darker with a "Lv N" tag.
 var level_blocked: Dictionary = {}
 var last_draw_usec := 0   ## script time of the last redraw (ownership changes end here)
+## Art source for pack terrain (null = procedural only). Exports with placeholder
+## art pass the placeholder library, which has no terrain.
+var assets: AssetLibrary
 var _terrain: TerrainLayer
+var _pack: PackTerrainLayer
 var _procedural := false  ## the TerrainLayer draws the base ground of this map
+var _pack_backdrop := false   ## the pack terrain replaces the procedural ground and backdrop
+var _theme := ""
+var _cov_grid := PackedByteArray()   ## per grid tile: 1 = the pack terrain draws its ground
+var _cov_version := -1
 
 const ROAD_GROUND_KINDS := ["road", "road_blocked"]
 const BACKDROP_MARGIN := 24
@@ -38,6 +52,10 @@ func _init() -> void:
 	_terrain.name = "Terrain"
 	_terrain.show_behind_parent = true
 	add_child(_terrain)
+	_pack = PackTerrainLayer.new()
+	_pack.name = "PackTerrain"
+	_pack.show_behind_parent = true
+	add_child(_pack)
 
 
 func _ready() -> void:
@@ -47,16 +65,60 @@ func _ready() -> void:
 
 func set_theme(theme_id: String) -> void:
 	_terrain.set_theme(theme_id)
+	if theme_id != _theme:
+		_theme = theme_id
+		if map:
+			_refresh_pack()
+			queue_redraw()
+
+
+func set_assets(lib: AssetLibrary) -> void:
+	## (Re)reads the pack terrain for the current map, e.g. after packs were
+	## installed / removed, or to draw an export with placeholder art.
+	assets = lib
+	if map:
+		_refresh_pack()
+		queue_redraw()
+
+
+func set_ambient_mode(mode: int) -> void:
+	_pack.set_ambient_mode(mode)
+
+
+func pack_layer() -> PackTerrainLayer:
+	return _pack
 
 
 func setup(m: FarmMap, unlocked_plots: Dictionary) -> void:
-	_terrain.setup(m)
-	_procedural = TerrainLayer.applies_to(m)
 	if m != map:
 		map = m
 		_build_static()
 	unlocked = m.canonical_unlocked(unlocked_plots) if m else {}
+	_refresh_pack()
+	_terrain.setup(m)
 	queue_redraw()
+
+
+func _refresh_pack() -> void:
+	var tp := assets.terrain_for(map) if assets and map else null
+	_pack.setup(map, tp, assets, _plot_open() if map else PackedByteArray(), _theme)
+	_pack_backdrop = _pack.backdrop_ok
+	_terrain.set_suppressed(_pack_backdrop)
+	_procedural = TerrainLayer.applies_to(map) and not _pack_backdrop
+	if _pack.tiles_version != _cov_version:
+		_cov_version = _pack.tiles_version
+		_cov_grid = PackedByteArray()
+		if map and not _pack.covered.is_empty():
+			var w := map.size.x
+			_cov_grid.resize(w * map.size.y)
+			var any := false
+			for y in map.size.y:
+				for x in w:
+					var c := 1 if _pack.covers(Vector2i(x, y)) else 0
+					_cov_grid[y * w + x] = c
+					any = any or c == 1
+			if not any:
+				_cov_grid = PackedByteArray()
 
 
 func set_level_blocked(blocked: Dictionary) -> void:
@@ -140,7 +202,7 @@ func _draw() -> void:
 	if _cls_grid.size() != map.size.x * map.size.y:
 		_build_static()
 	var t0 := Time.get_ticks_usec()
-	if not _procedural:
+	if not _procedural and not _pack_backdrop:
 		var wb := map.world_bounds if map.world_bounds.size != Vector2i.ZERO else Rect2i(Vector2i.ZERO, map.size)
 		var back := Iso.grid_rect_polygon(wb.grow(BACKDROP_MARGIN))
 		_poly(back, TerrainTextures.get_tex("meadow"), Color(0.88, 0.92, 0.86))
@@ -148,32 +210,38 @@ func _draw() -> void:
 	var open := _plot_open()
 	# Row runs of equal look (kind / plot / road) become single parallelograms.
 	var w := map.size.x
+	var cov := _cov_grid
+	var has_cov := cov.size() == w * map.size.y
 	for y in map.size.y:
 		var row := y * w
 		var x := 0
 		while x < w:
 			var c := _cls_grid[row + x]
+			var cv := has_cov and cov[row + x] == 1
 			var x1 := x + 1
-			while x1 < w and _cls_grid[row + x1] == c:
+			while x1 < w and _cls_grid[row + x1] == c and (not has_cov or (cov[row + x1] == 1) == cv):
 				x1 += 1
-			_draw_run(Rect2i(x, y, x1 - x, 1), c, grass, open)
+			_draw_run(Rect2i(x, y, x1 - x, 1), c, grass, open, cv)
 			x = x1
 	if map.has_ground():
 		_draw_offgrid_roads()
-	_draw_land_edge()
+	if _pack.draws_land_edge():
+		_draw_land_edge()
 	_draw_plot_borders(open)
 	if show_plot_labels:
 		_draw_labels()
 	last_draw_usec = Time.get_ticks_usec() - t0
 
 
-func _draw_run(r: Rect2i, cls: int, grass: Texture2D, open: PackedByteArray) -> void:
+func _draw_run(r: Rect2i, cls: int, grass: Texture2D, open: PackedByteArray, covered := false) -> void:
+	## covered: the pack terrain draws these tiles' ground (only overlays here).
 	var pts := Iso.grid_rect_polygon(r)
+	var child := _procedural or covered   ## a child layer draws the base ground of this run
 	if cls >= PLOT_BASE:
 		var pi := cls - PLOT_BASE
 		var plot_id := str(map.plots[pi]["id"])
 		if open[pi] == 1:
-			if not _procedural:
+			if not child:
 				_poly(pts, grass, Color.WHITE)
 		elif hide_locked:
 			_poly(pts, TerrainTextures.get_tex("meadow"), Color(0.8, 0.85, 0.8))
@@ -183,13 +251,13 @@ func _draw_run(r: Rect2i, cls: int, grass: Texture2D, open: PackedByteArray) -> 
 				c = Color(0.62, 0.64, 0.6)
 			if plot_id == highlight_plot:
 				c = Color(1.0, 0.72, 0.66) if highlight_blocked else Color(0.95, 1.0, 0.85)
-			if _procedural:
+			if child:
 				_poly(pts, null, _locked_veil(plot_id))
 			else:
 				_poly(pts, grass, c)
 			_poly(pts, TerrainTextures.get_tex("hatch"), Color(1, 1, 1, 1))
 		return
-	if _procedural and cls != FarmMap.Kind.BLOCKED:
+	if child and cls != FarmMap.Kind.BLOCKED:
 		return
 	match cls:
 		FarmMap.Kind.BUILDABLE:
@@ -204,11 +272,12 @@ func _draw_run(r: Rect2i, cls: int, grass: Texture2D, open: PackedByteArray) -> 
 			if map.is_game_data():
 				# Game data: farm ground where nothing may be built (verges,
 				# around fixed buildings) — muted grass, lightly hatched.
-				_poly(pts, grass, Color(0.8, 0.86, 0.76))
+				if not child:
+					_poly(pts, grass, Color(0.8, 0.86, 0.76))
 				_poly(pts, TerrainTextures.get_tex("hatch"), Color(1, 1, 1, 0.22))
 			else:
 				# Public map: unbuildable or not-yet-mapped ground.
-				if not _procedural:
+				if not child:
 					_poly(pts, TerrainTextures.get_tex("meadow"), Color(0.8, 0.84, 0.78))
 				_poly(pts, TerrainTextures.get_tex("hatch"), Color(1, 1, 1, 0.6))
 		_:
@@ -227,7 +296,12 @@ func _draw_offgrid_roads() -> void:
 	## grid (e.g. the road continuing past the farm): drawn as road, never land.
 	var road := TerrainTextures.get_tex("road")
 	for r in offgrid_road_runs():
-		_poly(Iso.grid_rect_polygon(r), road, Color.WHITE)
+		if not _pack.active():
+			_poly(Iso.grid_rect_polygon(r), road, Color.WHITE)
+			continue
+		for x in range(r.position.x, r.end.x):   # only the tiles the pack terrain can't draw
+			if not _pack.covers(Vector2i(x, r.position.y)):
+				_poly(Iso.grid_rect_polygon(Rect2i(x, r.position.y, 1, 1)), road, Color.WHITE)
 
 
 func offgrid_road_runs() -> Array[Rect2i]:

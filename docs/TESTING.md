@@ -113,6 +113,7 @@ Test counts per file are the `func test_*` functions at a511d0c (417 in total).
 | `test_layout_tools` | 29 | mirror lines, symmetry, repeat, align, distribute, brushes, stamps (`.hdstamp`) |
 | `test_references` | 12 | several reference images, migration from one image, 2/3-point calibration, one undo step per edit |
 | `test_terrain` | 11 | procedural terrain built from the map, only without game data, deterministic, keeps off buildable land, seamless textures, owned/locked frontier, a pack world replaces it |
+| `test_terrain_pack` | 15 | pack terrain (`docs/TERRAIN_PACKS.md`) with the generated synthetic pack: manifest diagnostics, theme → variant, tile variants, piece expansion, `tile_types[].art`, AssetLibrary lookup, cached rebuilds, per-element fallback, Off/Reduced/Full |
 | `test_ambient` | 12 | animation sheets, Off/Reduced modes and OS default, mirror art, theme variants only when they exist |
 | `test_calibration` | 12 | N-point calibration: exact 2/3-point fits, least squares, outliers and verdicts, residual units, landmark anchors, reference layer uses the same fit |
 | `test_accuracy` | 12 | Farm Accuracy Report wording (public map, private world unverified until calibrated, user overrides), renderer / picking / landmark tiles share the grid |
@@ -230,7 +231,8 @@ The app is launched normally with `--rendering-driver opengl3` and `-- --capture
 scenario and saves the real framebuffer. Scenarios in `all`: overview, place_valid, place_invalid, selection,
 search, realistic, land, zoomed, gallery, help, settings, welcome, reference, compare, export, light,
 asset_manager, asset_review, asset_packs, original_art, asset_empty, landmarks, migration, drag_blocked,
-tools_symmetry, tools_repeat, winter, and the planning scenarios:
+tools_symmetry, tools_repeat, winter, terrain_pack, terrain_pack_winter, terrain_pack_river (a generated
+terrain pack: flat colours and patterns; they print `TERRAIN_PACK` build and frame times), and the planning scenarios:
 
 | Scenario | Shows |
 |---|---|

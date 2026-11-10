@@ -107,12 +107,14 @@ var _thumb_cache: Dictionary = {}      ## "key|variant|mask" -> Texture2D or nul
 var _tex_cache: Dictionary = {}        ## file path -> Texture2D (shared between keys/variants)
 var _stats_cache: Dictionary = {}      ## pack id -> stats
 var _item_themes: Variant = null       ## cached item_themes() (null = not computed)
+var _terrain_cache: Dictionary = {}    ## manifest path -> TerrainPack (parsed once per load_all)
 
 
 func load_all(item_db: ItemDatabase = null) -> void:
 	if item_db:
 		db = item_db
 	packs.clear()
+	_terrain_cache.clear()
 	_cache.clear()
 	_thumb_cache.clear()
 	_tex_cache.clear()
@@ -123,6 +125,13 @@ func load_all(item_db: ItemDatabase = null) -> void:
 	_scan_dir(dev_packs_dir, 50)
 	_scan_dir(user_packs_dir, 100)
 	packs.sort_custom(_pack_order)
+	# Terrain manifests are small: parse them now so their problems are listed
+	# with the other pack diagnostics (images load only when drawn).
+	for p in packs:
+		var tp := pack_terrain(str(p["id"]))
+		if tp:
+			for e in tp.diagnostics():
+				errors.append("%s: %s" % [p["id"], e])
 
 
 static func _pack_order(a: Dictionary, b: Dictionary) -> bool:
@@ -787,6 +796,64 @@ func review_packs() -> Array:
 	return out
 
 
+# --- terrain (docs/TERRAIN_PACKS.md) ----------------------------------------------
+
+func pack_terrain(pack_id: String) -> TerrainPack:
+	## The parsed terrain manifest a pack declares in pack.json ("terrain"), or null.
+	var p := pack_by_id(pack_id)
+	if p.is_empty() or bool(p.get("builtin", false)):
+		return null
+	var rel := str((p.get("data_files", {}) as Dictionary).get("terrain", ""))
+	if rel.is_empty():
+		return null
+	return _terrain_at(str(p["base"]).path_join(rel), pack_id)
+
+
+func _terrain_at(path: String, pack_id: String) -> TerrainPack:
+	if not _terrain_cache.has(path):
+		_terrain_cache[path] = TerrainPack.load_file(path, pack_id)
+	return _terrain_cache[path]
+
+
+func terrain_for(m: FarmMap) -> TerrainPack:
+	## Pack terrain to draw for a map, or null (procedural terrain only):
+	##   1. the world file's own "terrain" (FarmMap.terrain_path),
+	##   2. else the highest-priority installed pack whose pack.json declares
+	##      "terrain" and whose manifest applies to this map (its own world,
+	##      a listed map id, or any map in the game tile frame).
+	if m == null:
+		return null
+	if not m.terrain_path.is_empty():
+		var own := ""
+		for p in packs:
+			if not bool(p.get("builtin", false)) and m.terrain_path.begins_with(str(p["base"]) + "/"):
+				own = str(p["id"])
+				break
+		var wt := _terrain_at(m.terrain_path, own)
+		if wt.applies_to(m, true):
+			return wt
+	var world_pack := str(m.provenance.get("pack_id", "")) if str(m.provenance.get("active", "public")) != "public" else ""
+	for p in packs:
+		var tp := pack_terrain(str(p["id"]))
+		if tp and tp.applies_to(m, str(p["id"]) == world_pack):
+			return tp
+	return null
+
+
+func terrain_texture(tp: TerrainPack, rel: String) -> Texture2D:
+	## An image of a terrain pack (cached with the other pack textures); null
+	## when missing (reported once in the pack's diagnostics).
+	if tp == null or rel.is_empty():
+		return null
+	var path := tp.base_dir.path_join(rel)
+	var had := _tex_cache.has(path)
+	var tex := _texture(path, false, not tp.alpha_bleed)
+	if tex == null and not had:
+		tp.report("missing image %s" % rel)
+		errors.append("%s: terrain: missing image %s" % [tp.pack_id if not tp.pack_id.is_empty() else tp.id, rel])
+	return tex
+
+
 # --- statistics ------------------------------------------------------------------
 
 func pack_stats(pack_id: String) -> Dictionary:
@@ -806,13 +873,23 @@ func pack_stats(pack_id: String) -> Dictionary:
 	for rel in files:
 		if not _exists(base.path_join(rel)):
 			missing.append(rel)
+	var terrain_problems: Array = []
+	var tp := pack_terrain(str(p["id"]))
+	if tp:
+		var tdir := tp.base_dir.trim_prefix(base).trim_prefix("/")
+		for rel in tp.files():
+			files[tdir.path_join(rel) if not tdir.is_empty() else rel] = true
+		for rel in tp.missing_files():
+			missing.append(tdir.path_join(rel) if not tdir.is_empty() else rel)
+		terrain_problems = Array(tp.diagnostics())
 	missing.sort()
 	var st := {"id": p["id"], "name": p["name"], "version": p["version"], "sprites": (p["sprites"] as Dictionary).size(),
 		"variants": counts["variants"], "connections": counts["connections"], "shadows": counts["shadows"],
 		"thumbs": counts["thumbs"], "anims": counts["anims"], "mirrors": counts["mirrors"], "files": files.size(), "missing_files": missing,
 		"verified": (p["verified"] as Dictionary).size(), "rejected": (p["rejected"] as Dictionary).size(),
 		"assigned": (p["assigned"] as Dictionary).size(), "review_items": review_queue(p["id"]).size(),
-		"override_errors": (p["override_errors"] as Array) + (p.get("apply_errors", []) as Array)}
+		"override_errors": (p["override_errors"] as Array) + (p.get("apply_errors", []) as Array) + terrain_problems,
+		"terrain": tp != null, "terrain_problems": terrain_problems}
 	_stats_cache[pack_id] = st
 	return st
 

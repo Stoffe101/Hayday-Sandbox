@@ -20,7 +20,7 @@ extends Node
 const ALL := ["overview", "place_valid", "place_invalid", "selection", "search", "realistic", "land", "zoomed",
 	"gallery", "help", "settings", "welcome", "reference", "compare", "export", "light",
 	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty", "landmarks", "migration",
-	"drag_blocked", "tools_symmetry", "tools_repeat", "winter",
+	"drag_blocked", "tools_symmetry", "tools_repeat", "winter", "terrain_pack", "terrain_pack_winter", "terrain_pack_river",
 	"plan_budget", "plan_areas", "plan_phases", "plan_heatmap", "plan_shop", "plan_build", "plan_guide", "plan_accuracy",
 	"plan_minimap", "plan_layers", "plan_compare", "plan_ready"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
@@ -28,6 +28,9 @@ const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "anim_perf"]
 ## Asset scenarios install a synthetic pack generated from the built-in
 ## placeholders (never real artwork); it is removed again before the next scenario.
 const SyntheticPack := preload("res://tests/fixtures/synthetic_pack.gd")
+## terrain_pack* scenarios install a generated terrain pack (flat colours and
+## patterns, docs/TERRAIN_PACKS.md), removed again before the next scenario.
+const SynTerrain := preload("res://tests/fixtures/synthetic_terrain.gd")
 
 var out_dir := "res://artifacts/screens"
 var scale := 1.0
@@ -35,6 +38,7 @@ var scenarios: Array = []
 var main: Node
 var tag := ""
 var _pack_installed := false
+var _terrain_installed := false
 var real_art := false
 var outline_all := false   ## at_* scenarios select everything, so every footprint is outlined
 var hide_panels := false   ## hide top bar + side panels (Tab) for unobstructed QA shots
@@ -133,6 +137,10 @@ func _reset() -> void:
 		PackInstaller.uninstall(SyntheticPack.PACK_ID)
 		_app().reload_assets()
 		_pack_installed = false
+	if _terrain_installed:
+		PackInstaller.uninstall(SynTerrain.PACK_ID)
+		_app().reload_assets()
+		_terrain_installed = false
 	var s = _app().session
 	if s and _undo_after > 0:
 		# Edits a planning scenario made to the showcase (moved / new / removed objects).
@@ -410,6 +418,67 @@ func _install_synthetic_pack() -> bool:
 	print("INSTALL ", r.summary())
 	_pack_installed = r.ok
 	return r.ok
+
+
+func _install_terrain_pack() -> bool:
+	if real_art:
+		return true   # whatever terrain the installed packs bring
+	var zip := "user://capture_assets/synthetic_terrain.zip"
+	var b: Dictionary = SynTerrain.build_zip(zip, _session().map)
+	if not b["ok"]:
+		print("FAIL synthetic terrain: ", b["error"])
+		return false
+	var r = _app().install_pack(ProjectSettings.globalize_path(zip))
+	print("INSTALL ", r.summary())
+	_terrain_installed = r.ok
+	return r.ok
+
+
+func _terrain_pack(theme_id: String, zoom: float, at: Vector2) -> bool:
+	## Frame time over the same view without and with the pack, its build
+	## times, then the shot (pack terrain, the given theme and view).
+	if zoom > 0.0:
+		main.camera.set_zoom_level(zoom)
+		main.camera.zoom = Vector2(zoom, zoom)
+		main.camera.target_zoom = zoom
+		main.camera.center_on(at)
+	else:
+		main._fit()
+	var vsync := DisplayServer.window_get_vsync_mode()
+	var max_fps := Engine.max_fps
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	Engine.max_fps = 0
+	var plain_ms: float = await _avg_frame_ms(120)
+	if not _install_terrain_pack():
+		return false
+	main.ground.set_theme(theme_id)
+	await _frames(4)
+	var pl: PackTerrainLayer = main.ground.pack_layer()
+	var first_ms := [pl.last_tiles_usec / 1000.0, pl.last_pieces_usec / 1000.0]
+	var pack_ms: float = await _avg_frame_ms(120)
+	# Again, alternating (placeholder art = procedural terrain, then the pack from its caches).
+	main.ground.set_assets(main._placeholder_assets())
+	var plain2_ms: float = await _avg_frame_ms(120)
+	var t0 := Time.get_ticks_usec()
+	main.ground.set_assets(_app().assets)
+	var reload_ms := (Time.get_ticks_usec() - t0) / 1000.0
+	var pack2_ms: float = await _avg_frame_ms(120)
+	# An ownership change (every plot unlocked) rebuilds only the tiles.
+	var s = _session()
+	var all_open := {}
+	for pid in s.map.all_plot_ids():
+		all_open[pid] = true
+	main.ground.setup(s.map, all_open)
+	var own_ms := pl.last_tiles_usec / 1000.0
+	main.ground.setup(s.map, s.layout.unlocked_plots)
+	DisplayServer.window_set_vsync_mode(vsync)
+	Engine.max_fps = max_fps
+	var tp: TerrainPack = pl.pack
+	print("TERRAIN_PACK %s active=%s variant=%s backdrop=%s tiles=%d batches=%d pieces=%d failed=%d vertices=%d anims=%d clips=%d first_build_ms tiles=%.2f pieces=%.2f cached_rebuild_ms=%.2f ownership_tiles_ms=%.2f frame_ms procedural=%.2f/%.2f pack=%.2f/%.2f problems=%s" % [
+		theme_id, str(pl.active()), pl.variant, str(pl.backdrop_ok), pl.stats["tiles"], pl.stats["tile_batches"], pl.stats["pieces"],
+		pl.failed_pieces, pl.stats["vertices"], pl.stats["anims"], pl.stats["clips"], first_ms[0], first_ms[1], reload_ms, own_ms,
+		plain_ms, plain2_ms, pack_ms, pack2_ms, str(tp.diagnostics()) if tp else "[]"])
+	return pl.active() or real_art
 
 
 func _asset_manager(item_id: String, tab: int) -> bool:
@@ -804,6 +873,20 @@ func _scenario(sc: String) -> bool:
 		"winter":
 			main.ground.set_theme("winter")
 			main._fit()
+		"terrain_pack":
+			if not await _terrain_pack("", 0.0, Vector2.ZERO):
+				return false
+		"terrain_pack_winter":
+			if not await _terrain_pack("winter", 0.0, Vector2.ZERO):
+				return false
+		"terrain_pack_river":
+			# River, glints, the road crossing on its bridge, and the land edge.
+			var road_y := 0.0
+			for r in s.map.regions:
+				if r["kind"] == FarmMap.Kind.ROAD and not (r["rects"] as Array).is_empty():
+					road_y = (r["rects"][0] as Rect2i).position.y
+			if not await _terrain_pack("", 1.6, Iso.grid_to_world(Vector2(-1.0, road_y - 2.0))):
+				return false
 		"anim_perf":
 			await _anim_perf()
 		"plan_budget":

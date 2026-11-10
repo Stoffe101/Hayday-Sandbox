@@ -2994,7 +2994,8 @@ func _relative_items(l: FarmLayout, uids: Array) -> Dictionary:
 const QA_DESIGN := BudgetEngine.MODE_DESIGN
 const QA_TO_BUY := BudgetEngine.MODE_TO_BUY
 const QA_REMAINING := BudgetEngine.MODE_REMAINING
-const QaUnit := preload("res://tests/unit/test_qa_planning.gd")
+## tests/fixtures, not tests/unit: exported self-test builds (CI) leave tests/unit out.
+const QaUnit := preload("res://tests/fixtures/csv_util.gd")
 
 
 func _qa_journeys() -> void:

@@ -248,6 +248,8 @@ func _build_world() -> void:
 	renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
 	ground.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
 	world.add_child(renderer)
+	# Pack terrain pieces with "layer": "foreground" draw over the objects (docs/TERRAIN_PACKS.md).
+	ground.pack_layer().attach_foreground(world)
 	world.add_child(plan_overlay)
 	overlay = EditorOverlay.new()
 	overlay.visibility_layer = Exporter.LAYER_OVERLAY
@@ -260,6 +262,7 @@ func _build_world() -> void:
 	world.add_child(camera)
 	camera.make_current()
 	camera.view_changed.connect(_on_view_changed)
+	ground.pack_layer().extent_changed.connect(_apply_world_bounds)   # camera bounds follow the pack terrain
 	controller = EditorController.new()
 	controller.camera = camera
 	controller.renderer = renderer
@@ -1126,7 +1129,9 @@ func _on_map_changed() -> void:
 
 func world_rect_px(m: FarmMap) -> Rect2:
 	var wb := m.world_bounds if m.world_bounds.size != Vector2i.ZERO else Rect2i(Vector2i.ZERO, m.size)
-	return Iso.footprint_world_bounds(wb.position, wb.size)
+	var r := Iso.footprint_world_bounds(wb.position, wb.size)
+	# Pack terrain: framed by its pieces (PackTerrainLayer.camera_rect).
+	return ground.pack_layer().camera_rect(m, r) if ground else r
 
 
 func _apply_world_bounds() -> void:

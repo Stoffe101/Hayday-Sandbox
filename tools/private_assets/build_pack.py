@@ -52,6 +52,9 @@ Pipeline:
                  client states is never mirrored to fit an old catalogue size), and world/world.json, the landmark
                  sprites "lm_<id>" and catalog_overrides.json are copied into the pack; pack.json declares "world"
                  and "catalog_overrides".
+  Terrain        when build_terrain.py has written <root>/packs/hayday_original_terrain/terrain/ (or with --terrain):
+                 that folder is copied into the pack as terrain/ and pack.json declares "terrain" (main-farm ground
+                 tiles, edges, river, cliff, forests, water clips; docs/TERRAIN_PACKS.md). --no-terrain leaves it out.
 
 Usage:
   python3 tools/private_assets/build_pack.py                         # build into <root>/packs/hayday_original
@@ -60,6 +63,7 @@ Usage:
   python3 tools/private_assets/build_pack.py --rebuild               # ignore the inventory cache, rewrite the pack
   python3 tools/private_assets/build_pack.py --report                # print the last coverage summary and exit
   python3 tools/private_assets/build_pack.py --build-world --install-dir ...   # world data + landmarks too
+  python3 tools/private_assets/build_pack.py --terrain --install-dir ...       # + terrain (build_terrain.py)
 
 Requires Python 3.10+, Pillow (with WebP) and numpy; rapidfuzz is used when installed (difflib otherwise).
 """
@@ -426,6 +430,23 @@ def load_catalog() -> tuple[list[dict], dict]:
 
 
 WORLD_DIR_NAME = "hayday_original_world"   # build_world.py output folder under <root>/packs/
+ADDITIONS_REL = Path("research") / "catalog" / "client_additions.json"   # client_catalog.py output under <root>
+
+
+def addition_items(additions: dict) -> list[dict]:
+	"""Catalogue additions (client_catalog.py: items the public catalogue lacks, facts from the client data) in the
+	load_catalog() shape, so the matcher finds their art like any catalogue item (name = the game text)."""
+	out = []
+	for iid, it in sorted((additions or {}).items()):
+		fp = it.get("footprint") or [1, 1]
+		conn = it.get("connect") or {}
+		out.append({"id": iid, "name": it.get("name", iid), "category": it.get("category", "decoration"),
+			"fp": (max(1, int(fp[0])), max(1, int(fp[1]))), "fp_trusted": True, "fp_status": "game_data",
+			"art_key": it.get("art", iid), "aliases": [], "connect_style": conn.get("style", ""),
+			"connect_group": conn.get("group", ""), "layer": it.get("layer", "object"), "season": it.get("season", ""),
+			"file": "client_additions"})
+	return out
+TERRAIN_DIR_NAME = "hayday_original_terrain"   # build_terrain.py output folder under <root>/packs/
 
 
 def apply_catalog_overrides(items: list[dict], doc: dict | None) -> list[str]:
@@ -1607,11 +1628,22 @@ class Builder:
 		self.world_dir = None if getattr(args, "no_world", False) else (getattr(args, "world_dir", None)
 			or self.root / "packs" / WORLD_DIR_NAME)
 		self.world_overrides = read_json(self.world_dir / "catalog_overrides.json") if self.world_dir else None
+		self.terrain_dir = None if getattr(args, "no_terrain", False) else (getattr(args, "terrain_dir", None)
+			or self.root / "packs" / TERRAIN_DIR_NAME)
 		self.curation = read_json(self.mapdir / "art_curation.json", {}) or {}
+		add_path = None if getattr(args, "no_additions", False) else (getattr(args, "additions", None) or self.root / ADDITIONS_REL)
+		self.additions = ((read_json(add_path, {}) or {}).get("additions") or {}) if add_path and add_path.exists() else {}
 
 	# --- stage 1
 	def inventory(self):
 		self.items, self.categories = load_catalog()
+		if self.additions:
+			known = {it["id"] for it in self.items}
+			clash = sorted(k for k in self.additions if k in known)
+			if clash:
+				raise SystemExit(f"catalogue additions clash with catalogue ids: {clash[:5]} (re-run client_catalog.py)")
+			self.items += addition_items(self.additions)
+			log(f"catalogue additions: {len(self.additions)} client-only items (client_catalog.py)")
 		self.fp_overridden = apply_catalog_overrides(self.items, self.world_overrides)
 		if self.world_overrides:
 			log(f"catalog overrides: {len(self.fp_overridden)} items use client-stated footprints "
@@ -2535,6 +2567,9 @@ class Builder:
 					p.unlink()
 					removed += 1
 		world_decl, world_sums = self._merge_world(pd, sprites)
+		terrain_decl, terrain_sums = self._merge_terrain(pd)
+		world_decl.update(terrain_decl)
+		world_sums += terrain_sums
 		# the version changes whenever an entry OR an image changes (e.g. re-encoded edges)
 		img_sums = sorted(f"{k}:{v.get('sha256', '')}:{v.get('thumb_sha256', '')}" for k, v in results.items() if "error" not in v)
 		img_sums += world_sums
@@ -2622,8 +2657,16 @@ class Builder:
 			shutil.copy2(wd / f, dst)
 			sums.append(f"{f}:{sha256_file(dst)}")
 		sprites.update(lm)
-		if (wd / "catalog_overrides.json").exists():
-			shutil.copy2(wd / "catalog_overrides.json", pd / "catalog_overrides.json")
+		if (wd / "catalog_overrides.json").exists() or self.additions:
+			cov = read_json(wd / "catalog_overrides.json", None) if (wd / "catalog_overrides.json").exists() else None
+			if not isinstance(cov, dict):
+				cov = {"format": "hayday-sandbox-catalog-overrides", "version": 1, "items": {}}
+			if self.additions:
+				# Client-only items: the app adds them to the catalogue while this pack is installed.
+				cov["additions"] = self.additions
+				write_json(pd / "catalog_overrides.json", cov)
+			else:
+				shutil.copy2(wd / "catalog_overrides.json", pd / "catalog_overrides.json")
 			decl["catalog_overrides"] = "catalog_overrides.json"
 			sums.append(f"catalog_overrides.json:{sha256_file(pd / 'catalog_overrides.json')}")
 		sums.append(f"world/world.json:{sha256_file(pd / 'world' / 'world.json')}")
@@ -2635,6 +2678,22 @@ class Builder:
 		log(f"world: world.json + {len(lm)} landmark sprites ({self.world_stats['landmark_variants']} variants)"
 			+ (" + catalog_overrides.json" if "catalog_overrides" in decl else ""))
 		return decl, sums
+
+	def _merge_terrain(self, pd: Path) -> tuple[dict, list[str]]:
+		"""Copy build_terrain.py's output folder (terrain/) into the pack. Returns (pack.json declarations, digests)."""
+		if (pd / "terrain").is_dir():
+			shutil.rmtree(pd / "terrain")
+		td = self.terrain_dir
+		if td is None or not (td / "terrain" / "terrain.json").is_file():
+			if td is not None:
+				log(f"terrain: none at {td} (run build_terrain.py or use --terrain); the pack has no terrain")
+			return {}, []
+		shutil.copytree(td / "terrain", pd / "terrain")
+		sums = [f"{p.relative_to(pd).as_posix()}:{sha256_file(p)}" for p in sorted((pd / "terrain").rglob("*")) if p.is_file()]
+		rep = read_json(td / "build_report.json", {}) or {}
+		log(f"terrain: {len(sums)} files from {td}")
+		return {"terrain": "terrain/terrain.json", "terrain_provenance": {"tool": "tools/private_assets/build_terrain.py",
+			"generated": rep.get("generated"), "client": rep.get("client"), "placement": rep.get("placement_name")}}, sums
 
 	def _review_plan(self):
 		"""Review queue: medium matches and unmatched client objects / object-like images with suggestions."""
@@ -3288,6 +3347,13 @@ def main(argv=None) -> int:
 		help=f"build_world.py output to include (default <root>/packs/{WORLD_DIR_NAME})")
 	ap.add_argument("--build-world", action="store_true", help="run build_world.py (world, overrides, landmark sprites) first")
 	ap.add_argument("--no-world", action="store_true", help="build the pack without world data / catalogue overrides")
+	ap.add_argument("--additions", type=Path, default=None,
+		help=f"catalogue additions (client_catalog.py; default <root>/{ADDITIONS_REL.as_posix()})")
+	ap.add_argument("--no-additions", action="store_true", help="build the pack without client-only catalogue additions")
+	ap.add_argument("--terrain", action="store_true", help="run build_terrain.py (ground tiles, edges, water clips) first")
+	ap.add_argument("--no-terrain", action="store_true", help="build the pack without terrain")
+	ap.add_argument("--terrain-dir", type=Path, default=None,
+		help=f"build_terrain.py output to include (default <root>/packs/{TERRAIN_DIR_NAME})")
 	args = ap.parse_args(argv)
 	root = ensure_private(args.root, "the private root")
 	if args.report:
@@ -3302,6 +3368,18 @@ def main(argv=None) -> int:
 		if rc:
 			log("build_world.py failed; the pack is not built")
 			return rc
+	if args.terrain and not args.no_terrain:
+		sys.path.insert(0, str(Path(__file__).resolve().parent))
+		import build_terrain  # noqa: PLC0415
+		targs = ["--root", str(root)]
+		if args.terrain_dir:
+			targs += ["--out", str(args.terrain_dir)]
+		try:
+			rc = build_terrain.main(targs)
+		except SystemExit as ex:   # missing client file / placement: terrain is optional
+			rc = str(ex) or 1
+		if rc:
+			log(f"build_terrain.py failed ({rc}); the pack is built with the terrain already at the terrain dir, if any")
 	b = Builder(args)
 	b.inventory()
 	b.match()

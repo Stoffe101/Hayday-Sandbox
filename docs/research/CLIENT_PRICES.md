@@ -16,7 +16,8 @@ live in the user's private data folder (`docs/PRIVATE_ASSETS.md`).
 | Installed supplement | `user://private_data/client_prices.json` (previous version `client_prices.prev.json`) |
 | Report | `user://private_data/client_price_report.json` and `.md` |
 | Your matching decisions | `user://private_data/client_price_mapping.json` |
-| Tests (invented data) | `tests/unit/test_client_prices.gd`, self-test journey "QA 9b" |
+| Client-only items, record classification | `tools/private_assets/client_catalog.py` (private outputs, see below) |
+| Tests (invented data) | `tests/unit/test_client_prices.gd`, `tests/unit/test_client_catalog.gd`, self-test journey "QA 9b" |
 
 `user://` is `%APPDATA%\HaydaySandbox\` on Windows. The leak guard (`tools/ci/check_private_leaks.py`) refuses
 these documents and large client data tables wherever they are put.
@@ -34,6 +35,8 @@ Either of these:
 
 Reading rules (`ClientPrices.records_from_tables`):
 
+* The English game texts are read from `localization/texts.csv` next to `assets/data` when present (the record's
+  `text`; a reference file may carry it as `game_text`). They are only used for matching.
 * Row 2 holds the column types and is skipped. A row with an empty first column continues the row above it. For
   example, a second voucher currency (`Vouchers` / `VoucherCount`) is on its own continuation row.
 * `Price` is coins, `DiamondPrice` is diamonds and `PearlPrice` is pearls (`Currency.GAME_FIELDS`). Currencies are
@@ -72,8 +75,14 @@ reward) has no colour name and no item uses it in 1.73.89. It keeps the id `vouc
 ## Pearls
 
 `PearlPrice` is a separate currency (`pearls`, `money.csv` `Pearl`). In 1.73.89 it is used by 8 decoration
-records, all water decorations. None of them is in the sandbox catalogue yet, so they stay in the review queue as
-unmatched. The currency itself works everywhere: budgets, the shopping list, balances and exports.
+records, all water decorations (`WaterDeco = TRUE`). The public catalogue does not have them and no public source
+names them (checked against the fan wiki on 2026-11-10), so they are **private catalogue additions** (below): with the
+art pack installed they are ordinary items with their client footprint, art and pearl price. The currency works
+everywhere: budgets, the shopping list, balances and exports (with its own vector mark).
+
+In the game these decorations are placed only in the river's water-decoration zones (the client level data has a
+`WaterDecoZones` section: two zones along the main farm's river). The sandbox does not model those zones yet: its
+placement check treats them like any other decoration (KNOWN_ISSUES).
 
 ## Matching a record to a catalogue item
 
@@ -85,11 +94,17 @@ Rules are tried strongest first (`ClientPrices.match_record`):
    art the app shows decides. When one export serves several items, the exact name picks one of them; otherwise
    the record is ambiguous.
 3. A **catalogue alias**.
-4. The **translation id** (`TID_DECO_WATER_DRAGON_STEPS` → `water_dragon_steps`).
-5. The **exact normalized name**.
+4. The **game text**: the English name the client shows for the record equals exactly one catalogue name. The
+   catalogue's names come from the wiki, which uses the game's names, so this is as strong as an alias. When one art
+   export serves several items, the game text also picks the one it names.
+5. The **translation id** (`TID_DECO_WATER_DRAGON_STEPS` → `water_dragon_steps`).
+6. The **exact normalized name**.
 
 Looser similarities (a trailing number, a plural, one name containing the other) only produce **review
 candidates**. They are never applied, because a wrong price on a decoration is worse than a clearly unknown one.
+The same holds for **art hints**: when the installed pack shows a record's client export as some catalogue item by
+name similarity only (a misspelt or Russian wiki name), that item becomes the first review candidate and the
+reason says so, but nothing is applied until you choose it.
 
 When several records claim one item with the same rule:
 
@@ -97,6 +112,48 @@ When several records claim one item with the same rule:
 * If exactly one of them has a price, that one wins. These are shop / gift twins that share the art, e.g. a
   `…Shop` row and its prize row.
 * Otherwise nothing is applied and every claim goes to the review queue.
+
+## Reviewing a record: candidates side by side
+
+Asset manager > **Game data** > *Review* lists every record that was not applied. Each one shows what the client
+says (record name, game text, table, client size, client price, why it was not applied) and its candidates **side by
+side**: picture from the active art pack, name, id, size (and whether it matches the record's size, mirrored or not)
+and the price the planner uses now with its origin. *Use this* maps the record to that item, *Other item…* searches
+the whole catalogue, *Ignore record* says it is not an item, *Clear decision* goes back to unassigned. Decisions are
+saved in `client_price_mapping.json` at once and applied by *Re-import with my decisions* (the tables folder of the
+last import is remembered, also when the import ran from the command line with `--install`). A record you have not
+decided stays **unassigned**: nothing is applied. Filters: needs a choice (has candidates), with a price, ambiguous,
+conflicting, unmatched, decided by you. The view-model is pure and unit tested (`ClientPrices.review_candidates`,
+`decision_of`).
+
+## Records the catalogue does not have (client-only items)
+
+The public catalogue only holds facts with a public source. An object that exists in the client but in no public
+source is **never added to the repository**; it can only become a **private catalogue addition**:
+
+1. `python3 tools/private_assets/client_catalog.py --review <supplement or report>` classifies every record in the
+   review list (rules in the tool's header, first rule wins): *duplicate* (game text equals a catalogue name or tag,
+   the pack already shows its art as a catalogue item, or the catalogue has two entries with that name), *variant*
+   (yearly / numbered copies, near-names), *out of scope area* (neighborhood, valley), *unreleased* (placeholder art or
+   an untranslated text), *event mechanics*, *customization component*, *missing main-farm object* and *incomplete*.
+   It writes a private report to `<root>/qa/<date>/client_records/` and, for the missing main-farm objects with
+   complete data (English text, footprint, real art), `<root>/research/catalog/client_additions.json`.
+2. `build_pack.py` matches their art like any catalogue item (by game text, so the match is exact) and merges them
+   into the pack's `catalog_overrides.json` under `"additions"` (`{id: item record}`; footprint status `game_data`;
+   name = the game text; category = water for water decorations, seasonal for a themed one, else the public
+   catalogue's keyword rule; flippable only with a mirrored client export).
+3. The app adds them while the pack is installed (`ItemDatabase.apply_overrides`; an addition never replaces a
+   catalogue item or alias) and removes them with the pack (`revert_overrides`). The client-price import then matches
+   them by their art export like any item, so their price comes from the supplement, never from the additions file.
+
+Layouts that use an added item keep it by id; without the pack it shows as an unknown item, like any item the
+catalogue does not know.
+
+## Data versions
+
+The client tables the user uploaded (`assets/data`, 400 files) were compared byte for byte with the extraction of
+the 1.73.89 client in the private root: all 394 files the extraction has are identical; the upload has 6 more files
+(valley mini-game boards, not used for prices). Same version.
 
 ## Precedence and merge
 
@@ -136,6 +193,10 @@ assumes the cheapest case and says so.
 `PriceBook.skin_cost(kind, parts)` prices a set of parts (slot → part name, the same shape as the landmark skin
 presets of a private world). Default parts cost nothing, and unknown parts are listed. Choosing an appearance never
 moves the landmark, never adds a building and never counts as buying a second farmhouse.
+
+The **design-customization budget** (`SkinBudget`, docs/PLANNING.md §4) uses these prices for the look a layout
+chooses for the farmhouse, truck and roadside shop: optional (Plan › Budget › Design customization), whole farm only,
+default and owned parts (inventory `owned_parts`) never charged, parts without a price counted as unknown.
 
 ## Import, report, rollback
 
@@ -180,31 +241,44 @@ If the art pack and the price supplement are from different game versions, the G
 
 ## Results on the user's client (1.73.89, 2026-11-10)
 
-These are aggregate counts from the private report; per-item values stay private.
+These are aggregate counts from the private reports; per-item values stay private. "First import" is the state
+before the game-text rule, the art hints and the private additions; "now" is with them (art pack 2026.11.10).
 
-| | Count |
+| | First import | Now |
+|---|---|---|
+| Client records read | 2,454 | 2,454 |
+| Object records | 2,045 | 2,045 |
+| Appearance parts (kept apart, not items) | 409 (house 147, truck 116, roadside shop 146) | 409 |
+| Matched by export name / game text / translation id | 1,842 / – / 2 | 1,923 / 4 / 2 |
+| Ambiguous / unmatched (review) | 11 / 172 | 2 / 96 (27 of them with a candidate to choose) |
+| Catalogue items with a client record | 1,844 of 1,967 | 1,857 of 1,967 public + 72 of 72 private additions |
+| Known purchase prices | 447 → 455 | 447 → 467 (the 12 more are private additions: 8 pearl, 4 coin or voucher) |
+| Researched prices confirmed by the client | 412 | 414 |
+| Prices that differ from research (client used) | 11 | 11 |
+| Researched prices the client does not list (kept, unverified) | 25 | 25 |
+| Items that can't be bought | 1,507 | 1,567 (60 added event prizes without a shop price) |
+| Items still without a price | 5 (planning markers) | 5 (planning markers) |
+
+The game-text rule settled 9 of the 11 ambiguous records (an art export shared by two catalogue items, the game
+text naming one) and matched 4 more records; 2 of the newly matched records confirm a researched price exactly. The
+2 still ambiguous records have two catalogue entries with the same name: your choice.
+
+Classification of the 170 records the public catalogue could not take (`client_catalog.py`):
+
+| Class | Records |
 |---|---|
-| Client records read | 2,454 |
-| Object records | 2,045 |
-| Appearance parts (kept apart, not items) | 409 (house 147, truck 116, roadside shop 146) |
-| Matched by export name | 1,842 |
-| Matched by translation id | 2 |
-| Ambiguous / unmatched (review) | 11 / 172 |
-| Catalogue items with a client record | 1,844 of 1,967 |
-| Known purchase prices: before → after | 447 → 455 |
-| Researched prices confirmed by the client | 412 |
-| Prices that differ from research (client used) | 11 |
-| Researched prices the client does not list (kept, unverified) | 25 |
-| New prices (no price before) | 8 |
-| Items that can't be bought | 1,507 |
-| Items still without a price | 5 (all planning markers, which have no price by design) |
+| Missing main-farm object, data complete (added privately; 8 pearl water decorations, 4 sanctuary decorations, 60 event prizes and fence / path pieces) | 72 |
+| Duplicate of a catalogue item (25: the pack already shows their art as a catalogue item with a misspelt or Russian name; 2: two catalogue entries with one name) | 27 |
+| Variant (a yearly copy of an event building) | 1 |
+| Other area (13 neighborhood, 4 valley) | 17 |
+| Not released (placeholder art or untranslated text) | 46 |
+| Event mechanics (seasonal event creatures; plausible, not verified) | 5 |
+| Main-farm object with incomplete data (two connecting pond pieces: the client data does not say path or water) | 2 |
 
-The gain in **coverage** is small (447 → 455) because most of the catalogue really is not sold in the regular
-shop: event prizes, rewards, collection items. The gain in **trust** is large: 412 researched prices are now
-confirmed by the game files, and 11 outdated wiki prices are corrected. Most of these are production buildings;
-for one of them, the client's base price plus its rise reproduces the wiki's second-copy price exactly. The 155
-unmatched records without a price are event items with no shop price. The 17 unmatched records with a price
-include the 8 pearl water decorations and a few items the catalogue does not have yet.
+The coverage gain is small because most of the catalogue really is not sold in the regular shop: event prizes,
+rewards, collection items. The gain in **trust** is large: 414 researched prices are confirmed by the game files and
+11 outdated wiki prices are corrected. Most of these are production buildings; for one of them, the client's base
+price plus its rise reproduces the wiki's second-copy price exactly.
 
 Unverified:
 

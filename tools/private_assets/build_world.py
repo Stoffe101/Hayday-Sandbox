@@ -1178,6 +1178,9 @@ class WorldBuilder:
 				"unlock_level": unlock, "replaces_items": replaces,
 				"evidence": ev, "confidence": conf, "footprint_confidence": fp_conf, "blocks_confidence": blocks_conf,
 				"game_version": c.version, "special_object": d["so"], "note": d.get("note", ""),
+				# The SpecialObjects row's tile (X, Y). Top-corner objects: their export's registration point is drawn
+				# on its top corner (= origin). The centred truck: see landmark_anchor_offset (pending screenshot).
+				"client_registration": [x, y],
 			})
 		for name in so_rows:
 			if name not in seen:
@@ -2038,6 +2041,24 @@ def theme_postfixes(client: Client) -> list[str]:
 	return pf
 
 
+def landmark_anchor_offset(lm: dict, ppw: float) -> tuple[float, float]:
+	"""Texture px from an export's registration point to the pixel the app puts on the footprint's ground centre.
+
+	The app draws every sprite with its anchor on the footprint centre.
+	* top_corner: the client draws the export's registration point on the top corner of the origin tile, so
+	  anchor = registration + ((W-H)*16, (W+H)*8) world px * ppw.
+	* center (the parked truck): the registration point is put on the footprint centre, i.e. the art covers the
+	  Road_01_Blocked parking pair exactly (verified-in-data cells). The other reading, the uniform SpecialObjects
+	  rule (registration point on the top corner of the row's tile = `client_registration`), would draw it half a
+	  tile further along -x. The data supports both; which one the client uses is PENDING SCREENSHOT (Plan ->
+	  Accuracy -> Write placement check compares a clicked truck centre with both). Logical cells are unaffected.
+	"""
+	W, H = lm["footprint"]
+	if lm.get("draw_anchor") == "center":
+		return (0.0, 0.0)
+	return ((W - H) * HALF_W / 2 * ppw, (W + H) * HALF_H / 2 * ppw)
+
+
 def render_landmark_sprites(client: Client, world: dict, out_dir: Path, ppw: float = PPW, workers: int = 4) -> dict:
 	"""Render every landmark state, theme variant and skin preset; returns {"sprites": {...}, "report": {...}}."""
 	sys.path.insert(0, str(TOOLS_DIR))
@@ -2053,9 +2074,7 @@ def render_landmark_sprites(client: Client, world: dict, out_dir: Path, ppw: flo
 	try:
 		for lm in world["landmarks"]:
 			d = defs[lm["id"]]
-			W, H = lm["footprint"]
-			off = (0.0, 0.0) if lm["draw_anchor"] == "center" else ((W - H) * HALF_W / 2 * ppw, (W + H) * HALF_H / 2 * ppw)
-			# NB: ground centre of the footprint relative to its top corner = ((W-H)*16, (W+H)*8) world px
+			off = landmark_anchor_offset(lm, ppw)
 
 			def add(variant: str, img, origin, lm=lm, off=off, same_as: str | None = None):
 				if same_as is not None:   # an alias of an already rendered variant (one file, two entries)
@@ -2509,6 +2528,13 @@ def self_test() -> int:
 		check(lms["newspaper_mailbox"]["area"] == "road_verge" and lms["newspaper_mailbox"]["unlock_level"] == 7,
 			"mailbox area/unlock")
 		check(lms["truck"]["draw_anchor"] == "center" and lms["truck"]["replaces_items"] == [], "truck")
+		# sprite anchors: registration point on the client tile's top corner
+		tk, fh = lms["truck"], lms["farmhouse"]
+		check(len(tk["client_registration"]) == 2 and fh["client_registration"] == fh["origin"], "registration tiles")
+		check(landmark_anchor_offset({"footprint": [3, 2], "origin": [5, 5], "draw_anchor": "top_corner"}, 2.0) == (32.0, 80.0),
+			"top-corner anchor offset = ((W-H)*16, (W+H)*8) * ppw")
+		check(landmark_anchor_offset({"footprint": [1, 2], "origin": [7, 6], "draw_anchor": "center"}, 3.0) == (0.0, 0.0),
+			"centred sprite: registration point on the footprint centre")
 		check(lms["farmhouse"]["fallback_art"] == "farmhouse", "fallback art")
 		inits = world["initial_objects"]
 		check(len(inits) == 8 and all(o["item"] in catalog for o in inits), f"initial objects {len(inits)}")

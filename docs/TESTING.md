@@ -114,6 +114,8 @@ Test counts per file are the `func test_*` functions at a511d0c (417 in total).
 | `test_references` | 12 | several reference images, migration from one image, 2/3-point calibration, one undo step per edit |
 | `test_terrain` | 11 | procedural terrain built from the map, only without game data, deterministic, keeps off buildable land, seamless textures, owned/locked frontier, a pack world replaces it |
 | `test_client_prices` | 17 | client-price supplement with invented tables: voucher mapping, pearls, 999 placeholder, continuation rows, copy limits, matching rules and review queue, shop/gift twins, precedence and merge, every-N rises, shop price → purchase counter, install / rollback, budget and shopping list agree |
+| `test_client_catalog` | 6 | private catalogue additions (apply / revert / clashes / additions-only pack), an added item priced through its art export, the game-text rule (and a text naming two items staying ambiguous), art-pack hints as review candidates only, the side-by-side review view-model |
+| `test_skin_budget` | 5 | design customization: original look free, default and owned parts never charged, event parts unknown, whole farm only and only when switched on, shop rows / CSV / guide step agree, owned parts in inventory JSON |
 | `test_client_level` / `test_world_validator` | 18 | level-table parsing and the world check against synthetic client tables (`docs/research/WORLD_VALIDATION.md`) |
 | `test_terrain_pack` | 15 | pack terrain (`docs/TERRAIN_PACKS.md`) with the generated synthetic pack: manifest diagnostics, theme → variant, tile variants, piece expansion, `tile_types[].art`, AssetLibrary lookup, cached rebuilds, per-element fallback, Off/Reduced/Full |
 | `test_ambient` | 12 | animation sheets, Off/Reduced modes and OS default, mirror art, theme variants only when they exist |
@@ -234,7 +236,10 @@ scenario and saves the real framebuffer. Scenarios in `all`: overview, place_val
 search, realistic, land, zoomed, gallery, help, settings, welcome, reference, compare, export, light,
 asset_manager, asset_review, asset_packs, original_art, asset_empty, landmarks, migration, drag_blocked,
 tools_symmetry, tools_repeat, winter, terrain_pack, terrain_pack_winter, terrain_pack_river (a generated
-terrain pack: flat colours and patterns; they print `TERRAIN_PACK` build and frame times), and the planning scenarios:
+terrain pack: flat colours and patterns; they print `TERRAIN_PACK` build, frame, Ambient-animation and season-switch
+times), terrain_pack_fg (a foreground canopy over a new bakery, which must still be picked), terrain_pack_blend
+(add / multiply / screen pieces), terrain_pack_zoomout (zoomed out to the camera's limit, which follows the pack's
+pieces; these three print `TERRAIN_FX` and FAIL when a check does not hold), and the planning scenarios:
 
 | Scenario | Shows |
 |---|---|

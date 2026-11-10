@@ -87,6 +87,8 @@ Existing keys stay (`level`, `owned`, `budget_coins`, `budget_diamonds`, `treat_
 
 * `balances`: `{currency: amount}`: what the player has now (coins, diamonds, vouchers, supplies).
 * `purchased`: `{item: copies bought so far}` for progressive prices (defaults to the effective owned count).
+* `owned_parts`: `{"house" | "truck" | "roadside_shop": [appearance part names]}`: parts of the farmhouse, truck and
+  roadside-shop looks the player owns (design customization, §4). Kept in inventory JSON files.
 
 `owned[item]` = all copies the player has (on the farm and in storage). An item **without an `owned` entry has
 unknown ownership**. Budgets count it as *to buy* and say how many item types that affects (upper bound,
@@ -120,7 +122,8 @@ returns a new profile; the dialog applies it with one undoable `SetProfile`.
   "baseline": {"name": "My farm", "taken": "2026-11-10T..Z", "source_id": "...",
                "objects": {"<uid>": ["item", x, y, w, h]},             // optional snapshot of the real farm
                "unlocked_plots": ["plot id", ...]},                    // land owned when taken (optional)
-  "steps_done": {"<guide step id>": true}  // guide steps ticked by hand (optional)
+  "steps_done": {"<guide step id>": true}, // guide steps ticked by hand (optional)
+  "customization": {"include": true}       // design customization in the farm totals (optional, default off)
 }
 ```
 
@@ -182,6 +185,16 @@ object are harmless and become valid again on undo.
   compared with the spendable balances (§2); a phase is affordable when the running total is covered.
   Currencies are never converted. Once a phase has an unknown or unbuyable price, the running total is marked as
   a lower bound. Currencies needed without a balance entry count as 0 and are listed.
+* **Design customization** (`SkinBudget`): the look a layout chooses for the farmhouse, truck and roadside shop
+  (world state `landmark_skins`; a preset = slot → appearance part) is priced from the parts in the private client
+  supplement (`customization_*` tables, never items). Default parts come with the farm and owned parts
+  (`profile.owned_parts`) are never charged, in every mode; a part to buy without a price is unknown, never 0. It is
+  optional (`planning.customization.include`, one undoable `SetPlanning`, Budget tab) and belongs to the **whole
+  farm** only (never an area, phase or selection). `PlanContext.customization()` computes it once per change, and the
+  budget chip, the Budget tab's Farm column, the Shop tab (its own "Design customization" lines, totals and CSV rows
+  `part:<kind>:<part>`) and the guide (stage 8, one "Give the … the look …" step per customized landmark with the
+  parts to buy and their cost; ticked by hand) all read that one result. The engine's own `Totals` stay objects +
+  land; views add the look with `SkinBudget.total_cost`.
 * **Unknowns are visible.** Every total reports objects/types with unknown price, types that can't be bought,
   types with unknown ownership, and plots whose supplies are unknown. `Totals.is_exact()` is true only when none
   of these is left out.
@@ -201,6 +214,8 @@ src/core/planning/                (pure: no scene / UI / App; unit-tested)
   baseline.gd          snapshot of the real farm, diff (unchanged / moved / new / removed, fungible reuse)
   accuracy_report.gd   map provenance, landmark confidence, footprints, calibration residuals
   readiness.gd         "Can I build this?" rows from conflicts, the Realistic report and can't-buy counts
+  skin_budget.gd       design customization: the chosen farmhouse / truck / shop look priced from appearance parts
+  client_prices.gd     private client-price supplement: reading, matching, review candidates (CLIENT_PRICES.md)
 src/core/calibration_math.gd   N-point calibration (similarity for 2, least-squares affine for 3+), residuals
 src/core/object_layers.gd      view layers by category (show / dim / hide)
 src/ui/plan/                   PlanContext, PlanTab, PlanPanel and its tabs, PlanScope / PlanUiModels (pure

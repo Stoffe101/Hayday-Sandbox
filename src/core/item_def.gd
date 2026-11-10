@@ -32,6 +32,10 @@ var public_footprint_status: String = "unverified"
 var public_unlock_level: int = -1
 ## "" = public catalogue; else the id of the pack whose overrides set footprint/unlock level.
 var footprint_source: String = ""
+## "" = public catalogue item; else the id of the private pack whose catalogue
+## additions (catalog_overrides.json "additions") added this item. Such items come
+## from the user's own game files only and disappear when the pack is removed.
+var added_by_pack: String = ""
 ## Id of the fixed world landmark this catalogue entry duplicates ("" = none).
 ## Such items are kept so old layouts resolve, but are never placeable and are
 ## hidden from the catalogue (the world layer draws the landmark itself).

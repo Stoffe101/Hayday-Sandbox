@@ -104,12 +104,7 @@ func add_item(it: ItemDef) -> void:
 
 func finalize() -> void:
 	# Stable display order: category order, then name.
-	ordered.sort_custom(func(a: ItemDef, b: ItemDef):
-		var oa: int = category_index.get(a.category, {}).get("order", 999)
-		var ob: int = category_index.get(b.category, {}).get("order", 999)
-		if oa != ob:
-			return oa < ob
-		return a.name.naturalnocasecmp_to(b.name) < 0)
+	_sort_ordered()
 	aliases.clear()
 	for it: ItemDef in ordered:
 		if not category_index.has(it.category):
@@ -259,10 +254,14 @@ func apply_overrides(data: Variant, pack_id: String) -> Dictionary:
 	## reported, never guessed. Returns a report:
 	##   {pack_id, applied: int, records: [{id, old, new, axis_swap, old_status, new_status,
 	##    old_unlock, new_unlock, change}], footprint_changed: [{id, old, new, axis_swap}],
-	##    unknown: [ids], invalid: [messages], hash: String}
+	##    unknown: [ids], invalid: [messages], hash: String, added: [ids]}
+	## The optional "additions" object ({"<new id>": item record in the catalogue
+	## schema}) adds items the public catalogue does not have (client-only items
+	## with facts from the user's own game files); they are removed again by
+	## revert_overrides(). An addition never replaces a catalogue item or alias.
 	revert_overrides()
 	var rep := {"pack_id": pack_id, "applied": 0, "records": [], "footprint_changed": [], "unknown": [],
-		"invalid": [], "hash": ""}
+		"invalid": [], "hash": "", "added": []}
 	if not data is Dictionary:
 		rep["invalid"].append("catalogue overrides: not a JSON object")
 		return rep
@@ -277,7 +276,13 @@ func apply_overrides(data: Variant, pack_id: String) -> Dictionary:
 	if not list is Dictionary:
 		rep["invalid"].append("catalogue overrides: 'items' must be an object")
 		return rep
+	var adds: Variant = d.get("additions", {})
 	rep["hash"] = JSON.stringify(list, "", true).md5_text()
+	if adds is Dictionary and not (adds as Dictionary).is_empty():
+		rep["hash"] = JSON.stringify([list, adds], "", true).md5_text()
+		_apply_additions(adds, pack_id, rep)
+	elif adds != null and not adds is Dictionary:
+		rep["invalid"].append("catalogue overrides: 'additions' must be an object")
 	var ids: Array = (list as Dictionary).keys()
 	ids.sort()
 	for raw_id in ids:
@@ -335,15 +340,75 @@ func apply_overrides(data: Variant, pack_id: String) -> Dictionary:
 		if new_fp != old:
 			rep["footprint_changed"].append({"id": it.id, "old": old, "new": new_fp, "axis_swap": rec["axis_swap"]})
 		rep["applied"] += 1
-	overrides_pack = pack_id if int(rep["applied"]) > 0 else ""
+	overrides_pack = pack_id if int(rep["applied"]) > 0 or not (rep["added"] as Array).is_empty() else ""
 	overrides_report = rep
 	return rep
 
 
+func _apply_additions(adds: Dictionary, pack_id: String, rep: Dictionary) -> void:
+	## Adds client-only items (see apply_overrides()); bad or colliding entries are
+	## reported in rep.invalid and skipped, never guessed.
+	var ids: Array = adds.keys()
+	ids.sort()
+	for raw in ids:
+		var key := str(raw).strip_edges()
+		var e: Variant = adds[raw]
+		if not e is Dictionary:
+			rep["invalid"].append("addition %s: entry is not an object" % key)
+			continue
+		if items.has(key) or aliases.has(key):
+			rep["invalid"].append("addition %s: the catalogue already has this id; ignored" % key)
+			continue
+		var rec: Dictionary = (e as Dictionary).duplicate(true)
+		rec["id"] = key
+		var errs: Array = []
+		var it := ItemDef.from_dict(rec, errs)
+		if it == null or not errs.is_empty():
+			rep["invalid"].append("addition %s: %s" % [key, "; ".join(PackedStringArray(errs))])
+			continue
+		if not category_index.is_empty() and not category_index.has(it.category):
+			rep["invalid"].append("addition %s: unknown category '%s'" % [key, it.category])
+			continue
+		it.added_by_pack = pack_id
+		it.source_file = "pack:%s" % pack_id
+		items[key] = it
+		ordered.append(it)
+		(rep["added"] as Array).append(key)
+	if not (rep["added"] as Array).is_empty():
+		_sort_ordered()
+
+
+func _sort_ordered() -> void:
+	ordered.sort_custom(func(a: ItemDef, b: ItemDef):
+		var oa: int = category_index.get(a.category, {}).get("order", 999)
+		var ob: int = category_index.get(b.category, {}).get("order", 999)
+		if oa != ob:
+			return oa < ob
+		return a.name.naturalnocasecmp_to(b.name) < 0)
+
+
+func added_items() -> Array[ItemDef]:
+	## Items a private pack added (catalogue additions), in display order.
+	var out: Array[ItemDef] = []
+	for it: ItemDef in ordered:
+		if not it.added_by_pack.is_empty():
+			out.append(it)
+	return out
+
+
 func revert_overrides() -> int:
 	## Restores the public catalogue values of every overridden item (e.g. when
-	## the private pack is disabled/removed). Returns how many were restored.
+	## the private pack is disabled/removed) and removes the items a pack added.
+	## Returns how many items were restored or removed.
 	var n := 0
+	var added: Array = []
+	for it: ItemDef in items.values():
+		if not it.added_by_pack.is_empty():
+			added.append(it)
+	for it: ItemDef in added:
+		items.erase(it.id)
+		ordered.erase(it)
+		n += 1
 	for it: ItemDef in items.values():
 		if it.footprint_source.is_empty():
 			continue

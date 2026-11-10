@@ -7,7 +7,10 @@ extends RefCounted
 ## textured cliff polygon, a river polygon with clip animations (glints), road
 ## polygons and a bridge beyond the grid, mesh pieces with colour-add ops, an
 ## animated sprite-sheet piece, a theme -> variant table and per-piece variant
-## overrides. Used by the unit tests and the "terrain_pack*" visual scenarios.
+## overrides, a foreground canopy drawn over the objects ("layer"), pieces
+## with the add / multiply / screen blend modes, a mesh with both an add op and
+## the add blend, and clip colour transforms (element add terms, an instance
+## mul and add). Used by the unit tests and the "terrain_pack*" visual scenarios.
 ## Nothing is written into the project folder.
 ##
 ## Each tile texture has a small red square at its (u0, v0) corner: on screen
@@ -135,6 +138,39 @@ static func beacon_sheet() -> Image:
 	return img
 
 
+static func canopy_image() -> Image:
+	## A leafy canopy (green blobs, see-through holes): a foreground piece.
+	var img := Image.create(256, 160, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.2, 0.45, 0.2, 0.0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	for i in 40:
+		var cx := rng.randi_range(20, 236)
+		var cy := rng.randi_range(20, 120)
+		var r := rng.randi_range(10, 22)
+		var col := Color("#3e7f3a").lerp(Color("#79b552"), rng.randf())
+		for y in range(cy - r, cy + r):
+			for x in range(cx - r, cx + r):
+				if Vector2(x - cx, y - cy).length() < r:
+					_px(img, x, y, col)
+	for y in range(110, 160):   # a trunk
+		for x in range(120, 136):
+			_px(img, x, y, Color("#6b4a2b"))
+	return img
+
+
+static func rays_image() -> Image:
+	## Soft white light shafts on black-transparent: drawn with the add blend.
+	var img := Image.create(128, 128, false, Image.FORMAT_RGBA8)
+	for y in 128:
+		for x in 128:
+			var band := absf(sin((x + y * 0.5) * TAU / 40.0))
+			var fade := clampf(1.0 - absf(y - 64.0) / 64.0, 0.0, 1.0)
+			var a := band * fade * 0.8
+			img.set_pixel(x, y, Color(1.0, 0.95, 0.7, a))
+	return img
+
+
 # --- data ----------------------------------------------------------------------------
 
 static func _cell_rect(key: String) -> Array:
@@ -196,7 +232,9 @@ static func clips_data() -> Dictionary:
 			continue
 		var t := float(f - 4) / 19.0
 		var a := sin(t * PI) * 0.85
-		frames.append([{"shape": "streak", "m": [1.0, 0.0, 0.0, 1.0, -20.0 + 40.0 * t, 0.0], "mul": [1.0, 1.0, 1.0, a], "add": [0, 0, 0]}])
+		# A warm colour-add term on every other frame (drawn by the add pass).
+		var add := [0.3, 0.15, 0.0] if f % 2 == 0 else [0, 0, 0]
+		frames.append([{"shape": "streak", "m": [1.0, 0.0, 0.0, 1.0, -20.0 + 40.0 * t, 0.0], "mul": [1.0, 1.0, 1.0, a], "add": add}])
 	return {"shapes": {"streak": {"atlas": "tiles", "polygon_world": [[0, -3], [26, -6], [30, 0], [4, 3]],
 			"uv": [[u0, v0], [u1, v0], [u1, v1], [u0, v1]]}},
 		"clips": {"glint_a": {"fps": 12, "frame_count": 24, "frames": frames}}}
@@ -233,7 +271,11 @@ static func manifest(m: FarmMap, opts: Dictionary = {}) -> Dictionary:
 	var glints: Array = []
 	for i in 8:
 		var gp := Iso.grid_to_world(Vector2(river.position.x + river.size.x * (0.3 + 0.4 * (i % 2)), river.position.y + 3 + i * maxf(1.0, river.size.y / 8.0)))
-		glints.append({"clip": "glint_a", "x_axis": [0.89, -0.45], "y_axis": [0.88, 0.47], "origin_world": [gp.x, gp.y]})
+		var g := {"clip": "glint_a", "x_axis": [0.89, -0.45], "y_axis": [0.88, 0.47], "origin_world": [gp.x, gp.y]}
+		if i == 1:
+			g["mul"] = [1.0, 0.7, 0.7, 1.0]   # an instance colour transform
+			g["add"] = [0.0, 0.1, 0.3]
+		glints.append(g)
 	pieces.append({"id": "river", "kind": "river", "z": 3, "rect_tiles": [rv.position.x, rv.position.y, rv.size.x, rv.size.y],
 		"color": "#ffffff", "texture": "pieces/water.png", "uv_world": 96, "clips": glints})
 	# Roads beyond the grid (west across the river, east to the edge), and a bridge.
@@ -251,6 +293,22 @@ static func manifest(m: FarmMap, opts: Dictionary = {}) -> Dictionary:
 	pieces.append({"id": "beacon", "kind": "deco", "z": 7, "anim": {"sheet": "anim/beacon.png", "frames": 4, "columns": 4, "fps": 4},
 		"origin": [16, 46], "scale": 1.0, "anchor_tile": [12, -1], "repeat": {"count": 3, "step_tile": [24, 0]},
 		"variants": {"winter": {"hidden": true}}})
+	# A tree canopy near the land's south-west corner, drawn over the objects.
+	pieces.append({"id": "canopy", "kind": "deco", "layer": "foreground", "z": 8, "file": "pieces/canopy.png",
+		"origin": [128, 150], "anchor_tile": [4, mini(31, m.size.y - 1)], "modulate": "#ffffffe6"})
+	# Blend modes: light shafts (add) over the north-east land, a cloud shadow
+	# (multiply) over the east land, a haze (screen) over the south-east land,
+	# and a glowing star mesh (add op + add blend) beside the south road.
+	pieces.append({"id": "rays", "kind": "deco", "layer": "foreground", "blend": "add", "z": 9, "file": "pieces/rays.png",
+		"origin": [64, 64], "scale": 1.5, "anchor_tile": [m.size.x - 6, 6]})
+	var e0 := Vector2(m.size.x - 12, m.size.y * 0.3)
+	pieces.append({"id": "cloud_shadow", "kind": "deco", "blend": "multiply", "z": 9,
+		"polygon_tiles": [[e0.x, e0.y], [e0.x + 8, e0.y - 1], [e0.x + 10, e0.y + 5], [e0.x + 3, e0.y + 8]], "color": "#5a6a9acc"})
+	var h0 := Vector2(m.size.x - 12, m.size.y * 0.65)
+	pieces.append({"id": "haze", "kind": "deco", "blend": "screen", "z": 9,
+		"polygon_tiles": [[h0.x, h0.y], [h0.x + 9, h0.y], [h0.x + 9, h0.y + 6], [h0.x, h0.y + 6]], "color": "#6f4fa0b0"})
+	pieces.append({"id": "star_glow", "kind": "deco", "blend": 8, "z": 6, "mesh": "mesh/star.mesh.json",
+		"anchor_tile": [m.size.x - 4, m.size.y + 2]})
 	if bool(opts.get("bad_piece", false)):
 		pieces.append({"id": "lost", "kind": "edge", "file": "pieces/does_not_exist.png", "anchor_tile": [0, 0]})
 	var maps: Array = opts.get("maps", [m.id])
@@ -274,6 +332,8 @@ static func files_for(m: FarmMap, opts: Dictionary = {}) -> Dictionary:
 	out["terrain/pieces/cliff.png"] = cliff_image().save_png_to_buffer()
 	out["terrain/pieces/water.png"] = water_image().save_png_to_buffer()
 	out["terrain/anim/beacon.png"] = beacon_sheet().save_png_to_buffer()
+	out["terrain/pieces/canopy.png"] = canopy_image().save_png_to_buffer()
+	out["terrain/pieces/rays.png"] = rays_image().save_png_to_buffer()
 	out["terrain/mesh/star.mesh.json"] = JSON.stringify(mesh_data()).to_utf8_buffer()
 	out["terrain/clips/glints.json"] = JSON.stringify(clips_data()).to_utf8_buffer()
 	out["terrain/terrain.json"] = JSON.stringify(manifest(m, opts), "  ").to_utf8_buffer()

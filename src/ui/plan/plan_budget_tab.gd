@@ -67,6 +67,7 @@ func refresh() -> void:
 		return
 	var sig := "%d/%d|%s|%s|%s|%s|%s|%d|%s|%d" % [eng.get_instance_id(), eng.version, ctx.mode, str(ctx.selection()), ctx.active_area, ctx.active_phase,
 		str(ctx.layers.get("heatmap")), ctx.session.stack.version, ctx.session.layout.mode, ctx.session.layout.profile.hash()]
+	sig += "|%d" % ctx.customization().hash()
 	if sig == _sig:
 		return
 	_sig = sig
@@ -86,6 +87,7 @@ func refresh() -> void:
 	_not_buyable_section(br, uids, where)
 	_ownership_section(sc)
 	_land_section()
+	_customization_section()
 	_targets_section()
 	_expensive_section(uids, where)
 	_heatmap_section()
@@ -94,18 +96,24 @@ func refresh() -> void:
 # --- totals side by side ---------------------------------------------------------------------
 
 func _columns() -> Array:
-	## [[header, tooltip, Totals]] for the farm and whatever else is in focus.
+	## [[header, tooltip, Totals, cost shown]] for the farm and whatever else is in
+	## focus. The farm's cost includes the chosen look when it is switched on
+	## (SkinBudget, the same rule as the budget chip).
 	var eng := ctx.engine
-	var cols: Array = [["Farm", "Whole farm", eng.totals(null, ctx.mode)]]
+	var ft := eng.totals(null, ctx.mode)
+	var cols: Array = [["Farm", "Whole farm", ft, SkinBudget.total_cost(ft.cost, ctx.customization(), PlanScope.SCOPE_FARM)]]
 	var sel := ctx.selection()
 	if not sel.is_empty():
-		cols.append(["Selection", "%d selected object%s" % [sel.size(), "" if sel.size() == 1 else "s"], eng.totals(sel, ctx.mode)])
+		var st := eng.totals(sel, ctx.mode)
+		cols.append(["Selection", "%d selected object%s" % [sel.size(), "" if sel.size() == 1 else "s"], st, st.cost])
 	var a := PlanDoc.area(ctx.plan(), ctx.active_area)
 	if not a.is_empty():
-		cols.append([str(a.get("name", "Area")), "Area “%s”" % str(a.get("name", "")), eng.area_totals(ctx.active_area, ctx.mode)])
+		var at := eng.area_totals(ctx.active_area, ctx.mode)
+		cols.append([str(a.get("name", "Area")), "Area “%s”" % str(a.get("name", "")), at, at.cost])
 	var p := PlanDoc.phase(ctx.plan(), ctx.active_phase)
 	if not p.is_empty():
-		cols.append([str(p.get("name", "Phase")), "Phase “%s” (with the land it opens)" % str(p.get("name", "")), eng.phase_totals(ctx.active_phase, ctx.mode)])
+		var pt := eng.phase_totals(ctx.active_phase, ctx.mode)
+		cols.append([str(p.get("name", "Phase")), "Phase “%s” (with the land it opens)" % str(p.get("name", "")), pt, pt.cost])
 	return cols
 
 
@@ -136,7 +144,7 @@ func _totals_section() -> void:
 		grid.add_child(h)
 	var cur := {}
 	for c: Array in cols:
-		for k in (c[2] as BudgetEngine.Totals).cost:
+		for k in (c[3] as Dictionary):
 			cur[k] = true
 	var short := cols.size() > 2
 	for k: String in Currency.sorted_ids(cur.keys()):
@@ -145,8 +153,8 @@ func _totals_section() -> void:
 		g.mouse_filter = Control.MOUSE_FILTER_PASS
 		grid.add_child(g)
 		for c: Array in cols:
-			var t: BudgetEngine.Totals = c[2]
-			_cell(grid, int(t.cost.get(k, 0)), short, "%s %s" % [Currency.format_amount(int(t.cost.get(k, 0))), Currency.unit_name(k, int(t.cost.get(k, 0)))])
+			var cc: Dictionary = c[3]
+			_cell(grid, int(cc.get(k, 0)), short, "%s %s" % [Currency.format_amount(int(cc.get(k, 0))), Currency.unit_name(k, int(cc.get(k, 0)))])
 	if cur.is_empty():
 		grid.add_child(UI.label("—", "Faint"))
 		for c in cols:
@@ -174,6 +182,7 @@ func _totals_stacked(cols: Array) -> void:
 	## One small card per scope: name, amounts (wrapping), objects and unpriced count.
 	for c: Array in cols:
 		var t: BudgetEngine.Totals = c[2]
+		var cc: Dictionary = c[3]
 		var card := UI.card()
 		var v := UI.vbox(2)
 		card.add_child(v)
@@ -184,9 +193,9 @@ func _totals_stacked(cols: Array) -> void:
 		h.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		v.add_child(h)
 		var f := PlanUI.flow()
-		for k: String in Currency.sorted_ids(t.cost.keys()):
-			f.add_child(BudgetWidget.amount_chip(k, int(t.cost[k]), true))
-		if t.cost.is_empty():
+		for k: String in Currency.sorted_ids(cc.keys()):
+			f.add_child(BudgetWidget.amount_chip(k, int(cc[k]), true))
+		if cc.is_empty():
 			f.add_child(UI.label("nothing to pay" if t.is_exact() else "no known price", "Faint"))
 		v.add_child(f)
 		var unk := t.unknown_price_objects + t.not_buyable_objects
@@ -314,6 +323,54 @@ func _land_section() -> void:
 		v.add_child(BudgetWidget.currency_row(k, int(t.land_cost[k]), ""))
 	if not t.unknown_cost_plots.is_empty():
 		v.add_child(UI.label("%d plot%s with unknown supplies (not in the totals)." % [t.unknown_cost_plots.size(), "" if t.unknown_cost_plots.size() == 1 else "s"], "Faint", true))
+	_body.add_child(card)
+
+
+func _customization_section() -> void:
+	## The chosen look of the farmhouse / truck / roadside shop: optional cost,
+	## parts to buy, parts owned (inventory). Whole farm only.
+	var skin := ctx.customization()
+	var rows: Array = skin.get("rows", [])
+	if rows.is_empty():
+		return
+	_body.add_child(UI.section("Design customization"))
+	var card := UI.card()
+	var v := UI.vbox(4)
+	card.add_child(v)
+	var cb := CheckBox.new()
+	cb.text = "Include the farm's look in the farm totals"
+	cb.tooltip_text = "Adds what the chosen farmhouse, truck and roadside-shop looks cost to the whole farm's budget, shopping list and guide. Default and owned parts never cost anything. Undoable."
+	cb.button_pressed = bool(skin.get("enabled", false))
+	cb.toggled.connect(func(on: bool): ctx.set_customization_included(on))
+	v.add_child(cb)
+	v.add_child(UI.label(SkinBudget.summary_text(skin), "Dim", true))
+	if not bool(skin.get("known", false)):
+		v.add_child(UI.label("No part prices installed: import your game files in Asset manager > Game data.", "Faint", true))
+	for e: Dictionary in skin.get("landmarks", []):
+		v.add_child(UI.label("%s — %s" % [str(e["name"]), str(e["skin_name"])], "", true))
+		var to_mark: Array = []
+		for r: Dictionary in e["rows"]:
+			var st := str(r["status"])
+			var txt := "• %s (%s): %s" % [str(r["name"]), str(r["slot"]),
+				{"default": "comes with the farm", "owned": "owned", "unknown": "price unknown"}.get(st, Currency.format_line(r["price"]))]
+			var l := UI.label(txt, "Faint", true)
+			if st == "unknown":
+				l.add_theme_color_override("font_color", UiTheme.c("warn"))
+			v.add_child(l)
+			if st in ["to_buy", "unknown"]:
+				to_mark.append(str(r["part"]))
+		var owned_now: Array = (e["rows"] as Array).filter(func(r): return str(r["status"]) == "owned").map(func(r): return str(r["part"]))
+		var row := UI.hbox(6)
+		if not to_mark.is_empty():
+			var b := UI.button("I own these parts", "check", "Record the parts in your inventory: they are never charged (undoable)", "Ghost")
+			b.pressed.connect(func(): ctx.set_parts_owned(str(e["kind"]), to_mark, true))
+			row.add_child(b)
+		if not owned_now.is_empty():
+			var b2 := UI.button("Not owned", "x", "Remove these parts from your inventory (undoable)", "Ghost")
+			b2.pressed.connect(func(): ctx.set_parts_owned(str(e["kind"]), owned_now, false))
+			row.add_child(b2)
+		if row.get_child_count() > 0:
+			v.add_child(row)
 	_body.add_child(card)
 
 

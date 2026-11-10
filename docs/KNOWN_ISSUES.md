@@ -45,6 +45,17 @@ State at HEAD a511d0c (2026-11-10), after the farm-planning wave.
   relative to the five mapped landmarks (farmhouse, order board, truck, roadside shop, newspaper mailbox), all at
   approximate positions and flagged as such. Landmarks that are not in the map data (for example the Mine) are
   never used or invented. The Accuracy tab states this; calibrate a screenshot to measure it.
+* **Water decorations are not limited to the river's water-decoration zones.** In the game the pearl-priced water
+  decorations (private catalogue additions) go only into two zones along the main farm's river (client level data,
+  `WaterDecoZones`). The sandbox does not model those zones: the placement check treats them like land decorations
+  (and refuses water tiles). Placement validity would need the item passed to the per-tile check
+  (`PlacementRules.check_rect` / `ConflictIndex`).
+* **Client records still waiting for your choice.** With the user's 1.73.89 data, 2 records are ambiguous (two
+  catalogue entries share the name) and 27 unmatched records have a candidate (mostly catalogue items with misspelt
+  or Russian wiki names whose art the pack already shows): they stay unpriced until chosen in Asset manager > Game
+  data. Two connecting pond pieces are listed but not added (the client data does not say path or water).
+* **Design customization is whole-farm only and charged per part.** The game's own counting for looks bought as a
+  style-guide bundle (if any discount applies) is unknown; the budget sums the parts.
 * **No PDF export.** Print the exported HTML guide to PDF from a browser.
 * **Exports with installed art and private-pack terrain were not verified with a real private pack** in this wave;
   the code paths ran with the synthetic test pack only.

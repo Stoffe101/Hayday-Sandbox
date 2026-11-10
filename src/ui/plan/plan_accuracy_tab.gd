@@ -52,6 +52,11 @@ func _build() -> void:
 		DisplayServer.clipboard_set(AccuracyReport.to_text(report))
 		ctx.toast("Accuracy report copied", "success"))
 	acts.add_child(cp)
+	var pc := UI.button("Write placement check", "clipboard-check", "For every calibrated screenshot: check each clicked landmark against the others and write a private report (user://private_data/placement_checks)")
+	pc.pressed.connect(func():
+		var w := write_placement_checks()
+		ctx.toast(str(w["text"]), "success" if int(w["written"]) > 0 else "info"))
+	acts.add_child(pc)
 	add_child(acts)
 	_help = PlanUiKit.wrap_label(CALIBRATE_HELP, "Faint")
 	_help.visible = false
@@ -138,3 +143,28 @@ func _calibrate() -> void:
 	_help.visible = true
 	if ctx.has_signal(CALIBRATE_SIGNAL):
 		ctx.emit_signal(CALIBRATE_SIGNAL)
+
+
+const PLACEMENT_DIR := "user://private_data/placement_checks"
+
+
+func write_placement_checks(dir: String = PLACEMENT_DIR) -> Dictionary:
+	## PlacementCheck of every calibrated reference image -> <dir>/<time>_<image id>.json + .md
+	## (private: made from the user's own screenshots). {written, labels: [..], paths: [..], text}.
+	var out := {"written": 0, "labels": [], "paths": [], "text": ""}
+	var imgs: Array = LayoutIO.normalize_reference(ctx.layout().reference).get("images", [])
+	var stamp := Time.get_datetime_string_from_system(true).replace(":", "-")
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
+	for im in imgs:
+		if not im is Dictionary or CalibrationMath.record_of(im).is_empty():
+			continue
+		var r := PlacementCheck.build(im, ctx.map, ctx.layout(), Time.get_datetime_string_from_system(true))
+		var base := dir.path_join("%s_%s" % [stamp, str(im.get("id", "image")).validate_filename()])
+		JsonUtil.write_atomic(base + ".json", JsonUtil.stringify(r, true), false)
+		JsonUtil.write_atomic(base + ".md", PlacementCheck.to_markdown(r), false)
+		out["written"] = int(out["written"]) + 1
+		out["labels"].append(str(r["label"]))
+		out["paths"].append(base + ".json")
+	out["text"] = "No calibrated screenshot yet: calibrate one first (Calibrate a screenshot)." if int(out["written"]) == 0 \
+		else "Placement check written for %d screenshot(s): %s (private_data/placement_checks)" % [out["written"], ", ".join(PackedStringArray(out["labels"]))]
+	return out

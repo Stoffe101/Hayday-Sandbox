@@ -21,6 +21,9 @@ extends RefCounted
 ##   6 nature      fruit trees, bushes, flowers, nature, fields
 ##   7 decor       everything else (decorations, furniture, seasonal, small
 ##                 structures, unknown items)
+##   8 look        the chosen look of the farmhouse, truck and roadside shop
+##                 (options.customization = SkinBudget.compute(); one step per
+##                 landmark whose look is not the original, with the parts to buy)
 ## Editor planning markers (category "planning") are not game items and get no step.
 ## Within a stage: phases in build order (Unphased last), then clusters of the
 ## same item whose footprints touch (8-neighbourhood) — one step per cluster —
@@ -30,7 +33,7 @@ extends RefCounted
 ## Each step: {id, number, stage, stage_key, stage_name, kind, phase, phase_name,
 ##   items, item_names, uids, count, reused, bounds: Rect2i, from_bounds: Rect2i,
 ##   plot, title, description, tiles_text, from_tiles_text, location: {...}, done}
-## kind: unlock | clear | store | store_temp | move | place_from_storage | place.
+## kind: unlock | clear | store | store_temp | move | place_from_storage | place | customize.
 ## done: every uid is marked placed (plan.placed) — or the step was ticked by
 ## hand (plan.steps_done[id], the only way for steps without objects to place).
 ## Step ids are derived from the content (kind, stage, phase, items, uids, plot),
@@ -50,6 +53,7 @@ const STAGES := [
 	{"stage": 5, "key": "paths_fences", "name": "Paths and fences"},
 	{"stage": 6, "key": "nature", "name": "Trees, bushes, flowers and fields"},
 	{"stage": 7, "key": "decor", "name": "Decorations and finishing"},
+	{"stage": 8, "key": "look", "name": "Farm look (customization)"},
 ]
 const BUILDING_CATEGORIES := ["production", "animal_home", "farm_building"]
 ## Categories that count as large buildings when the footprint covers >= BIG_AREA tiles.
@@ -74,6 +78,7 @@ static func build(layout: FarmLayout, map: FarmMap, plan: Dictionary, options: D
 	##   baseline: Dictionary   overrides plan["baseline"] ({} = ignore the baseline)
 	##   include_planned: bool  include planned ghosts (default true)
 	##   big_area: int          tile threshold for structures / water (default BIG_AREA)
+	##   customization: Dictionary  SkinBudget.compute() result: adds stage 8 steps
 	##   primary: Dictionary    uid -> primary phase id when already known (e.g.
 	##                          BudgetEngine.primary_phases(), the same rule as
 	##                          PlanDoc.primary_phases(), which is used otherwise)
@@ -137,6 +142,12 @@ static func build(layout: FarmLayout, map: FarmMap, plan: Dictionary, options: D
 	drafts.append_array(_ordered_moves(_clusters(move_entries, 3, "move", "from"), plan))
 	for stage in [4, 5, 6, 7]:
 		drafts.append_array(_ordered_clusters(_clusters(place_entries[stage], stage, "place", "rect"), plan))
+	# 8 the farm's look
+	if options.get("customization") is Dictionary:
+		for e: Dictionary in (options["customization"] as Dictionary).get("landmarks", []):
+			var lm := map.landmark(str(e["id"])) if map else null
+			drafts.append({"kind": "customize", "stage": 8, "phase": PlanDoc.UNPHASED, "uids": [], "item": "",
+				"bounds": lm.rect() if lm else Rect2i(), "look": "%s:%s" % [e["id"], e["skin"]], "custom": e})
 	# Finish the steps: ids, numbers, texts, done.
 	var steps: Array = []
 	var by_node := {}
@@ -852,6 +863,27 @@ static func _finish(d: Dictionary, layout: FarmLayout, map: FarmMap, plan: Dicti
 			extra.append("from %s" % tiles_text(from_b))
 		"place_from_storage":
 			title = "Place %s from storage" % what
+		"customize":
+			var e: Dictionary = d["custom"]
+			title = "Give the %s the look “%s”" % [str(e.get("name", e.get("id", ""))), str(e.get("skin_name", ""))]
+			var buy := PackedStringArray()
+			var own := PackedStringArray()
+			for r: Dictionary in e.get("rows", []):
+				if str(r["status"]) == "to_buy":
+					buy.append("%s (%s)" % [str(r["name"]), Currency.format_line(r["price"])])
+				elif str(r["status"]) == "unknown":
+					buy.append("%s (price unknown)" % str(r["name"]))
+				elif str(r["status"]) == "owned":
+					own.append(str(r["name"]))
+			if not buy.is_empty():
+				extra.append("parts to buy: " + ", ".join(buy))
+			if not own.is_empty():
+				extra.append("already owned: " + ", ".join(own))
+			if buy.is_empty() and own.is_empty():
+				extra.append("only default parts: nothing to buy")
+			s["cost"] = (e.get("cost", {}) as Dictionary).duplicate()
+			s["landmark"] = str(e.get("id", ""))
+			s["look"] = str(d.get("look", ""))
 		_:
 			title = "Place %s" % what
 			var ru := int(d.get("reused", 0))
@@ -879,6 +911,8 @@ static func _step_id(s: Dictionary) -> String:
 	for u in us:
 		ul.append(str(u))
 	parts.append(",".join(ul))
+	if s.has("look"):
+		parts.append(str(s["look"]))
 	return "%s-%s" % [s["kind"], "|".join(parts).md5_text().left(12)]
 
 

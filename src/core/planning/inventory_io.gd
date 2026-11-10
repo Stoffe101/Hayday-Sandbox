@@ -44,6 +44,9 @@ static func export_json(profile: Dictionary) -> String:
 	var doc := {"format": FORMAT, "schema_version": SCHEMA_VERSION,
 		"owned": _int_dict(profile.get("owned")), "purchased": _int_dict(profile.get("purchased")),
 		"balances": _int_dict(profile.get("balances"))}
+	# Appearance parts owned (design customization, SkinBudget): {kind: [part names]}.
+	if profile.get(SkinBudget.OWNED_KEY) is Dictionary and not (profile[SkinBudget.OWNED_KEY] as Dictionary).is_empty():
+		doc[SkinBudget.OWNED_KEY] = (profile[SkinBudget.OWNED_KEY] as Dictionary).duplicate(true)
 	return JsonUtil.stringify(doc)
 
 
@@ -101,7 +104,17 @@ static func import_json(text: String, db: ItemDatabase, profile: Dictionary, rep
 				rep["errors"].append("balances.%s: '%s' is not a whole number >= 0" % [str(k), str(bsrc[k])])
 				continue
 			bal[str(k)] = n
-	return _finish(rep, profile, owned, purch, bal, replace, data.has("owned"), data.has("purchased"), data.has("balances"))
+	var res := _finish(rep, profile, owned, purch, bal, replace, data.has("owned"), data.has("purchased"), data.has("balances"))
+	var parts: Variant = data.get(SkinBudget.OWNED_KEY)
+	if parts is Dictionary:
+		var p: Dictionary = res["profile"]
+		if replace:
+			p.erase(SkinBudget.OWNED_KEY)
+		for kind in parts:
+			if parts[kind] is Array:
+				p = SkinBudget.with_owned(p, str(kind), parts[kind], true)
+		res["profile"] = p
+	return res
 
 
 static func import_csv(text: String, db: ItemDatabase, profile: Dictionary, replace: bool = false) -> Dictionary:

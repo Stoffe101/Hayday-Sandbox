@@ -18,8 +18,12 @@ extends RefCounted
 ##   1. the user's own decision (mapping file: key -> item id, "" = ignore),
 ##   2. the asset export name, through the installed art pack's verified
 ##      sprite sources (export -> catalogue id),
-##   3. a catalogue alias, 4. the translation id (TID_DECO_X -> x),
-##   5. the exact (normalized) item name.
+##   3. a catalogue alias, 4. the game text (the English name the client shows
+##      for the record's TID, read from localization/texts.csv next to the
+##      tables when present) equal to exactly one catalogue name, 5. the
+##      translation id (TID_DECO_X -> x), 6. the exact (normalized) item name.
+##   The game text also settles an art export shared by several items when it
+##   names exactly one of them.
 ## Looser name similarities only produce review candidates, never a price: a
 ## wrong price is worse than a clearly unknown one. When two records claim one
 ## item with the same strength and different prices, neither is applied.
@@ -42,15 +46,18 @@ const COMPONENT_TABLES := {"customization_house": "house", "customization_truck"
 ## columns are crop speed-ups, never a field price).
 const FIELD_ROW := "EmptyField"
 const SENTINEL_DIAMONDS := 999
+## Review reason of a record no rule matched (a hint may follow after "; ").
+const UNMATCHED_REASON := "no reliable identifier matched"
 
 const RULE_USER := "user_mapping"
 const RULE_EXPORT := "asset_export"
 const RULE_ALIAS := "alias"
+const RULE_TEXT := "game_text"
 const RULE_TID := "translation_id"
 const RULE_NAME := "name"
-const RULES := [RULE_USER, RULE_EXPORT, RULE_ALIAS, RULE_TID, RULE_NAME]
-const RULE_CONFIDENCE := {RULE_USER: "user", RULE_EXPORT: "high", RULE_ALIAS: "high", RULE_TID: "medium",
-	RULE_NAME: "medium"}
+const RULES := [RULE_USER, RULE_EXPORT, RULE_ALIAS, RULE_TEXT, RULE_TID, RULE_NAME]
+const RULE_CONFIDENCE := {RULE_USER: "user", RULE_EXPORT: "high", RULE_ALIAS: "high", RULE_TEXT: "high",
+	RULE_TID: "medium", RULE_NAME: "medium"}
 
 var errors: PackedStringArray = PackedStringArray()
 var warnings: PackedStringArray = PackedStringArray()
@@ -83,11 +90,12 @@ static func records_from_reference(d: Dictionary, errs: Array = []) -> Array:
 			fp = [int(r["tile_width"]), int(r["tile_height"])]
 		var cb: Variant = r.get("can_buy_game_flag")
 		var extra: Array = r.get("additional_price_rows_need_review", []) if r.get("additional_price_rows_need_review") is Array else []
+		var txt := {"text": str(r.get("game_text", ""))} if r.get("game_text") is String else {}
 		out.append(_record(str(r.get("table", "")), str(r.get("source_name", "")), str(r.get("translation_id", "")),
 			str(r.get("asset_export", "")), price, vouchers, int(r.get("price_increase", 0)) if r.get("price_increase") != null else 0,
 			int(r.get("increase_every_n_objects", 1)) if r.get("increase_every_n_objects") != null else 1,
 			cb if cb is bool else null, bool(r.get("diamond_999_sentinel", false)),
-			int(r.get("unlock_level", -1)) if r.get("unlock_level") != null else -1, fp, extra.size(), {}))
+			int(r.get("unlock_level", -1)) if r.get("unlock_level") != null else -1, fp, extra.size(), txt))
 	return out
 
 
@@ -99,6 +107,7 @@ static func records_from_tables(dir: String, errs: Array = []) -> Array:
 	if not FileAccess.file_exists(base.path_join("decorations.csv")) and FileAccess.file_exists(base.path_join("assets/data/decorations.csv")):
 		base = base.path_join("assets/data")
 	var limits := _level_limits(base.path_join("exp_levels.csv"))
+	var texts := read_texts(find_texts(base))
 	var out: Array = []
 	var found := 0
 	for t in ITEM_TABLES + COMPONENT_TABLES.keys():
@@ -110,9 +119,39 @@ static func records_from_tables(dir: String, errs: Array = []) -> Array:
 		for g in read_table(path):
 			var rec := _record_from_rows(str(t), g, limits)
 			if not rec.is_empty():
+				rec["text"] = str(texts.get(str(rec["tid"]), ""))
 				out.append(rec)
 	if found == 0:
 		errs.append("no client price tables in %s" % dir)
+	return out
+
+
+static func find_texts(base: String) -> String:
+	## The client's English texts table for a tables folder ("" = none): the
+	## extraction keeps it in ../localization/texts.csv next to assets/data.
+	for p in [base.path_join("texts.csv"), base.path_join("localization/texts.csv"),
+			base.get_base_dir().path_join("localization/texts.csv")]:
+		if FileAccess.file_exists(p):
+			return p
+	return ""
+
+
+static func read_texts(path: String) -> Dictionary:
+	## texts.csv -> {TID: English text}; {} when missing or without an EN column.
+	var out := {}
+	if path.is_empty():
+		return out
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return out
+	var header := f.get_csv_line()
+	var en := header.find("EN")
+	if en < 0:
+		return out
+	while not f.eof_reached():
+		var line := f.get_csv_line()
+		if line.size() > en and line[0].begins_with("TID_") and not line[en].strip_edges().is_empty():
+			out[line[0]] = line[en].strip_edges()
 	return out
 
 
@@ -229,7 +268,7 @@ static func _record_from_rows(table: String, g: Dictionary, limits: Dictionary) 
 static func _record(table: String, name: String, tid: String, export: String, price: Dictionary, vouchers: Dictionary,
 		increase: int, every: int, can_buy: Variant, sentinel: bool, unlock: int, fp: Variant, extra_rows: int,
 		extra: Dictionary) -> Dictionary:
-	var r := {"table": table, "name": name, "key": "%s:%s" % [table, name.to_lower()], "tid": tid, "export": export,
+	var r := {"table": table, "name": name, "key": "%s:%s" % [table, name.to_lower()], "tid": tid, "export": export, "text": "",
 		"price": price, "vouchers": vouchers, "increase": maxi(0, increase), "every": maxi(1, every),
 		"can_buy": can_buy, "sentinel_999": sentinel, "unlock_level": unlock, "footprint": fp,
 		"extra_price_rows": extra_rows, "component": COMPONENT_TABLES.get(table, "")}
@@ -301,6 +340,43 @@ static func export_index_from_sprites(sprites: Dictionary, db: ItemDatabase = nu
 	return out
 
 
+static func art_hints_from_sprites(sprites: Dictionary, db: ItemDatabase = null, out: Dictionary = {}) -> Dictionary:
+	## Like export_index_from_sprites() but for every client-sourced entry, whatever
+	## its match confidence (e.g. a misspelt catalogue name matched by similarity).
+	## Only ever used for review candidates, never to apply a price.
+	var by_art := {}
+	if db != null:
+		for it: ItemDef in db.items.values():
+			if not it.added_by_pack.is_empty():
+				continue
+			var a: Array = by_art.get(it.art_key, [])
+			a.append(it.id)
+			by_art[it.art_key] = a
+	for key in sprites:
+		var s: Variant = sprites[key]
+		if not s is Dictionary or not s.get("source") is Dictionary:
+			continue
+		var ex := str(s["source"].get("export", ""))
+		if ex.is_empty() or str(s["source"].get("kind", "")) != "apk":
+			continue
+		var a: Array = out.get(ex, [])
+		for id in (by_art.get(str(key), []) if db != null else [str(key)]):
+			if not str(id) in a:
+				a.append(str(id))
+		if not a.is_empty():
+			out[ex] = a
+	return out
+
+
+static func art_hints_from_library(lib: AssetLibrary, db: ItemDatabase) -> Dictionary:
+	var out := {}
+	if lib != null:
+		for p in lib.pack_list():
+			if p.get("sprites") is Dictionary:
+				art_hints_from_sprites(p["sprites"], db, out)
+	return out
+
+
 static func export_index_from_library(lib: AssetLibrary, db: ItemDatabase) -> Dictionary:
 	## The same index over every installed pack, highest priority first (the
 	## pack whose art the app shows decides an export).
@@ -328,8 +404,9 @@ static func name_index(db: ItemDatabase) -> Dictionary:
 
 
 static func match_record(rec: Dictionary, db: ItemDatabase, exports: Dictionary, names: Dictionary,
-		mapping: Dictionary) -> Dictionary:
-	## {item ("" = none), rule, confidence, candidates: [ids], reason}.
+		mapping: Dictionary, hints: Dictionary = {}) -> Dictionary:
+	## {item ("" = none), rule, confidence, candidates: [ids], reason}. `hints`
+	## (art_hints_from_sprites()) only adds review candidates.
 	var key := str(rec["key"])
 	if mapping.has(key):
 		var to := str(mapping[key])
@@ -338,6 +415,7 @@ static func match_record(rec: Dictionary, db: ItemDatabase, exports: Dictionary,
 		if db.get_item(to) != null:
 			return {"item": db.resolve_id(to), "rule": RULE_USER, "confidence": "user", "candidates": [], "reason": ""}
 	var nm := normalize_name(str(rec["name"]))
+	var tx := normalize_name(str(rec.get("text", "")))
 	var ex := str(rec["export"])
 	if not ex.is_empty() and exports.has(ex):
 		var ids: Array = exports[ex]
@@ -346,10 +424,17 @@ static func match_record(rec: Dictionary, db: ItemDatabase, exports: Dictionary,
 		var by_name: Array = ids.filter(func(i): return i in names.get(nm, []))
 		if by_name.size() == 1:
 			return {"item": str(by_name[0]), "rule": RULE_EXPORT, "confidence": "high", "candidates": ids, "reason": ""}
+		var by_text: Array = ids.filter(func(i): return i in names.get(tx, [])) if not tx.is_empty() else []
+		if by_text.size() == 1:
+			return {"item": str(by_text[0]), "rule": RULE_EXPORT, "confidence": "high", "candidates": ids,
+				"reason": "the game text names one of the items sharing the art"}
 		return {"item": "", "rule": "", "confidence": "", "candidates": ids,
 			"reason": "the art export '%s' is used by several items" % ex}
 	if db.aliases.has(nm):
 		return {"item": str(db.aliases[nm]), "rule": RULE_ALIAS, "confidence": "high", "candidates": [], "reason": ""}
+	var x_ids: Array = names.get(tx, []) if not tx.is_empty() else []
+	if x_ids.size() == 1:
+		return {"item": str(x_ids[0]), "rule": RULE_TEXT, "confidence": "high", "candidates": [], "reason": ""}
 	var tn := tid_name(str(rec["tid"]))
 	if not tn.is_empty():
 		var t_ids: Array = names.get(tn, [])
@@ -362,8 +447,22 @@ static func match_record(rec: Dictionary, db: ItemDatabase, exports: Dictionary,
 		return {"item": str(n_ids[0]), "rule": RULE_NAME, "confidence": "medium", "candidates": [], "reason": ""}
 	if n_ids.size() > 1:
 		return {"item": "", "rule": "", "confidence": "", "candidates": n_ids, "reason": "the name fits several items"}
-	return {"item": "", "rule": "", "confidence": "", "candidates": loose_candidates(nm, tn, names),
-		"reason": "no reliable identifier matched"}
+	if x_ids.size() > 1:
+		return {"item": "", "rule": "", "confidence": "", "candidates": x_ids, "reason": "the game text fits several items"}
+	var loose := loose_candidates(nm, tn, names)
+	if not tx.is_empty() and loose.size() < 5:
+		for id in loose_candidates(tx, "", names, 5 - loose.size()):
+			if not id in loose:
+				loose.append(id)
+	var reason := UNMATCHED_REASON
+	var hinted: Array = (hints.get(ex, []) as Array).filter(func(i): return db.get_item(str(i)) != null) if not ex.is_empty() else []
+	if not hinted.is_empty():
+		reason += "; your art pack shows its art as %s (name similarity, not verified)" % ", ".join(PackedStringArray(hinted))
+		for id in loose:
+			if not id in hinted:
+				hinted.append(id)
+		loose = hinted
+	return {"item": "", "rule": "", "confidence": "", "candidates": loose, "reason": reason}
 
 
 static func loose_candidates(nm: String, tn: String, names: Dictionary, limit: int = 5) -> Array:
@@ -429,7 +528,7 @@ static func item_record(rec: Dictionary, m: Dictionary) -> Dictionary:
 		out["max_count"] = int(rec["max_count"])
 		out["copy_levels"] = rec.get("copy_levels", [])
 	var prov := {"table": rec["table"], "name": rec["name"], "key": rec["key"], "tid": rec["tid"],
-		"export": rec["export"], "can_buy": rec["can_buy"], "sentinel_999": rec["sentinel_999"],
+		"export": rec["export"], "text": str(rec.get("text", "")), "can_buy": rec["can_buy"], "sentinel_999": rec["sentinel_999"],
 		"unlock_level": rec["unlock_level"], "footprint": rec["footprint"], "rule": m.get("rule", ""),
 		"match_confidence": m.get("confidence", "")}
 	if not (rec["price"] as Dictionary).is_empty() and rec["can_buy"] == false:
@@ -443,8 +542,9 @@ static func item_record(rec: Dictionary, m: Dictionary) -> Dictionary:
 
 
 func build(records: Array, db: ItemDatabase, exports: Dictionary, mapping: Dictionary, game_version: String,
-		source: Dictionary) -> Dictionary:
-	## The supplement document (see class doc). `source`: {kind, file, ...} for provenance.
+		source: Dictionary, hints: Dictionary = {}) -> Dictionary:
+	## The supplement document (see class doc). `source`: {kind, file, ...} for provenance;
+	## `hints`: art_hints_from_sprites() (review candidates only).
 	var names := name_index(db)
 	var claims := {}          # item -> [{rec, m}]
 	var review: Array = []
@@ -464,12 +564,12 @@ func build(records: Array, db: ItemDatabase, exports: Dictionary, mapping: Dicti
 			components[kind] = parts
 			continue
 		stats["item_records"] += 1
-		var m := match_record(rec, db, exports, names, mapping)
+		var m := match_record(rec, db, exports, names, mapping, hints)
 		if str(m["item"]).is_empty():
 			if str(m["rule"]) == RULE_USER:
 				stats["ignored"] += 1
 				continue
-			var amb := not (m["candidates"] as Array).is_empty() and str(m["reason"]) != "no reliable identifier matched"
+			var amb := not (m["candidates"] as Array).is_empty() and not str(m["reason"]).begins_with(UNMATCHED_REASON)
 			stats["ambiguous" if amb else "unmatched"] += 1
 			review.append(_review_row(rec, m["candidates"], str(m["reason"]), "ambiguous" if amb else "unmatched"))
 			continue
@@ -523,7 +623,52 @@ static func _review_row(rec: Dictionary, candidates: Array, reason: String, kind
 	var price: Dictionary = (rec["price"] as Dictionary).duplicate()
 	Currency.add_into(price, rec["vouchers"])
 	return {"key": rec["key"], "table": rec["table"], "name": rec["name"], "tid": rec["tid"], "export": rec["export"],
+		"text": str(rec.get("text", "")), "footprint": rec.get("footprint"), "unlock_level": rec.get("unlock_level", -1),
 		"price": price, "can_buy": rec["can_buy"], "kind": kind, "reason": reason, "candidates": candidates.duplicate()}
+
+
+# --- review (the Game data page's side-by-side choice) ------------------------------------------
+
+static func decision_of(key: String, mapping: Dictionary) -> Dictionary:
+	## The user's decision for a record key: {state: "unassigned" | "ignored" | "chosen", item}.
+	if not mapping.has(key):
+		return {"state": "unassigned", "item": ""}
+	var to := str(mapping[key])
+	return {"state": "ignored" if to.is_empty() else "chosen", "item": to}
+
+
+static func review_candidates(row: Dictionary, db: ItemDatabase, prices: PriceBook = null, extra: Array = []) -> Array:
+	## A review record's candidates (plus `extra` ids, e.g. the user's own pick) for
+	## a side-by-side comparison: [{id, name, category, footprint (Vector2i),
+	## footprint_status, size_match (true / false / null = client size unknown),
+	## price (Cost of copy 1, or null), price_text, origin, art_key, added (a
+	## client-only item of the private pack)}]. Unknown ids are skipped.
+	var out: Array = []
+	var seen := {}
+	var cfp: Variant = row.get("footprint")
+	for raw in (row.get("candidates", []) as Array) + extra:
+		var it := db.get_item(str(raw)) if db != null else null
+		if it == null or seen.has(it.id):
+			continue
+		seen[it.id] = true
+		var size_match: Variant = null
+		if cfp is Array and (cfp as Array).size() == 2:
+			var c := Vector2i(int(cfp[0]), int(cfp[1]))
+			size_match = it.footprint == c or it.footprint == Vector2i(c.y, c.x)
+		var price: Variant = prices.copy_price(it.id, 1) if prices != null else null
+		var ptxt := "unknown"
+		var origin := ""
+		if prices != null:
+			var r := prices.resolved(it.id)
+			origin = str(r.get("origin", ""))
+			if price != null:
+				ptxt = Currency.format_line(price, "free")
+			elif prices.is_not_buyable(it.id):
+				ptxt = prices.method_text(it.id)
+		out.append({"id": it.id, "name": it.name, "category": it.category, "footprint": it.footprint,
+			"footprint_status": it.footprint_status, "size_match": size_match, "price": price, "price_text": ptxt,
+			"origin": origin, "art_key": it.art_key, "added": not it.added_by_pack.is_empty()})
+	return out
 
 
 # --- report -------------------------------------------------------------------------------------
@@ -621,6 +766,7 @@ static func report_markdown(rep: Dictionary) -> String:
 			["Matched by your own mapping", st.get("by_rule", {}).get(RULE_USER, 0)],
 			["Matched by art export name (exact)", st.get("by_rule", {}).get(RULE_EXPORT, 0)],
 			["Matched by alias", st.get("by_rule", {}).get(RULE_ALIAS, 0)],
+			["Matched by game text", st.get("by_rule", {}).get(RULE_TEXT, 0)],
 			["Matched by translation id", st.get("by_rule", {}).get(RULE_TID, 0)],
 			["Matched by exact name", st.get("by_rule", {}).get(RULE_NAME, 0)],
 			["Ambiguous (review)", st.get("ambiguous", 0)], ["Unmatched (review)", st.get("unmatched", 0)],
@@ -653,7 +799,8 @@ static func report_markdown(rep: Dictionary) -> String:
 # --- one-call import (app and tool) ---------------------------------------------------------------
 
 static func import_from(path: String, db: ItemDatabase, exports: Dictionary, public_book: PriceBook,
-		game_version: String = "", mapping: Variant = null, installed: String = PriceBook.DEFAULT_CLIENT) -> Dictionary:
+		game_version: String = "", mapping: Variant = null, installed: String = PriceBook.DEFAULT_CLIENT,
+		hints: Dictionary = {}) -> Dictionary:
 	## Reads `path` (a folder with the client tables, or a reference .json), builds
 	## the supplement and its report against the installed one. Nothing is written.
 	## {ok, error, notes, doc, report}. The game version comes from the reference,
@@ -681,7 +828,7 @@ static func import_from(path: String, db: ItemDatabase, exports: Dictionary, pub
 	if gv.is_empty():
 		return {"ok": false, "error": "the game version is unknown", "notes": notes, "doc": {}, "report": {}}
 	var m: Dictionary = mapping if mapping is Dictionary else load_mapping()
-	var doc := ClientPrices.new().build(records, db, exports, m, gv, source)
+	var doc := ClientPrices.new().build(records, db, exports, m, gv, source, hints)
 	var prev: Variant = JsonUtil.read_json(installed) if FileAccess.file_exists(installed) else null
 	var rep := build_report(doc, public_book, db, prev if prev is Dictionary else {})
 	return {"ok": true, "error": "", "notes": notes, "doc": doc, "report": rep}

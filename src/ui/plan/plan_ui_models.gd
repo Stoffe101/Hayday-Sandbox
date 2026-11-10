@@ -340,7 +340,17 @@ static func totals_text(t: Dictionary) -> String:
 	var up := (t.get("unknown_cost_plots", []) as Array).size()
 	if up > 0:
 		out.append("Supplies for %s are unknown." % plural(up, "plot"))
+	var cu := int(t.get("customization_unknown", 0))
+	if cu > 0:
+		out.append("%s of the farm's look %s no known price." % [plural(cu, "part"), "has" if cu == 1 else "have"])
 	return " ".join(out)
+
+
+static func customization_text(r: Dictionary) -> String:
+	## "Farmhouse: Gold roof (Roof): 250,000 coins" (SkinBudget.shop_rows rows).
+	var st := str(r.get("status", ""))
+	var price := "owned" if st == "owned" else ("price unknown" if st == "unknown" else Currency.format_line(r.get("price"), "free", "unknown"))
+	return "%s: %s" % [str(r.get("name", "")), price]
 
 
 static func supply_text(r: Dictionary) -> String:
@@ -354,7 +364,7 @@ static func supply_text(r: Dictionary) -> String:
 	return txt
 
 
-static func shop_csv(rows: Array, supplies: Array = []) -> String:
+static func shop_csv(rows: Array, supplies: Array = [], custom: Array = []) -> String:
 	## Spreadsheet export of the shopping list (prices as text, unknown stays "unknown").
 	var cols := ["group", "item_id", "name", "used", "owned", "bought", "still_needed", "next_price", "price_range",
 		"known_total", "unknown_price_copies", "cant_buy_copies", "how_to_get", "unlock_level", "availability",
@@ -384,6 +394,18 @@ static func shop_csv(rows: Array, supplies: Array = []) -> String:
 		for c in cells2:
 			out2.append(csv_field(str(c)))
 		lines.append(",".join(out2))
+	for r: Dictionary in custom:
+		# Appearance parts of the farm's look (SkinBudget.shop_rows): one copy each, never an item.
+		var st := str(r.get("status", ""))
+		var cells3: Array = [str(r.get("group", SkinBudget.GROUP)), str(r.get("item", "")), str(r.get("name", "")), "1",
+			"1" if st == "owned" else "0", "", "0" if st == "owned" else "1",
+			Currency.format_line(r.get("price"), "free", "unknown"), "",
+			"" if st == "owned" else Currency.format_line(r.get("price"), "", "unknown"), "1" if st == "unknown" else "0", "",
+			"appearance part" + (" (event)" if bool(r.get("event", false)) else ""), "", "", "game_data", "client"]
+		var out3: PackedStringArray = []
+		for c in cells3:
+			out3.append(csv_field(str(c)))
+		lines.append(",".join(out3))
 	return "\n".join(lines) + "\n"
 
 

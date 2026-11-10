@@ -19,6 +19,14 @@ const DEFAULT_VARIANT := "default"
 const FRAMES := ["game_tile"]
 const BASES := ["procedural", "color"]
 const PIECE_TYPES := ["image", "mesh", "polygon"]
+## Piece layers: "ground" pieces draw under every object (the default; the
+## game's background art), "foreground" pieces over the objects (never picked).
+const LAYERS := ["ground", "foreground"]
+## Piece blend modes (as in Flash / SC: normal, add, screen, multiply).
+const BLENDS := ["normal", "add", "screen", "multiply"]
+## Flash / SC blend numbers a converter may write instead of a name (0 and 1
+## are normal, 2 "layer" composites like normal for a single piece).
+const BLEND_NUMBERS := {0: "normal", 1: "normal", 2: "normal", 3: "multiply", 4: "screen", 8: "add"}
 ## Per-kind tile fallbacks for maps (or tiles) without ground data.
 const KIND_TILE_KEYS := ["buildable", "plot", "plot_locked", "road", "blocked", "water", "scenery"]
 const MAX_REPEAT := 512
@@ -523,6 +531,14 @@ func _piece(e: Dictionary, i: int, errs: Array) -> Dictionary:
 		var c: Variant = _color(e["modulate"], "piece '%s' modulate" % pid, errs)
 		if c != null:
 			p["modulate"] = c
+	p["layer"] = str(e.get("layer", "ground"))
+	if not p["layer"] in LAYERS:
+		errs.append("terrain: piece '%s' has unknown layer '%s' (drawn on the ground)" % [pid, p["layer"]])
+		p["layer"] = "ground"
+	p["blend"] = blend_name(e.get("blend", "normal"))
+	if p["blend"].is_empty():
+		errs.append("terrain: piece '%s' has unknown blend '%s' (drawn normal)" % [pid, str(e.get("blend"))])
+		p["blend"] = "normal"
 	var ty := str(e.get("type", ""))
 	if ty.is_empty():
 		if e.has("mesh"):
@@ -561,8 +577,13 @@ func _piece(e: Dictionary, i: int, errs: Array) -> Dictionary:
 			if not (xa is Array and ya is Array and o is Array and (xa as Array).size() == 2 and (ya as Array).size() == 2 and (o as Array).size() == 2):
 				errs.append("terrain: piece '%s' clip '%s' has a bad transform" % [pid, str(c["clip"])])
 				continue
+			# Instance colour transform: multiplier and add term (rgb, 0..1).
+			var mul: Variant = _color(c["mul"], "piece '%s' clip mul" % pid, errs) if c.has("mul") else Color.WHITE
+			var add: Variant = _color(c["add"], "piece '%s' clip add" % pid, errs) if c.has("add") else Color(0, 0, 0, 0)
 			p["clips"].append({"clip": str(c["clip"]), "xform": Transform2D(Vector2(float(xa[0]), float(xa[1])),
-				Vector2(float(ya[0]), float(ya[1])), Vector2(float(o[0]), float(o[1])))})
+				Vector2(float(ya[0]), float(ya[1])), Vector2(float(o[0]), float(o[1]))),
+				"mul": mul if mul is Color else Color.WHITE,
+				"add": Color((add as Color).r, (add as Color).g, (add as Color).b, 0.0) if add is Color else Color(0, 0, 0, 0)})
 	return p
 
 
@@ -654,6 +675,17 @@ static func safe_rel(p: String) -> String:
 	if rel.is_empty() or rel.begins_with("/") or rel.contains("://") or rel.contains(":") or ".." in rel.split("/"):
 		return ""
 	return rel
+
+
+static func blend_name(v: Variant) -> String:
+	## "normal" / "add" / "screen" / "multiply" from a name or a Flash / SC
+	## blend number; "" when unknown.
+	if v is int or v is float:
+		return BLEND_NUMBERS.get(int(v), "")
+	var s := str(v).strip_edges().to_lower()
+	if s.is_valid_int():
+		return BLEND_NUMBERS.get(int(s), "")
+	return s if s in BLENDS else ""
 
 
 static func _bool(v: Variant) -> bool:

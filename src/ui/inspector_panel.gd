@@ -1253,4 +1253,4 @@ static func skin_cost_text(lm: Landmark, skin_id: String) -> String:
 	var t := "Appearance parts: %s" % Currency.format_line(c["cost"], "nothing to buy (original parts)")
 	if not (c["unknown"] as Array).is_empty():
 		t += " + %d part%s without a price" % [(c["unknown"] as Array).size(), "" if (c["unknown"] as Array).size() == 1 else "s"]
-	return t + " (from your game files; cosmetic, not in the budget)"
+	return t + " (from your game files; cosmetic: in the farm budget only when Plan › Budget › Design customization includes it)"

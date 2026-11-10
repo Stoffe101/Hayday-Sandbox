@@ -121,6 +121,32 @@ func _free_origin(item: ItemDef, near: Vector2i, flipped: bool = false) -> Vecto
 	return near
 
 
+func _mirror_free_origin(item: ItemDef, near: Vector2i, line: Dictionary) -> Vector2i:
+	## An origin near `near` where the item and its mirrored copy over `line`
+	## both fit and do not touch each other (the footprint and the free block
+	## differ between the public and a private world).
+	var s := _s()
+	for r in 12:
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				if maxi(absi(dx), absi(dy)) != r:
+					continue
+				var o := near + Vector2i(dx, dy)
+				var rect := Rect2i(o, item.size_for(false))
+				var m := LayoutTools.mirror_placement(rect, false, item.flippable, line)
+				if m.is_empty():
+					continue
+				var mr: Rect2i = m["rect"]
+				if mr.grow(1).intersects(rect) or _touches_landmark(rect.grow(1)) or _touches_landmark(mr.grow(1)):
+					continue
+				if not PlacementRules.check_item(s.layout, s.map, item, o, false).ok:
+					continue
+				var fit := LayoutTools.fit_mask(s.layout, s.map, [rect, mr])
+				if fit[0] and fit[1]:
+					return o
+	return _free_origin(item, near)
+
+
 func _free_block(size: Vector2i) -> Vector2i:
 	## Top corner of a completely empty, landmark-free area of this size (-1 = none).
 	var s := _s()
@@ -175,10 +201,10 @@ func _layout_tools_check() -> void:
 	s.set_symmetry_tile(base + Vector2i(12, 9))
 	s.place_flipped = false
 	s.set_active_item(tall.id)
-	var po := _free_origin(tall, base + Vector2i(14, 9))
+	var po := _mirror_free_origin(tall, base + Vector2i(14, 9), s.mirror_line())
 	var placed := s.place_objects([s.make_object(tall, po)], "Place")
 	var mo := s.layout.get_obj(placed[placed.size() - 1]) if placed.size() == 2 else null
-	check(mo != null and mo.flipped and mo.size == tall.size_for(true), "screen mirror places the mirrored (rotated) item")
+	check(mo != null and mo.flipped and mo.size == tall.size_for(true), "screen mirror places the mirrored (rotated) item (%s %s at %s: %d placed)" % [tall.id, str(tall.footprint), str(po), placed.size()])
 	s.stack.undo()
 	main.dock.tool_action.emit("symmetry", false)
 	# Outline brush (connection shapes come from the normal renderer logic).
@@ -1834,20 +1860,37 @@ func _put(item_id: String, origin: Vector2i) -> PlacedObject:
 
 
 func _overlap_point(a: PlacedObject, b: PlacedObject) -> Variant:
-	## A world point where pick_all finds both objects (null: none).
+	## A world point where pick_all finds both objects (null: none). The point
+	## must be inside the overlap with a margin (every neighbour 2 world px away
+	## hits both too): a click goes world -> screen -> world, and real art can
+	## overlap in a thin sliver only, where that round trip may land outside it.
 	var r: Rect2 = main.renderer.bounds_of(a.uid).intersection(main.renderer.bounds_of(b.uid))
+	var fallback: Variant = null
 	var y := r.position.y
 	while y < r.end.y:
 		var x := r.position.x
 		while x < r.end.x:
-			var uids := []
-			for h: Dictionary in main.renderer.pick_all(Vector2(x, y)):
-				uids.append(h["uid"])
-			if a.uid in uids and b.uid in uids:
-				return Vector2(x, y)
+			var q := Vector2(x, y)
+			if _hits_both(q, a, b):
+				if fallback == null:
+					fallback = q
+				var inner := true
+				for d: Vector2 in [Vector2(2, 0), Vector2(-2, 0), Vector2(0, 2), Vector2(0, -2), Vector2(2, 2), Vector2(-2, -2), Vector2(2, -2), Vector2(-2, 2)]:
+					if not _hits_both(q + d, a, b):
+						inner = false
+						break
+				if inner:
+					return q
 			x += 3.0
 		y += 3.0
-	return null
+	return fallback
+
+
+func _hits_both(q: Vector2, a: PlacedObject, b: PlacedObject) -> bool:
+	var uids := []
+	for h: Dictionary in main.renderer.pick_all(q):
+		uids.append(h["uid"])
+	return a.uid in uids and b.uid in uids
 
 
 func _click_screen(p: Vector2) -> void:
@@ -1881,9 +1924,11 @@ func _drag_check() -> void:
 	var p: Variant = _overlap_point(a, b)
 	check(p != null, "the two sprites overlap somewhere")
 	if p != null:
+		var sp: Vector2 = cam.world_to_screen(p)
+		# The stack where the click really lands (world -> screen -> world).
+		p = ctl.world_at(sp)
 		var stack: Array = ctl.objects_here(p)
 		check(stack.size() >= 2 and stack[0]["uid"] == main.renderer.pick_any(p)["uid"], "objects_here lists both, top-most first (%d entries)" % stack.size())
-		var sp: Vector2 = cam.world_to_screen(p)
 		_click_screen(sp)
 		check(s.selection == [stack[0]["uid"]], "first click selects the top-most object")
 		_click_screen(sp)
@@ -2355,16 +2400,24 @@ func _world_art_check() -> void:
 		await _frames(2)
 		print("  GROUND ownership redraw %d us" % main.ground.last_draw_usec)
 		check(main.ground.last_draw_usec > 0 and main.ground.last_draw_usec < 50000, "an ownership change redraws in under 50 ms (%.1f ms)" % (main.ground.last_draw_usec / 1000.0))
-	# A real ambient animation from the built-in placeholders.
-	var wm: ItemDef = s.db.get_item("windmill")
+	# A real ambient animation: the windmill (or another animated sprite) of the
+	# active library; when installed art has none (a private pack can replace
+	# the animated placeholder with a static image), the built-in placeholders
+	# in an isolated library, so the behaviour is tested in every world.
+	var anim_lib := _animated_item_lib(s)
+	var wm: ItemDef = anim_lib[0]
+	var saved_lib: AssetLibrary = main.renderer.assets
+	if anim_lib[1] != saved_lib:
+		main.renderer.assets = anim_lib[1]
+		main.renderer.rebuild_all()
 	var at := _free_origin(wm, Vector2i(6, 6))
 	var po := PlacedObject.new()
-	po.item_id = "windmill"
+	po.item_id = wm.id
 	po.origin = at
 	po.size = wm.footprint
 	s.execute(EditCommands.AddObjects.new([po]))
 	var uid: int = s.layout.objects.keys().max()
-	check(main.renderer.anim_stats()["animated"] >= 1 and main.renderer.anim_frame_of(uid) >= -1, "a windmill placeholder is animated")
+	check(main.renderer.anim_stats()["animated"] >= 1 and main.renderer.anim_frame_of(uid) >= -1, "an animated sprite is animated (%s, %s)" % [wm.id, "active library" if anim_lib[1] == saved_lib else "isolated placeholders"])
 	var view := Rect2(-1e6, -1e6, 2e6, 2e6)
 	main.renderer.set_ambient_mode(ObjectRenderer.Ambient.FULL)
 	var f0: int = main.renderer.anim_frame_of(uid)
@@ -2376,7 +2429,34 @@ func _world_art_check() -> void:
 	check(main.renderer.anim_frame_of(uid) >= 0, "…and Full plays it again")
 	s.stack.undo()
 	check(main.renderer.anim_frame_of(uid) == -2, "removing the object removes its animation")
+	if main.renderer.assets != saved_lib:
+		main.renderer.assets = saved_lib
+		main.renderer.rebuild_all()
 	await _reference_check()
+
+
+func _animated_item_lib(s: EditorSession) -> Array:
+	## [ItemDef, AssetLibrary]: the windmill, else the first placeable item whose
+	## sprite in the active library is animated; else the windmill in an isolated
+	## library of the built-in placeholders only (no user or dev packs).
+	var lib: AssetLibrary = main.renderer.assets
+	var theme := s.layout.theme()
+	var cands: Array = [s.db.get_item("windmill")]
+	for it: ItemDef in s.db.ordered:
+		# Cheap pre-filter on the pack entry (no texture loads for 2,000 items).
+		if it.can_place() and it.footprint.x <= 3 and it.footprint.y <= 3 and lib.entry_of(it.art_key).get("anim") is Dictionary:
+			cands.append(it)
+	for it: ItemDef in cands:
+		if it == null:
+			continue
+		var spr := lib.get_sprite(it.art_key, lib.themed_variant(it.art_key, "", theme))
+		if spr != null and spr.anim != null:
+			return [it, lib]
+	var iso := AssetLibrary.new()
+	iso.user_packs_dir = "user://__selftest_no_packs__"
+	iso.dev_packs_dir = "res://__selftest_no_packs__"
+	iso.load_all(s.db)
+	return [s.db.get_item("windmill"), iso]
 
 
 func _reference_check() -> void:
@@ -2449,6 +2529,15 @@ func _reference_check() -> void:
 	check(not main.controller.calibrating and s.layout.reference["images"][1].has("affine"), "two pairs of clicks calibrate the active image")
 	var xf: Transform2D = ReferenceLayer.xform_of(s.layout.reference["images"][1])
 	check((xf * ia).distance_to(ga) < 0.01 and (xf * ib).distance_to(gb) < 0.01, "the clicked points land on the tile corners")
+	# Accuracy tab → placement check: a private report per calibrated screenshot.
+	var acc := PlanAccuracyTab.new()
+	acc.ctx = App.plan_ctx
+	var pcw: Dictionary = acc.write_placement_checks("user://selftest_placement_checks")
+	acc.free()
+	check(int(pcw["written"]) == 1 and pcw["labels"] == ["pending-screenshot"] and FileAccess.file_exists(str(pcw["paths"][0])),
+		"placement check written; two points stay “pending screenshot” (%s)" % str(pcw["labels"]))
+	for f2: String in DirAccess.get_files_at("user://selftest_placement_checks"):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path("user://selftest_placement_checks".path_join(f2)))
 	s.stack.undo()
 	check(not s.layout.reference["images"][1].has("affine"), "calibration is undoable")
 	main._on_inspector_action("ref_remove", ids[1])
@@ -3019,6 +3108,7 @@ func _qa_journeys() -> void:
 	await _qa_migration()
 	await _qa_prices()
 	await _qa_client_prices()
+	await _qa_customization()
 	await _qa_layers_and_scale()
 	for k in keep:
 		st.set_v(k, keep[k], false)
@@ -3777,7 +3867,9 @@ func _qa_client_prices() -> void:
 		"source": {"kind": "selftest"}, "stats": {"records": 1, "item_records": 1, "component_records": 0},
 		"items": {item: {"client_status": "priced", "method": "shop", "price": {"coins": 5}, "step": {"coins": 2},
 			"step_every": 3, "client": {"table": "deco_fences", "name": "SyntheticFence", "rule": "asset_export"}}},
-		"components": {}, "review": []}
+		"components": {}, "review": [{"key": "decorations:selftest twin", "table": "decorations", "name": "Selftest twin",
+			"text": "Selftest twin", "tid": "", "export": "", "footprint": [1, 1], "price": {"coins": 3}, "can_buy": true,
+			"kind": "ambiguous", "reason": "the name fits several items", "candidates": [item, "bench"]}]}
 	var rep := ClientPrices.build_report(doc, App.prices.derived(null), App.db)
 	var res := ClientPrices.install(doc, rep)
 	check(bool(res["ok"]) and not PlanUiKit.is_inside_repo(ProjectSettings.globalize_path(PriceBook.DEFAULT_CLIENT)),
@@ -3800,6 +3892,19 @@ func _qa_client_prices() -> void:
 	var txt := "
 ".join(_qa_texts(am.game_data))
 	check(txt.contains("Prices from your game files") and txt.contains("0.0.1-synthetic"), "QA9b: the Game data tab shows the installed supplement")
+	check(txt.contains("Selftest twin") and txt.contains("Use this") and txt.contains("Unassigned"),
+		"QA9b: an ambiguous record shows its candidates side by side, unassigned until chosen")
+	var gd: GameDataPage = am.game_data
+	var rk := "decorations:selftest twin"
+	var had: Variant = ClientPrices.load_mapping().get(rk)
+	gd.set_decision(rk, item)
+	await _frames(2)
+	check(ClientPrices.decision_of(rk, ClientPrices.load_mapping()) == {"state": "chosen", "item": item}
+		and "\n".join(_qa_texts(am.game_data)).contains("Chosen"), "QA9b: choosing a candidate is saved in the mapping file")
+	gd.set_decision(rk, had)
+	await _frames(2)
+	check(ClientPrices.decision_of(rk, ClientPrices.load_mapping())["state"] == ("unassigned" if had == null else ("ignored" if str(had).is_empty() else "chosen")),
+		"QA9b: clearing the choice leaves the record unassigned")
 	am.modal.close()
 	await _frames(2)
 	var d := PriceDialog.open(ctx, item)
@@ -3820,6 +3925,77 @@ func _qa_client_prices() -> void:
 	await _frames(2)
 	check(not App.prices.has_client_data() and _qa_coins(w.last_totals) == researched, "QA9b: removing it restores the researched prices (%d)" % _qa_coins(w.last_totals))
 	ctx.set_scope_pin("auto")
+
+
+func _qa_customization() -> void:
+	## Design customization (SkinBudget): the chosen farmhouse look is priced from
+	## invented appearance parts, optional (undoable toggle), owned parts never
+	## charged, and the chip, the Budget tab, the Shop tab and the guide agree.
+	print("QA 9c: design customization")
+	var ctx: PlanContext = App.plan_ctx
+	var s: EditorSession = await _qa_open("QA customization", "empty")
+	var lm: Landmark = null
+	for l: Landmark in App.map.landmarks:
+		if l.skin_kind == "house":
+			lm = l
+	if lm == null:
+		check(false, "QA9c: the map has a farmhouse landmark with a look")
+		return
+	var skins_before := lm.skins.duplicate(true)
+	lm.skins.append({"id": "qa_look", "name": "QA look", "parts": {"Roof": "QaRoofGold", "Porch": "QaPorchEvent", "Building": "QaWallPlain"}})
+	var doc := {"format": PriceBook.CLIENT_FORMAT, "schema_version": 1, "game_version": "0.0.2-synthetic", "items": {}, "review": [],
+		"components": {"house": {"QaRoofGold": {"name": "QaRoofGold", "slot": "Roof", "price": {"coins": 4321}},
+			"QaPorchEvent": {"name": "QaPorchEvent", "slot": "Porch", "event": true},
+			"QaWallPlain": {"name": "QaWallPlain", "slot": "Building", "default": true}}}}
+	var had_client := FileAccess.file_exists(PriceBook.DEFAULT_CLIENT)
+	var keep := FileAccess.get_file_as_string(PriceBook.DEFAULT_CLIENT) if had_client else ""
+	JsonUtil.write_atomic(PriceBook.DEFAULT_CLIENT, JsonUtil.stringify(doc), false)
+	App.reload_client_prices()
+	ctx.set_scope_pin("farm")
+	var w: BudgetWidget = main.budget
+	await _frames(2)
+	var base := _qa_coins(w.last_totals)
+	s.execute(SetWorldStateCommand.for_landmark(s.layout, "landmark_skins", lm.id, "qa_look"))
+	await _frames(2)
+	var sk := ctx.customization()
+	check(Currency.equal(sk["cost"], {"coins": 4321}) and (sk["unknown_parts"] as Array).size() == 1 and not bool(sk["enabled"]),
+		"QA9c: the look's parts are priced (default free, event part unknown), off by default (%s)" % str(sk["cost"]))
+	check(int(w.last_cost.get("coins", 0)) == base, "QA9c: switched off, the chip leaves the look out")
+	var n0 := s.stack.size()
+	ctx.set_customization_included(true)
+	await _frames(2)
+	check(s.stack.size() == n0 + 1 and int(w.last_cost.get("coins", 0)) == base + 4321 and _qa_coins(w.last_totals) == base,
+		"QA9c: switched on, the chip adds the look to the farm (%d → %d), one undo step" % [base, int(w.last_cost.get("coins", 0))])
+	main.open_plan("shop")
+	await _frames(2)
+	var shop: PlanTab = main.plan_panel.page_of("shop")
+	shop.call("_refresh_data", true)
+	var shop_cost: Dictionary = shop.get("totals").get("cost", {})
+	check(int(shop_cost.get("coins", 0)) == int(w.last_cost.get("coins", 0)) and (shop.get("custom") as Array).size() == 2,
+		"QA9c: the shopping list agrees and lists the parts (%s)" % str(shop_cost))
+	main.open_plan("budget")
+	await _frames(2)
+	var btxt := "\n".join(_qa_texts(main.plan_panel.page_of("budget")))
+	check(btxt.contains("Design customization") and btxt.contains("QaRoofGold"), "QA9c: the Budget tab shows the look and its parts")
+	var steps: Array = (ctx.guide()["steps"] as Array).filter(func(st): return st["kind"] == "customize")
+	check(steps.size() == 1 and Currency.equal(steps[0]["cost"], {"coins": 4321}), "QA9c: the guide has one step for the look with the same cost")
+	ctx.set_parts_owned("house", ["QaRoofGold"], true)
+	await _frames(2)
+	check(int(w.last_cost.get("coins", 0)) == base and Currency.equal(ctx.customization()["cost"], {}),
+		"QA9c: an owned part is never charged")
+	s.stack.undo()
+	s.stack.undo()
+	await _frames(2)
+	check(not bool(ctx.customization()["enabled"]) and int(w.last_cost.get("coins", 0)) == base, "QA9c: undo restores inventory and the toggle")
+	s.stack.undo()
+	lm.skins.assign(skins_before)
+	if had_client:
+		JsonUtil.write_atomic(PriceBook.DEFAULT_CLIENT, keep, false)
+	else:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(PriceBook.DEFAULT_CLIENT))
+	App.reload_client_prices()
+	ctx.set_scope_pin("auto")
+	await _frames(2)
 
 
 # Known gaps: Ctrl+A and hidden layers, issue marks / heatmap on hidden objects, View tab at 200 % --

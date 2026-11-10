@@ -10,6 +10,7 @@ Runs the documented tools in order, each as a subprocess, with resume:
            you already have, e.g. pulled from your own phone; nothing is downloaded)
   build    tools/private_assets/build_pack.py   --root <root> --install-dir <install dir>
            (+ --build-world when client tables were extracted: map v2 world, landmarks, catalogue overrides;
+           + --terrain when the client's background art and the terrain placement file exist: pack terrain;
            if build_pack.py has no --install-dir option, the built pack is installed with install_pack.py)
 
 Defaults
@@ -339,6 +340,12 @@ def step_commands(step: str, args, tools: Path) -> tuple[list[list[str]], str | 
 		if "--build-world" in h and "--no-world" not in args.build_arg and "--build-world" not in args.build_arg \
 				and any(Path(root).glob("raw/apk_extracted/*/assets/data/level_0.csv")):
 			extra.append("--build-world")
+		# terrain (ground tiles, edges, river, water clips) needs the client's background art and the private placement
+		# file of the terrain research (anchors are not in the client tables)
+		if "--terrain" in h and "--no-terrain" not in args.build_arg and "--terrain" not in args.build_arg \
+				and any(Path(root).glob("raw/apk_extracted/*/assets/sc/background.sc")) \
+				and (Path(root) / "research" / "terrain" / "terrain_manifest.json").is_file():
+			extra.append("--terrain")
 		if "--install-dir" in h or not h:
 			return [py + [str(s), "--root", root, "--install-dir", str(args.install_dir), *extra, *args.build_arg]], None
 		cmds = [py + [str(s), "--root", root, *args.build_arg]]
@@ -648,6 +655,27 @@ def self_test() -> int:
 			str(gitroot / "user" / "hayday_original"), "--no-pip", "--steps", "build"], capture_output=True, text=True)
 		if r.returncode == 0 or "refusing" not in (r.stdout + r.stderr):
 			fails.append(f"install dir inside a git work tree must be refused: rc={r.returncode}")
+		# build step flags: --build-world / --terrain only when their private inputs exist
+		t2 = tmp / "tools2"
+		t2.mkdir()
+		(t2 / "build_pack.py").write_text("import argparse\nap = argparse.ArgumentParser()\nfor f in ('--root', '--install-dir'):"
+			"\n\tap.add_argument(f)\nfor f in ('--build-world', '--no-world', '--terrain', '--no-terrain'):\n\tap.add_argument(f, "
+			"action='store_true')\nap.parse_args()\n")
+		r2 = tmp / "private2"
+		ns = argparse.Namespace(root=r2, install_dir=inst, build_arg=[])
+		(r2 / "raw" / "apk_extracted" / "9.9" / "assets" / "sc").mkdir(parents=True)
+		(r2 / "raw" / "apk_extracted" / "9.9" / "assets" / "sc" / "background.sc").write_bytes(b"x")
+		cmd = step_commands("build", ns, t2)[0][0]
+		if "--terrain" in cmd:
+			fails.append(f"--terrain without the placement file: {cmd}")
+		(r2 / "research" / "terrain").mkdir(parents=True)
+		(r2 / "research" / "terrain" / "terrain_manifest.json").write_text("{}")
+		cmd = step_commands("build", ns, t2)[0][0]
+		if "--terrain" not in cmd or "--build-world" in cmd:
+			fails.append(f"build step flags (terrain yes, world no): {cmd}")
+		ns.build_arg = ["--no-terrain"]
+		if "--terrain" in step_commands("build", ns, t2)[0][0]:
+			fails.append("--build-arg --no-terrain must suppress --terrain")
 	finally:
 		shutil.rmtree(tmp, ignore_errors=True)
 	for f in fails:

@@ -268,7 +268,7 @@ func test_build_matches_reference_after_random_edits() -> void:
 func test_build_matches_reference_with_real_catalogue() -> void:
 	var rdb := ItemDatabase.new()
 	rdb.load_default()
-	var rpb := PriceBook.load_default(rdb, "user://__no_price_overrides__.json")
+	var rpb := PriceBook.load_default(rdb, "user://__no_price_overrides__.json", PriceBook.DEFAULT_PATH, "")
 	var rmap := FarmMap.load_file("res://data/maps/hayday_farm.json")
 	var rl := FarmLayout.new()
 	var rng := RandomNumberGenerator.new()

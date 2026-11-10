@@ -233,6 +233,23 @@ func test_layer_builds_once_and_falls_back() -> void:
 	layer.free()
 
 
+func test_color_backdrop_fills_far_beyond_the_world_diamond() -> void:
+	## Base "color": zoomed far out, the screen corners outside the world's iso
+	## diamond must show the pack's background colour, not the app's clear colour.
+	var m := _public()
+	var lib := _lib(m)
+	var layer := PackTerrainLayer.new()
+	layer.setup(m, lib.terrain_for(m), lib, _open_all(m), "")
+	var bg: PackedVector2Array = layer._bg_poly
+	assert_eq(bg.size(), 4)
+	var wb := m.world_bounds if m.world_bounds.size != Vector2i.ZERO else Rect2i(Vector2i.ZERO, m.size)
+	var diamond := Iso.grid_rect_polygon(wb.grow(PackTerrainLayer.BACKDROP_MARGIN))
+	var box := PackTerrainLayer._poly_bounds(bg)
+	var need := PackTerrainLayer._poly_bounds(diamond).grow(10000.0)
+	assert_true(box.encloses(need), "backdrop %s encloses %s" % [str(box), str(need)])
+	layer.free()
+
+
 func test_missing_piece_keeps_procedural_backdrop() -> void:
 	var m := _public()
 	var lib := _lib(m, {"bad_piece": true})
@@ -316,3 +333,212 @@ func test_validate_file_for_authors() -> void:
 	assert_true(r["ok"], str(r))
 	assert_eq(r["missing"].size(), 0)
 	assert_eq(r["variants"], ["default", "winter"] as Array[String])
+
+
+func test_layers_and_blend_modes_parse() -> void:
+	var m := _public()
+	var d := _tp(m).pieces_for()
+	var by_id := func(pid: String) -> Dictionary:
+		return d.filter(func(p: Dictionary) -> bool: return p["id"] == pid)[0]
+	assert_eq(by_id.call("canopy")["layer"], "foreground")
+	assert_eq(by_id.call("river")["layer"], "ground", "ground is the default")
+	assert_eq(by_id.call("rays")["blend"], "add")
+	assert_eq(by_id.call("cloud_shadow")["blend"], "multiply")
+	assert_eq(by_id.call("haze")["blend"], "screen")
+	assert_eq(by_id.call("star_glow")["blend"], "add", "Flash / SC blend number 8")
+	assert_eq(by_id.call("river")["blend"], "normal")
+	assert_eq(TerrainPack.blend_name(3), "multiply")
+	assert_eq(TerrainPack.blend_name("4"), "screen")
+	assert_eq(TerrainPack.blend_name(1), "normal")
+	assert_eq(TerrainPack.blend_name("ADD"), "add")
+	assert_eq(TerrainPack.blend_name(13), "", "overlay is not supported")
+	var river: Dictionary = by_id.call("river")
+	var inst: Dictionary = river["clips"][1]
+	assert_eq(inst["mul"], Color(1.0, 0.7, 0.7, 1.0), "clip instance mul")
+	assert_eq(inst["add"], Color(0.0, 0.1, 0.3, 0.0), "clip instance add (rgb)")
+	assert_eq((river["clips"][0] as Dictionary)["mul"], Color.WHITE)
+	var bad := TerrainPack.from_data({"format": TerrainPack.FORMAT, "schema_version": 1, "frame": "game_tile",
+		"pieces": [{"id": "a", "file": "x.png", "layer": "sky"}, {"id": "b", "file": "x.png", "blend": "overlay"}]})
+	var all := "\n".join(bad.diagnostics())
+	assert_true(all.contains("unknown layer 'sky'"), all)
+	assert_true(all.contains("unknown blend 'overlay'"), all)
+	var ps := bad.pieces_for()
+	assert_eq(ps.size(), 2, "both still drawn")
+	assert_eq(ps[0]["layer"], "ground")
+	assert_eq(ps[1]["blend"], "normal")
+
+
+func test_foreground_pieces_draw_over_objects() -> void:
+	var m := _public()
+	var lib := _lib(m)
+	var layer := PackTerrainLayer.new()
+	layer.setup(m, lib.terrain_for(m), lib, _open_all(m), "")
+	assert_eq(layer.stats["foreground"], 2, "canopy + rays")
+	var fg := layer.foreground
+	assert_eq(fg.get_parent(), layer, "not attached yet: drawn with the ground")
+	var names: Array = fg.get_node("Pieces").get_children().map(func(n: Node) -> String: return str(n.name))
+	assert_true(names.any(func(n: String) -> bool: return n.begins_with("canopy")), str(names))
+	for c in layer.get_node("Pieces").get_children():
+		assert_false(str(c.name).begins_with("canopy"), "a foreground piece is not a ground piece")
+	# main.gd: world -> [ground, ..., renderer, foreground, overlays]
+	var world := Node2D.new()
+	var objects := Node2D.new()
+	world.add_child(layer)
+	world.add_child(objects)
+	world.add_child(Node2D.new())
+	layer.attach_foreground(world, objects.get_index() + 1)
+	assert_eq(fg.get_parent(), world)
+	assert_eq(fg.get_index(), objects.get_index() + 1, "right after the objects, before the overlays")
+	assert_true(fg.get_class() == "Node2D", "draws only: it never takes a click")
+	for c in fg.get_children():
+		assert_false(c is Control or c is CollisionObject2D)
+	# Winter (own variant without its own list): the canopy stays, the extent follows.
+	var hit := [0]
+	layer.extent_changed.connect(func() -> void: hit[0] += 1)
+	layer.setup(m, layer.pack, lib, _open_all(m), "")
+	assert_eq(hit[0], 0, "no change, no signal")
+	layer.free()
+	assert_false(is_instance_valid(fg), "the attached foreground goes with its layer")
+	world.free()
+
+
+func test_blend_materials() -> void:
+	assert_null(PackTerrainLayer.material_for("normal", false), "plain pieces need no material")
+	var a := PackTerrainLayer.material_for("add", false)
+	assert_not_null(a)
+	assert_eq(a, PackTerrainLayer.material_for("add", false), "shared per combination")
+	assert_ne(a, PackTerrainLayer.material_for("add", true))
+	assert_true(PackTerrainLayer.shader_code("add", false).contains("blend_add"))
+	assert_true(PackTerrainLayer.shader_code("multiply", false).contains("blend_mul"))
+	assert_true(PackTerrainLayer.shader_code("multiply", false).contains("mix(vec3(1.0), c.rgb, c.a)"), "transparent texels leave the ground as it is")
+	assert_true(PackTerrainLayer.shader_code("screen", false).contains("hint_screen_texture"))
+	assert_true(PackTerrainLayer.shader_code("normal", true).contains("CUSTOM0.rgb"), "mesh add ops")
+	assert_false(PackTerrainLayer.shader_code("screen", false).contains("CUSTOM0"))
+	var m := _public()
+	var lib := _lib(m)
+	var layer := PackTerrainLayer.new()
+	layer.setup(m, lib.terrain_for(m), lib, _open_all(m), "")
+	assert_eq(layer.stats["blended"], 4, "rays, cloud shadow, haze, star glow")
+	var mats := {}
+	for holder in [layer.get_node("Pieces"), layer.foreground.get_node("Pieces")]:
+		for c in holder.get_children():
+			mats[str(c.name).get_slice("_", 0)] = c.material
+	assert_eq(mats["rays"], PackTerrainLayer.material_for("add", false))
+	assert_eq(mats["cloud"], PackTerrainLayer.material_for("multiply", false))
+	assert_eq(mats["haze"], PackTerrainLayer.material_for("screen", false))
+	assert_eq(mats["star"], PackTerrainLayer.material_for("add", true), "star_glow: add op + add blend")
+	assert_null(mats["river"])
+	layer.free()
+
+
+func test_clip_colour_transforms() -> void:
+	var m := _public()
+	var lib := _lib(m)
+	var layer := PackTerrainLayer.new()
+	layer.setup(m, lib.terrain_for(m), lib, _open_all(m), "")
+	var an: PackTerrainLayer._AnimNode = layer.anim_node()
+	assert_true(an.has_add, "element add terms: the add pass is used")
+	assert_eq(an.clips[1]["mul"], Color(1.0, 0.7, 0.7, 1.0))
+	var b: Rect2 = an.clips[0]["bounds"]
+	assert_true(b.size.x > 20.0 and b.size.x < 200.0, "bounds from the clip's frames, not a fixed box: %s" % str(b))
+	assert_true(b.has_point((an.clips[0]["xform"] as Transform2D).origin.lerp(b.get_center(), 0.5)))
+	assert_eq(PackTerrainLayer._AnimNode._rgba([0.5, 0.25, 0.0], Color(0, 0, 0, 0)), Color(0.5, 0.25, 0.0, 0.0))
+	layer.free()
+
+
+func test_only_clips_in_view_animate() -> void:
+	var m := _public()
+	var lib := _lib(m)
+	var layer := PackTerrainLayer.new()
+	layer.setup(m, lib.terrain_for(m), lib, _open_all(m), "")
+	var an: PackTerrainLayer._AnimNode = layer.anim_node()
+	an.set_mode(ObjectRenderer.Ambient.FULL)
+	var far := Rect2(Vector2(1e6, 1e6), Vector2(100, 100))
+	assert_eq(an.animating_in(far), 0)
+	for i in 30:
+		assert_false(an.advance(1.0 / 30.0, far), "nothing in view: never redrawn")
+	var r0: Rect2 = an.clips[0]["bounds"]
+	assert_eq(an.animating_in(r0), an.clips.filter(func(c: Dictionary) -> bool: return (c["bounds"] as Rect2).intersects(r0)).size())
+	an._shown.clear()
+	assert_true(an.advance(1.0 / 30.0, r0), "a clip in view: redrawn")
+	an.set_mode(ObjectRenderer.Ambient.REDUCED)
+	var all: Rect2 = an.clips.reduce(func(acc: Rect2, c: Dictionary) -> Rect2: return acc.merge(c["bounds"]), an.clips[0]["bounds"])
+	assert_eq(an.animating_in(all), ceili(an.clips.size() / 3.0), "Reduced: every third")
+	an.set_mode(ObjectRenderer.Ambient.OFF)
+	assert_eq(an.animating_in(all), 0)
+	assert_false(an.advance(1.0, all), "Off: never")
+	assert_false(an.is_processing())
+	layer.free()
+
+
+func test_camera_rect_follows_the_pieces() -> void:
+	var m := _public()
+	var lib := _lib(m)
+	var layer := PackTerrainLayer.new()
+	var world := PackTerrainLayer._poly_bounds(Iso.grid_rect_polygon(Rect2i(-1000, -1000, 10, 10)))
+	assert_eq(layer.camera_rect(m, world), world, "no pack: the world rect")
+	layer.setup(m, lib.terrain_for(m), lib, _open_all(m), "")
+	assert_true(layer.extent.size.x > 0.0)
+	var wr := Iso.footprint_world_bounds(m.world_bounds.position, m.world_bounds.size)
+	var cr := layer.camera_rect(m, wr)
+	assert_true(cr.encloses(layer.extent.grow(PackTerrainLayer.CAMERA_MARGIN)), "every piece is reachable")
+	assert_true(cr.encloses(Iso.footprint_world_bounds(Vector2i.ZERO, m.size)), "the whole placement grid too")
+	for lm in m.landmarks:
+		assert_true(cr.encloses(Iso.footprint_world_bounds(lm.origin, lm.footprint)), "landmark %s" % lm.id)
+	assert_true(layer.extent.encloses(Rect2(layer.anim_node().clips[0]["bounds"])), "animations count")
+	assert_eq(layer.camera_rect(FarmMap.make_simple(4, 4), wr), wr, "another map: its world rect")
+	var proc := PackTerrainLayer.new()
+	proc.setup(m, _lib(m, {"base": "procedural"}).terrain_for(m), lib, _open_all(m), "")
+	assert_eq(proc.camera_rect(m, wr), wr.merge(proc.extent.grow(PackTerrainLayer.CAMERA_MARGIN)), "over the procedural terrain: the union")
+	proc.free()
+	layer.free()
+
+
+func test_ownership_and_theme_transitions() -> void:
+	## Locked -> owned plots swap only the tiles of those plots; a theme swaps
+	## the variant (tiles and pieces) and back.
+	var m := _public()
+	var lib := _lib(m)
+	var tp := lib.terrain_for(m)
+	var layer := PackTerrainLayer.new()
+	var closed := PackedByteArray()
+	closed.resize(m.plots.size())
+	layer.setup(m, tp, lib, closed, "")
+	var ga0 := tp.ground_art(m, closed)
+	var one := closed.duplicate()
+	one[0] = 1
+	var ga1 := tp.ground_art(m, one)
+	var changed := 0
+	var keys0: Array[String] = ga0["keys"]
+	var keys1: Array[String] = ga1["keys"]
+	var ids0: PackedInt32Array = ga0["ids"]
+	var ids1: PackedInt32Array = ga1["ids"]
+	var rect: Rect2i = ga0["rect"]
+	for i in ids0.size():
+		var k0 := keys0[ids0[i]] if ids0[i] >= 0 else ""
+		var k1 := keys1[ids1[i]] if ids1[i] >= 0 else ""
+		if k0 != k1:
+			changed += 1
+			var t := rect.position + Vector2i(i % rect.size.x, i / rect.size.x)
+			assert_eq(m.plot_of[t.y * m.size.x + t.x], 0, "only tiles of the unlocked plot change")
+			assert_eq(k0, "syn_locked")
+			assert_eq(k1, "syn_plot")
+	assert_true(changed > 0, "the plot's tiles changed look")
+	var v := layer.tiles_version
+	layer.setup(m, tp, lib, one, "")
+	assert_eq(layer.tiles_version, v + 1)
+	var default_batches: Array = layer._batches
+	var t0 := Time.get_ticks_usec()
+	layer.setup(m, tp, lib, one, "winter")
+	var ms := (Time.get_ticks_usec() - t0) / 1000.0
+	assert_eq(layer.variant, "winter")
+	assert_eq(layer._bg_color, Color("#b9cbd6"), "the winter background colour")
+	assert_false(is_same(layer._batches, default_batches))
+	layer.setup(m, tp, lib, one, "")
+	assert_eq(layer.variant, "default")
+	assert_eq(layer._bg_color, Color("#4d7d68"))
+	assert_true(is_same(layer._batches, default_batches), "back to a variant seen with this ownership: cached triangles")
+	layer.setup(m, tp, lib, _open_all(m), "")
+	assert_false(is_same(layer._batches, default_batches), "another ownership: rebuilt")
+	assert_true(ms < 250.0, "theme switch (synthetic, headless) %.1f ms" % ms)
+	layer.free()

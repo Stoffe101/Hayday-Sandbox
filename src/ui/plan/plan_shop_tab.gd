@@ -38,6 +38,8 @@ var _data_key := ""
 ## Current data (read by tests / the self-test).
 var rows: Array = []
 var supplies: Array = []
+## Parts of the farm's chosen look (SkinBudget.shop_rows), whole farm only, when included.
+var custom: Array = []
 var shown_rows: Array = []
 var totals: Dictionary = {}
 var last_refresh_usec := 0
@@ -199,6 +201,8 @@ func _refresh_data(reset_paging: bool) -> void:
 	var sel: Array = ctx.session.selection
 	var key := "%d/%d|%d|%d|%s|%s|%s|%d" % [eng.get_instance_id(), eng.version, ctx.prices.version if ctx.prices else 0, ctx.session.stack.version,
 		_mode, _scope_key, str(sel.hash()) if str(scope["kind"]) == PlanUiModels.SCOPE_SELECTION else "", ctx.plan().hash()]
+	var skin := ctx.customization()
+	key += "|%d" % skin.hash()
 	if key == _data_key and not reset_paging:
 		last_refresh_usec = Time.get_ticks_usec() - t0
 		return
@@ -209,6 +213,11 @@ func _refresh_data(reset_paging: bool) -> void:
 		supplies = ShoppingList.supply_rows(eng, uids, _mode)
 		totals = eng.totals(uids, _mode).to_dict()
 		return null)
+	# The farm's look (SkinBudget): same rule as the budget chip and the Budget tab.
+	var kind := str(scope["kind"])
+	custom = SkinBudget.shop_rows(skin) if SkinBudget.applies(skin, kind) else []
+	totals["cost"] = SkinBudget.total_cost(totals.get("cost", {}), skin, kind)
+	totals["customization_unknown"] = SkinBudget.unknown_count(skin, kind)
 	if str(scope["kind"]) == PlanUiModels.SCOPE_SELECTION and sel.is_empty():
 		_list.empty_text = "Select objects on the farm to see what they cost."
 	else:
@@ -241,6 +250,10 @@ func _apply_view(reset_paging: bool = false) -> void:
 		for s: Dictionary in supplies:
 			var l := PlanUiKit.wrap_label(PlanUiModels.supply_text(s), "Dim")
 			_supplies_box.add_child(l)
+	if not custom.is_empty():
+		_supplies_box.add_child(UI.label(SkinBudget.GROUP, "Section"))
+		for c: Dictionary in custom:
+			_supplies_box.add_child(PlanUiKit.wrap_label(PlanUiModels.customization_text(c), "Dim"))
 	var acq: Dictionary = ctx.plan().get("acquired", {}) if ctx.plan().get("acquired") is Dictionary else {}
 	var n := 0
 	for k in acq:
@@ -497,7 +510,7 @@ func _apply_to_inventory() -> void:
 
 func _export_csv() -> void:
 	var nm := PlanUiModels.safe_file_stem(ctx.layout().name, "farm") + "_shopping.csv"
-	var data := PlanUiModels.shop_csv(rows, supplies)
+	var data := PlanUiModels.shop_csv(rows, supplies, custom)
 	PlanUiKit.save_file(self, "Export shopping list", PackedStringArray(["*.csv ; CSV spreadsheet"]), nm, func(p: String):
 		var err := PlanUiKit.write_text(p, data)
 		ctx.toast("Saved the shopping list to %s" % p if err.is_empty() else err, "success" if err.is_empty() else "error"))

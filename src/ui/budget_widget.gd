@@ -38,6 +38,9 @@ var _mode_pop: PopupMenu
 var _menu_pop: PopupMenu
 var _sig := ""
 var last_totals: BudgetEngine.Totals   ## what is shown (tests)
+## Design customization (PlanContext.customization()) and the cost shown with it (tests).
+var last_skin: Dictionary = {}
+var last_cost: Dictionary = {}
 
 
 func setup(context: PlanContext) -> void:
@@ -232,10 +235,12 @@ func refresh() -> void:
 	var sc := ctx.scope()
 	var t := ctx.scope_totals()
 	last_totals = t
+	last_skin = ctx.customization()
 	# The engine's instance id too: another layout's engine counts versions from 0 again.
 	var sig := "%d/%d|%s|%s|%s|%s|%s|%d%d" % [ctx.engine.get_instance_id(), ctx.engine.version, ctx.mode, str(sc.get("kind")), str(sc.get("id")), str(sc.get("uids").hash() if sc.get("uids") is Array else 0), ctx.scope_pin, int(collapsed), int(expanded)]
 	if ctx.session != null:
 		sig += "|%d" % ctx.session.stack.version
+	sig += "|%d" % last_skin.hash()
 	if sig == _sig:
 		return
 	_sig = sig
@@ -260,7 +265,10 @@ func _fill_row(sc: Dictionary, t: BudgetEngine.Totals) -> void:
 	_scope_btn.tooltip_text = "Budget of: %s%s\nClick: follow the selection / area / phase, or pin the whole farm." % [
 		str(sc.get("label", "")), " (pinned)" if ctx.scope_pin == "farm" else ""]
 	UI.clear(_amounts)
-	var ids := Currency.sorted_ids(t.cost.keys())
+	# The whole farm's total includes the chosen look when the Budget tab says so (SkinBudget).
+	var cost := SkinBudget.total_cost(t.cost, last_skin, kind)
+	last_cost = cost
+	var ids := Currency.sorted_ids(cost.keys())
 	if ids.is_empty():
 		var l := UI.label("Nothing to pay" if t.is_exact() else "No known price", "Dim")
 		l.add_theme_font_size_override("font_size", 14)
@@ -269,15 +277,19 @@ func _fill_row(sc: Dictionary, t: BudgetEngine.Totals) -> void:
 	for c: String in ids:
 		if shown >= 4:
 			var more := UI.label("+%d" % (ids.size() - shown), "Faint")
-			more.tooltip_text = Currency.format_line(t.cost)
+			more.tooltip_text = Currency.format_line(cost)
 			_amounts.add_child(more)
 			break
-		_amounts.add_child(amount_chip(c, int(t.cost[c]), ids.size() > 2))
+		_amounts.add_child(amount_chip(c, int(cost[c]), ids.size() > 2))
 		shown += 1
-	var unknown := t.unknown_price_objects + t.not_buyable_objects
+	var parts_unknown := SkinBudget.unknown_count(last_skin, kind)
+	var unknown := t.unknown_price_objects + t.not_buyable_objects + parts_unknown
 	_warn.visible = unknown > 0 or not t.unknown_cost_plots.is_empty()
 	_warn.text = "+%d" % unknown if unknown > 0 else "+?"
-	_warn.tooltip_text = "Not included in the total: %s.\nUnknown prices are counted, never treated as 0. Click for the breakdown." % PlanScope.unknown_text(t)
+	var why := PlanScope.unknown_text(t)
+	if parts_unknown > 0:
+		why += "; %d appearance part%s without a price" % [parts_unknown, "" if parts_unknown == 1 else "s"]
+	_warn.tooltip_text = "Not included in the total: %s.\nUnknown prices are counted, never treated as 0. Click for the breakdown." % why
 	_mode_btn.text = str(PlanScope.MODE_LABELS.get(ctx.mode, ctx.mode)) + " ▾"
 	_mode_btn.tooltip_text = "%s\n\nClick to switch: Design cost · To buy · Remaining." % str(PlanScope.MODE_HELP.get(ctx.mode, ""))
 
@@ -309,6 +321,8 @@ func _fill_card(sc: Dictionary, t: BudgetEngine.Totals) -> void:
 		if not t.unknown_cost_plots.is_empty():
 			land += " (+%d with unknown supplies)" % t.unknown_cost_plots.size()
 		_card.add_child(UI.label(land, "Dim", true))
+	if str(sc.get("kind")) == PlanScope.SCOPE_FARM and not SkinBudget.summary_text(last_skin).is_empty():
+		_card.add_child(UI.label(SkinBudget.summary_text(last_skin), "Dim", true))
 	var counts := "%d object%s · %d charged · %d owned · %d bought · %d placed" % [t.objects, "" if t.objects == 1 else "s",
 		t.charged_objects, t.owned_objects, t.acquired_objects, t.placed_objects]
 	_card.add_child(UI.label(counts, "Faint", true))
@@ -381,7 +395,7 @@ static func glyph(currency: String, size: int = 16) -> Glyph:
 
 
 ## Original vector currency marks (never game art): gold coin, green diamond,
-## coloured voucher tickets, film, key, expansion supplies, "?" for others.
+## coloured voucher tickets, pearl, film, key, expansion supplies, "?" for others.
 class Glyph:
 	extends Control
 	var currency := ""
@@ -423,6 +437,11 @@ class Glyph:
 					var x := fr.position.x + fr.size.x * (0.2 + 0.3 * i)
 					draw_rect(Rect2(x - r * 0.1, fr.position.y + r * 0.12, r * 0.2, r * 0.2), Color(0.9, 0.9, 0.9))
 					draw_rect(Rect2(x - r * 0.1, fr.end.y - r * 0.32, r * 0.2, r * 0.2), Color(0.9, 0.9, 0.9))
+			"pearls":
+				draw_circle(c, r * 0.9, Color("#b9b2c8"))
+				draw_circle(c, r * 0.78, Color("#f1edf6"))
+				draw_circle(c + Vector2(r * 0.18, r * 0.2), r * 0.42, Color("#ddd5e8"))
+				draw_circle(c + Vector2(-r * 0.3, -r * 0.32), r * 0.18, Color(1, 1, 1, 0.95))
 			"golden_keys":
 				draw_circle(c + Vector2(-r * 0.4, 0), r * 0.42, Color("#e2b23a"))
 				draw_circle(c + Vector2(-r * 0.4, 0), r * 0.18, Color(0.15, 0.12, 0.05))

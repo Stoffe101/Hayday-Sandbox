@@ -82,15 +82,17 @@ var client_info: Dictionary = {}
 var _resolved: Dictionary = {}      ## item -> resolved record (cache, cleared on change)
 
 
-static func load_default(db: ItemDatabase, overrides: String = DEFAULT_OVERRIDES, price_path: String = DEFAULT_PATH) -> PriceBook:
-	## Catalogue + the price file (when present) + the user's overrides (when present).
+static func load_default(db: ItemDatabase, overrides: String = DEFAULT_OVERRIDES, price_path: String = DEFAULT_PATH,
+		client: String = DEFAULT_CLIENT) -> PriceBook:
+	## Catalogue + the price file (when present) + the private client supplement
+	## (when present; "" = leave it out) + the user's overrides (when present).
 	var pb := PriceBook.new()
 	pb.overrides_path = overrides
 	pb.set_catalogue(db)
 	if FileAccess.file_exists(price_path):
 		pb.load_file(price_path)
-	if FileAccess.file_exists(DEFAULT_CLIENT):
-		pb.load_client(DEFAULT_CLIENT)
+	if not client.is_empty() and FileAccess.file_exists(client):
+		pb.load_client(client)
 	pb.load_overrides()
 	return pb
 

@@ -219,7 +219,7 @@ func test_real_price_file_loads() -> void:
 		return
 	var real := ItemDatabase.new()
 	real.load_default()
-	var p := PriceBook.load_default(real, "user://__no_price_overrides__.json")
+	var p := PriceBook.load_default(real, "user://__no_price_overrides__.json", PriceBook.DEFAULT_PATH, "")
 	assert_eq(p.errors.size(), 0, "errors: %s" % str(p.errors))
 	assert_eq(p.warnings.size(), 0, "warnings: %s" % str(p.warnings).left(300))
 	assert_true(p.price_db_count() > 1000)

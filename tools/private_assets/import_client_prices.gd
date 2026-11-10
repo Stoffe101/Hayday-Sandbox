@@ -4,7 +4,8 @@ extends SceneTree
 ## repository. The app does the same from Asset Manager > Game data.
 ##   godot --headless --path . --script res://tools/private_assets/import_client_prices.gd -- \
 ##     (--tables=<folder with decorations.csv ...> | --reference=<price_reference.json>)
-##     [--pack=<installed art pack folder or its pack.json>]   export names -> items (strongest match)
+##     [--pack=<installed art pack folder or its pack.json>]   export names -> items (strongest match);
+##                                                              its catalog_overrides (incl. additions) are applied
 ##     [--mapping=<your mapping json>]                          default user://private_data/client_price_mapping.json
 ##     [--game-version=1.73.89]                                 default: from the reference / the pack provenance
 ##     (--install | --out=<supplement.json>)                    --install = user://private_data/client_prices.json
@@ -53,13 +54,20 @@ func _initialize() -> void:
 		quit(1)
 		return
 	var exports := {}
+	var hints := {}
 	if a.has("pack"):
 		var pp := str(a["pack"])
 		if not pp.ends_with(".json"):
 			pp = pp.path_join("pack.json")
 		var pack: Variant = JsonUtil.read_json(pp)
+		# The pack's catalogue corrections and additions (client-only items), as the app applies them.
+		var cov := pp.get_base_dir().path_join(str(pack.get("catalog_overrides", ""))) if pack is Dictionary and not str(pack.get("catalog_overrides", "")).is_empty() else ""
+		if not cov.is_empty() and FileAccess.file_exists(cov):
+			var crep := db.apply_overrides(PackOverrides.parse_catalog_overrides(JsonUtil.read_json(cov)), str(pack.get("id", "pack")))
+			print("note: pack catalogue: %d corrected, %d added" % [int(crep["applied"]), (crep["added"] as Array).size()])
 		if pack is Dictionary and pack.get("sprites") is Dictionary:
 			exports = ClientPrices.export_index_from_sprites(pack["sprites"], db)
+			hints = ClientPrices.art_hints_from_sprites(pack["sprites"], db)
 			if game_version.is_empty() and pack.get("provenance") is Dictionary:
 				game_version = str(pack["provenance"].get("client_build", ""))
 		else:
@@ -71,7 +79,7 @@ func _initialize() -> void:
 	var mapping := ClientPrices.load_mapping(str(a.get("mapping", ClientPrices.MAPPING_PATH)))
 	var cp := ClientPrices.new()
 	var t0 := Time.get_ticks_msec()
-	var doc := cp.build(records, db, exports, mapping, game_version, source)
+	var doc := cp.build(records, db, exports, mapping, game_version, source, hints)
 	var t1 := Time.get_ticks_msec()
 	var pb := PriceBook.load_default(db)
 	pb.clear_client()
@@ -82,6 +90,9 @@ func _initialize() -> void:
 		printerr("not written: ", res["error"])
 		quit(1)
 		return
+	if a.has("install"):
+		# The app's "Re-import with my decisions" uses the same source.
+		ClientPrices.set_last_source(str(a.get("tables", a.get("reference", ""))))
 	var c: Dictionary = rep["coverage"]
 	print("CLIENT-PRICES OK records=%d items=%d components=%d review=%d known_before=%d known_after=%d newly=%d changed=%d build_ms=%d -> %s" % [
 		records.size(), (doc["items"] as Dictionary).size(), int(doc["stats"]["component_records"]),

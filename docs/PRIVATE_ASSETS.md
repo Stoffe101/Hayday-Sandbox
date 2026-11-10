@@ -49,6 +49,7 @@ None of these folders may be inside a git work tree. `fetch_fankit.py`, `fetch_w
 | **Hay Day Wiki** (Fandom), en + ru | `tools/private_assets/fetch_wiki.py --out <root> --wiki en\|ru --resume` | Public MediaWiki API plus the wiki's static image CDN (`format=original`). Each file is verified against the API's SHA-1. Discovery uses object categories plus the catalogue's item names and cited pages. |
 | Game client files **you already have** (optional) | `tools/private_assets/extract_from_apk.py extract <apk/xapk> --out <root>` | Verifies the APK signature is Supercell's, then decodes the `.sc`/`.sctx` files and renders sprites locally. It never downloads anything and never contacts a server. Details: [research/ASSET_ACQUISITION.md](research/ASSET_ACQUISITION.md). |
 | Pack build | `tools/private_assets/build_pack.py --root <root> --install-dir <dir>` | Matches images to catalogue items, calibrates anchors and scale, and writes and installs the pack. This tool is maintained separately. `acquire.py` reads its options and imports at run time. |
+| Pack terrain (optional) | `tools/private_assets/build_terrain.py [--install-dir <dir>]` (or `build_pack.py --terrain`) | Turns the client's own background art (extracted with the tool above) into the pack's `terrain/` folder ([TERRAIN_PACKS.md](TERRAIN_PACKS.md)): ground-tile images per world tile type and season, the edge exports as triangle meshes over the client atlases ("mesh replay"), and the animated water clips. Where each edge sits comes from a private placement file written by the terrain research (anchors are not in the client tables); the tool itself holds no game numbers. `--install-dir` backs the installed pack up to `<root>/archive/installed_<version>/` first and adds `-t<digest>` to its version. `--self-test` runs on made-up data; `--validate` runs `tools/ci/check_terrain_pack.gd`. |
 
 `tools/private_assets/acquire.py` runs these steps in order with resume (details below). On the development
 machine on 2026-11-09 the indexes record 2,808 of 2,808 Fan Kit assets downloaded (0 failed), 2,386 en-wiki files
@@ -163,6 +164,95 @@ All of these write only to `<root>` (they refuse the repository) and contain no 
   diamonds, ground-centre crosses and labels on them for checking the calibration by eye.
 * Items checked that way are listed in `<root>/mapping/visually_verified.json` and marked `verified` in the
   installed pack's `overrides.json` (which `build_pack.py` keeps and counts).
+
+### Pack QA report (read-only)
+
+`python3 tools/private_assets/pack_qa.py` (Windows: `py tools\private_assets\pack_qa.py`; Godot from `--godot`,
+`$env:GODOT` or PATH) checks the installed pack without changing anything:
+
+* It finds the installed pack the way the app does (`%APPDATA%\HaydaySandbox\asset_packs\hayday_original`,
+  `~/.local/share/HaydaySandbox/...`, or `--pack-dir`) and runs `tools/private_assets/pack_qa.gd` headless with a
+  fresh, empty temporary user-data folder (`APPDATA` / `XDG_DATA_HOME`). The pack is only read in place; layouts,
+  settings, autosaves and the pack's `overrides.json` are never opened for writing.
+* `pack_qa.gd` loads the pack with the app's own `AssetLibrary` and the catalogue with the pack's footprint
+  corrections, then for every catalogue item with pack art: the base sprite, every variant (levels, growth stages,
+  states, skins, seasonal `__<theme>` copies and whether their base look exists), hand-drawn mirrors, all connection
+  pieces and the thumbnails are resolved and decoded. Each image is measured against its footprint: art width vs the
+  footprint diamond (`w_ratio`), horizontal centring of the solid art on the anchor (`center_off`), where the solid
+  art ends below the anchor in half diamond heights (`bottom`, 1 = the diamond's bottom corner) and the share of
+  semi-transparent dark pixels (baked shadow). Landmark art (`lm_*`): present, loads, states and skins with art.
+  Placeable items that fall back to placeholders are listed as missing art.
+* Flags: fixed sanity limits (anchor outside the image, art far off-centre or above the ground centre, under- or
+  oversize, pixels per world px out of range; fence posts and lone pieces are exempt from "undersize") and outliers
+  within the category (median ± 4 MAD). Connection pieces are compared with the item's other pieces that reach the
+  same down-facing sides; diagonal corner pieces of paths (masks 3, 6, 9, 12, half a tile on purpose) only with
+  each other.
+* Output, default `<root>/qa/<YYYY-MM-DD>/`: `pack_qa.json`, `pack_qa.md` and `sheets/*.png` contact sheets
+  (flagged sprites, landmarks, connection pieces per group, app flip next to the client's mirror art, a sample per
+  category). Each cell draws the sprite at a known world scale with the footprint diamond, its tile grid and the
+  anchor (red cross). The tool refuses an output folder inside a git work tree. Pillow is needed for the sheets only
+  (`--no-sheets`, or `--sheets-only <folder>` to redraw).
+* A flag is a question, not a verdict: art that legitimately overhangs (trees, balloons, flags, landmarks whose
+  export draws parts far from their tile) is flagged by design. Look at the sheet before changing the builder.
+
+### Calibration sheets (1:1 placement)
+
+`python3 tools/private_assets/calibration_sheet.py [--targets ...] [--zooms 0.5,1,2]` renders the real app with the
+pack (Xvfb + OpenGL on Linux; a temporary user-data folder that links the pack read-only) at each target and zoom
+through `tests/visual/capture.gd --dump-objects --hide-panels`. The dump holds no pixels: the tile -> image transform,
+every object's and landmark's footprint, ground centre, sprite bounds and, for landmarks, the client row tile
+(`client_registration`, written by `build_world.py`). The tool then draws the tile grid with `x,y` labels, blue
+object footprints, red landmark footprints, yellow ground centres (= sprite anchors) and magenta client
+registration points, and puts the zoom levels of each target side by side (`sheet_<target>.png`). Default targets:
+farmhouse, mine, roadside shop, truck, order board, dock, the road edge, a fence line, barn, silo, sugar mill and the
+first 1x1 / 2x2 decoration of the QA layout (`make_test_layout.gd --out=<root>/layouts/q1_calibration.hdlayout`).
+Output: `<root>/screens/calibration/<date>/` (or `--out`); it refuses a git work tree.
+
+### Settling a placement question with a real screenshot
+
+Where only the game itself can decide (the truck's half-tile question, see
+[research/WORLD_VALIDATION.md](research/WORLD_VALIDATION.md)), use a real in-game screenshot:
+
+1. **In Hay Day:** open your own farm, close every menu, zoom all the way in (two-finger pinch out) and pan so the
+   farmhouse, the order board and the parked truck are all on screen. Do not tap anything (a tapped object shows a
+   menu and moves the camera). Take a screenshot; one per zoom level helps (fully zoomed in, and the default zoom).
+   For the Mine or the roadside shop, centre those instead.
+2. **In the app:** open the inspector's View tab → *Screenshot reference* → add the screenshot, then *Calibrate*
+   with 4 or more points. Click a point on the screenshot, then the same point on the farm; clicks near a landmark
+   corner or centre snap to it (the farmhouse's footprint corners, the order board's corners, the Mine's corners).
+   For the truck click its visual centre (midway between its wheels, on the ground) and the truck's centre on the
+   farm.
+3. **Plan → Accuracy → Write placement check.** For every calibrated screenshot the app fits the screenshot from
+   the other points and measures each clicked point against that fit (leave-one-out), per landmark, and for a clicked
+   centre of a centred landmark compares the click with both candidates (footprint centre and client registration
+   point). It writes `user://private_data/placement_checks/<time>_<image>.json` + `.md` (private: made from your
+   screenshot). Labels: `pending-screenshot` (fewer than 3 measured points), `screenshot-checked` (all within
+   0.25 tile), `mismatch` (lists the points).
+* Pack terrain: render it with a **copied** data folder (a temporary `XDG_DATA_HOME` holding only a copy of
+  `asset_packs/`, plus a `settings.cfg` with `show_grid=false`), an empty layout per season (`world.theme`) opened
+  with `--open=`, and `at_<x>_<y>_<zoom>` scenarios with `--real-art --hide-panels --out=<root>/screens/...`. The
+  `terrain_pack*` scenarios print build times and frame times with and without the pack. Your real `layouts/`,
+  `settings.cfg` and autosaves are never touched that way.
+
+### Client-only items (catalogue additions)
+
+Objects your client has but the public catalogue does not (for example the pearl-priced water decorations) come in as
+**private catalogue additions**, never as repository data:
+
+```bash
+# after a client-price import (Asset manager > Game data, or import_client_prices.gd --install):
+python3 tools/private_assets/client_catalog.py --review ~/.local/share/HaydaySandbox/private_data/client_prices.json
+python3 tools/private_assets/build_pack.py            # matches their art, writes "additions" into catalog_overrides.json
+python3 tools/private_assets/install_pack.py <root>/packs/hayday_original   # back up the installed pack first
+godot --headless --path . --script res://tools/private_assets/import_client_prices.gd -- \
+  --tables=<root>/raw/apk_extracted/<build>/assets/data --pack=<installed pack> --install   # their prices
+```
+
+`client_catalog.py` classifies every record the import could not apply and writes a private report
+(`<root>/qa/<date>/client_records/classification.{json,md}`) and the additions
+(`<root>/research/catalog/client_additions.json`); it refuses a git work tree. `build_pack.py --no-additions` builds
+without them. To see the farm's look in the budget of a private capture, add `--with-look` to the capture command
+(the capture driver otherwise resets the plan, including that toggle, before every scenario).
 
 ## For contributors and AI agents
 

@@ -14,7 +14,8 @@ What it does
   * finds pack.json at the root of the folder/zip or exactly one folder deep (same rule as the in-app installer);
   * validates it: format "hayday-sandbox-asset-pack", a safe id, a "sprites" object, safe relative file paths
     (sprites and the optional "world" / "catalog_overrides" / "terrain" data files), anchors as [x, y]; counts
-    referenced files that are missing (warning; an error with --strict);
+    referenced files that are missing (warning; an error with --strict); counts the files the terrain manifest
+    references (atlases, tiles, meshes, clips; docs/TERRAIN_PACKS.md) and warns about missing ones;
   * refuses a destination inside a git work tree (private art must never land in a repository);
   * skips unsafe zip entries (absolute paths, '..', symlinks), copies/extracts into a hidden temporary folder next to
     the destination and swaps it into place, so an interrupted install never leaves a half-written pack; the
@@ -172,6 +173,68 @@ def validate_pack_json(data: bytes) -> tuple[dict, list[str]]:
 	return pack, files
 
 
+def terrain_files(manifest: bytes | None, rel: str) -> tuple[list[str], list[str]]:
+	"""(pack-relative files, problems) a terrain manifest (docs/TERRAIN_PACKS.md) references: atlases, tile images,
+	a separate tile file, the clips file and every piece's mesh / image / sheet / texture in every variant. Paths
+	inside it are relative to its folder; unsafe ones are problems."""
+	if manifest is None:
+		return [], [f"terrain manifest {rel} is missing"]
+	try:
+		d = json.loads(manifest.decode("utf-8-sig"))
+	except (UnicodeDecodeError, ValueError) as ex:
+		return [], [f"terrain manifest {rel} is not valid JSON: {ex}"]
+	if not isinstance(d, dict):
+		return [], [f"terrain manifest {rel} is not a JSON object"]
+	base = rel.rsplit("/", 1)[0] + "/" if "/" in rel else ""
+	found: list[str] = []
+	probs: list[str] = []
+
+	def add(v) -> None:
+		if not isinstance(v, str) or not v:
+			return
+		q = safe_rel(base + v) if safe_rel(v) else None
+		if q is None:
+			probs.append(f"terrain: unsafe path {v!r}")
+		elif q not in found:
+			found.append(q)
+
+	def tex(e) -> None:
+		if isinstance(e, dict):
+			add(e.get("file"))
+			for ve in (e.get("variants") or {}).values() if isinstance(e.get("variants"), dict) else []:
+				if isinstance(ve, dict):
+					add(ve.get("file"))
+	for a in (d.get("atlases") or {}).values() if isinstance(d.get("atlases"), dict) else []:
+		add(a.get("file") if isinstance(a, dict) else a)
+	tiles = d.get("tiles", d.get("ground"))
+	if isinstance(tiles, str):
+		add(tiles)
+	elif isinstance(tiles, dict):
+		for e in tiles.values():
+			tex(e)
+	clips = d.get("clips", d.get("water_glints"))
+	if isinstance(clips, str):
+		add(clips)
+	lists = [d.get("pieces")]
+	for v in (d.get("variants") or {}).values() if isinstance(d.get("variants"), dict) else []:
+		if isinstance(v, dict):
+			lists.append(v.get("pieces"))
+	for v in (d.get("seasons") or {}).values() if isinstance(d.get("seasons"), dict) else []:
+		lists.append(v)
+	for lst in lists:
+		for p in lst if isinstance(lst, list) else []:
+			if not isinstance(p, dict):
+				continue
+			for k in ("mesh", "file", "texture"):
+				v = p.get(k)
+				add(v.get("file") if isinstance(v, dict) else v)
+			if isinstance(p.get("image"), dict):
+				add(p["image"].get("file"))
+			if isinstance(p.get("anim"), dict):
+				add(p["anim"].get("sheet"))
+	return found, probs
+
+
 # ---- sources -----------------------------------------------------------------------------------------------
 
 class FolderSource:
@@ -186,6 +249,10 @@ class FolderSource:
 
 	def pack_json(self) -> bytes:
 		return (self.base / "pack.json").read_bytes()
+
+	def read(self, rel: str) -> bytes | None:
+		p = self.base / rel
+		return p.read_bytes() if p.is_file() and not p.is_symlink() else None
 
 	def members(self) -> list[str]:
 		out = []
@@ -220,6 +287,12 @@ class ZipSource:
 
 	def pack_json(self) -> bytes:
 		return self.z.read(self.prefix + "pack.json")
+
+	def read(self, rel: str) -> bytes | None:
+		try:
+			return self.z.read(self.prefix + rel)
+		except KeyError:
+			return None
 
 	def members(self) -> list[str]:
 		out = []
@@ -304,10 +377,20 @@ def install(src_path: Path, dest: Path | None, dest_root: Path | None, strict: b
 		raise PackError(f"destination {dest} is inside the source {src_real}")
 	members = source.members()
 	have = set(members)
+	terrain: list[str] = []
+	if isinstance(pack.get("terrain"), str) and safe_rel(pack["terrain"]):
+		terrain, tprobs = terrain_files(source.read(safe_rel(pack["terrain"])), safe_rel(pack["terrain"]))
+		for p in tprobs:
+			log("warning: " + p)
 	missing = sorted(set(files) - have)
+	t_missing = sorted(set(terrain) - have)
+	if t_missing:
+		log(f"warning: {len(t_missing)} terrain file(s) are missing, e.g. {t_missing[:3]} (the app draws its own "
+			"terrain where pack terrain is missing)")
 	images = sum(1 for m in members if m.lower().endswith((".png", ".webp", ".jpg", ".jpeg")))
 	info = {"id": pid, "version": pack.get("version"), "sprites": len(pack["sprites"]), "files": len(members),
 		"images": images, "missing": len(missing), "dest": str(dest), "source": source.label,
+		"terrain_files": len(terrain), "terrain_missing": len(t_missing),
 		"skipped_unsafe": len(getattr(source, "skipped", []))}
 	if missing:
 		msg = f"{len(missing)} referenced file(s) are missing from the pack, e.g. {missing[:3]}"
@@ -317,7 +400,8 @@ def install(src_path: Path, dest: Path | None, dest_root: Path | None, strict: b
 	if info["skipped_unsafe"]:
 		log(f"warning: skipped {info['skipped_unsafe']} unsafe zip entr(y/ies): {source.skipped[:3]}")
 	if dry_run:
-		log(f"DRY RUN: would install pack '{pid}' ({info['sprites']} sprites, {info['files']} files) into {dest}")
+		log(f"DRY RUN: would install pack '{pid}' ({info['sprites']} sprites, {info['files']} files"
+			+ (f", terrain {len(terrain) - len(t_missing)}/{len(terrain)} files" if terrain else "") + f") into {dest}")
 		return info
 	dest.parent.mkdir(parents=True, exist_ok=True)
 	need = source.total_size() if isinstance(source, ZipSource) else sum((source.base / m).stat().st_size
@@ -354,7 +438,8 @@ def install(src_path: Path, dest: Path | None, dest_root: Path | None, strict: b
 			shutil.rmtree(tmp, ignore_errors=True)
 	record_install(dest, pid, private_roots)
 	log(f"installed pack '{pid}' v{info['version']}: {info['sprites']} sprites, {info['files']} files "
-		f"({images} images) -> {dest}")
+		f"({images} images)" + (f", terrain {len(terrain) - len(t_missing)}/{len(terrain)} files" if terrain else "")
+		+ f" -> {dest}")
 	return info
 
 
@@ -454,6 +539,18 @@ def self_test() -> int:
 		(wpack / "world" / "world.json").write_text('{"format": "hayday-sandbox-map", "schema_version": 2}')
 		if install(wpack, None, user, False, True, [priv], quiet)["missing"] != 1:
 			fails.append("a declared but missing catalog_overrides.json must be counted as missing")
+		tpack = make_pack(tmp / "t1", extra={"terrain": "terrain/terrain.json"})
+		(tpack / "terrain" / "meshes").mkdir(parents=True)
+		(tpack / "terrain" / "terrain.json").write_text(json.dumps({"format": "hayday-sandbox-terrain", "schema_version": 1,
+			"atlases": {"a": {"file": "atlas/a.png"}}, "tiles": {"g": {"file": "tiles/g.png", "variants": {"winter": {"file": "tiles/g_w.png"}}}},
+			"clips": "clips.json", "pieces": [{"mesh": "meshes/e.mesh.json"}],
+			"variants": {"winter": {"pieces": [{"mesh": "meshes/e.mesh.json"}, {"type": "image", "file": "img/w.png"}]}}}))
+		(tpack / "terrain" / "meshes" / "e.mesh.json").write_text("{}")
+		ti = install(tpack, None, tmp / "user_t", False, False, [priv], quiet)
+		if ti["terrain_files"] != 6 or ti["terrain_missing"] != 5:
+			fails.append(f"terrain files must be counted (6 referenced, 5 missing): {ti}")
+		if not (tmp / "user_t" / "hayday_original" / "terrain" / "meshes" / "e.mesh.json").is_file():
+			fails.append("terrain files must be copied")
 		miss = make_pack(tmp / "m1", extra={"sprites": {"x": {"file": "items/nope.png"}}})
 		if install(miss, None, user, False, True, [priv], quiet)["missing"] != 1:
 			fails.append("missing files must be counted")

@@ -13,6 +13,7 @@ extends Node
 ##   --outline-all                at_* scenarios select every object (footprint outlines)
 ##   --dump-objects               write <shot>.objects.json (screen footprints/bounds, no pixels)
 ##   --hide-panels                hide the top bar and side panels
+##   --with-look                  include the layout's farmhouse / truck / shop look in the budget (SkinBudget)
 ##   scenario export_objects      export of the objects' bounding box at 1x
 ##   --select-items=a+b+c         items the "selection" scenario selects (default field+apple_tree)
 ## Screens of a private pack must go to the private root (--out=...), never artifacts/.
@@ -21,8 +22,9 @@ const ALL := ["overview", "place_valid", "place_invalid", "selection", "search",
 	"gallery", "help", "settings", "welcome", "reference", "compare", "export", "light",
 	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty", "landmarks", "migration",
 	"drag_blocked", "tools_symmetry", "tools_repeat", "winter", "terrain_pack", "terrain_pack_winter", "terrain_pack_river",
+	"terrain_pack_fg", "terrain_pack_blend", "terrain_pack_zoomout",
 	"plan_budget", "plan_areas", "plan_phases", "plan_heatmap", "plan_shop", "plan_build", "plan_guide", "plan_accuracy",
-	"plan_minimap", "plan_layers", "plan_compare", "plan_ready", "game_data"]
+	"plan_minimap", "plan_layers", "plan_compare", "plan_ready", "game_data", "game_data_review"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
 const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "anim_perf"]
 ## Asset scenarios install a synthetic pack generated from the built-in
@@ -43,6 +45,7 @@ var _client_installed := false
 var real_art := false
 var outline_all := false   ## at_* scenarios select everything, so every footprint is outlined
 var hide_panels := false   ## hide top bar + side panels (Tab) for unobstructed QA shots
+var with_look := false     ## --with-look: every scenario includes the farm's look (design customization) in the budget
 var dump_objects := false  ## write <shot>.objects.json: id, footprint corners + sprite bounds in screen px
 var select_items: Array = ["field", "apple_tree"]   ## "selection" scenario (--select-items=a+b)
 var _migration_layout_open := false
@@ -70,6 +73,8 @@ func _ready() -> void:
 			dump_objects = true
 		elif a == "--hide-panels":
 			hide_panels = true
+		elif a == "--with-look":
+			with_look = true
 		elif a.begins_with("--select-items="):
 			select_items = Array(a.substr(15).split("+"))
 	if scenarios.is_empty():
@@ -188,6 +193,8 @@ func _reset() -> void:
 		main.dock.set_status("")   # e.g. "Select something that can be copied"
 		main.inspector.show_tab(0)   # the auto-hiding inspector starts closed
 		_reset_plan(s)
+		if with_look:
+			s.layout.set_planning(SkinBudget.with_enabled(s.layout.planning, true))
 	if hide_panels and not main._panels_hidden:
 		main._panels_hidden = true
 		main._update_view_rect()
@@ -388,7 +395,48 @@ func _dump_objects(path: String, px_per_logical: Vector2, export_rect := Rect2()
 	var meta := {"zoom": export_scale if exporting else main.camera.zoom.x, "objects": out}
 	if exporting:
 		meta["export_rect"] = [export_rect.position.x, export_rect.position.y, export_rect.size.x, export_rect.size.y]
+	_dump_world_geometry(meta, xf, view, exporting, px_per_logical)
 	JsonUtil.write_atomic(path, JsonUtil.stringify(meta, true), false)
+
+
+func _dump_world_geometry(meta: Dictionary, xf: Callable, view: Rect2, exporting: bool, px_per_logical: Vector2) -> void:
+	## Calibration sheets: the tile -> image transform (screen = o + x*ex + y*ey
+	## for tile corner (x, y)) and every landmark in view with its footprint,
+	## ground centre, sprite bounds and the registration tile its sprite is
+	## anchored to (pack field "client_registration"). No image data.
+	var o: Vector2 = xf.call(Iso.grid_to_world(Vector2.ZERO))
+	var ex: Vector2 = xf.call(Iso.grid_to_world(Vector2(1, 0))) - o
+	var ey: Vector2 = xf.call(Iso.grid_to_world(Vector2(0, 1))) - o
+	meta["tile_to_image"] = {"o": [snappedf(o.x, 0.01), snappedf(o.y, 0.01)], "ex": [snappedf(ex.x, 0.001), snappedf(ex.y, 0.001)], "ey": [snappedf(ey.x, 0.001), snappedf(ey.y, 0.001)]}
+	var s = _session()
+	var lms: Array = []
+	if s.map != null:
+		for lm: Landmark in s.map.landmarks:
+			var key := LandmarkView.key_of(lm.id)
+			var pts: Array = []
+			var inside := false
+			for w in Iso.footprint_polygon(lm.origin, lm.footprint):
+				var p: Vector2 = xf.call(w)
+				pts.append([snappedf(p.x, 0.1), snappedf(p.y, 0.1)])
+				inside = inside or view.grow(400).has_point(p if exporting else p / px_per_logical)
+			if not inside:
+				continue
+			var c: Vector2 = xf.call(Iso.footprint_center(lm.origin, lm.footprint))
+			var b: Rect2 = main.renderer.world_entry_bounds(key)
+			var b0: Vector2 = xf.call(b.position)
+			var b1: Vector2 = xf.call(b.end)
+			var spr: AssetLibrary.SpriteInfo = main.renderer.world_sprite_of(key)
+			var row := {"id": lm.id, "origin": [lm.origin.x, lm.origin.y], "size": [lm.footprint.x, lm.footprint.y],
+				"draw_anchor": lm.draw_anchor, "confidence": lm.confidence, "footprint": pts, "center": [snappedf(c.x, 0.1), snappedf(c.y, 0.1)],
+				"bounds": [snappedf(b0.x, 0.1), snappedf(b0.y, 0.1), snappedf(b1.x, 0.1), snappedf(b1.y, 0.1)],
+				"pack": spr.pack_id if spr else "", "file": spr.path if spr else ""}
+			var reg: Variant = lm.extra.get("client_registration", null)
+			if reg is Array and (reg as Array).size() == 2:
+				var rp: Vector2 = xf.call(Iso.grid_to_world(Vector2(float(reg[0]), float(reg[1]))))
+				row["client_registration"] = [int(reg[0]), int(reg[1])]
+				row["registration_point"] = [snappedf(rp.x, 0.1), snappedf(rp.y, 0.1)]
+			lms.append(row)
+	meta["landmarks"] = lms
 
 
 func _find_free(item_id: String, near: Vector2i) -> Vector2i:
@@ -480,14 +528,96 @@ func _terrain_pack(theme_id: String, zoom: float, at: Vector2) -> bool:
 	main.ground.setup(s.map, all_open)
 	var own_ms := pl.last_tiles_usec / 1000.0
 	main.ground.setup(s.map, s.layout.unlocked_plots)
+	# Ambient animation Off / Reduced / Full over the same view (animated instances in view).
+	var amb := []
+	var view: Rect2 = main.world.get_canvas_transform().affine_inverse() * main.get_viewport().get_visible_rect()
+	for mode in [ObjectRenderer.Ambient.OFF, ObjectRenderer.Ambient.REDUCED, ObjectRenderer.Ambient.FULL]:
+		main.ground.set_ambient_mode(mode)
+		var an: PackTerrainLayer._AnimNode = pl.anim_node()
+		var r0 := an.redraws
+		var ms: float = await _avg_frame_ms(60)
+		amb.append("%.2f(%d in view, %d redraws)" % [ms, an.animating_in(view), an.redraws - r0])
+	main.ground.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[_app().settings.ambient_animation()])
+	# Season switches through every variant of the pack and back (GroundLayer.set_theme: pieces, tiles, coverage).
+	var seasons := []
+	var tpv: TerrainPack = pl.pack
+	for v in (tpv.variants + tpv.variants if tpv else []) + [theme_id]:
+		var t0s := Time.get_ticks_usec()
+		main.ground.set_theme(v)
+		seasons.append("%s=%.1f" % [v if not str(v).is_empty() else "-", (Time.get_ticks_usec() - t0s) / 1000.0])
 	DisplayServer.window_set_vsync_mode(vsync)
 	Engine.max_fps = max_fps
 	var tp: TerrainPack = pl.pack
-	print("TERRAIN_PACK %s active=%s variant=%s backdrop=%s tiles=%d batches=%d pieces=%d failed=%d vertices=%d anims=%d clips=%d first_build_ms tiles=%.2f pieces=%.2f cached_rebuild_ms=%.2f ownership_tiles_ms=%.2f frame_ms procedural=%.2f/%.2f pack=%.2f/%.2f problems=%s" % [
+	print("TERRAIN_PACK %s active=%s variant=%s backdrop=%s tiles=%d batches=%d pieces=%d foreground=%d blended=%d failed=%d vertices=%d anims=%d clips=%d first_build_ms tiles=%.2f pieces=%.2f cached_rebuild_ms=%.2f ownership_tiles_ms=%.2f frame_ms procedural=%.2f/%.2f pack=%.2f/%.2f ambient_ms off/reduced/full=%s season_switch_ms %s problems=%s" % [
 		theme_id, str(pl.active()), pl.variant, str(pl.backdrop_ok), pl.stats["tiles"], pl.stats["tile_batches"], pl.stats["pieces"],
-		pl.failed_pieces, pl.stats["vertices"], pl.stats["anims"], pl.stats["clips"], first_ms[0], first_ms[1], reload_ms, own_ms,
-		plain_ms, plain2_ms, pack_ms, pack2_ms, str(tp.diagnostics()) if tp else "[]"])
+		pl.stats["foreground"], pl.stats["blended"], pl.failed_pieces, pl.stats["vertices"], pl.stats["anims"], pl.stats["clips"],
+		first_ms[0], first_ms[1], reload_ms, own_ms, plain_ms, plain2_ms, pack_ms, pack2_ms, " / ".join(amb), " ".join(seasons), str(tp.diagnostics()) if tp else "[]"])
 	return pl.active() or real_art
+
+
+func _terrain_fx(which: String) -> bool:
+	## Pack terrain features over the objects: the foreground layer (picking
+	## must still find the object under it) or the blend modes. Prints a
+	## TERRAIN_FX line; FAIL when a check does not hold.
+	if not _install_terrain_pack():
+		return false
+	var s = _session()
+	main.ground.set_theme("")
+	await _frames(4)
+	var pl: PackTerrainLayer = main.ground.pack_layer()
+	var fg: Node2D = pl.foreground
+	var ok: bool = fg.get_parent() == main.world and fg.get_index() == main.renderer.get_index() + 1
+	var at := Vector2.ZERO
+	var zoom := 1.2
+	var picked := "-"
+	if which == "fg":
+		var canopy := Vector2.ZERO
+		for p in pl.pack.pieces_for(pl.variant):
+			if p["id"] == "canopy":
+				canopy = p["at"]
+		# A bakery whose south corner is the canopy's trunk: the leaves cover it.
+		var it: ItemDef = s.db.get_item("bakery")
+		var origin := Vector2i(Iso.world_to_grid(canopy).round()) - it.footprint
+		var under: Array = s.layout.uids_in_rect(Rect2i(origin, it.footprint))
+		if not under.is_empty():
+			_exec(EditCommands.RemoveObjects.new(under, "Capture removal"))
+		var po: PlacedObject = s.make_object(it, origin)
+		_exec(EditCommands.AddObjects.new([po]))
+		await _frames(2)
+		var c := Iso.footprint_center(po.origin, po.size)
+		var hit: Dictionary = main.controller.pick_at(c)
+		picked = "%s:%d at %s" % [hit.get("kind", ""), int(hit.get("uid", 0)), str(po.origin)]
+		ok = ok and s.layout.get_obj(po.uid) != null and str(hit.get("kind", "")) == "object" and int(hit.get("uid", 0)) == po.uid
+		at = canopy + Vector2(0, -70)
+		zoom = 1.6
+	elif which == "zoomout":
+		main.camera.smooth = false
+		main._apply_world_bounds()
+		var cam: FarmCamera = main.camera
+		for i in 80:
+			cam.wheel_zoom(cam.view_rect.get_center(), -1.0)
+		await _frames(6)
+		var want: Rect2 = main.world_rect_px(s.map)
+		ok = ok and cam.limits == want.grow(FarmCamera.LIMIT_MARGIN) and is_equal_approx(cam.zoom.x, cam.min_zoom)
+		ok = ok and (not pl.active() or want.encloses(pl.extent))
+		print("TERRAIN_FX zoomout min_zoom=%.3f zoom=%.3f world_rect=%s" % [cam.min_zoom, cam.zoom.x, str(want)])
+	else:
+		at = Iso.grid_to_world(Vector2(s.map.size.x - 8, s.map.size.y * 0.45))
+		zoom = 0.7
+		ok = ok and (real_art or pl.stats["blended"] >= 3)   # the real pack has no blended pieces
+	main.camera.smooth = false
+	if which != "zoomout":
+		main.camera.set_zoom_level(zoom)
+		main.camera.zoom = Vector2(zoom, zoom)
+		main.camera.target_zoom = zoom
+		main.camera.center_on(at)
+	await _frames(6)
+	print("TERRAIN_FX %s ok=%s foreground=%d blended=%d fg_index=%d renderer_index=%d picked=%s extent=%s camera_limits=%s" % [
+		which, str(ok), pl.stats["foreground"], pl.stats["blended"], fg.get_index(), main.renderer.get_index(), picked,
+		str(pl.extent), str(main.camera.limits)])
+	if not ok:
+		print("FAIL terrain_pack_%s: a foreground / blend check did not hold" % which)
+	return ok
 
 
 func _asset_manager(item_id: String, tab: int) -> bool:
@@ -633,8 +763,9 @@ func _scenario(sc: String) -> bool:
 			var ok_2: bool = await _asset_manager("bakery", 2)
 			if not ok_2:
 				return false
-		"game_data":
+		"game_data", "game_data_review":
 			# Asset manager > Game data with an invented client-price supplement
+			# (game_data_review: scrolled to the review list's side-by-side candidates)
 			# (real game data only with --real-art, whose shots go to the private root).
 			if not real_art:
 				var recs := ClientPrices.records_from_reference({"format": ClientPrices.REFERENCE_FORMAT, "records": [
@@ -643,6 +774,7 @@ func _scenario(sc: String) -> bool:
 					{"table": "decorations", "source_name": "Water Dragon Steps", "purchase_price_fields": {}, "voucher_requirements": [{"game_currency": "Voucher3", "amount": 12}]},
 					{"table": "decorations", "source_name": "Moon Fountain", "purchase_price_fields": {"pearls": 40}, "voucher_requirements": []},
 					{"table": "decorations", "source_name": "Hay Bales", "purchase_price_fields": {"coins": 30}, "voucher_requirements": []},
+					{"table": "decorations", "source_name": "Fitting room", "purchase_price_fields": {"coins": 900}, "voucher_requirements": [], "tile_width": 2, "tile_height": 2},
 					{"table": "customization_house", "source_name": "RoofInvented", "purchase_price_fields": {"coins": 5000}, "voucher_requirements": []}]})
 				var pb0: PriceBook = _app().prices.derived(null)
 				var doc := ClientPrices.new().build(recs, _app().db, {}, {}, "0.0.0-synthetic", {"kind": "synthetic"})
@@ -657,6 +789,9 @@ func _scenario(sc: String) -> bool:
 			await _frames(6)
 			amg.show_tab(3)
 			await _frames(20)
+			if sc == "game_data_review":
+				amg.game_data.scroll_vertical = 100000
+				await _frames(6)
 		"asset_empty":
 			# What a user sees before installing any pack.
 			main._fit()
@@ -919,6 +1054,18 @@ func _scenario(sc: String) -> bool:
 				if r["kind"] == FarmMap.Kind.ROAD and not (r["rects"] as Array).is_empty():
 					road_y = (r["rects"][0] as Rect2i).position.y
 			if not await _terrain_pack("", 1.6, Iso.grid_to_world(Vector2(-1.0, road_y - 2.0))):
+				return false
+		"terrain_pack_fg":
+			# A foreground piece (canopy) over an object: drawn above it, never picked.
+			if not await _terrain_fx("fg"):
+				return false
+		"terrain_pack_blend":
+			# Pieces with the add (light shafts), multiply (cloud shadow) and screen (haze) blends.
+			if not await _terrain_fx("blend"):
+				return false
+		"terrain_pack_zoomout":
+			# Zoomed out as far as a user can: the camera bounds follow the pack's pieces.
+			if not await _terrain_fx("zoomout"):
 				return false
 		"anim_perf":
 			await _anim_perf()

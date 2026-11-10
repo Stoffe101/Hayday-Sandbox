@@ -103,6 +103,28 @@ centre-anchored sprite at the footprint centre, which is half a tile (16, 8 worl
 client's registration point. That offset is reported by the `rendering_anchors` check; it is not corrected in the
 world data (fixing it belongs to the pack builder / renderer).
 
+### Where the truck art is drawn (W5 check; pending screenshot)
+
+The logical cells stay as above (verified road cells, unchanged). Only the drawing position was examined, with the
+pack's own export data and private calibration sheets (`tools/private_assets/calibration_sheet.py`, rendered at
+zoom 1, 2 and 3 for both readings):
+
+| Reading | Where the export's registration point goes | Supported by | What it looks like |
+|---|---|---|---|
+| B, current | the footprint centre | the parking pair lies exactly under the art; the export is centred on its registration point | the truck stands on the parking pair, on the driveway |
+| A, uniform rule | the top corner of the row's tile (X, Y), as for the other 30 landmarks | one drawing rule for every SpecialObjects row | the truck moves half a tile (16, 8 world px) along -x, its rear over the verge |
+
+Conclusion: keep B (**strong**, not verified). The two readings use the same data and differ only in the client's
+drawing code, which is not read. The rendering-anchors check keeps reporting the measured offset, and the world
+records the row tile as `client_registration` so a screenshot can decide. `build_world.py`
+(`landmark_anchor_offset`) states the rule.
+
+Settling it (**pending screenshot**): take an in-game screenshot with the farmhouse, order board and truck on screen
+(recipe in [PRIVATE_ASSETS.md](../PRIVATE_ASSETS.md#settling-a-placement-question-with-a-real-screenshot)), calibrate
+it with 4+ landmark points including the truck's centre, then Plan → Accuracy → *Write placement check*. The
+report says whether the clicked truck centre is closer to the footprint centre (B) or to the registration point (A).
+Only then would the pack builder change the truck's anchor (the logical cells never move).
+
 ## Evidence ladder (Plan → Accuracy)
 
 1. Exact match to client ground data (`ground`)

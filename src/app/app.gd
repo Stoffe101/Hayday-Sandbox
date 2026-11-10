@@ -106,10 +106,13 @@ func _apply_catalog_overrides() -> bool:
 		var parsed := PackOverrides.parse_catalog_overrides(JsonUtil.read_json(path), errs)
 		for x in errs:
 			push_warning("Pack %s: %s" % [e.get("pack_id", "?"), x])
-		if (parsed.get("items", {}) as Dictionary).is_empty():
+		if (parsed.get("items", {}) as Dictionary).is_empty() and not (parsed.get("additions") is Dictionary and not (parsed["additions"] as Dictionary).is_empty()):
 			continue
 		var rep := db.apply_overrides(parsed, str(e["pack_id"]))
-		if int(rep.get("applied", 0)) <= 0:
+		for x in rep.get("invalid", []):
+			if str(x).begins_with("addition"):
+				push_warning("Pack %s: %s" % [e.get("pack_id", "?"), x])
+		if int(rep.get("applied", 0)) <= 0 and (rep.get("added", []) as Array).is_empty():
 			continue
 		db.overrides_report["pack_version"] = str(e.get("version", ""))
 		applied = true

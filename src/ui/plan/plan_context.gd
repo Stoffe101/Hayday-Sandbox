@@ -73,6 +73,9 @@ var map: FarmMap
 var _guide: Dictionary = {}
 var _guide_key := ""
 var _pending := false
+## Design-customization budget (SkinBudget.compute), rebuilt lazily by customization().
+var _skin: Dictionary = {}
+var _skin_key := ""
 
 
 func bind(s: EditorSession, e: BudgetEngine, p: PriceBook, d: ItemDatabase, m: FarmMap) -> void:
@@ -83,6 +86,8 @@ func bind(s: EditorSession, e: BudgetEngine, p: PriceBook, d: ItemDatabase, m: F
 	map = m
 	_guide = {}
 	_guide_key = ""
+	_skin = {}
+	_skin_key = ""
 	_diff = {}
 	_diff_key = ""
 	_ready_cache = {}
@@ -121,15 +126,51 @@ func guide() -> Dictionary:
 	## The recreation guide for the current layout and plan (cached per change).
 	if session == null:
 		return {}
-	var key := "%d|%d|%d" % [session.stack.version, plan().hash(), map.get_instance_id() if map else 0]
+	var key := "%d|%d|%d|%s" % [session.stack.version, plan().hash(), map.get_instance_id() if map else 0, _customization_key()]
 	if key != _guide_key:
-		var opts := {"db": db}
+		var opts := {"db": db, "customization": customization()}
 		var bl: Variant = plan().get("baseline")
 		if bl is Dictionary:
 			opts["baseline"] = bl
 		_guide = RecreationGuide.build(session.layout, map, plan(), opts)
 		_guide_key = key
 	return _guide
+
+
+func customization() -> Dictionary:
+	## What the chosen farmhouse / truck / roadside-shop look costs (SkinBudget;
+	## cached per change). The budget chip, the Budget and Shop tabs and the guide
+	## all read this one result, so they always agree.
+	var key := _customization_key()
+	if key != _skin_key or _skin.is_empty():
+		var lms: Array = []
+		if map != null:
+			lms.assign(map.landmarks)
+		_skin = SkinBudget.compute(session.layout if session != null else null, lms, prices,
+			session.layout.profile if session != null else {}, plan())
+		_skin_key = key
+	return _skin
+
+
+func _customization_key() -> String:
+	if session == null:
+		return "none|%d" % (prices.version if prices else 0)
+	var l := session.layout
+	return "%d|%d|%d|%d|%d|%d" % [session.stack.version, l.world_state.hash(), l.profile.hash(), plan().hash(),
+		prices.version if prices else 0, map.get_instance_id() if map else 0]
+
+
+func set_customization_included(on: bool) -> void:
+	## The "include design customization" toggle: one undoable SetPlanning.
+	set_plan(SkinBudget.with_enabled(plan(), on), "Include design customization" if on else "Leave out design customization")
+
+
+func set_parts_owned(kind: String, parts: Array, owned: bool) -> void:
+	## Marks appearance parts as owned (inventory, one undoable SetProfile).
+	if session == null:
+		return
+	set_profile(SkinBudget.with_owned(session.layout.profile, kind, parts, owned),
+		"Mark %d part%s %s" % [parts.size(), "" if parts.size() == 1 else "s", "owned" if owned else "not owned"])
 
 
 func notify_changed() -> void:

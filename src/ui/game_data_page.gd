@@ -181,7 +181,9 @@ func _pick(folder: bool) -> void:
 func run_import(path: String) -> Dictionary:
 	## Builds (does not install) the supplement from `path` and shows the result.
 	var exports := ClientPrices.export_index_from_library(App.assets, App.db)
-	var res := ClientPrices.import_from(path, App.db, exports, App.prices.derived(null), App.client_build())
+	var hints := ClientPrices.art_hints_from_library(App.assets, App.db)
+	var res := ClientPrices.import_from(path, App.db, exports, App.prices.derived(null), App.client_build(), null,
+		PriceBook.DEFAULT_CLIENT, hints)
 	if not bool(res["ok"]):
 		_pending = {}
 		refresh()
@@ -204,9 +206,9 @@ func _pending_card() -> PanelContainer:
 	v.add_child(UI.label("Ready to install: game %s" % str(rep["game_version"]), "Heading"))
 	var grid := _grid()
 	var by: Dictionary = st.get("by_rule", {})
-	_kv(grid, "Matched", "%s items (export name %s · alias %s · translation id %s · name %s · yours %s)" % [
+	_kv(grid, "Matched", "%s items (export name %s · alias %s · game text %s · translation id %s · name %s · yours %s)" % [
 		UI.fmt_int((_pending["doc"]["items"] as Dictionary).size()), by.get(ClientPrices.RULE_EXPORT, 0), by.get(ClientPrices.RULE_ALIAS, 0),
-		by.get(ClientPrices.RULE_TID, 0), by.get(ClientPrices.RULE_NAME, 0), by.get(ClientPrices.RULE_USER, 0)])
+		by.get(ClientPrices.RULE_TEXT, 0), by.get(ClientPrices.RULE_TID, 0), by.get(ClientPrices.RULE_NAME, 0), by.get(ClientPrices.RULE_USER, 0)])
 	_kv(grid, "Not applied", "%s ambiguous · %s unmatched · %s conflicting (all in the review list)" % [st.get("ambiguous", 0),
 		st.get("unmatched", 0), st.get("conflicting_claims", 0)])
 	_kv(grid, "Known prices", "%s → %s" % [UI.fmt_int(int(cov["known_before"])), UI.fmt_int(int(cov["known_after"]))])
@@ -257,22 +259,31 @@ func _set_status(t: String, ok: bool) -> void:
 
 # --- review queue -----------------------------------------------------------------------------------
 
-func _review_card() -> PanelContainer:
-	var c := UI.card()
-	var v := UI.vbox(6)
-	c.add_child(v)
-	var rows: Array = []
+func review_rows() -> Array:
+	## The review list shown: the pending import's, else the installed report's.
 	var src: Variant = _pending.get("doc", {}).get("review") if not _pending.is_empty() else null
 	if src == null:
 		var rep: Variant = JsonUtil.read_json(ClientPrices.REPORT_PATH)
 		src = rep.get("review", []) if rep is Dictionary and App.prices.has_client_data() else []
-	rows = src
+	return src if src is Array else []
+
+
+func _review_card() -> PanelContainer:
+	var c := UI.card()
+	var v := UI.vbox(6)
+	c.add_child(v)
+	var rows := review_rows()
 	var mapping := ClientPrices.load_mapping()
+	var decided := 0
+	for r: Dictionary in rows:
+		if mapping.has(str(r.get("key", ""))):
+			decided += 1
 	var head := UI.hbox(8)
-	head.add_child(UI.label("Review: client records not applied (%d)" % rows.size(), "Heading"))
+	head.add_child(UI.label("Review: client records not applied (%d · %d decided)" % [rows.size(), decided], "Heading"))
 	head.add_child(UI.spacer())
 	var flt := OptionButton.new()
-	for f in [["all", "All"], ["priced", "With a price"], ["ambiguous", "Ambiguous"], ["conflict", "Conflicting"], ["unmatched", "Unmatched"]]:
+	for f in [["all", "All"], ["choice", "Needs a choice (has candidates)"], ["priced", "With a price"], ["ambiguous", "Ambiguous"],
+			["conflict", "Conflicting"], ["unmatched", "Unmatched"], ["decided", "Decided by you"]]:
 		flt.add_item(f[1])
 		flt.set_item_metadata(flt.item_count - 1, f[0])
 		if f[0] == _review_filter:
@@ -285,57 +296,184 @@ func _review_card() -> PanelContainer:
 	if rows.is_empty():
 		v.add_child(UI.label("Nothing to review.", "Dim"))
 		return c
-	v.add_child(UI.label("A record is applied only when a reliable identifier matches. Choose the right item (or ignore the record), then use “Re-import with my decisions”. A wrong price is worse than an unknown one.", "Faint", true))
+	v.add_child(UI.label("A record is applied only when a reliable identifier matches. Compare the candidates side by side, pick the right item (or ignore the record), then use “Re-import with my decisions”. Records you have not decided stay unassigned: a wrong price is worse than an unknown one.", "Faint", true))
 	var shown := 0
 	for r: Dictionary in rows:
-		var kind := str(r.get("kind", ""))
-		var priced := not (r.get("price", {}) as Dictionary).is_empty()
-		if _review_filter == "priced" and not priced:
-			continue
-		if _review_filter in ["ambiguous", "conflict", "unmatched"] and kind != _review_filter:
+		if not _passes_filter(r, mapping):
 			continue
 		shown += 1
 		if shown > 150:
-			v.add_child(UI.label("… %d more (narrow the filter)" % (rows.size() - 150), "Faint"))
+			v.add_child(UI.label("… more records (narrow the filter)", "Faint"))
 			break
 		v.add_child(_review_row(r, mapping))
+	if shown == 0:
+		v.add_child(UI.label("No record matches this filter.", "Dim"))
 	return c
 
 
-func _review_row(r: Dictionary, mapping: Dictionary) -> HBoxContainer:
-	var row := UI.hbox(8)
+func _passes_filter(r: Dictionary, mapping: Dictionary) -> bool:
+	var kind := str(r.get("kind", ""))
+	match _review_filter:
+		"priced":
+			return not (r.get("price", {}) as Dictionary).is_empty()
+		"choice":
+			return not (r.get("candidates", []) as Array).is_empty()
+		"decided":
+			return mapping.has(str(r.get("key", "")))
+		"ambiguous", "conflict", "unmatched":
+			return kind == _review_filter
+	return true
+
+
+func _review_row(r: Dictionary, mapping: Dictionary) -> PanelContainer:
+	## One record: what the client says, its candidates side by side (picture,
+	## name, id, size, price now) and the decision buttons.
 	var key := str(r["key"])
-	var txt := "%s · %s · %s" % [str(r["name"]), str(r["table"]), Currency.format_line(r["price"] if not (r["price"] as Dictionary).is_empty() else null, "Free", "no price")]
-	var l := UI.label(txt, "", true)
-	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	l.tooltip_text = "%s\nExport: %s · TID: %s" % [str(r.get("reason", "")), str(r.get("export", "")), str(r.get("tid", ""))]
-	row.add_child(l)
-	var pick := OptionButton.new()
-	pick.custom_minimum_size.x = 180
-	pick.clip_text = true
-	pick.add_item("Choose item…")
-	pick.set_item_metadata(0, null)
-	for id in r.get("candidates", []):
-		var it := App.db.get_item(str(id))
-		pick.add_item(it.name if it != null else str(id))
-		pick.set_item_metadata(pick.item_count - 1, str(id))
-	pick.add_item("Ignore this record")
-	pick.set_item_metadata(pick.item_count - 1, "")
-	if mapping.has(key):
-		for i in pick.item_count:
-			if pick.get_item_metadata(i) == str(mapping[key]):
-				pick.select(i)
-	pick.item_selected.connect(func(i):
-		var m := ClientPrices.load_mapping()
-		var to: Variant = pick.get_item_metadata(i)
-		if to == null:
-			m.erase(key)
-		else:
-			m[key] = str(to)
-		ClientPrices.save_mapping(m)
-		_set_status("Saved. Re-import to apply your decisions.", true))
-	row.add_child(pick)
-	return row
+	var dec := ClientPrices.decision_of(key, mapping)
+	var box := PanelContainer.new()
+	box.add_theme_stylebox_override("panel", _row_style(str(dec["state"])))
+	var v := UI.vbox(4)
+	box.add_child(v)
+	var top := UI.hbox(8)
+	var fp: Variant = r.get("footprint")
+	var title := str(r["name"])
+	if not str(r.get("text", "")).is_empty() and str(r["text"]).to_lower() != title.to_lower():
+		title += " — “%s”" % str(r["text"])
+	var tl := UI.label(title, "", true)
+	tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tl.tooltip_text = "Export: %s · TID: %s · record %s" % [str(r.get("export", "")), str(r.get("tid", "")), key]
+	top.add_child(tl)
+	top.add_child(_decision_badge(dec))
+	v.add_child(top)
+	var facts := "%s · %s · client size %s · client price %s" % [str(r.get("kind", "")), str(r["table"]),
+		("%d×%d" % [int(fp[0]), int(fp[1])]) if fp is Array and (fp as Array).size() == 2 else "?",
+		Currency.format_line(r["price"] if not (r["price"] as Dictionary).is_empty() else null, "free", "none")]
+	v.add_child(UI.label(facts, "Faint", true))
+	if not str(r.get("reason", "")).is_empty():
+		v.add_child(UI.label(str(r["reason"]), "Faint", true))
+	var extra: Array = []
+	if str(dec["state"]) == "chosen" and not str(dec["item"]) in (r.get("candidates", []) as Array):
+		extra.append(str(dec["item"]))
+	var cands := ClientPrices.review_candidates(r, App.db, App.prices, extra)
+	if not cands.is_empty():
+		var flow := HFlowContainer.new()
+		flow.add_theme_constant_override("h_separation", 8)
+		flow.add_theme_constant_override("v_separation", 8)
+		for cd: Dictionary in cands:
+			flow.add_child(_candidate_tile(key, cd, str(dec["state"]) == "chosen" and str(dec["item"]) == str(cd["id"])))
+		v.add_child(flow)
+	var act := UI.hbox(8)
+	var other := UI.button("Other item…", "search", "Pick any catalogue item for this record")
+	other.pressed.connect(func(): _pick_other(key, str(r.get("text", r["name"]))))
+	act.add_child(other)
+	if str(dec["state"]) != "ignored":
+		var ig := UI.button("Ignore record", "eye-off", "This record is not a catalogue item (or not one you plan with)")
+		ig.pressed.connect(func(): set_decision(key, ""))
+		act.add_child(ig)
+	if str(dec["state"]) != "unassigned":
+		var cl := UI.button("Clear decision", "x", "Back to unassigned (nothing is applied)")
+		cl.pressed.connect(func(): set_decision(key, null))
+		act.add_child(cl)
+	v.add_child(act)
+	return box
+
+
+func _candidate_tile(key: String, cd: Dictionary, chosen: bool) -> PanelContainer:
+	var tile := PanelContainer.new()
+	tile.custom_minimum_size = Vector2(240, 0)
+	tile.add_theme_stylebox_override("panel", _row_style("chosen" if chosen else "tile"))
+	var v := UI.vbox(2)
+	tile.add_child(v)
+	var tex := App.assets.get_thumbnail(str(cd["art_key"])) if App.assets != null else null
+	if tex != null:
+		var tr := TextureRect.new()
+		tr.texture = tex
+		tr.custom_minimum_size = Vector2(64, 64)
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		v.add_child(tr)
+	var nm := UI.label(str(cd["name"]), "", true)
+	v.add_child(nm)
+	v.add_child(UI.label("%s%s" % [str(cd["id"]), " · from your game files" if bool(cd["added"]) else ""], "Faint", true))
+	var fpv: Vector2i = cd["footprint"]
+	var size_txt := "%d×%d %s" % [fpv.x, fpv.y, ItemDef.status_label(str(cd["footprint_status"])).to_lower()]
+	var sl := UI.label(size_txt + ("" if cd["size_match"] == null else (" · same size as the record" if bool(cd["size_match"]) else " · NOT the record's size")), "Faint", true)
+	if cd["size_match"] == false:
+		sl.add_theme_color_override("font_color", UiTheme.c("warn"))
+	v.add_child(sl)
+	var origin := str({PriceBook.ORIGIN_CATALOGUE: "catalogue", PriceBook.ORIGIN_PRICE_DB: "public research",
+		PriceBook.ORIGIN_CLIENT: "your game files", PriceBook.ORIGIN_USER: "your correction"}.get(str(cd["origin"]), ""))
+	v.add_child(UI.label("Price now: %s%s" % [str(cd["price_text"]), (" (%s)" % origin) if not origin.is_empty() and cd["price"] != null else ""], "Faint", true))
+	var b := UI.button("Chosen" if chosen else "Use this", "check" if chosen else "", "Map this record to %s" % str(cd["name"]), "Accent" if chosen else "")
+	b.disabled = chosen
+	b.pressed.connect(func(): set_decision(key, str(cd["id"])))
+	v.add_child(b)
+	return tile
+
+
+func _decision_badge(dec: Dictionary) -> Control:
+	match str(dec["state"]):
+		"chosen":
+			var it := App.db.get_item(str(dec["item"]))
+			return UI.badge("→ %s" % (it.name if it else str(dec["item"])), UiTheme.c("accent"))
+		"ignored":
+			return UI.badge("Ignored", UiTheme.c("text_dim"))
+	return UI.badge("Unassigned", UiTheme.c("warn"))
+
+
+func _row_style(state: String) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = UiTheme.c("panel_solid") if state != "tile" else UiTheme.c("panel_alt")
+	sb.set_corner_radius_all(6)
+	sb.set_content_margin_all(8)
+	if state == "chosen":
+		sb.border_color = UiTheme.c("accent")
+		sb.set_border_width_all(2)
+	return sb
+
+
+func set_decision(key: String, to: Variant) -> void:
+	## Saves the user's decision for a record (item id, "" = ignore, null = clear)
+	## in client_price_mapping.json; it applies at the next (re-)import.
+	var m := ClientPrices.load_mapping()
+	if to == null:
+		m.erase(key)
+	else:
+		m[key] = str(to)
+	ClientPrices.save_mapping(m)
+	refresh()
+	_set_status("Saved. Use “Re-import with my decisions” to apply it.", true)
+
+
+func _pick_other(key: String, query: String) -> void:
+	var box := UI.vbox(6)
+	box.custom_minimum_size = Vector2(420, 360)
+	var q := LineEdit.new()
+	q.placeholder_text = "Search the catalogue"
+	q.text = query
+	box.add_child(q)
+	var list := ItemList.new()
+	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(list)
+	var fill := func(t: String):
+		list.clear()
+		for it: ItemDef in App.db.search(t, {"include_hidden": true}).slice(0, 60):
+			list.add_item("%s  (%s · %d×%d)" % [it.name, it.id, it.footprint.x, it.footprint.y])
+			list.set_item_metadata(list.item_count - 1, it.id)
+	q.text_changed.connect(fill)
+	fill.call(query)
+	var dlg := AcceptDialog.new()
+	dlg.title = "Choose the catalogue item"
+	dlg.ok_button_text = "Use selected"
+	dlg.add_child(box)
+	dlg.confirmed.connect(func():
+		var sel := list.get_selected_items()
+		if not sel.is_empty():
+			set_decision(key, str(list.get_item_metadata(sel[0])))
+		dlg.queue_free())
+	dlg.canceled.connect(dlg.queue_free)
+	add_child(dlg)
+	dlg.popup_centered()
 
 
 # --- world --------------------------------------------------------------------------------------------

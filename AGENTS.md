@@ -23,13 +23,14 @@ these layouts in the real game, so **never invent facts** — unknown data stays
    `python3 tools/ci/check_private_leaks.py` must pass. See `docs/PRIVATE_ASSETS.md`.
 
 ## Commands
-Linux / cloud box (counts as of 2026-11-09, HEAD 8c93360):
+Linux / cloud box (counts as of a511d0c; refreshed at the end of each wave):
 ```bash
 godot --headless --path . --import                                   # after adding class_name scripts / assets
-godot --headless --path . --script res://tools/ci/check_scripts.gd   # compile every script (92)
-godot --headless --path . --script res://tests/run_tests.gd          # unit tests (266 tests / 11,239 assertions)
-godot --headless --path . -- --selftest                              # in-app integration test (329 checks)
+godot --headless --path . --script res://tools/ci/check_scripts.gd   # compile every script (148)
+godot --headless --path . --script res://tests/run_tests.gd          # unit tests (417 tests / 15,149 assertions)
+godot --headless --path . -- --selftest                              # in-app integration test (404 checks)
 godot --headless --path . -- --selftest=perf                         # benchmarks (7 checks)
+godot --headless --path . --script res://tests/perf/perf_planning.gd # planning benchmarks (2k/5k/10k)
 godot --path . -- --install-pack=<zip> [--quit-after-install]        # install an asset pack into user://asset_packs
 tools/ci/visual_tests.sh all [1920x1080:1 ...]                       # Xvfb screenshots → artifacts/screens (isolated data dir)
 python3 tools/ci/validate_data.py                                    # data + licence guard (1,967 items)
@@ -40,16 +41,21 @@ tools/build/build.sh                                                 # Windows p
 ```
 Windows (PowerShell 5.1; set `$env:GODOT` to the Godot 4.7.2 exe or put `godot` on PATH):
 ```powershell
+powershell -ExecutionPolicy Bypass -File tools\ci\run_godot.ps1 [-Log f] [-TimeoutSec s] <godot args>
+#   ONE headless Godot command ("--headless --path ." added), e.g. --script res://tests/run_tests.gd -- --filter=budget,
+#   -- --selftest, --import (restores project.godot afterwards). Use this instead of calling Godot directly.
 powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1 [-Perf] [-SkipImport] [-Tag name]
 #   import, check_scripts, unit_tests, selftest[, selftest_perf], validate_data, leak guard (+ self-test),
 #   export-check self-test, coverage report + diff. Logs: artifacts\checks\[name\]<step>.log
 powershell -ExecutionPolicy Bypass -File tools\ci\visual_tests.ps1 [scenarios] [WxH:scale ...]
 #   real OpenGL screenshots → artifacts\screens\ (one run at a time: it writes a temporary override.cfg)
 ```
-Both Windows runners start every Godot child with a fresh temporary `APPDATA` (real user data and installed packs
-are never touched), headless for checks and off-screen without focus for captures. Python comes from `.venv\` in
+All three Windows runners start every Godot child with a fresh temporary `APPDATA` (real user data and installed
+packs are never touched), headless for checks and off-screen without focus for captures, and hold one shared Godot
+lock (a named mutex), so parallel shells or agents wait for each other instead of importing and testing at once. Python comes from `.venv\` in
 the repository when present, else `python` on PATH. See `docs/TESTING.md`.
 Data regeneration: `python3 tools/catalog/build_catalog.py` (items), `python3 tools/catalog/build_map.py` (maps),
+`python3 tools/catalog/build_prices.py [--report]` (prices),
 `python3 tools/art_generator/generate.py` (placeholder art, incremental), `godot --headless --path . --script
 res://tools/samples/generate_samples.gd` (sample layouts), `python3 tools/catalog/coverage_report.py`.
 
@@ -67,10 +73,23 @@ res://tools/samples/generate_samples.gd` (sample layouts), `python3 tools/catalo
   `SetWorldStateCommand`.
 * Tests must not touch the real user folder: the Windows runners and `visual_tests.sh` isolate it; never launch a
   visible Godot window on the user's machine (headless checks, off-screen captures).
+* **Planning** (`docs/PLANNING.md`): pure logic in `src/core/planning/` (PlanDoc, Currency, PriceBook,
+  BudgetEngine, ShoppingList, InventoryIO, Baseline, RecreationGuide, GuideExport, AccuracyReport, Readiness);
+  UI in `src/ui/plan/` (PlanContext = `App.plan_ctx`, PlanTab, PlanPanel, tabs; PlanScope / PlanUiModels are pure
+  and unit-tested), plus `budget_widget.gd`, `minimap.gd`, the planning dialogs, `src/render/plan_overlay.gd` and
+  `src/editor/plan_controller.gd`. The `BudgetEngine` belongs to the `EditorSession` (`session.budget`); prices are
+  `App.prices`. Planning data changes only through `EditCommands.SetPlanning` (inventory: `SetProfile`); tabs act
+  through `PlanContext`, never on main.gd or the layout directly.
+* **Prices and unknowns**: an unknown price is `null`, never 0; currencies are never converted; "can't be bought"
+  is counted apart from "price unknown"; items without an inventory record are unknown ownership. User price
+  overrides live in `user://price_overrides.json`, never in the repository.
+* Exports with installed (private) art: placeholder art is the default; never write such pictures inside the
+  repository.
 
 ## Where things are
-See `docs/ARCHITECTURE.md` (module map, state ownership), `docs/ASSET_PIPELINE.md`, `docs/ITEM_DATABASE.md`,
-`docs/TESTING.md`, `docs/KNOWN_ISSUES.md`, `docs/ROADMAP.md`.
+See `docs/ARCHITECTURE.md` (module map, state ownership), `docs/PLANNING.md` (planning data, rules, exports),
+`docs/research/PRICING_RESEARCH.md`, `docs/ASSET_PIPELINE.md`, `docs/ITEM_DATABASE.md`, `docs/TESTING.md`,
+`docs/KNOWN_ISSUES.md`, `docs/ROADMAP.md`.
 
 ## Priorities (next)
 See `docs/ROADMAP.md` (main farm only; no separate-region editors). Open problems are in `docs/KNOWN_ISSUES.md`.

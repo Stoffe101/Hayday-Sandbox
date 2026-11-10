@@ -297,7 +297,7 @@ func _refresh_phase_set(force: bool) -> bool:
 	## The active phase's objects (painted in its colour). True when it changed.
 	var pid := ctx.active_phase if ctx != null else ""
 	var eng := ctx.engine if ctx != null else null
-	var key := "%s|%s" % [pid, str(eng.version) if eng != null and not pid.is_empty() else ""]
+	var key := "%s|%s" % [pid, "%d/%d" % [eng.get_instance_id(), eng.version] if eng != null and not pid.is_empty() else ""]
 	if key == _phase_key and not force:
 		return false
 	_phase_key = key

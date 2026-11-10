@@ -109,10 +109,16 @@ static func diff(layout: FarmLayout, baseline: Dictionary, db: ItemDatabase = nu
 	var matched := {}
 	var uids := layout.objects.keys()
 	uids.sort()
+	# Design item ids resolved like the baseline's (an object saved under an old
+	# alias is still the same item; BudgetEngine matches the same way).
+	var design_item := {}
+	for u in uids:
+		var raw: String = (layout.objects[u] as PlacedObject).item_id
+		design_item[u] = db.resolve_id(raw) if db != null else raw
 	for u in uids:
 		var o: PlacedObject = layout.objects[u]
 		var b: Variant = base.get(int(u))
-		if b != null and str(b["item"]) == o.item_id:
+		if b != null and str(b["item"]) == str(design_item[u]):
 			matched[int(u)] = true
 			if b["rect"] == o.rect() and bool(b["flipped"]) == o.flipped:
 				status[int(u)] = "unchanged"
@@ -140,7 +146,7 @@ static func diff(layout: FarmLayout, baseline: Dictionary, db: ItemDatabase = nu
 		removed_by_item[e["item"]].append(e)
 	var new_by_item := {}
 	for u in added:
-		var it: String = (layout.objects[u] as PlacedObject).item_id
+		var it: String = design_item[u]
 		if not new_by_item.has(it):
 			new_by_item[it] = []
 		new_by_item[it].append(u)
@@ -172,14 +178,15 @@ static func diff(layout: FarmLayout, baseline: Dictionary, db: ItemDatabase = nu
 	for bu in base:
 		_count(items, str(base[bu]["item"]), "baseline")
 	for u in uids:
-		_count(items, layout.objects[u].item_id, "design")
-		_count(items, layout.objects[u].item_id, status[int(u)])
+		var di: String = design_item[u]
+		_count(items, di, "design")
+		_count(items, di, status[int(u)])
 		if status[int(u)] != "new":
-			_count(items, layout.objects[u].item_id, "kept")
+			_count(items, di, "kept")
 		elif reuse.has(int(u)):
-			_count(items, layout.objects[u].item_id, "reused")
+			_count(items, di, "reused")
 		else:
-			_count(items, layout.objects[u].item_id, "extra_needed")
+			_count(items, di, "extra_needed")
 	for e: Dictionary in removed:
 		_count(items, str(e["item"]), "removed")
 		if not reused_base.has(e["uid"]):

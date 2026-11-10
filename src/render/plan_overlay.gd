@@ -31,6 +31,8 @@ const TINT_MOVED := Color(0.78, 0.9, 1.2)
 const TINT_NEW := Color(0.85, 1.15, 0.85)
 
 var ctx: PlanContext
+## Objects an object layer hides get no heatmap, progress check or phase outline.
+var renderer: ObjectRenderer
 var zoom := 1.0
 var visible_rect := Rect2()
 var font: Font
@@ -135,11 +137,13 @@ func _draw_under(ci: Node2D) -> void:
 			ci.draw_polyline(closed, Color(col.r, col.g, col.b, 0.85), (3.0 if _exporting() else 2.0) * _inv(), true)
 
 
-func _draw_heatmap(ci: Node2D) -> void:
-	var eng := ctx.engine
-	if eng == null:
-		return
-	var key := "%d|%s|%d" % [eng.version, ctx.mode, ctx.session.layout.objects.size()]
+func _update_heat() -> bool:
+	## uid -> heat bucket for the current engine version and mode (false without an engine).
+	var eng := ctx.engine if ctx != null else null
+	if eng == null or ctx.session == null:
+		return false
+	# The engine's instance id too: a new layout's engine starts counting versions again.
+	var key := "%d|%d|%s|%d" % [eng.get_instance_id(), eng.version, ctx.mode, ctx.session.layout.objects.size()]
 	if key != _heat_key:
 		_heat_key = key
 		_heat.clear()
@@ -152,10 +156,23 @@ func _draw_heatmap(ci: Node2D) -> void:
 				if c == null:
 					st = str(eng.object_info(u).get("price_state", "unknown"))
 				_heat[u] = PlanScope.heat_bucket(c, st))
+	return true
+
+
+func heat_buckets() -> Dictionary:
+	## uid -> PlanScope.HEAT_* as the heatmap shows it now (tests). Shared: don't modify.
+	_update_heat()
+	return _heat
+
+
+func _draw_heatmap(ci: Node2D) -> void:
+	if not _update_heat():
+		return
 	var lw := 1.2 * _inv()
+	var hiding := _hiding()
 	for u: int in _heat:
 		var o: PlacedObject = ctx.session.layout.objects.get(u)
-		if o == null:
+		if o == null or (hiding and renderer.is_layer_hidden(u)):
 			continue
 		var b := int(_heat[u])
 		if b == PlanScope.HEAT_NONE:
@@ -170,6 +187,25 @@ func _draw_heatmap(ci: Node2D) -> void:
 		ci.draw_polyline(closed, Color(col.r, col.g, col.b, 0.9), lw, true)
 		if b == PlanScope.HEAT_UNKNOWN or b == PlanScope.HEAT_NOT_BUYABLE:
 			_hatch(ci, poly, Color(1, 1, 1, 0.55) if b == PlanScope.HEAT_UNKNOWN else Color(0, 0, 0, 0.55), lw, o.size)
+
+
+func _hiding() -> bool:
+	## True while an object layer hides something (and not while exporting: an
+	## exported plan picture shows the whole design).
+	return renderer != null and not _exporting() and renderer.layer_hidden_count() > 0
+
+
+func heat_drawn_uids() -> Array:
+	## uids the heatmap would mark right now (tests): known buckets except
+	## "nothing to pay", without objects hidden by an object layer.
+	var out: Array = []
+	var hiding := _hiding()
+	_update_heat()
+	for u: int in _heat:
+		if int(_heat[u]) != PlanScope.HEAT_NONE and not (hiding and renderer.is_layer_hidden(u)):
+			out.append(u)
+	out.sort()
+	return out
 
 
 func _in_view(r: Rect2i) -> bool:
@@ -301,9 +337,10 @@ func _draw_phase_highlight(layout: FarmLayout) -> void:
 	if ph.is_empty():
 		return
 	var col := Color(str(ph.get("color", "#f2b84b")))
+	var hiding := _hiding()
 	for u in ctx.engine.phase_uids(ctx.active_phase):
 		var o := layout.get_obj(int(u))
-		if o != null:
+		if o != null and not (hiding and renderer.is_layer_hidden(int(u))):
 			_outline(Iso.footprint_polygon(o.origin, o.size), col, 2.0)
 
 
@@ -330,11 +367,14 @@ func _draw_progress(layout: FarmLayout) -> void:
 	var r := 7.0 * _inv()
 	# One cached set per engine version (is_placed() per object re-checks the plan: seconds at 10k).
 	var placed_set: Dictionary = eng.placed_set() if bl is Dictionary else {}
+	var hiding := _hiding()
 	for o: PlacedObject in layout.objects.values():
 		var c := Iso.footprint_center(o.origin, o.size)
 		if visible_rect.size != Vector2.ZERO and not visible_rect.has_point(c):
 			continue
 		if not (placed.has(str(o.uid)) or placed_set.has(o.uid)):
+			continue
+		if hiding and renderer.is_layer_hidden(o.uid):
 			continue
 		draw_circle(c, r, Color(0.06, 0.2, 0.1, 0.85))
 		draw_circle(c, r * 0.82, C_CHECK)

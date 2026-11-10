@@ -1,22 +1,24 @@
 # Testing
 
-All layers run locally (Windows or Linux) and in CI (`.github/workflows/ci.yml`). Counts below are from
-`tools\ci\windows_checks.ps1 -SkipImport -Tag docs` on the Windows development PC on 2026-11-09 at HEAD 8c93360
-(Godot 4.7.2); logs in `artifacts\checks\docs\`.
+All layers run locally (Windows or Linux) and in CI (`.github/workflows/ci.yml`). The static, unit and
+integration counts are **as of a511d0c** (Windows development PC, Godot 4.7.2) and will be refreshed for the final
+commit of this wave. Rows marked † are from the earlier run with `tools\ci\windows_checks.ps1 -SkipImport -Tag docs`
+on 2026-11-09 at HEAD 8c93360 (logs in `artifacts\checks\docs\`) and were not re-counted for this update.
 
 | Layer | Command (Linux form) | What it covers | Result |
 |---|---|---|---|
-| Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 92 scripts, 0 failed |
-| Data | `python3 tools/ci/validate_data.py` | manifests, maps, asset pack refs, samples, **licence guard** | 1,967 items, 0 errors, 0 warnings |
-| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 266 tests / 11,239 assertions, 0 failed |
-| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 329 checks, 0 failed |
-| Performance | `godot --headless --path . -- --selftest=perf` | synthetic farms 2k/5k/10k, densely packed real map, world layer, thumbnails | 7 checks, 0 failed (numbers below) |
+| Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 148 scripts, 0 failed (a511d0c) |
+| Data | `python3 tools/ci/validate_data.py` | manifests, maps, asset pack refs, samples, price file (`data/prices/`), **licence guard** | 1,967 items, 0 errors, 0 warnings † |
+| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 417 tests / 15,149 assertions, 0 failed (a511d0c) |
+| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 404 checks, 0 failed (a511d0c) |
+| Performance | `godot --headless --path . -- --selftest=perf` | synthetic farms 2k/5k/10k, densely packed real map, world layer, thumbnails | 7 checks, 0 failed (numbers below) † |
 | Planning perf | `godot --headless --path . --script res://tests/perf/perf_planning.gd [-- --sizes=2000,5000,10000 --reps=30]` | budget engine, scopes, phases, checklist, shopping list, guide + exports on 2k/5k/10k real-item farms | table of mean / p95 / max (numbers below) |
-| Leak guard | `python3 tools/ci/check_private_leaks.py [--self-test]` | private art can't enter git (see PRIVATE_ASSETS.md) | self-test 56/56; tracked tree OK |
-| Export check | `python3 tools/ci/check_export_contents.py --self-test` | PCK contents scanner | OK |
-| Coverage | `python3 tools/catalog/coverage_report.py` + `git diff --exit-code docs/CATALOG_COVERAGE.md` | report is current | OK |
+| Budget perf | `godot --headless --path . --script res://tests/perf/perf_budget.gd [-- --sizes=... --reps=20]` | `BudgetEngine` alone: full recompute, incremental edits | not part of the runners; run by hand |
+| Leak guard | `python3 tools/ci/check_private_leaks.py [--self-test]` | private art can't enter git (see PRIVATE_ASSETS.md) | self-test 56/56; tracked tree OK † |
+| Export check | `python3 tools/ci/check_export_contents.py --self-test` | PCK contents scanner | OK † |
+| Coverage | `python3 tools/catalog/coverage_report.py` + `git diff --exit-code docs/CATALOG_COVERAGE.md` | report is current | OK † |
 | Exported build | `build/linux/HaydaySandbox.x86_64 --headless -- --selftest` | packaging of data/art/samples in an export | CI only (no Linux export templates on the Windows PC) |
-| Visual | `tools/ci/visual_tests.sh all` / `tools\ci\visual_tests.ps1 all` | 27 UI scenarios, real rendering | screenshots, inspected by eye |
+| Visual | `tools/ci/visual_tests.sh all` / `tools\ci\visual_tests.ps1 all` | 39 UI scenarios (12 of them planning), real rendering | screenshots, inspected by eye |
 
 ## Running everything
 
@@ -31,7 +33,25 @@ powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1            
 powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1 -Perf           # + selftest_perf (up to 30 min timeout)
 powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1 -SkipImport -Tag name   # logs in artifacts\checks\name\
 powershell -ExecutionPolicy Bypass -File tools\ci\visual_tests.ps1 [scenarios] [WxH:scale ...]
+# One headless Godot command ("--headless --path ." is added in front):
+powershell -ExecutionPolicy Bypass -File tools\ci\run_godot.ps1 --script res://tests/run_tests.gd -- --filter=budget
+powershell -ExecutionPolicy Bypass -File tools\ci\run_godot.ps1 -- --selftest
+powershell -ExecutionPolicy Bypass -File tools\ci\run_godot.ps1 --import
+powershell -ExecutionPolicy Bypass -File tools\ci\run_godot.ps1 -TimeoutSec 1800 -Log out.log --script res://tests/perf/perf_planning.gd
 ```
+
+`run_godot.ps1` is the way to run any single Godot command on Windows; don't call the Godot executable directly.
+Its own options `-Log <file>` (keep the log; default: a temporary file that is printed and deleted) and
+`-TimeoutSec <s>` (default 900) come first; everything else goes to Godot unchanged. It runs with a throw-away
+`APPDATA`, prints the log, returns Godot's exit code (124 = timeout), refuses `--import` while
+`hayday-sandbox-private-assets` is inside the repository, and restores `project.godot` after an import (an import
+rewrites it).
+
+**Shared Godot lock.** `run_godot.ps1`, `windows_checks.ps1` and `visual_tests.ps1` all take the same named
+mutex (`Local\HaydaySandboxGodot`, `Enter-GodotLock` in `tools\ci\windows_common.ps1`) for the whole run, so runs
+started from parallel shells or agents wait for each other instead of importing and testing at the same time (an
+import rewrites the `.godot` cache that every other run reads). A run waits up to an hour for the lock; a lock
+left by a crashed run is taken over.
 
 `windows_checks.ps1` runs, in order: `import` (unless `-SkipImport`; it refuses to run if
 `hayday-sandbox-private-assets` is inside the repository and restores `project.godot` afterwards), `check_scripts`,
@@ -61,11 +81,15 @@ under `xvfb-run` with `--rendering-driver opengl3`.
   minimised Godot window stops drawing. Because of that `override.cfg`, run **one visual run at a time**; the script
   refuses to start if the file already exists and removes it when done.
 * Godot children run with `CreateNoWindow` and a timeout (300 s per check step, 1800 s for perf, 300 s per visual
-  configuration); a timeout is logged and reported as exit code 124.
+  configuration, 900 s by default for `run_godot.ps1`); a timeout is logged and reported as exit code 124.
+* **One Godot run at a time** on Windows: all three runners hold the shared Godot lock (see above). The planning
+  exports in the capture scenarios use placeholder art only.
 * Asset-pack tests use synthetic packs built at runtime from the placeholder PNGs
   (`tests/fixtures/synthetic_pack.gd`), never real artwork.
 
-## Unit tests (`tests/unit/`, 19 files)
+## Unit tests (`tests/unit/`, 33 files)
+
+Test counts per file are the `func test_*` functions at a511d0c (417 in total).
 
 | File | Tests | Covers |
 |---|---:|---|
@@ -85,11 +109,25 @@ under `xvfb-run` with `--rendering-driver opengl3`.
 | `test_camera_math` | 24 | springs, anchored zoom, inertia, rubber-band limits, fit zoom |
 | `test_drag_math` | 7 | drag hysteresis, nearest-valid search order |
 | `test_layout_tools` | 29 | mirror lines, symmetry, repeat, align, distribute, brushes, stamps (`.hdstamp`) |
-| `test_references` | 11 | several reference images, migration from one image, 2/3-point calibration, one undo step per edit |
-| `test_terrain` | 7 | procedural terrain built from the map, only without game data, deterministic, keeps off buildable land |
+| `test_references` | 12 | several reference images, migration from one image, 2/3-point calibration, one undo step per edit |
+| `test_terrain` | 11 | procedural terrain built from the map, only without game data, deterministic, keeps off buildable land, seamless textures, owned/locked frontier, a pack world replaces it |
 | `test_ambient` | 12 | animation sheets, Off/Reduced modes and OS default, mirror art, theme variants only when they exist |
+| `test_calibration` | 12 | N-point calibration: exact 2/3-point fits, least squares, outliers and verdicts, residual units, landmark anchors, reference layer uses the same fit |
+| `test_accuracy` | 12 | Farm Accuracy Report wording (public map, private world unverified until calibrated, user overrides), renderer / picking / landmark tiles share the grid |
+| `test_layout_schema4` | 8 | v3 zones → areas, v4 round trip with unknown keys, newer schema refused, `.v3-backup` on first save, `SetPlanning` undo / merge, uid identity |
+| `test_plan_doc` | 3 | normalize keeps unknown keys, areas / phases / primary phase, placed / baseline / step ticks |
+| `test_prices` | 13 | currency formatting, catalogue cost parsing (every real cost text), layering and origin, step / schedule prices, unknown never 0, overrides, the real price file loads |
+| `test_budget` | 25 | no double counting across views, owned copies follow moves, farm = sum of phases, acquired / remaining, unknown never free, progressive and scheduled prices, vouchers / event currency, not buyable, max count, allocation order, unknown ownership and baseline, planned objects, phase status, affordability, laziness, in-place edits, batching, incremental = full after random edits |
+| `test_shopping` | 8 | rows, scopes, filter / sort / search, equivalence with a reference build (random edits, real catalogue), row reuse, acquisition progress and apply to inventory |
+| `test_inventory_io` | 7 | CSV / JSON round trips, tolerant and headerless CSV, replace, ambiguous names, bad JSON, quoted fields |
+| `test_baseline` | 4 | snapshot shape, diff by uid and item, fungible reuse, missing baseline |
+| `test_guide` | 10 | stage / phase / cluster order, no baseline, move dependencies and swap cycles, landmark directions, progress and stable ids, exports, equivalence with reference implementations |
+| `test_plan_scope` | 8 | scope resolution and pin, totals = engine, shared objects / overlapping areas, heat buckets, targets, area drafts, corner placement |
+| `test_plan_ui_models` | 23 | view-models of Shop, Build, Guide, Accuracy and the dialogs: currencies kept apart, unknowns in texts and CSV, checklist, moved-since-placed, inventory working copy, price overrides |
+| `test_plan_context` | 3 | the session owns and disposes its budget, `set_map` rebinds it, context view state and scope |
+| `test_planning_extras` | 10 | object layer groups / states / never touching the layout, readiness rows (ready, blocking, Realistic-only level, fixed landmarks), area → stamp, accuracy wording |
 
-## Integration self-test (`tests/integration/app_selftest.gd`, 329 checks)
+## Integration self-test (`tests/integration/app_selftest.gd`, 404 checks at a511d0c)
 
 Runs inside the real application (autoloads, UI, renderer, controller) and feeds synthetic mouse/keyboard events.
 Areas covered: catalogue/map/art/sample integrity; v1 and v2 layout migration (frame shift, landmarks moved to the
@@ -103,7 +141,15 @@ select, delete, land tool, Creative↔Realistic, save/reload; asset importer and
 Asset Manager anchors/scale/verify/review, uninstall); a synthetic pack with world data and catalogue corrections
 (world swap, provenance, landmark states); symmetry, outline and line brushes, repeat, align, distribute, stamps;
 `ConflictIndex` vs full scan; session handler counts across layout switches and UI rebuilds; inspector auto-hide,
-catalogue rail, panel widths, name wrapping; grouped issues; help lists the real keys.
+catalogue rail, panel widths, name wrapping; grouped issues; help lists the real keys. Planning (`_plan_check`,
+`_plan_extras_check`): the price book loads; the planning context follows the session and its budget engine; the
+budget chip updates live on place / move / delete / undo / redo and when a copy is recorded as owned; the area
+tool (polygon, undo / redo, Esc, from selection); J opens the Plan panel in the inspector's place and the camera
+view stops at it; phase assignment; every tab opens; area and phase pictures; no doubled handlers after layout
+switches and UI rebuilds; object layers (hidden objects not pickable or box-selected, selection released, layout
+and save data unchanged); compare tints and counts match `Baseline.diff`, turning it off clears them; area →
+stamp keeps relative positions without editing the layout; readiness is cached and updated by undo; the overview
+map appears only with room, repaints only edited tiles, round-trips coordinates and moves the camera on click.
 
 The self-test passes when other packs are installed in the data folder, but the runners isolate it anyway. Two
 more modes exist for a user's installed original-art pack (private; see `docs/PRIVATE_ASSETS.md`):
@@ -111,12 +157,12 @@ more modes exist for a user's installed original-art pack (private; see `docs/PR
 wave.
 
 Expected noise at exit: an error about the deliberately missing `selftest_missing.png` reference image, and
-"RIDs … leaked" / "ObjectDB instances were leaked" warnings (8 RIDs and 17 instances in this run). These predate
-this wave.
+"RIDs … leaked" / "ObjectDB instances were leaked" warnings (8 RIDs and 17 instances in the 2026-11-09 run; not
+re-counted at a511d0c). These predate the planning wave.
 
 ## Performance (`--selftest=perf`, Windows development PC)
 
-From `artifacts\checks\perf\selftest_perf.log` (2026-11-09). "Edit" = mean over 45 random moves, adds and undos,
+From `artifacts\checks\perf\selftest_perf.log` (2026-11-09, before the planning wave; not re-run for this update). "Edit" = mean over 45 random moves, adds and undos,
 including the command, its signal handlers (conflicts, Realistic analysis in Realistic mode) and the depth order.
 
 | Farm | Objects | Open | Full depth sort | Edit, Creative | Edit, Realistic | Placement check | Pick | Save | Load | Full analysis | File |
@@ -140,7 +186,7 @@ Windows: `powershell -ExecutionPolicy Bypass -File tools\ci\run_godot.ps1 -Timeo
 res://tests/perf/perf_planning.gd`. Each size: N real catalogue items from 500 item types (fixed seed) on the real
 map, real price file, 5 areas (2 polygons), 4 phases, a baseline (30 % in place, 5 % moved, 2 % removed), 10 %
 marked placed. Mean / p95 / max over 30 repetitions (10 or 5 for the slow cases). "Before" = HEAD b256fbc, "after" =
-this change, run back to back on 2026-11-10 while the PC was busy (expect ±30 % noise; compare columns, not runs).
+the changes committed as a511d0c, run back to back on 2026-11-10 while the PC was busy (expect ±30 % noise; compare columns, not runs).
 Outputs were checked to be identical: 485 hashed outputs (shopping rows in every mode and scope, breakdowns, totals,
 area lists, allocation order, guide JSON / CSV / HTML) on three real-catalogue layouts with edits in between, plus
 the equivalence unit tests in `test_shopping.gd`, `test_budget.gd` and `test_guide.gd`.
@@ -172,7 +218,9 @@ read-only) and sorts on cached natural-order name ranks. `RecreationGuide` uses 
 road" / "along the river", native sorts for cluster order, a rect test for small cluster groups and per-plot lookups
 for land; `options.primary` takes precomputed primary phases. Unchanged: the full recompute, single-edit refresh and
 the phases tab are dominated by one pass over every object (`_sum`, `_derive`); `PlanDoc.objects_in_area`,
-`Baseline.diff` and the guide exports are outside this change.
+`Baseline.diff` and the guide exports are outside this change. `Baseline.diff` is not in this benchmark; it was
+measured at about 70 ms at 10k objects during this wave (a one-off measurement, no log kept). The compare view
+recomputes it once per edit (`PlanContext.compare_diff()`).
 
 ## Visual tests (`tests/visual/capture.gd`)
 
@@ -180,7 +228,25 @@ The app is launched normally with `--rendering-driver opengl3` and `-- --capture
 scenario and saves the real framebuffer. Scenarios in `all`: overview, place_valid, place_invalid, selection,
 search, realistic, land, zoomed, gallery, help, settings, welcome, reference, compare, export, light,
 asset_manager, asset_review, asset_packs, original_art, asset_empty, landmarks, migration, drag_blocked,
-tools_symmetry, tools_repeat, winter. The asset scenarios install the synthetic placeholder-derived pack and remove
+tools_symmetry, tools_repeat, winter, and the planning scenarios:
+
+| Scenario | Shows |
+|---|---|
+| `plan_budget` | budget chip expanded with a selection scope, and the Budget tab |
+| `plan_areas` | Areas tab with an active area |
+| `plan_phases` | Phases tab with an active, highlighted phase; also writes a phase picture with guide numbers (`export_plan_phase_1.png`, placeholder art) |
+| `plan_heatmap` | cost heatmap on the farm (areas layer off) with the Budget tab legend |
+| `plan_shop` | Shop tab |
+| `plan_build` | Build tab |
+| `plan_guide` | Guide tab |
+| `plan_accuracy` | Accuracy tab |
+| `plan_minimap` | overview map while zoomed in, with the active phase in its colour (log line `MINIMAP shown=… room=…`) |
+| `plan_layers` | decorations hidden and trees dimmed, View tab open (log line `LAYERS hidden=…`) |
+| `plan_compare` | Compare with my farm after a few edits against the baseline, legend, Build tab (log line `COMPARE {…}`) |
+| `plan_ready` | "Can I build this?" card with blocking issues (log line `READY blocking=… checks=… rows=…`) |
+
+The overview map needs a free canvas of at least 700×420 logical px, so `plan_minimap` shows no map at
+1920×1080 @200 % by design. The asset scenarios install the synthetic placeholder-derived pack and remove
 it again. Extra scenarios (`export2x`, `export_objects`, `at_<x>_<y>_<zoom>`, `anim_perf`) are only for a real
 pack or an opened layout. Default configurations: 1920×1080 @100 %, 2560×1440 @125 %, 3440×1440 @100 %
 (ultrawide), 3840×2160 @200 %.
@@ -198,5 +264,7 @@ selection is committed in `docs/screenshots/`; CI uploads the full set as an art
 6. View tab → Import screenshot… → calibrate 3 points.
 7. Settings → Open data folder → `%APPDATA%\HaydaySandbox` contains `layouts/`, `history/`, `settings.cfg`.
 8. Check the .exe icon and Properties → Details (product name "Hayday Sandbox", version 0.1.0.0).
-9. `HaydaySandbox.exe --headless -- --selftest` is **not** available in the Windows build (tests are excluded from
+9. Press J: the Plan panel opens; Guide › Export guide… › Printable page (HTML) saves to Documents and opens in a
+   browser; Shift+M shows the overview map.
+10. `HaydaySandbox.exe --headless -- --selftest` is **not** available in the Windows build (tests are excluded from
    Windows exports); use a debug export with tests included if needed.

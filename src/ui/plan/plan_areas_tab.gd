@@ -34,13 +34,14 @@ func refresh() -> void:
 	for c in get_children():
 		if c is CheckButton and c.has_meta("layer"):
 			(c as CheckButton).set_pressed_no_signal(bool(ctx.layers.get("areas", true)))
-	var sig := "%d|%s|%s|%s" % [eng.version, ctx.mode, ctx.active_area, str(ctx.plan().get("areas", []).hash())]
+	var sig := "%d/%d|%s|%s|%s" % [eng.get_instance_id(), eng.version, ctx.mode, ctx.active_area, str(ctx.plan().get("areas", []).hash())]
 	if sig == _sig:
 		return
 	_sig = sig
 	var keep := PlanUI.focused_key(self)
 	UI.clear(_body)
 	var areas := PlanDoc.areas(ctx.plan())
+	notice_text = ""
 	if areas.is_empty():
 		var card := UI.card()
 		var v := UI.vbox(4)
@@ -55,20 +56,19 @@ func refresh() -> void:
 	PlanUI.restore_focus(self, keep)
 
 
+## The overlap / shared-objects warning last shown ("" = none; tests read it).
+var notice_text := ""
+
+
 func _overlap_notice(areas: Array) -> void:
-	var pairs := PlanScope.overlapping_areas(ctx.plan())
-	if pairs.is_empty():
-		return
+	# Shared objects count even when the shapes share no tile (an object across both).
 	var per := {}
 	for a in areas:
 		per[str(a.get("id"))] = ctx.engine.area_uids(str(a.get("id")))
-	var sh := PlanScope.shared_objects(per)
-	var names: PackedStringArray = []
-	for p: Array in pairs.slice(0, 3):
-		names.append("%s + %s" % [str(PlanDoc.area(ctx.plan(), p[0]).get("name", p[0])), str(PlanDoc.area(ctx.plan(), p[1]).get("name", p[1]))])
-	var txt := "Overlapping areas: %s%s." % [", ".join(names), "" if pairs.size() <= 3 else " and %d more" % (pairs.size() - 3)]
-	if int(sh["objects"]) > 0:
-		txt += " %d object%s count in more than one area, so area totals are not additive (phases still add up)." % [int(sh["objects"]), "" if int(sh["objects"]) == 1 else "s"]
+	var txt := PlanScope.overlap_notice(ctx.plan(), per)
+	notice_text = txt
+	if txt.is_empty():
+		return
 	var l := UI.label(txt, "Dim", true)
 	l.add_theme_color_override("font_color", UiTheme.c("warn"))
 	_body.add_child(l)

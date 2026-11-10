@@ -681,9 +681,11 @@ static func _ordered_moves(clusters: Array, plan: Dictionary) -> Array:
 						from_at[Vector2i(x, y)] = []
 					from_at[Vector2i(x, y)].append(i)
 	var outs: Array = []
+	var preds: Array = []
 	var indeg: Array = []
 	for i in n:
 		outs.append({})
+		preds.append({})
 		indeg.append(0)
 	for a in n:
 		var deps := {}
@@ -695,8 +697,12 @@ static func _ordered_moves(clusters: Array, plan: Dictionary) -> Array:
 							deps[b] = true
 		for b in deps:
 			outs[b][a] = true
+			preds[a][b] = true
 			indeg[a] += 1
 	var order: Array = _key_order(clusters)
+	var rank := {}
+	for i in order.size():
+		rank[order[i]] = i
 	var out: Array = []
 	var emitted := {}
 	var stored := {}
@@ -715,12 +721,10 @@ static func _ordered_moves(clusters: Array, plan: Dictionary) -> Array:
 			out.append(d)
 			_release(outs, indeg, pick)
 			continue
-		# Cycle: store the first waiting cluster to free its tiles.
-		var brk := -1
-		for i in order:
-			if not emitted.has(i) and not stored.has(i):
-				brk = i
-				break
+		# Cycle: store a cluster that is ON a cycle (the first by sort key) to free its
+		# tiles. A cluster merely waiting behind a cycle must not go to storage: it
+		# moves normally once the cycle is broken.
+		var brk := _cycle_member(order, rank, preds, emitted, stored)
 		if brk < 0:
 			break   # cannot happen: every waiting cluster is already stored
 		stored[brk] = true
@@ -731,6 +735,40 @@ static func _ordered_moves(clusters: Array, plan: Dictionary) -> Array:
 		out.append(s)
 		_release(outs, indeg, brk)
 	return out
+
+
+static func _cycle_member(order: Array, rank: Dictionary, preds: Array, emitted: Dictionary, stored: Dictionary) -> int:
+	## A waiting cluster on a dependency cycle (-1 = none): walk from the first
+	## waiting cluster along still-blocking dependencies (clusters neither moved nor
+	## stored; every waiting cluster has one) until one repeats, then take the
+	## cycle's first cluster by sort key.
+	var start := -1
+	for i in order:
+		if not emitted.has(i) and not stored.has(i):
+			start = i
+			break
+	if start < 0:
+		return -1
+	var pos := {}
+	var path: Array = []
+	var cur := start
+	while not pos.has(cur):
+		pos[cur] = path.size()
+		path.append(cur)
+		var nxt := -1
+		for b in preds[cur]:
+			if emitted.has(b) or stored.has(b):
+				continue
+			if nxt < 0 or int(rank[b]) < int(rank[nxt]):
+				nxt = int(b)
+		if nxt < 0:
+			return start   # defensive: nothing blocks it after all
+		cur = nxt
+	var best := cur
+	for j in range(int(pos[cur]), path.size()):
+		if int(rank[path[j]]) < int(rank[best]):
+			best = path[j]
+	return best
 
 
 static func _release(outs: Array, indeg: Array, i: int) -> void:

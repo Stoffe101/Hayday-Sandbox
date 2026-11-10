@@ -1189,7 +1189,7 @@ func _full(plan: Dictionary) -> void:
 			if e != null:
 				var bid := str(e[0])
 				base = bid == o.item_id or _item_key(bid) == _items[idx]
-				placed = base and e.size() >= 3 and int(e[1]) == org.x and int(e[2]) == org.y
+				placed = base and same_spot(e, o)
 		if has_placed and not placed:
 			placed = placed_u.has(u)
 		_s_base[i] = 1 if base else 0
@@ -1588,9 +1588,21 @@ func _is_placed(o: PlacedObject, base: bool) -> bool:
 	if _placed_u.has(o.uid):
 		return true
 	if base:
-		var e: Array = _base_u[o.uid]
-		return e.size() >= 3 and int(e[1]) == o.origin.x and int(e[2]) == o.origin.y
+		return same_spot(_base_u[o.uid], o)
 	return false
+
+
+static func same_spot(e: Array, o: PlacedObject) -> bool:
+	## A baseline record ["item", x, y, w, h(, flipped)] and the object stand on the
+	## same tiles the same way round: Baseline.diff's "unchanged" (rotating in
+	## place is a move). Records without a size compare the origin only.
+	if e.size() < 3 or int(e[1]) != o.origin.x or int(e[2]) != o.origin.y:
+		return false
+	if e.size() < 5:
+		return true
+	if maxi(1, int(e[3])) != o.size.x or maxi(1, int(e[4])) != o.size.y:
+		return false
+	return (e.size() > 5 and e[5] is bool and bool(e[5])) == o.flipped
 
 
 func _refresh_locked() -> void:

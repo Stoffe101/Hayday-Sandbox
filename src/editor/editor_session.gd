@@ -72,6 +72,8 @@ func _init(l: FarmLayout, item_db: ItemDatabase, farm_map: FarmMap, prices: Pric
 	symmetry["pos"] = default_mirror_pos(symmetry["kind"])
 	if prices != null:
 		budget = BudgetEngine.new(layout, db, prices, map)
+		# The Realistic report's coin / diamond figures are the budget's To-buy totals.
+		_analysis.budget = budget
 
 
 func dispose() -> void:
@@ -383,10 +385,14 @@ func clear_selection() -> void:
 	selection_changed.emit()
 
 
-func select_all() -> void:
+func select_all(keep: Callable = Callable()) -> void:
 	## Every placed object (landmarks are never part of an object selection).
+	## `keep(uid) -> bool` leaves objects out (main.gd: those hidden by an object
+	## layer, which can't be picked either).
 	clear_landmark_selection()
 	selection = layout.objects.keys()
+	if keep.is_valid():
+		selection = selection.filter(func(u): return keep.call(int(u)))
 	selection_changed.emit()
 
 

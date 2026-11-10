@@ -191,7 +191,7 @@ func _refresh_data(reset_paging: bool) -> void:
 	var scope := _scope()
 	var eng := ctx.engine
 	var sel: Array = ctx.session.selection
-	var key := "%d|%d|%d|%s|%s|%s|%d" % [eng.version, ctx.prices.version if ctx.prices else 0, ctx.session.stack.version,
+	var key := "%d/%d|%d|%d|%s|%s|%s|%d" % [eng.get_instance_id(), eng.version, ctx.prices.version if ctx.prices else 0, ctx.session.stack.version,
 		_mode, _scope_key, str(sel.hash()) if str(scope["kind"]) == PlanUiModels.SCOPE_SELECTION else "", ctx.plan().hash()]
 	if key == _data_key and not reset_paging:
 		last_refresh_usec = Time.get_ticks_usec() - t0

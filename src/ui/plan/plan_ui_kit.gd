@@ -117,6 +117,8 @@ static func repo_dir() -> String:
 
 static func is_inside_repo(path: String) -> bool:
 	## True for paths in the project folder (exports never go there).
+	if path.begins_with("res://"):
+		return true
 	var root := repo_dir().replace("\\", "/").to_lower().trim_suffix("/")
 	var p := path.replace("\\", "/").simplify_path().to_lower()
 	if root.is_empty():

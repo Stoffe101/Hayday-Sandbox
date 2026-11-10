@@ -224,6 +224,18 @@ func _outline(poly: PackedVector2Array, col: Color, w: float) -> void:
 	draw_polyline(p, col, w / maxf(zoom, 0.05), true)
 
 
+func shown_issue_uids() -> Array:
+	## uids whose issue marker is drawn: existing objects not hidden by an object layer.
+	var out: Array = []
+	if layout == null:
+		return out
+	var hiding := renderer != null and renderer.layer_hidden_count() > 0
+	for u in issues:
+		if layout.get_obj(u) != null and not (hiding and renderer.is_layer_hidden(int(u))):
+			out.append(u)
+	return out
+
+
 func _draw() -> void:
 	if layout == null:
 		return
@@ -231,11 +243,9 @@ func _draw() -> void:
 	if show_annotations:
 		_draw_annotations()
 	_draw_diff()
-	# Issue markers
-	for u in issues:
+	# Issue markers (not on objects an object layer hides: they aren't drawn either)
+	for u in shown_issue_uids():
 		var o := layout.get_obj(u)
-		if o == null:
-			continue
 		var poly := Iso.footprint_polygon(o.origin, o.size)
 		if issues[u] >= 2:
 			var c := Color(0.95, 0.3, 0.2, 0.9)

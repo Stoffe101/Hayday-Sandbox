@@ -35,7 +35,7 @@ const SHORTCUTS := [
 	["Equal ↔ / Equal ↕", "Distribute 3+ objects with equal gaps"],
 	["Stamps (dock) / Save stamp", "Keep a selection as a reusable group; click to place copies, Esc stops"],
 	["Planning", ""],
-	["J", "Open / close the Plan panel (Budget · Areas · Phases · Shop · Build · Guide)"],
+	["J", "Open / close the Plan panel (Budget · Areas · Phases · Shop · Build · Guide · Accuracy)"],
 	["Budget chip (canvas corner)", "Cost of the selection, area, phase or farm; ⋮ moves, shrinks or expands it"],
 	["Area tool: drag", "Rectangle area (Plan › Areas › Rectangle)"],
 	["Area tool: click corners", "Polygon area; double-click, Enter or the first corner closes it, Backspace removes a corner"],

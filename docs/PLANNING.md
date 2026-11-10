@@ -1,8 +1,8 @@
 # Farm planning: budgets, areas, phases, shopping, checklist, guide
 
-This is the design of the planning layer that sits on top of the editor. Every number it shows comes from
-`data/prices/` (researched, with sources and confidence), the user's own price overrides, the layout's inventory
-and its planning data. Nothing is estimated: an unknown price stays unknown and is counted, never treated as 0.
+This is the design of the planning layer that sits on top of the editor, as implemented at a511d0c. Every number
+it shows comes from `data/prices/` (researched, with sources and confidence; the catalogue's own cost fields are used
+only for items without a price record), the user's own price overrides, the layout's inventory and its planning data. Nothing is estimated: an unknown price stays unknown and is counted, never treated as 0.
 
 Workflow: **Design → Budget → Areas → Phases → Shop → Build → Guide.**
 
@@ -60,25 +60,43 @@ sources}}`, informational: the step rule and what is known about its basis). Cur
 `sources` (expansion supplies have no fixed coin price). Research and coverage: `docs/research/PRICING_RESEARCH.md`;
 regenerate with `python3 tools/catalog/build_prices.py [--report]`.
 
-**Layering** (`PriceBook`): catalogue `cost` fields (fallback) < `hayday_prices.json` < user overrides in
-`user://price_overrides.json` (same record shape plus `"origin": "user"`, never written to the repository). Each
-resolved price says where it came from.
+**Layering** (`PriceBook`, one shared instance `App.prices`): catalogue `cost` fields (used only when the price
+file has no record for the item) < `hayday_prices.json` < user overrides. The override file is `user://price_overrides.json`
+(`{"format": "hayday-sandbox-price-overrides", "schema_version": 1, "items": {id: record}}`, each record in the
+price-file shape plus `"origin": "user"`); it is never written to the repository. Keys an override leaves out fall
+back to the lower layers, except that setting any of `price`, `step`, `schedule`, `schedule_repeats_last`
+replaces all four (so an old schedule never hides a new price). An override that gives a price to an item whose
+method is `unknown`, `reward` or `not_in_shop`, without naming a method, makes it `shop`. When a price record has
+no `max_count`, the catalogue's maximum is used (an item fact, not a price). Each resolved record says where it
+came from (`origin`: `catalogue`, `price_db`, `user`, `none`).
 
 **Progressive prices:** copy *k* (1-based) costs `schedule[k-1]` if present (the last entry repeats only if the
 record says `"schedule_repeats_last": true`, otherwise copies past the table are unknown), else `price + step×(k-1)`.
 Which *k* the next purchase is: `profile.purchased[item]` if recorded, else the copies owned. Both the step rule
-and its basis are community data and flagged as such.
+and its basis are community data and flagged as such (`rules.step_basis` is `unverified`).
 
 ## 2. Inventory (`layout.profile`)
 
 Existing keys stay (`level`, `owned`, `budget_coins`, `budget_diamonds`, `treat_unknown_as_owned`). New:
 
 * `balances`: `{currency: amount}`: what the player has now (coins, diamonds, vouchers, supplies).
-* `purchased`: `{item: copies bought so far}` for progressive prices (defaults to owned).
+* `purchased`: `{item: copies bought so far}` for progressive prices (defaults to the effective owned count).
 
 `owned[item]` = all copies the player has (on the farm and in storage). An item **without an `owned` entry has
 unknown ownership**. Budgets count it as *to buy* and say how many item types that affects (upper bound,
-never a silent 0). A baseline (§3) gives a lower bound: the copies standing on the real farm.
+never a silent 0). A baseline (§3) gives a lower bound: the budget uses `max(owned, copies in the baseline)` as
+the owned count, and an item with baseline copies has known ownership.
+
+`treat_unknown_as_owned` is read by Realistic Mode only; the budget ignores it. `budget_coins` /
+`budget_diamonds`, when set, cap the coin / diamond balances used for phase affordability
+(`BudgetEngine.spendable()`).
+
+**Inventory files** (`InventoryIO`, Inventory dialog › Import / Export): CSV with columns
+`item_id,name,owned,purchased`; balances are rows whose `item_id` is `currency:<id>` (amount in `owned`). JSON:
+`{"format": "hayday-sandbox-inventory", "schema_version": 1, "owned": {}, "purchased": {}, "balances": {}}`.
+Import accepts a header or none, `,` `;` or tab separators and quoted fields, and matches ids exactly, through
+aliases or by item name (case-insensitive). Unknown and ambiguous names are reported, not imported. Import
+returns a new profile; the dialog applies it with one undoable `SetProfile`.
 
 ## 3. Planning document (`layout.planning`, layout schema 4)
 
@@ -100,11 +118,23 @@ never a silent 0). A baseline (§3) gives a lower bound: the copies standing on 
 }
 ```
 
+Notes on the fields as the code saves them (`PlanDoc.normalize`):
+
+* Areas and phases share one id counter (`next_id`): ids look like `a1`, `p2`, `a3`. Records with a missing or
+  duplicate id, and areas without a usable rect (4 numbers) or polygon (3+ points), are dropped on load.
+* `target` is a Cost (`{currency: amount}`); the Areas and Phases tabs edit coins and diamonds. `notes` is kept if
+  present but the UI does not edit it. New areas get `color` and `visible: true`; new phases get `color` and
+  `areas: []`.
+* `placed[uid]` stores the object's origin when it was marked, so the Build tab can list objects moved after
+  marking.
+* `steps_done` and `baseline` are omitted when empty. `acquired` keeps only counts > 0.
+
 Edited only through `EditCommands.SetPlanning(old, new, label, merge_key)` (undoable; consecutive commands merge
-only when they carry the same non-empty merge key, e.g. rapid checklist ticks). Schema 3 files load unchanged and
-get an empty `planning`; their `annotations` of kind `zone` (and annotations without a kind, which the editor draws
-as zones) become rect areas (the text becomes the name, else "Area N"; colour and unknown fields kept), labels stay,
-and the original file is kept as `<file>.v3-backup` on the first save. Unknown keys inside `planning` are kept.
+only when they carry the same non-empty merge key, e.g. rapid checklist ticks or a target being typed). When a
+schema 3 file is loaded, its `annotations` of kind `zone` (and annotations without a kind, which the editor drew as
+zones) become rect areas (the text becomes the name, else "Area N"; colour and unknown fields kept) and labels
+stay annotations; a file without zones gets an empty `planning`. The original file is kept as
+`<file>.v3-backup` on the first save. Unknown keys inside `planning` are kept.
 
 Baseline details (`baseline.gd`): a baseline record may carry a 6th element `true` = flipped (rotating counts as
 moving). Planned ghosts are not part of a snapshot. Matching is by uid **and** item (same uid, other item = removed
@@ -134,33 +164,65 @@ object are harmless and become valid again on undo.
 * **Land.** Expansion plots the design needs (objects standing on locked plots) add their supplies
   (`land_deed`, `mallet`, `marker_stake`, `expansion_permit`) from the map, in the *To buy* and *Remaining* totals
   and the shopping list.
+* **Planned objects.** Planned (ghost) objects are part of the design: budgets, the shopping list and the guide
+  include them. A baseline snapshot leaves them out, and the "can't be bought" / "no inventory" readiness rows
+  count only real objects.
 * **Checklist state per object:** *not acquired* (to buy) → *acquired, not placed* (covered by owned or acquired
-  copies) → *placed* (`placed[uid]`, or an unchanged baseline object). A phase is *completed* when all its
-  objects are placed or it is marked done; *ready to build* when nothing in it is still to buy; *in progress*
-  when some objects are placed; else *not started*.
+  copies) → *placed* (`placed[uid]`, or a baseline object still at its baseline origin). Phase status, checked in
+  this order: *completed* when marked done or every object is placed; *not started* when it has no objects;
+  *ready to build* when nothing in it is still to buy and it needs no locked plot; *in progress* when some
+  objects are placed; else *not started*.
+* **Affordability** (Phases tab): phases in build order, *Remaining* cost summed cumulatively per currency,
+  compared with the spendable balances (§2); a phase is affordable when the running total is covered.
+  Currencies are never converted. Once a phase has an unknown or unbuyable price, the running total is marked as
+  a lower bound. Currencies needed without a balance entry count as 0 and are listed.
 * **Unknowns are visible.** Every total reports objects/types with unknown price, types that can't be bought,
-  and types with unknown ownership.
+  types with unknown ownership, and plots whose supplies are unknown. `Totals.is_exact()` is true only when none
+  of these is left out.
 
 ## 5. Modules
 
 ```
-src/core/planning/
-  plan_doc.gd          planning dict helpers: normalize, areas, phases, membership, primary phase (pure)
-  currency.gd          currency ids, names, order, formatting
+src/core/planning/                (pure: no scene / UI / App; unit-tested)
+  plan_doc.gd          planning dict helpers: normalize, areas, phases, membership, primary phase
+  currency.gd          currency ids, names, order, formatting; a Cost is {currency: int}, unknown = null
   price_book.gd        price layering, per-copy price, method/confidence, overrides IO
-  budget_engine.gd     allocation + per-object costs + totals per scope; incremental per item
-  shopping_list.gd     grouped rows, acquisition progress
-  inventory_io.gd      owned/balances CSV and JSON import/export
+  budget_engine.gd     allocation + per-object costs + totals per scope; incremental per item, batch API
+  shopping_list.gd     grouped rows (reused while their item is unchanged), supply rows, acquisition progress
+  inventory_io.gd      owned / purchased / balances CSV and JSON import/export
   recreation_guide.gd  ordered numbered steps with landmark-relative directions, progress (stage rules: class doc)
   guide_export.gd      the guide as printable HTML (a page per phase), CSV checklist, JSON and plain text
   baseline.gd          snapshot of the real farm, diff (unchanged / moved / new / removed, fungible reuse)
   accuracy_report.gd   map provenance, landmark confidence, footprints, calibration residuals
-src/core/calibration_math.gd   least-squares affine fit from N points, per-point residuals
+  readiness.gd         "Can I build this?" rows from conflicts, the Realistic report and can't-buy counts
+src/core/calibration_math.gd   N-point calibration (similarity for 2, least-squares affine for 3+), residuals
+src/core/object_layers.gd      view layers by category (show / dim / hide)
+src/ui/plan/                   PlanContext, PlanTab, PlanPanel and its tabs, PlanScope / PlanUiModels (pure
+                               view-models, unit-tested), PlanUI / PlanUiKit widgets, PlanDialog, ReadinessCard
+src/ui/budget_widget.gd, minimap.gd, compare_legend.gd, inventory_dialog.gd, price_dialog.gd, baseline_dialog.gd
+src/render/plan_overlay.gd     areas, phase highlight, progress ticks, guide numbers, heatmap, compare tints
+src/editor/plan_controller.gd  area tool (rectangle / polygon / from selection)
 ```
 
-UI (no logic): budget widget on the canvas, a Plan panel (Budget, Areas, Phases, Shopping, Checklist, Guide,
-Accuracy), area drawing tool, inventory and price-override dialogs, canvas overlays (areas, phase highlight,
-guide numbers, progress, cost heatmap).
+UI: the budget chip on the canvas; the Plan panel (J) with the tabs Budget, Areas, Phases, Shop, Build, Guide and
+Accuracy; the area tool; the inventory, price and "My real farm" dialogs; the canvas overlays (areas, phase
+highlight, guide numbers, progress, cost heatmap, compare tints); the overview map. Tabs act only through
+`PlanContext` (`App.plan_ctx`), which emits `changed` at most once per frame; every document edit is one
+`SetPlanning` or `SetProfile` command.
+
+**Guide and shopping-list exports** (native save dialogs that start in Documents; text files written through
+`PlanUiKit.write_text` are refused inside the program folder):
+
+* Guide (`GuideExport`, Guide tab › Export guide…): printable HTML (one section per phase, each starting on a new
+  printed page; optional overview and per-phase PNG pictures written next to the HTML file), CSV checklist
+  (`number,done,stage,phase,title,items,count,tiles,from_tiles,description,id`), JSON
+  (`{"format": "hayday-sandbox-guide", "version": 1, ...}`) and plain text. PNG: an overview picture, or one
+  picture per phase into a folder. There is no PDF export: print the HTML page to PDF from a browser.
+* Pictures use the placeholder art unless the user picks "Installed art (private)"; such pictures can't be saved
+  inside the program folder and the app warns not to share them.
+* Shopping list (Shop tab › Export CSV…): `group,item_id,name,used,owned,bought,still_needed,next_price,
+  price_range,known_total,unknown_price_copies,cant_buy_copies,how_to_get,unlock_level,availability,confidence,
+  price_origin`; unknown prices and unknown ownership are written as `unknown`, never 0.
 
 ## 6. Planning extras (view only unless noted)
 

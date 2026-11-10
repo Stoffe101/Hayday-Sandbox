@@ -65,7 +65,7 @@ func refresh() -> void:
 	var eng := ctx.engine
 	if eng == null:
 		return
-	var sig := "%d|%s|%s|%s|%s|%s|%d|%s|%d" % [eng.version, ctx.mode, str(ctx.selection()), ctx.active_area, ctx.active_phase,
+	var sig := "%d/%d|%s|%s|%s|%s|%s|%d|%s|%d" % [eng.get_instance_id(), eng.version, ctx.mode, str(ctx.selection()), ctx.active_area, ctx.active_phase,
 		str(ctx.layers.get("heatmap")), ctx.session.stack.version, ctx.session.layout.mode, ctx.session.layout.profile.hash()]
 	if sig == _sig:
 		return

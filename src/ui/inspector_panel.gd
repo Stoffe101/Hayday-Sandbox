@@ -887,12 +887,16 @@ func _report_card(s: EditorSession) -> void:
 			c.append("%s coins" % UI.fmt_int(r.coins_needed))
 		if r.diamonds_needed > 0:
 			c.append("%s diamonds" % UI.fmt_int(r.diamonds_needed))
-		var kvc := UI.kv("Est. cost", " + ".join(c))
+		var kvc := UI.kv("To buy" if r.cost_source == "budget" else "Est. cost", " + ".join(c))
+		if r.cost_source == "budget":
+			kvc.tooltip_text = "The budget's To-buy total (same as the budget chip): researched prices, your overrides and rising prices per copy."
 		if r.over_budget_coins or r.over_budget_diamonds:
 			(kvc.get_child(1) as Label).add_theme_color_override("font_color", UiTheme.c("danger"))
 		v.add_child(kvc)
 	if not r.unknown_cost_items.is_empty():
 		v.add_child(UI.label("%d item type(s) have no known price and are not included." % r.unknown_cost_items.size(), "Faint", true))
+	if not r.unknown_ownership_types.is_empty():
+		v.add_child(UI.label("%d item type(s) without a recorded inventory are counted as to buy (as in the budget)." % r.unknown_ownership_types.size(), "Faint", true))
 	if r.unverified > 0:
 		v.add_child(UI.label("%d object(s) use unverified footprints." % r.unverified, "Faint", true))
 	if r.planned_count > 0:

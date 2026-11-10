@@ -112,6 +112,30 @@ static func shared_objects(area_uids: Dictionary) -> Dictionary:
 	return {"objects": shared.size(), "pairs": pairs}
 
 
+static func overlap_notice(plan: Dictionary, area_uids: Dictionary) -> String:
+	## The Areas tab's "not additive" warning ("" = none): shapes sharing tiles, or
+	## areas that share objects without sharing a tile (an object standing across
+	## both). `area_uids` = area id -> its uids (BudgetEngine.area_uids).
+	var pairs := overlapping_areas(plan)
+	var sh := shared_objects(area_uids)
+	var shared_n := int(sh["objects"])
+	if pairs.is_empty() and shared_n == 0:
+		return ""
+	var named: Array = pairs
+	if named.is_empty():
+		named = []
+		for p: Array in sh["pairs"]:
+			named.append([p[0], p[1]])
+	var names: PackedStringArray = []
+	for p: Array in named.slice(0, 3):
+		names.append("%s + %s" % [str(PlanDoc.area(plan, p[0]).get("name", p[0])), str(PlanDoc.area(plan, p[1]).get("name", p[1]))])
+	var more := "" if named.size() <= 3 else " and %d more" % (named.size() - 3)
+	var txt := ("Overlapping areas: %s%s." if not pairs.is_empty() else "Areas sharing objects: %s%s.") % [", ".join(names), more]
+	if shared_n > 0:
+		txt += " %d object%s count in more than one area, so area totals are not additive (phases still add up)." % [shared_n, "" if shared_n == 1 else "s"]
+	return txt
+
+
 static func overlapping_areas(plan: Dictionary) -> Array:
 	## Pairs of areas whose shapes share at least one tile: [[a, b], ...].
 	var list := PlanDoc.areas(plan)

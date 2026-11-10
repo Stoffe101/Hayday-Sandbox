@@ -232,7 +232,8 @@ func refresh() -> void:
 	var sc := ctx.scope()
 	var t := ctx.scope_totals()
 	last_totals = t
-	var sig := "%d|%s|%s|%s|%s|%s|%d%d" % [ctx.engine.version, ctx.mode, str(sc.get("kind")), str(sc.get("id")), str(sc.get("uids").hash() if sc.get("uids") is Array else 0), ctx.scope_pin, int(collapsed), int(expanded)]
+	# The engine's instance id too: another layout's engine counts versions from 0 again.
+	var sig := "%d/%d|%s|%s|%s|%s|%s|%d%d" % [ctx.engine.get_instance_id(), ctx.engine.version, ctx.mode, str(sc.get("kind")), str(sc.get("id")), str(sc.get("uids").hash() if sc.get("uids") is Array else 0), ctx.scope_pin, int(collapsed), int(expanded)]
 	if ctx.session != null:
 		sig += "|%d" % ctx.session.stack.version
 	if sig == _sig:

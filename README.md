@@ -1,8 +1,10 @@
 # Hayday Sandbox
 
 An offline, isometric **farm layout designer** for planning Hay Day farms. It is a planning editor only: there is
-no gameplay, no coins, no diamonds and no grinding. Design freely in **Creative Mode** (the full sandbox), then
-switch to **Realistic Mode** to see what your farm level, inventory, land and budget actually allow.
+no gameplay and no grinding; coins and diamonds appear only as researched prices in your budget. Design freely in
+**Creative Mode** (the full sandbox), switch to **Realistic Mode** to see what your farm level, inventory, land and
+budget actually allow, then plan the rebuild: budget, areas, phases, shopping list, build checklist and a
+step-by-step guide.
 
 > **Unofficial fan tool.** This material is unofficial and is not endorsed by Supercell. For more information see
 > Supercell's Fan Content Policy: <https://www.supercell.com/fan-content-policy>. Hayday Sandbox contains **no
@@ -34,7 +36,7 @@ switch to **Realistic Mode** to see what your farm level, inventory, land and bu
   Bakery"), paint strokes, lines (Shift), rectangle fills (Ctrl), multi-select, box select, click-again to select the
   object behind, an "Objects here" list on right-click, live drag preview with blocker outlines, optional snap to the
   nearest free spot, copy/cut/paste, duplicate, rotate (Hay Day's mirror, only where the game allows), lock, group,
-  eyedropper, eraser, notes and zones, auto-connecting fences and paths. Every edit is an undoable command
+  eyedropper, eraser, notes, auto-connecting fences and paths. Every edit is an undoable command
   (one gesture = one undo step).
 * **Layout tools**: symmetry placement (three mirror lines), repeat arrays with a live preview, align and equal
   spacing, fence/path line and outline brushes, and reusable **stamps** saved as `.hdstamp` files that can be
@@ -45,11 +47,40 @@ switch to **Realistic Mode** to see what your farm level, inventory, land and bu
   areas of the game are flagged. In Realistic Mode the eyedropper, paste and duplicate refuse items above your farm
   level. The issues list groups problems by reason.
 * **Future planning**: *planned* (ghost) objects and editor-only reserved-space markers.
+* **Farm planning** (workflow strip in the top bar: Design → Budget → Areas → Phases → Shop → Build → Guide; see
+  [PLANNING.md](docs/PLANNING.md)):
+  * **Budget chip** on the canvas: what the selection, active area, active phase or whole farm costs, per currency
+    (coins, diamonds, vouchers and event currencies are never converted into each other), in three modes:
+    *Design cost*, *To buy* (owned copies deducted) and *Remaining* (also what you bought during the project).
+    Unknown prices, items that can't be bought and items with no inventory record are counted next to the total,
+    never treated as 0.
+  * **Plan panel** (J) with the tabs Budget, Areas, Phases, Shop, Build, Guide and Accuracy. Areas are rectangles
+    or polygons (also drawn with the notes tool, N); phases set the build order and get Design / To buy /
+    Remaining totals, status, targets and "what my balances pay for". The Shop tab is a grouped shopping list
+    with search, filters, a "bought" counter and CSV export; the Build tab is a checklist (not acquired / to
+    place / placed); the Guide tab gives numbered steps with directions relative to the farm's landmarks, and
+    exports HTML (print it to PDF from a browser), CSV, JSON, text and PNG. A "Can I build this?" card lists
+    blocking issues apart from costs.
+  * **Price data** (`data/prices/hayday_prices.json`) from public fan wikis, with sources and a confidence per
+    record: 1,962 of the 1,967 items have a record, but only 447 can be bought for a known price (338 in the shop,
+    66 for vouchers, 38 for event currency, 5 free). 1,514 are not sold or are rewards, and 1 price is unknown.
+    How the per-copy price step is counted is not established. You can override any price; overrides stay in
+    your user folder. See [pricing research](docs/research/PRICING_RESEARCH.md).
+  * **Inventory**: copies owned and bought, balances (coins, diamonds, vouchers, expansion supplies), CSV/JSON
+    import and export. A blank entry means "not recorded", which is not the same as 0.
+  * **My real farm**: a snapshot of your current farm as a baseline. Copies on it count as owned, the guide moves
+    objects from it, and *Compare with my farm* tints unchanged, moved (with arrows), new and removed objects.
+  * **Overview map** (Shift+M) and **object layers** (show, dim or hide decorations, buildings, trees, fences,
+    paths…; view only).
+  * **Accuracy report**: how far the map, landmarks and footprints can be trusted. The public map is an
+    approximation reconstructed from wiki images and tables; its landmark positions are approximate.
 * **Layouts**: unlimited local layouts, gallery with thumbnails, templates, rename/duplicate/delete (to trash),
   import/export, autosave with crash recovery, revision snapshots on every save, versioned crash-safe files
-  (schema 3; older files are migrated and the original file is backed up before the first save).
+  (schema 4; older files are migrated, zones become planning areas, and the original file is backed up before the
+  first save).
 * **Screenshot references**: several reference images per layout, each with its own opacity, visibility, lock and
-  order, aligned to the grid with **2- or 3-point calibration**. All changes are undoable.
+  order, aligned to the grid by **calibration from 2 or more points** (3 or more also correct a stretched image;
+  from 4 points the error of each point is measured in tiles and pixels). All changes are undoable.
 * **Compare** two layouts: added / removed / moved objects highlighted on the farm, plus item count changes.
 * **Export** PNG images of the whole farm, unlocked land, objects or the view, up to poster size (tiled
   rendering), with optional transparency, grid and labels.
@@ -85,12 +116,16 @@ $env:GODOT = 'C:\path\to\Godot_v4.7.2-stable_win64.exe'
 powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1            # add -Perf for benchmarks
 powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1 -SkipImport -Tag mytag
 
+# One headless Godot command (adds --headless --path .), e.g. a filtered unit-test run
+powershell -ExecutionPolicy Bypass -File tools\ci\run_godot.ps1 --script res://tests/run_tests.gd -- --filter=budget
+
 # Screenshots of the real app (OpenGL) into artifacts\screens\
 powershell -ExecutionPolicy Bypass -File tools\ci\visual_tests.ps1 'overview,selection' 1920x1080:1
 ```
 
-Both runners give every Godot child a fresh, temporary `APPDATA`, so your real layouts, settings and any installed
-asset pack are never read or changed. Capture windows open off-screen and never take focus. Run one visual run at a
+The runners give every Godot child a fresh, temporary `APPDATA`, so your real layouts, settings and any installed
+asset pack are never read or changed. They share one lock, so runs started from parallel shells wait for each
+other instead of importing and testing at the same time. Capture windows open off-screen and never take focus. Run one visual run at a
 time: it writes a temporary `override.cfg` into the project folder and refuses to start if one already exists.
 Details: [docs/TESTING.md](docs/TESTING.md).
 
@@ -111,7 +146,8 @@ Press **F1** in the app for every shortcut (the help is built from the real key 
 
 | Keys | Action |
 |---|---|
-| **V** · **B** · **E** · **I** · **M** · **N** · **D** | select · place · erase · eyedropper · land · notes · pan tool |
+| **V** · **B** · **E** · **I** · **M** · **N** · **D** | select · place · erase · eyedropper · land · notes & areas · pan tool |
+| **J** · Shift+M | Plan panel · overview map |
 | Space / middle / right-drag | pan with any tool |
 | Shift+drag · Ctrl+drag | line of items · rectangle fill |
 | Click again on the same spot | select the object behind (cycles); right-click → *Objects here* |
@@ -126,13 +162,13 @@ Press **F1** in the app for every shortcut (the help is built from the real key 
 
 ## Documentation
 
-* [Product vision](docs/PRODUCT_VISION.md) · [Features](docs/FEATURES.md) · [Roadmap](docs/ROADMAP.md) · [Known issues](docs/KNOWN_ISSUES.md)
+* [Product vision](docs/PRODUCT_VISION.md) · [Features](docs/FEATURES.md) · [Farm planning](docs/PLANNING.md) · [Roadmap](docs/ROADMAP.md) · [Known issues](docs/KNOWN_ISSUES.md)
 * [Architecture](docs/ARCHITECTURE.md) · [Development & builds](docs/DEVELOPMENT.md) · [Testing](docs/TESTING.md)
 * [Asset pipeline](docs/ASSET_PIPELINE.md) · [Private original-art pack](docs/PRIVATE_ASSETS.md) · [Item database](docs/ITEM_DATABASE.md) · [Catalogue coverage](docs/CATALOG_COVERAGE.md)
 * Research: [legal & licensing](docs/research/LEGAL_AND_LICENSING.md) · [asset sources](docs/research/ASSET_SOURCES.md) ·
   [asset formats](docs/research/ASSET_FORMATS.md) · [placement](docs/research/PLACEMENT_RESEARCH.md) ·
   [Hay Day reference](docs/research/HAYDAY_REFERENCE.md) · [item data](docs/research/ITEM_DATA_RESEARCH.md) ·
-  [known uncertainties](docs/research/KNOWN_UNCERTAINTIES.md)
+  [pricing](docs/research/PRICING_RESEARCH.md) · [known uncertainties](docs/research/KNOWN_UNCERTAINTIES.md)
 
 ## Licence
 

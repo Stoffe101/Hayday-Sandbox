@@ -330,6 +330,7 @@ static func _int_dict(v: Variant) -> Dictionary:
 
 
 static func _csv_field(s: String) -> String:
+	s = GuideExport.csv_text_guard(s)
 	if s.contains(",") or s.contains("\"") or s.contains("\n") or s.contains(";"):
 		return "\"" + s.replace("\"", "\"\"") + "\""
 	return s

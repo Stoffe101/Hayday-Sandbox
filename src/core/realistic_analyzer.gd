@@ -39,6 +39,14 @@ class Report:
 	var coins_needed: int = 0
 	var diamonds_needed: int = 0
 	var unknown_cost_items: Array = []
+	## "catalogue" (flat catalogue cost fields × missing copies, the old rule) or
+	## "budget" (the budget engine's To-buy totals: price file, overrides,
+	## progressive prices; the same figures as the budget chip). See analyze().
+	var cost_source: String = "catalogue"
+	## With cost_source "budget": item types counted as to buy because no owned
+	## count is recorded (the budget's upper bound; the shortage list skips them
+	## while treat_unknown_as_owned is on).
+	var unknown_ownership_types: Array = []
 	var over_budget_coins: bool = false
 	var over_budget_diamonds: bool = false
 	var blocking_count: int = 0          ## objects with a severity-2 issue
@@ -56,6 +64,8 @@ class Cached:
 	var stack: CommandStack
 	var conflict_index: ConflictIndex
 	var computed := 0                ## recomputations so far (tests, diagnostics)
+	## When set (EditorSession does), costs come from this budget (see analyze()).
+	var budget: BudgetEngine = null
 	var _report: Report = null
 	var _key: Array = []
 	var _dirty := true
@@ -78,19 +88,31 @@ class Cached:
 	func report(db: ItemDatabase, map: FarmMap) -> Report:
 		var key := [stack.version if stack else 0, layout.mode, map.get_instance_id() if map else 0,
 			layout.objects.size(), layout.profile.hash(), layout.unlocked_plots.hash(),
-			db.overrides_pack if db else "", str(db.overrides_report.get("hash", "")) if db else ""]
+			db.overrides_pack if db else "", str(db.overrides_report.get("hash", "")) if db else "",
+			# prices / overrides / inventory edits bump the budget's version
+			budget.get_instance_id() if budget != null else 0, budget.sync() if budget != null else 0]
 		if _report == null or _dirty or key != _key:
 			var conflicts: Variant = conflict_index.conflicts() if conflict_index != null and conflict_index.map == map else null
-			_report = RealisticAnalyzer.analyze(layout, db, map, conflicts)
+			_report = RealisticAnalyzer.analyze(layout, db, map, conflicts, budget)
 			_key = key
 			_dirty = false
 			computed += 1
 		return _report
 
 
-static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflicts: Variant = null) -> Report:
+static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflicts: Variant = null,
+		budget: BudgetEngine = null) -> Report:
 	## `conflicts` (PlacementRules.find_conflicts' result, or ConflictIndex's)
 	## saves re-checking every object's tiles; the report is identical either way.
+	##
+	## Cost rule: without `budget`, coins_needed / diamonds_needed are the
+	## catalogue's flat cost fields × the missing copies of the shortage list
+	## (inventory per treat_unknown_as_owned). With `budget` (what the app passes),
+	## every coin / diamond figure is the budget engine's whole-farm To-buy total
+	## and per-item To-buy cost instead (price file + the user's overrides +
+	## progressive prices, unknown ownership counted as to buy), so the Realistic
+	## verdict, "Est. cost" and the budget chip never disagree. The issue codes
+	## (NOT_OWNED etc.) and the shortage counts keep the inventory rule above.
 	var r := Report.new()
 	var prof := layout.profile
 	var level := farm_level(layout)
@@ -174,6 +196,8 @@ static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflict
 				_add(r, u, NOT_OWNED)
 	r.level_locked.sort_custom(func(a, b): return a["level"] < b["level"])
 	r.required_level = maxi(r.required_level, r.required_land_level)
+	if budget != null:
+		_costs_from_budget(r, budget)
 	var bc := int(prof.get("budget_coins", -1))
 	var bd := int(prof.get("budget_diamonds", -1))
 	r.over_budget_coins = bc >= 0 and r.coins_needed > bc
@@ -184,6 +208,23 @@ static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflict
 				r.blocking_count += 1
 				break
 	return r
+
+
+static func _costs_from_budget(r: Report, budget: BudgetEngine) -> void:
+	## The budget's To-buy figures replace the catalogue estimate (see analyze()).
+	var t := budget.totals(null, BudgetEngine.MODE_TO_BUY)
+	r.cost_source = "budget"
+	r.coins_needed = int(t.cost.get(Currency.COINS, 0))
+	r.diamonds_needed = int(t.cost.get(Currency.DIAMONDS, 0))
+	r.unknown_cost_items = t.unknown_price_types.duplicate()
+	r.unknown_ownership_types = t.unknown_ownership_types.duplicate()
+	var br := budget.item_breakdown(null, BudgetEngine.MODE_TO_BUY)
+	for e: Dictionary in r.shortages:
+		var b: Dictionary = br.get(budget.db.resolve_id(str(e["item"])) if budget.db != null else str(e["item"]), {})
+		var c: Dictionary = b.get("cost", {})
+		var exact := int(b.get("unknown", 0)) == 0 and int(b.get("not_buyable", 0)) == 0
+		e["coins"] = int(c.get(Currency.COINS, 0)) if (exact or c.has(Currency.COINS)) else -1
+		e["diamonds"] = int(c.get(Currency.DIAMONDS, 0)) if (exact or c.has(Currency.DIAMONDS)) else -1
 
 
 static func _check_land_levels(r: Report, layout: FarmLayout, map: FarmMap, level: int) -> void:

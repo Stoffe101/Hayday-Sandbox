@@ -544,6 +544,7 @@ func _integration() -> void:
 	await _ui_panels_check()
 	await _plan_check()
 	await _plan_extras_check()
+	await _qa_journeys()
 
 
 func _importer_check() -> void:
@@ -2986,3 +2987,816 @@ func _relative_items(l: FarmLayout, uids: Array) -> Dictionary:
 		var o := l.get_obj(int(u))
 		out["%s@%s" % [o.item_id, str(o.origin - lo)]] = true
 	return out
+
+
+# --- QA journeys: the planning features played the way a player would ------------------------
+
+const QA_DESIGN := BudgetEngine.MODE_DESIGN
+const QA_TO_BUY := BudgetEngine.MODE_TO_BUY
+const QA_REMAINING := BudgetEngine.MODE_REMAINING
+const QaUnit := preload("res://tests/unit/test_qa_planning.gd")
+
+
+func _qa_journeys() -> void:
+	print("QA journeys")
+	var st: AppSettings = App.settings
+	var keep := {}
+	for k in ["budget_mode", "budget_scope", "plan_tab", "plan_show_heatmap", "budget_visible", "budget_expanded",
+			"budget_collapsed", "object_layers", "ui_scale"]:
+		keep[k] = st.get_v(k)
+	st.set_v("budget_visible", true)
+	st.set_v("object_layers", {}, false)
+	App.plan_ctx.set_mode(QA_TO_BUY)
+	App.plan_ctx.set_scope_pin("auto")
+	main._place_budget()
+	await _qa_garden()
+	await _qa_inventory_and_phases()
+	await _qa_shopping()
+	await _qa_checklist_resume()
+	await _qa_baseline()
+	await _qa_modes_and_switching()
+	await _qa_migration()
+	await _qa_prices()
+	await _qa_layers_and_scale()
+	for k in keep:
+		st.set_v(k, keep[k], false)
+	App.plan_ctx.set_mode(str(keep["budget_mode"]))
+	App.plan_ctx.set_scope_pin(str(keep["budget_scope"]))
+	main.set_plan_open(false)
+	App.open_layout(App.new_layout("QA end", "starter"))
+	await _frames(2)
+
+
+func _qa_open(layout_name: String, template: String = "starter") -> EditorSession:
+	var l := App.new_layout(layout_name, template)
+	l.id = ""   # not a library layout
+	App.open_layout(l)
+	main._fit_or_restore()
+	main.camera.smooth = false
+	main.camera.zoom = Vector2(1.5, 1.5)
+	main.camera.target_zoom = 1.5
+	await _frames(2)
+	return _s()
+
+
+func _qa_line(s: EditorSession, item_id: String, at: Vector2i, n: int, step: Vector2i = Vector2i(1, 0), label: String = "") -> Array:
+	## n copies in a row as one undo step (refused items: []).
+	var it := App.db.get_item(item_id)
+	if it == null:
+		print("  info QA: item %s missing from the catalogue" % item_id)
+		return []
+	var objs: Array = []
+	for i in n:
+		objs.append(s.make_object(it, at + step * i))
+	return s.place_objects(objs, label if not label.is_empty() else "Place %s" % item_id)
+
+
+func _qa_price_sum(item_id: String, first_k: int, count: int) -> int:
+	## Coins of copies first_k .. first_k + count - 1 (price book as it is now); -1 if any is unknown.
+	var sum := 0
+	for k in range(first_k, first_k + count):
+		var c: Variant = App.prices.copy_price(item_id, k)
+		if c == null:
+			return -1
+		sum += int((c as Dictionary).get("coins", 0))
+	return sum
+
+
+func _qa_coins(t: BudgetEngine.Totals) -> int:
+	return int(t.cost.get("coins", 0)) if t != null else -1
+
+
+func _qa_reconcile(eng: BudgetEngine) -> String:
+	## "" when the whole farm equals the sum of its phases (+ Unphased) in every mode, land included.
+	var bad: PackedStringArray = []
+	for m in BudgetEngine.MODES:
+		var farm := eng.totals(null, m)
+		var sum := {}
+		var land := {}
+		var plots: Array = []
+		var objects := 0
+		var unknown := 0
+		for pid in eng.phase_ids():
+			var t := eng.phase_totals(pid, m)
+			Currency.add_into(sum, t.cost)
+			Currency.add_into(land, t.land_cost)
+			plots.append_array(t.plots)
+			objects += t.objects
+			unknown += t.unknown_price_objects
+		plots.sort()
+		if not Currency.equal(sum, farm.cost):
+			bad.append("%s cost %s != %s" % [m, str(sum), str(farm.cost)])
+		if not Currency.equal(land, farm.land_cost) or plots != farm.plots:
+			bad.append("%s land %s %s != %s %s" % [m, str(land), str(plots), str(farm.land_cost), str(farm.plots)])
+		if objects != farm.objects or unknown != farm.unknown_price_objects:
+			bad.append("%s counts %d/%d != %d/%d" % [m, objects, unknown, farm.objects, farm.unknown_price_objects])
+	return "; ".join(bad)
+
+
+func _qa_texts(n: Node) -> PackedStringArray:
+	## Every text under a node (labels and buttons), in tree order.
+	var out: PackedStringArray = []
+	var stack: Array = [n]
+	while not stack.is_empty():
+		var nd: Node = stack.pop_front()
+		if nd.is_queued_for_deletion():
+			continue
+		if nd is Label:
+			out.append((nd as Label).text)
+		elif nd is Button:
+			out.append((nd as Button).text)
+		stack.append_array(nd.get_children())
+	return out
+
+
+func _qa_find_label(n: Node, text: String) -> Control:
+	var stack: Array = [n]
+	while not stack.is_empty():
+		var nd: Node = stack.pop_back()
+		if nd.is_queued_for_deletion():
+			continue
+		if nd is Label and (nd as Label).text.to_lower() == text.to_lower():
+			return nd
+		stack.append_array(nd.get_children())
+	return null
+
+
+func _qa_locked_tile(s: EditorSession) -> Vector2i:
+	## A free tile on a locked expansion whose supplies the map knows (-1 = none).
+	for p: Dictionary in s.map.plots:
+		var pid := str(p.get("id"))
+		if s.map.is_plot_unlocked(pid, s.layout.unlocked_plots) or not p.get("cost") is Dictionary or (p["cost"] as Dictionary).is_empty():
+			continue
+		for r: Rect2i in p.get("rects", []):
+			for y in range(r.position.y + 1, r.end.y - 1):
+				for x in range(r.position.x + 1, r.end.x - 1):
+					var t := Vector2i(x, y)
+					if PlacementRules.tile_code(s.layout, s.map, t) == PlacementRules.LOCKED_LAND and not _touches_landmark(Rect2i(t - Vector2i.ONE, Vector2i(3, 3))):
+						return t
+	return Vector2i(-1, -1)
+
+
+# 1. Flower Garden: selection budget, polygon area, overlapping area ------------------------
+
+func _qa_garden() -> void:
+	print("QA 1: Flower Garden")
+	var ctx: PlanContext = App.plan_ctx
+	var s: EditorSession = await _qa_open("QA flower garden")
+	var w: BudgetWidget = main.budget
+	var blk := _free_block(Vector2i(14, 10))
+	check(blk.x >= 0, "QA1: room for a 12 × 8 garden")
+	if blk.x < 0:
+		return
+	var a := blk + Vector2i.ONE
+	var all: Array = []
+	all += _qa_line(s, "stone_path", a, 6, Vector2i(1, 0), "Path")
+	all += _qa_line(s, "fence", a + Vector2i(0, 7), 6, Vector2i(1, 0), "Fence")
+	var lilies: Array = _qa_line(s, "african_lily", a + Vector2i(0, 2), 5) + _qa_line(s, "african_lily", a + Vector2i(0, 3), 5)
+	all += lilies
+	var violet := _qa_line(s, "african_violet", a + Vector2i(6, 2), 1)
+	var feeder := _qa_line(s, "alpaca_feeder", a + Vector2i(6, 4), 1)
+	var bench := _qa_line(s, "bench", a + Vector2i(8, 5), 1)
+	all += violet + feeder + bench
+	var mystery := PlacedObject.new()
+	mystery.item_id = "qa_unknown_statue"   # an item the catalogue doesn't know: no price at all
+	mystery.origin = a + Vector2i(10, 2)
+	mystery.size = Vector2i.ONE
+	var unknown := s.place_objects([mystery], "Mystery statue")
+	all += unknown
+	check(all.size() == 26 and lilies.size() == 10 and unknown.size() == 1, "QA1: the garden is placed (%d objects)" % all.size())
+	if feeder.is_empty() or unknown.is_empty():
+		return
+	var eng := s.budget
+	# Selection budget.
+	s.select(all)
+	await _frames(2)
+	check(ctx.scope()["kind"] == PlanScope.SCOPE_SELECTION and _qa_coins(w.last_totals) == _qa_coins(eng.totals(all, QA_TO_BUY)),
+		"QA1: selecting the garden shows its budget on the chip (%d coins)" % _qa_coins(w.last_totals))
+	var lily_design := _qa_price_sum("african_lily", 1, 10)
+	var lily_br: Dictionary = eng.item_breakdown(lilies, QA_DESIGN).get("african_lily", {})
+	check(lily_design > 0 and int((lily_br.get("cost", {}) as Dictionary).get("coins", -1)) == lily_design
+		and lily_design > 10 * _qa_price_sum("african_lily", 1, 1), "QA1: 10 lilies cost copies #1..#10 of a rising price (%d coins)" % lily_design)
+	var sel := eng.totals(all, QA_DESIGN)
+	var vouchers := false
+	for k in sel.cost:
+		vouchers = vouchers or str(k).begins_with("voucher_")
+	check(vouchers, "QA1: the violet adds vouchers, never converted into coins (%s)" % Currency.format_line(sel.cost))
+	check("alpaca_feeder" in sel.not_buyable_types and sel.not_buyable_objects == 1, "QA1: the feeder counts as can't be bought")
+	check("qa_unknown_statue" in sel.unknown_price_types and sel.unknown_price_objects == 1 and not sel.is_exact(), "QA1: the unknown statue counts as price unknown (not 0)")
+	check(w._warn.visible and w._warn.text == "+%d" % (w.last_totals.unknown_price_objects + w.last_totals.not_buyable_objects) and w._note.text.contains("unknown price"),
+		"QA1: the chip says what is left out (%s · %s)" % [w._warn.text, w._note.text])
+	# The heatmap and the shopping list keep unknowns visible too.
+	var heat: Dictionary = main.plan_overlay.heat_buckets()
+	check(int(heat.get(unknown[0], 0)) == PlanScope.HEAT_UNKNOWN and int(heat.get(feeder[0], 0)) == PlanScope.HEAT_NOT_BUYABLE,
+		"QA1: the heatmap hatches the unknown and the unbuyable object")
+	var rows := ShoppingList.build(eng, all, QA_TO_BUY)
+	var csv := QaUnit.parse_csv(PlanUiModels.shop_csv(rows))
+	var head: Array = csv[0]
+	var stat_row: Array = []
+	for i in range(1, csv.size()):
+		if csv[i][head.find("item_id")] == "qa_unknown_statue":
+			stat_row = csv[i]
+	check(not stat_row.is_empty() and stat_row[head.find("next_price")] == "unknown" and stat_row[head.find("unknown_price_copies")] == "1",
+		"QA1: the shopping CSV writes the statue's price as unknown")
+	# Polygon area drawn around it.
+	s.clear_selection()
+	main.camera.center_on(Iso.tile_center(a + Vector2i(6, 4)))
+	await _frames(1)
+	var n0 := s.stack.size()
+	ctx.request_area_tool.emit("polygon")
+	for g in [a, a + Vector2i(12, 0), a + Vector2i(12, 8), a + Vector2i(0, 8)]:
+		var sp: Vector2 = main.camera.world_to_screen(Iso.grid_to_world(Vector2(g)))
+		_move(sp)
+		_button(sp, true)
+		_button(sp, false)
+	main.plan_controller.close_polygon()
+	await _frames(1)
+	var aid := ctx.active_area
+	check(not aid.is_empty() and s.stack.size() == n0 + 1, "QA1: the polygon area is one undo step")
+	var area := PlanDoc.area(ctx.plan(), aid).duplicate(true)
+	area["name"] = "Flower Garden"
+	ctx.set_plan(PlanDoc.with_area(ctx.plan(), area), "Rename area")
+	var members: Array = eng.area_uids(aid).duplicate()
+	var want: Array = all.duplicate()
+	members.sort()
+	want.sort()
+	check(members == want, "QA1: the polygon holds exactly the garden (%d of %d)" % [members.size(), want.size()])
+	var same := true
+	for m in BudgetEngine.MODES:
+		var at := eng.area_totals(aid, m)
+		var stt := eng.totals(all, m)
+		same = same and Currency.equal(at.cost, stt.cost) and at.objects == stt.objects and at.unknown_price_objects == stt.unknown_price_objects \
+			and at.not_buyable_objects == stt.not_buyable_objects and at.plots == stt.plots
+	check(same, "QA1: area budget == selection budget in every mode")
+	await _frames(1)
+	check(ctx.scope()["kind"] == PlanScope.SCOPE_AREA and Currency.equal(w.last_totals.cost, eng.area_totals(aid, ctx.mode).cost), "QA1: the chip follows the active area")
+	# A second, overlapping area.
+	var farm0 := {}
+	for m in BudgetEngine.MODES:
+		farm0[m] = eng.totals(null, m).cost.duplicate()
+	ctx.request_area_tool.emit("rect")
+	_drag_tiles(a, a + Vector2i(3, 7))
+	await _frames(1)
+	check(PlanDoc.areas(ctx.plan()).size() == 2, "QA1: a second area drawn over the left half")
+	var unchanged := true
+	for m in BudgetEngine.MODES:
+		unchanged = unchanged and Currency.equal(farm0[m], eng.totals(null, m).cost)
+	check(unchanged, "QA1: another area doesn't change the grand total")
+	main.open_plan("areas")
+	await _frames(2)
+	var at_tab: PlanTab = main.plan_panel.page_of("areas")
+	var note := str(at_tab.get("notice_text"))
+	check(note.contains("not additive") and note.contains("Flower Garden"), "QA1: the Areas tab says area totals are not additive (%s)" % note)
+	main.set_plan_open(false)
+
+
+# 2 + 3. Inventory across areas, then phases ------------------------------------------------
+
+func _qa_inventory_and_phases() -> void:
+	print("QA 2/3: inventory and phases")
+	var ctx: PlanContext = App.plan_ctx
+	var s: EditorSession = await _qa_open("QA inventory")
+	var eng := s.budget
+	var blk := _free_block(Vector2i(13, 9))
+	check(blk.x >= 0, "QA2: room for two fence rows")
+	if blk.x < 0:
+		return
+	var a := blk + Vector2i.ONE
+	var row_a := _qa_line(s, "fence", a, 10, Vector2i(1, 0), "Fence row A")
+	var row_b := _qa_line(s, "fence", a + Vector2i(0, 4), 10, Vector2i(1, 0), "Fence row B")
+	var pc: PlanController = main.plan_controller
+	var area_a := pc.add_rect(Rect2i(a, Vector2i(10, 2)), "Entrance strip")
+	var area_b := pc.add_rect(Rect2i(a + Vector2i(0, 3), Vector2i(10, 3)), "Garden strip")
+	var p := s.layout.profile.duplicate(true)
+	p["owned"] = {"fence": 20}
+	ctx.set_profile(p, "Record 20 fences")
+	var br: Dictionary = eng.item_breakdown(null, QA_TO_BUY).get("fence", {})
+	check(row_a.size() == 10 and row_b.size() == 10 and int(br.get("owned", 0)) == 20 and int(br.get("charged", -1)) == 0, "QA2: 20 owned fences, none to buy on the farm")
+	check(eng.area_totals(area_a, QA_TO_BUY).charged_objects == 0 and eng.area_totals(area_b, QA_TO_BUY).charged_objects == 0,
+		"QA2: 10 fences in each area, each area charges 0 fences")
+	s.execute(EditCommands.MoveObjects.new([row_a[0]], Vector2i(0, 3)))
+	await _frames(1)
+	check(eng.status_of(row_a[0]) == BudgetEngine.STATUS_OWNED and eng.area_uids(area_a).size() == 9 and eng.area_uids(area_b).size() == 11
+		and int(eng.item_breakdown(null, QA_TO_BUY)["fence"]["charged"]) == 0, "QA2: a fence moved to the other area stays owned; totals unchanged")
+	var design := _qa_price_sum("fence", 1, 20)
+	check(int(eng.item_breakdown(null, QA_DESIGN)["fence"]["cost"].get("coins", -1)) == design, "QA2: Design mode still prices all 20 (%d coins)" % design)
+	s.stack.undo()
+	# 3. Phases (with an Orchard on locked land when the map has some).
+	p = s.layout.profile.duplicate(true)
+	p["owned"] = {"fence": 10, "apple_tree": 0}
+	ctx.set_profile(p, "Only 10 fences")
+	var lt := _qa_locked_tile(s)
+	var apple: Array = []
+	if lt.x >= 0:
+		apple = _qa_line(s, "apple_tree", lt, 1, Vector2i(1, 0), "Apple tree on locked land")
+	var plan := ctx.plan()
+	var ids := {}
+	ids["Entrance"] = PlanDoc.next_id(plan, "p")
+	plan = PlanDoc.with_phase(plan, {"name": "Entrance", "areas": [area_a]})
+	ids["Garden"] = PlanDoc.next_id(plan, "p")
+	plan = PlanDoc.with_phase(plan, {"name": "Garden", "areas": [area_b]})
+	if not apple.is_empty():
+		var area_c := PlanDoc.next_id(plan, "a")
+		plan = PlanDoc.with_area(plan, PlanScope.rect_area(Rect2i(lt - Vector2i.ONE, Vector2i(3, 3)), "Orchard corner"))
+		ids["Orchard"] = PlanDoc.next_id(plan, "p")
+		plan = PlanDoc.with_phase(plan, {"name": "Orchard", "areas": [area_c]})
+	ctx.set_plan(plan, "Phases")
+	check(PlanDoc.phases(ctx.plan()).size() == (3 if not apple.is_empty() else 2),
+		"QA3: phases Entrance, Garden%s" % (", Orchard (on locked land)" if not apple.is_empty() else " (no locked land with known supplies found)"))
+	var first_owned := true
+	var second_buy := true
+	for u in row_a:
+		first_owned = first_owned and eng.status_of(u) == BudgetEngine.STATUS_OWNED
+	for u in row_b:
+		second_buy = second_buy and eng.status_of(u) == BudgetEngine.STATUS_TO_BUY
+	check(first_owned and second_buy, "QA3: the 10 owned fences go to the first phase (Entrance)")
+	var rec := _qa_reconcile(eng)
+	check(rec.is_empty(), "QA3: whole farm == phases + Unphased in every mode, land included %s" % rec)
+	if not apple.is_empty():
+		var t := eng.totals(null, QA_TO_BUY)
+		var orch := eng.phase_totals(str(ids["Orchard"]), QA_TO_BUY)
+		check(not orch.plots.is_empty() and orch.plots == t.plots and not orch.land_cost.is_empty() and Currency.covers(t.cost, orch.land_cost),
+			"QA3: the Orchard's locked plot adds its supplies to To buy (%s)" % Currency.format_line(orch.land_cost))
+		var od := eng.phase_totals(str(ids["Orchard"]), QA_DESIGN)
+		check(Currency.equal(od.cost, od.object_cost), "QA3: Design cost leaves the land out")
+	ctx.set_plan(PlanDoc.with_phase_moved(ctx.plan(), str(ids["Garden"]), 0), "Move phase earlier")
+	first_owned = true
+	second_buy = true
+	for u in row_b:
+		first_owned = first_owned and eng.status_of(u) == BudgetEngine.STATUS_OWNED
+	for u in row_a:
+		second_buy = second_buy and eng.status_of(u) == BudgetEngine.STATUS_TO_BUY
+	check(first_owned and second_buy, "QA3: reordering phases gives the owned copies to the new first phase (Garden)")
+	rec = _qa_reconcile(eng)
+	check(rec.is_empty(), "QA3: still reconciles after the reorder %s" % rec)
+	# Manual assignment through the Phases tab, then deleting that phase.
+	var target := str(ids.get("Orchard", ids["Entrance"]))
+	main.open_plan("phases")
+	await _frames(1)
+	s.select([row_a[0]])
+	(main.plan_panel.page_of("phases") as PlanTab).call("_assign", target)
+	check(eng.primary_phase(row_a[0]) == target, "QA3: assigning an object puts it in that phase")
+	rec = _qa_reconcile(eng)
+	check(rec.is_empty(), "QA3: reconciles with a manual assignment %s" % rec)
+	ctx.set_plan(PlanDoc.without_phase(ctx.plan(), target), "Delete phase")
+	var fallback := str(ids["Entrance"]) if target != str(ids["Entrance"]) else BudgetEngine.UNPHASED
+	check(eng.primary_phase(row_a[0]) == fallback and not (ctx.plan()["assign"] as Dictionary).has(str(row_a[0])),
+		"QA3: deleting the phase sends its objects back to the area rule (%s)" % eng.primary_phase(row_a[0]))
+	if not apple.is_empty():
+		check(eng.primary_phase(apple[0]) == BudgetEngine.UNPHASED, "QA3: the apple tree's area has no phase left: Unphased")
+	rec = _qa_reconcile(eng)
+	check(rec.is_empty(), "QA3: reconciles after deleting a phase %s" % rec)
+	s.stack.undo()
+	check(eng.primary_phase(row_a[0]) == target, "QA3: undo brings the phase and the assignment back")
+	s.clear_selection()
+	main.set_plan_open(false)
+
+
+# 4. Shopping list ------------------------------------------------------------------------------
+
+func _qa_hedge_row(tab: PlanTab) -> Dictionary:
+	tab.refresh()
+	for r: Dictionary in tab.get("rows"):
+		if str(r.get("item")) == "hedge":
+			return r
+	return {}
+
+
+func _qa_shopping() -> void:
+	print("QA 4: shopping")
+	var ctx: PlanContext = App.plan_ctx
+	var s: EditorSession = await _qa_open("QA shopping")
+	var eng := s.budget
+	var blk := _free_block(Vector2i(12, 6))
+	if blk.x < 0:
+		check(false, "QA4: room for 40 hedges")
+		return
+	var hedges: Array = []
+	for y in 4:
+		hedges += _qa_line(s, "hedge", blk + Vector2i(1, 1 + y), 10, Vector2i(1, 0), "Hedges")
+	var p := s.layout.profile.duplicate(true)
+	p["owned"] = {"hedge": 0}
+	ctx.set_profile(p, "No hedges yet")
+	main.open_plan("shop")
+	await _frames(2)
+	var tab: PlanTab = main.plan_panel.page_of("shop")
+	tab.set("_mode", QA_REMAINING)
+	var r0 := _qa_hedge_row(tab)
+	var all40 := _qa_price_sum("hedge", 1, 40)
+	check(hedges.size() == 40 and int(r0.get("missing", -1)) == 40 and int((r0.get("total", {}) as Dictionary).get("coins", -1)) == all40,
+		"QA4: 40 hedges to buy (%d coins)" % all40)
+	ctx.set_plan(PlanDoc.with_acquired(ctx.plan(), "hedge", 15), "Bought: Hedge", "shop_bought:hedge")
+	var r1 := _qa_hedge_row(tab)
+	var rest := _qa_price_sum("hedge", 16, 25)
+	check(int(r1.get("missing", -1)) == 25 and int(r1.get("acquired", -1)) == 15 and int((r1.get("total", {}) as Dictionary).get("coins", -1)) == rest
+		and _qa_coins(eng.totals(null, QA_REMAINING)) == rest, "QA4: 15 of 40 bought: 25 still needed, remaining %d coins" % rest)
+	check(Currency.equal(r1.get("next_price"), App.prices.copy_price("hedge", 16)), "QA4: the next copy to buy is #16 (rising price)")
+	check(_qa_coins(eng.totals(null, QA_TO_BUY)) == all40, "QA4: To buy still counts the 15 bought copies")
+	s.stack.undo()
+	check(int(_qa_hedge_row(tab).get("missing", -1)) == 40, "QA4: undo restores 40 needed")
+	s.stack.redo()
+	var n0 := s.stack.size()
+	tab.call("_apply_to_inventory")
+	var prof := s.layout.profile
+	check(s.stack.size() == n0 + 1 and int(prof["owned"].get("hedge", -1)) == 15 and int(prof["purchased"].get("hedge", -1)) == 15
+		and (ctx.plan()["acquired"] as Dictionary).is_empty(), "QA4: “Add bought items to my inventory” is one undo step")
+	var r2 := _qa_hedge_row(tab)
+	check(_qa_coins(eng.totals(null, QA_REMAINING)) == rest and _qa_coins(eng.totals(null, QA_TO_BUY)) == rest and int(r2.get("missing", -1)) == 25
+		and int(r2.get("owned", -1)) == 15, "QA4: afterwards nothing is counted twice (remaining = to buy = %d)" % rest)
+	tab.call("_apply_to_inventory")
+	check(s.stack.size() == n0 + 1 and int(s.layout.profile["owned"]["hedge"]) == 15, "QA4: applying again adds nothing")
+	s.stack.undo()
+	check(int(s.layout.profile["owned"].get("hedge", -1)) == 0 and int((ctx.plan()["acquired"] as Dictionary).get("hedge", 0)) == 15, "QA4: one undo restores both halves")
+	s.stack.redo()
+	ctx.set_plan(PlanDoc.with_acquired(ctx.plan(), "hedge", 5), "Bought: Hedge", "shop_bought:hedge")
+	check(Currency.equal(_qa_hedge_row(tab).get("next_price"), App.prices.copy_price("hedge", 21)), "QA4: after 5 more purchases the next copy is #21")
+	main.set_plan_open(false)
+
+
+# 5 + 10. Build checklist and guide: tick, undo, save, reopen, resume; guide exports ----------
+
+func _qa_checklist_resume() -> void:
+	print("QA 5/10: checklist, guide, exports")
+	var ctx: PlanContext = App.plan_ctx
+	var s: EditorSession = await _qa_open("QA resume")
+	var silo := -1
+	for o: PlacedObject in s.layout.objects.values():
+		if o.item_id == "silo":
+			silo = o.uid
+	ctx.set_plan(PlanDoc.with_baseline(ctx.plan(), Baseline.snapshot(s.layout, "My farm")), "Set my real farm")
+	if silo > 0:
+		s.execute(EditCommands.RemoveObjects.new([silo]))
+	var blk := _free_block(Vector2i(10, 6))
+	if blk.x < 0:
+		check(false, "QA5: room for a small design")
+		return
+	var lilies := _qa_line(s, "african_lily", blk + Vector2i(1, 1), 3)
+	_qa_line(s, "stone_path", blk + Vector2i(1, 3), 4)
+	ctx.set_plan(PlanDoc.with_acquired(ctx.plan(), "african_lily", 1), "Bought: African lily")
+	main.open_plan("guide")
+	await _frames(2)
+	var gt: PlanTab = main.plan_panel.page_of("guide")
+	var g := ctx.guide()
+	var steps: Array = g["steps"]
+	var store_i := -1
+	var lily_i := -1
+	for i in steps.size():
+		if steps[i]["kind"] == "store" and store_i < 0:
+			store_i = i
+		if steps[i]["kind"] == "place" and "african_lily" in steps[i]["items"] and lily_i < 0:
+			lily_i = i
+	check(silo > 0 and store_i >= 0 and lily_i > store_i, "QA5: the guide stores the silo before placing new things")
+	if store_i < 0 or lily_i < 0:
+		return
+	gt.set("current", store_i)
+	gt.call("_toggle_done")
+	gt.set("current", lily_i)
+	gt.call("_toggle_done")
+	g = ctx.guide()
+	check(bool(g["steps"][store_i]["done"]) and bool(g["steps"][lily_i]["done"]) and int(g["progress"]["completed"]) == 2,
+		"QA5: two steps ticked (a hand tick and three lilies marked placed)")
+	s.stack.undo()
+	var after_undo := int(ctx.guide()["progress"]["completed"])
+	check(after_undo < 2, "QA5: undo takes the ticks back (%d left)" % after_undo)
+	s.stack.redo()
+	check(int(ctx.guide()["progress"]["completed"]) == 2, "QA5: redo")
+	var plan_before := PlanDoc.normalize(ctx.plan())
+	var current := int(ctx.guide()["progress"]["current"])
+	var path := "user://qa_resume.hdlayout"
+	check(LayoutIO.save_file(s.layout, path) == OK, "QA5: saved to %s" % path)
+	var rep := LayoutIO.LoadReport.new()
+	var back := LayoutIO.load_file(path, App.db, rep, App.map)
+	check(back != null, "QA5: reopened")
+	if back == null:
+		return
+	App.open_layout(back, rep)
+	await _frames(2)
+	s = _s()
+	var lost: Array = []
+	for k in ["placed", "steps_done", "acquired", "baseline", "areas", "phases"]:
+		if plan_before.get(k) != s.layout.planning.get(k):
+			lost.append(k)
+	check(lost.is_empty(), "QA5: placed, steps_done, acquired and baseline survive save / close / reopen %s" % str(lost))
+	check(int(ctx.guide()["progress"]["completed"]) == 2 and int(ctx.guide()["progress"]["current"]) == current, "QA5: the guide resumes at the same step")
+	var eng := s.budget
+	var u: int = lilies[0]
+	check(eng.is_placed(u), "QA5: the ticked lily counts as placed after reopening")
+	# Moving a placed object.
+	var mv := Vector2i(0, -1) if PlacementRules.check_group_move(s.layout, s.map, [u], Vector2i(0, -1)).ok else Vector2i(-1, 0)
+	s.execute(EditCommands.MoveObjects.new([u], mv))
+	main.open_plan("build")
+	await _frames(2)
+	var bt: PlanTab = main.plan_panel.page_of("build")
+	bt.refresh()
+	check(u in ((bt.get("checklist") as Dictionary).get("moved", []) as Array), "QA5: the Build tab lists it as moved since placed")
+	s.stack.undo()
+	# Duplicate / paste / repeat of a placed object.
+	s.select([u])
+	s.copy_selection()
+	var spot := _free_origin(App.db.get_item("african_lily"), s.layout.get_obj(u).origin + Vector2i(0, 5))
+	var copies := s.place_objects(s.clipboard_objects(spot), "Paste")
+	check(copies.size() == 1 and copies[0] != u and not eng.is_placed(copies[0]) and not PlanDoc.is_placed(ctx.plan(), copies[0]),
+		"QA5: a pasted copy of a placed object is not placed")
+	s.select([u])
+	var reps := s.apply_repeat(1, 3, Vector2i(0, 2))
+	var rep_placed := false
+	for c in reps:
+		rep_placed = rep_placed or eng.is_placed(int(c))
+	check(not rep_placed, "QA5: repeated copies aren't placed either (%d)" % reps.size())
+	# Delete then undo.
+	bt.refresh()
+	var placed_n := int((bt.get("checklist") as Dictionary)["overall"]["placed"])
+	s.select([u])
+	s.delete_selection()
+	check(not eng.is_placed(u), "QA5: a deleted object is no longer placed")
+	s.stack.undo()
+	bt.refresh()
+	check(eng.is_placed(u) and int((bt.get("checklist") as Dictionary)["overall"]["placed"]) == placed_n, "QA5: undoing the delete restores its placed state")
+	# 10. Exports of this guide.
+	var guide := ctx.guide()
+	var gsteps: Array = guide["steps"]
+	var js: Variant = JSON.parse_string(GuideExport.to_json(guide, {"title": "QA"}))
+	check(js is Dictionary and str(js["format"]) == GuideExport.FORMAT and (js["steps"] as Array).size() == gsteps.size(), "QA10: guide JSON parses with every step")
+	var csv := QaUnit.parse_csv(GuideExport.to_csv(guide))
+	var cols_ok := csv.size() == gsteps.size() + 1
+	for row in csv:
+		cols_ok = cols_ok and (row as Array).size() == GuideExport.CSV_COLUMNS.size()
+	check(cols_ok, "QA10: guide CSV: a header and one row per step, every column")
+	var txt := GuideExport.to_text(guide, {"title": "QA"})
+	check(txt.count("\n[") == gsteps.size(), "QA10: the plain-text guide lists every step")
+	main.open_plan("guide")
+	await _frames(1)
+	var dir := ProjectSettings.globalize_path("user://qa_guide")
+	var h: Dictionary = gt.call("html_for", dir.path_join("guide.html"))
+	var html := str(h["html"])
+	check(html.begins_with("<!doctype html>") and html.count("<li class=\"step") == gsteps.size() and html.contains("</html>"), "QA10: the guide HTML has every step")
+	var imgs_ok := not (h["images"] as Array).is_empty()
+	for o: Dictionary in h["images"]:
+		imgs_ok = imgs_ok and str(o["path"]).begins_with(dir) and not PlanUiKit.is_inside_repo(str(o["path"]))
+	check(imgs_ok, "QA10: its pictures go next to the page, never into the program folder")
+	var before := int(main.export_refused)
+	main._plan_export({"scope": "farm", "id": "", "guide_numbers": true, "path": ProjectSettings.globalize_path("res://qa_plan.png")})
+	main._plan_export({"scope": "farm", "id": "", "path": "res://qa_plan2.png", "art": "installed"})
+	check(int(main.export_refused) == before + 2 and not FileAccess.file_exists("res://qa_plan.png") and not FileAccess.file_exists("res://qa_plan2.png"),
+		"QA10: picture requests into the program folder are refused (any art)")
+	check(not bool(gt.call("_request_image", {"scope": "farm", "id": "", "path": "res://qa_plan3.png"})), "QA10: the Guide tab refuses them too")
+	var req: Dictionary = main.plan_export_request({"scope": "area", "id": "a1", "path": dir.path_join("x.png")})
+	check(str(req.get("art")) == "placeholder", "QA10: picture requests default to placeholder art")
+	main.set_plan_open(false)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+# 6. Baseline: compare, guide dependencies, swap -------------------------------------------------
+
+func _qa_baseline() -> void:
+	print("QA 6: my real farm")
+	var ctx: PlanContext = App.plan_ctx
+	var s: EditorSession = await _qa_open("QA baseline", "empty")
+	var blk := _free_block(Vector2i(10, 8))
+	if blk.x < 0:
+		check(false, "QA6: room")
+		return
+	var a := blk + Vector2i.ONE
+	var x: int = _qa_line(s, "african_lily", a, 1)[0]
+	var y: int = _qa_line(s, "african_violet", a + Vector2i(2, 0), 1)[0]
+	var r: int = _qa_line(s, "alpaca_feeder", a + Vector2i(0, 3), 1)[0]
+	var m: int = _qa_line(s, "fence", a + Vector2i(5, 3), 1)[0]
+	var keep_u: int = _qa_line(s, "stone_path", a + Vector2i(7, 0), 1)[0]
+	ctx.set_plan(PlanDoc.with_baseline(ctx.plan(), Baseline.snapshot(s.layout, "My farm")), "Set my real farm")
+	check(int(ctx.compare_counts().get("unchanged", -1)) == s.layout.count(), "QA6: right after the snapshot everything is unchanged")
+	s.execute(EditCommands.MoveEach.new([x, y], [Vector2i(2, 0), Vector2i(-2, 0)], "Swap"))
+	s.execute(EditCommands.RemoveObjects.new([r]))
+	var n: int = _qa_line(s, "stone_path", a + Vector2i(0, 3), 1)[0]   # onto the feeder's freed tile
+	s.execute(EditCommands.MoveObjects.new([m], Vector2i(0, 2)))
+	var c := ctx.compare_counts()
+	check(int(c.get("moved", -1)) == 3 and int(c.get("removed", -1)) == 1 and int(c.get("new", -1)) == 1 and int(c.get("unchanged", -1)) == s.layout.count() - 4,
+		"QA6: compare counts 3 moved, 1 removed, 1 new (%s)" % str(c))
+	var steps: Array = ctx.guide()["steps"]
+	var idx := {}
+	for i in steps.size():
+		var k := str(steps[i]["kind"])
+		if not idx.has(k):
+			idx[k] = []
+		idx[k].append(i)
+	var place_n := -1
+	for i in steps.size():
+		if steps[i]["kind"] == "place" and n in steps[i]["uids"]:
+			place_n = i
+	check(idx.has("store") and place_n > int(idx["store"][0]), "QA6: the feeder is stored before the path is placed on its tile")
+	check((idx.get("store_temp", []) as Array).size() == 1 and (idx.get("place_from_storage", []) as Array).size() == 1
+		and int(steps[idx["store_temp"][0]]["then_step"]) == int(steps[idx["place_from_storage"][0]]["number"]), "QA6: the swap is broken by one temporary storage")
+	var move_ok := false
+	for i in idx.get("move", []):
+		move_ok = move_ok or (m in steps[i]["uids"] and i < place_n)
+	check(move_ok, "QA6: the fence move comes before placing new objects")
+	check(s.budget.status_of(x) == BudgetEngine.STATUS_OWNED and s.budget.status_of(n) == BudgetEngine.STATUS_TO_BUY,
+		"QA6: baseline copies count as owned, the new path is to buy")
+	check(s.budget.is_placed(keep_u) and not s.budget.is_placed(x), "QA6: the unchanged path counts as placed, the swapped lily doesn't")
+
+
+# 7. Modes, farm level, layout switching ----------------------------------------------------------
+
+func _qa_layout_with(item_id: String, at: Vector2i, n: int, layout_name: String) -> FarmLayout:
+	var l := App.new_layout(layout_name, "empty")
+	l.id = ""
+	var it := App.db.get_item(item_id)
+	var objs: Array = []
+	for i in n:
+		var o := PlacedObject.new()
+		o.item_id = item_id
+		o.origin = at + Vector2i(i, 0)
+		o.size = it.size_for(false)
+		objs.append(o)
+	l.add_objects(objs)
+	return l
+
+
+func _qa_modes_and_switching() -> void:
+	print("QA 7: modes, level, switching")
+	var ctx: PlanContext = App.plan_ctx
+	var s: EditorSession = await _qa_open("QA modes")
+	var w: BudgetWidget = main.budget
+	var blk := _free_block(Vector2i(6, 4))
+	var barrels := _qa_line(s, "barrels", blk + Vector2i.ONE, 2)
+	var p := s.layout.profile.duplicate(true)
+	p["level"] = 5
+	ctx.set_profile(p, "Level 5")
+	await _frames(2)
+	var c0 := _qa_coins(w.last_totals)
+	s.set_mode(FarmLayout.MODE_REALISTIC)
+	await _frames(2)
+	check(ctx.engine == s.budget and _qa_coins(w.last_totals) == c0 and w.visible, "QA7: Realistic mode keeps the budget (%d coins)" % c0)
+	var lvl_row := false
+	for row: Dictionary in ctx.readiness().get("rows", []):
+		lvl_row = lvl_row or (row["id"] == Readiness.LEVEL and not barrels.is_empty() and barrels[0] in row["uids"])
+	check(lvl_row, "QA7: at level 5 the level-17 barrels show up as a level issue")
+	check(s.analysis().cost_source == "budget" and s.analysis().coins_needed == _qa_coins(s.budget.totals(null, QA_TO_BUY)),
+		"QA7: the Realistic verdict's coins are the budget's To-buy figure (%d)" % s.analysis().coins_needed)
+	p = s.layout.profile.duplicate(true)
+	p["level"] = 20
+	ctx.set_profile(p, "Level 20")
+	lvl_row = false
+	for row: Dictionary in ctx.readiness().get("rows", []):
+		lvl_row = lvl_row or row["id"] == Readiness.LEVEL
+	check(not lvl_row, "QA7: raising the farm level clears the level issue")
+	s.set_mode(FarmLayout.MODE_CREATIVE)
+	await _frames(1)
+	check(_qa_coins(w.last_totals) == c0, "QA7: back in Creative mode the budget is the same")
+	# Two layouts with the same edit counters but different contents: nothing stale.
+	ctx.set_layer("heatmap", true)
+	ctx.set_scope_pin("farm")
+	var at := _free_block(Vector2i(5, 3)) + Vector2i.ONE
+	var la := _qa_layout_with("golden_wall", at, 3, "QA expensive")
+	var lb := _qa_layout_with("fence", at, 3, "QA cheap")
+	App.open_layout(la)
+	await _frames(2)
+	var texts_a := _qa_texts(w)
+	App.open_layout(lb)
+	await _frames(2)
+	var texts_b := _qa_texts(w)
+	w._sig = ""
+	w.refresh()
+	var fresh := _qa_texts(w)
+	check(texts_b == fresh and texts_a != fresh, "QA7: after switching layouts the chip shows the new layout's numbers, not the old ones (%s)" % " ".join(texts_b))
+	var heat: Dictionary = main.plan_overlay.heat_buckets()
+	var eng := _s().budget
+	var heat_ok := heat.size() == _s().layout.count()
+	for u in heat:
+		heat_ok = heat_ok and int(heat[u]) == PlanScope.heat_bucket(eng.object_cost(u, ctx.mode), str(eng.object_info(u).get("price_state", "")))
+	check(heat_ok, "QA7: the heatmap is recomputed for the new layout")
+	ctx.set_layer("heatmap", false)
+	ctx.set_scope_pin("auto")
+	# Handlers and engines don't pile up.
+	var c1 := _ctx_counts()
+	var weak: WeakRef = weakref(eng)
+	eng = null
+	la = null
+	lb = null
+	for i in 4:
+		await _qa_open("QA switch %d" % i, ["starter", "empty"][i % 2])
+	check(_ctx_counts() == c1, "QA7: four more switches leave the planning context's and price book's handlers as they were")
+	check(weak.get_ref() == null, "QA7: the previous budget engine is freed (no leak)")
+
+
+# 8. Migration ---------------------------------------------------------------------------------
+
+func _qa_migration() -> void:
+	print("QA 8: migration")
+	var v3 := {"format": LayoutIO.FORMAT, "schema_version": 3, "app_version": "0.2.0",
+		"meta": {"id": "qa_v3", "name": "Old v3 farm", "mode": "creative"},
+		"map": {"id": "hayday_farm", "unlocked_plots": []},
+		"objects": [{"uid": 1, "item": "bakery", "x": 4, "y": 4, "w": 3, "h": 3}],
+		"annotations": [{"id": 1, "kind": "zone", "rect": [2, 2, 6, 6], "text": "Herb bed", "color": "#8fc46a"},
+			{"id": 2, "kind": "label", "rect": [10, 2, 1, 1], "text": "Remember the gate"},
+			{"id": 3, "rect": [12, 2, 3, 3], "text": ""}],
+		"world": FarmLayout.default_world_state()}
+	var text := JSON.stringify(v3, "\t")
+	var path := App.library.path_for("qa_v3")
+	JsonUtil.write_atomic(path, text, false)
+	var rep := LayoutIO.LoadReport.new()
+	var l := App.library.load_layout("qa_v3", rep)
+	check(l != null and rep.migrated_from == 3 and rep.zones_to_areas == 2, "QA8: a v3 layout opens as v4 (%s)" % (rep.summary() if l else rep.error))
+	if l == null:
+		return
+	var areas := PlanDoc.areas(l.planning)
+	check(areas.size() == 2 and str(areas[0]["name"]) == "Herb bed" and str(areas[0].get("color")) == "#8fc46a" and str(areas[1]["name"]) == "Area 2"
+		and l.annotations.size() == 1 and str(l.annotations[0].get("text")) == "Remember the gate" and l.count() == 1,
+		"QA8: zones became areas (names, colour), the label stays a note, the object is kept")
+	App.open_layout(l, rep)
+	await _frames(2)
+	var s := _s()
+	check(areas.size() == 2 and s.budget.area_uids(str(areas[0]["id"])) == [1], "QA8: the migrated area works in the budget")
+	check(App.save_current(false) == OK and JsonUtil.read_text(LayoutIO.backup_path_for(path, 3)) == text, "QA8: the first save keeps a .v3-backup of the original")
+	var rep2 := LayoutIO.LoadReport.new()
+	var again := App.library.load_layout("qa_v3", rep2)
+	check(again != null and rep2.migrated_from < 0 and PlanDoc.areas(again.planning).size() == 2 and again.annotations.size() == 1, "QA8: reloaded as v4, nothing lost")
+	App.library.delete("qa_v3")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(LayoutIO.backup_path_for(path, 3)))
+	var rep1 := LayoutIO.LoadReport.new()
+	var v1 := LayoutIO.load_file("res://tests/fixtures/v1_sample_minimal_starter.hdlayout", App.db, rep1, App.map)
+	check(v1 != null and rep1.migrated_from == 1 and int(LayoutIO.to_dict(v1)["schema_version"]) == LayoutIO.SCHEMA_VERSION and PlanDoc.areas(v1.planning).is_empty(),
+		"QA8: a v1 sample still migrates (to v%d)" % LayoutIO.SCHEMA_VERSION)
+
+
+# 9. Price overrides --------------------------------------------------------------------------
+
+func _qa_prices() -> void:
+	print("QA 9: price overrides")
+	var ctx: PlanContext = App.plan_ctx
+	var s: EditorSession = await _qa_open("QA prices", "empty")
+	var w: BudgetWidget = main.budget
+	var blk := _free_block(Vector2i(5, 3))
+	var item := "apple_tree"
+	var uids := _qa_line(s, item, blk + Vector2i.ONE, 2)
+	var p := s.layout.profile.duplicate(true)
+	p["owned"] = {item: 0}
+	ctx.set_profile(p, "None owned")
+	ctx.set_scope_pin("farm")
+	await _frames(2)
+	var researched: Variant = App.prices.copy_price(item, 1)
+	var c0 := _qa_coins(w.last_totals)
+	var mine := (int((researched as Dictionary).get("coins", 0)) if researched is Dictionary else 0) + 1000
+	check(App.prices.overrides_path.begins_with("user://") and not PlanUiKit.is_inside_repo(ProjectSettings.globalize_path(App.prices.overrides_path)),
+		"QA9: overrides live in the user data folder (%s)" % App.prices.overrides_path)
+	App.prices.set_override(item, {"price": {"coins": mine}})
+	check(App.prices.save_overrides() == OK, "QA9: the override is saved")
+	await _frames(2)
+	check(uids.size() == 2 and _qa_coins(w.last_totals) == 2 * mine, "QA9: the chip follows the override live (%d → %d coins)" % [c0, _qa_coins(w.last_totals)])
+	var restarted := PriceBook.load_default(App.db, App.prices.overrides_path)
+	check(restarted.has_override(item) and int((restarted.copy_price(item, 1) as Dictionary).get("coins", 0)) == mine, "QA9: …and survives a restart")
+	App.prices.remove_override(item)
+	App.prices.save_overrides()
+	await _frames(2)
+	check(_qa_coins(w.last_totals) == c0 and Currency.equal(App.prices.copy_price(item, 1), researched), "QA9: removing it restores the researched value")
+	check(not PriceBook.load_default(App.db, App.prices.overrides_path).has_override(item), "QA9: …also after a restart")
+	ctx.set_scope_pin("auto")
+
+
+# Known gaps: Ctrl+A and hidden layers, issue marks / heatmap on hidden objects, View tab at 200 % --
+
+func _qa_layers_and_scale() -> void:
+	print("QA: object layers and UI scale")
+	var ctx: PlanContext = App.plan_ctx
+	var s: EditorSession = await _qa_open("QA layers")
+	var blk := _free_block(Vector2i(6, 5))
+	var bench: int = _qa_line(s, "bench", blk + Vector2i.ONE, 1)[0]
+	var fence: int = _qa_line(s, "fence", blk + Vector2i(1, 3), 1)[0]
+	s.execute(EditCommands.AddObjects.new([s.make_object(App.db.get_item("bench"), blk + Vector2i.ONE)]))   # an overlap: issue mark
+	await _frames(2)
+	main._refresh_issues()
+	ctx.set_layer("heatmap", true)
+	check(bench in main.overlay.shown_issue_uids() and bench in main.plan_overlay.heat_drawn_uids(), "QA: the bench has an issue mark and a heatmap tile while shown")
+	main.set_object_layer("decorations", ObjectLayers.HIDE)
+	await _frames(2)
+	var hidden: bool = main.renderer.is_layer_hidden(bench)
+	_key(KEY_A, true)
+	check(hidden and not bench in s.selection and fence in s.selection, "QA: Ctrl+A leaves out objects hidden by an object layer")
+	check(not bench in main.overlay.shown_issue_uids(), "QA: no issue outline on a hidden object")
+	check(not bench in main.plan_overlay.heat_drawn_uids() and fence in main.plan_overlay.heat_drawn_uids(), "QA: no heatmap tile on a hidden object")
+	main.set_object_layer("decorations", ObjectLayers.SHOW)
+	await _frames(1)
+	_key(KEY_A, true)
+	check(bench in s.selection, "QA: shown again, Ctrl+A takes it")
+	ctx.set_layer("heatmap", false)
+	s.clear_selection()
+	# The View tab's Object layers section at 200 %: below the fold is fine if it scrolls there.
+	App.settings.set_v("ui_scale", 2.0, false)
+	await main._rebuild_ui()
+	await _frames(3)
+	main.set_plan_open(false)
+	main.inspector.visible = true
+	main.inspector.show_tab(2)
+	main.inspector.rebuild()
+	await _frames(3)
+	var sc: ScrollContainer = main.inspector._scroll
+	var sec := _qa_find_label(sc, "Object layers")
+	check(sec != null, "QA: the View tab has the Object layers section at 200 %")
+	if sec != null:
+		var below := not sc.get_global_rect().encloses(sec.get_global_rect())
+		sc.ensure_control_visible(sec)
+		await _frames(2)
+		var vis := sc.get_global_rect().grow(1.0).encloses(sec.get_global_rect())
+		check(vis, "QA: the View tab scrolls to Object layers at 200 %% (below the fold at first: %s; scroll %d of %d)" % [str(below), sc.scroll_vertical, int(sc.get_v_scroll_bar().max_value)])
+	App.settings.set_v("ui_scale", 0.0, false)
+	await main._rebuild_ui()
+	await _frames(2)

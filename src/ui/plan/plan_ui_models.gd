@@ -51,6 +51,7 @@ static func cost_words(c: Variant) -> String:
 
 
 static func csv_field(s: String) -> String:
+	s = GuideExport.csv_text_guard(s)
 	if s.contains(",") or s.contains("\"") or s.contains("\n") or s.contains("\r") or s.contains(";"):
 		return "\"%s\"" % s.replace("\"", "\"\"")
 	return s
@@ -412,7 +413,7 @@ static func placed_uids(layout: FarmLayout, plan: Dictionary, db: ItemDatabase =
 		if e is Array and (e as Array).size() >= 3:
 			var bid := str(e[0])
 			var same := bid == o.item_id or (db != null and db.resolve_id(bid) == db.resolve_id(o.item_id))
-			if same and int(e[1]) == o.origin.x and int(e[2]) == o.origin.y:
+			if same and BudgetEngine.same_spot(e, o):
 				out[o.uid] = true
 	return out
 

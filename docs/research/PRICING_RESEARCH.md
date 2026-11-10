@@ -16,7 +16,7 @@ the same licence and the Supercell Fan Content Policy disclaimer.
 ## TL;DR
 
 - 1,962 of the 1,967 catalogue items have a price record (the 5 missing are editor-only planning markers).
-- Only 467 items can be bought with a known price: 338 in the shop (217 coins, 121 diamonds), 66 with vouchers,
+- Only 447 items can be bought with a known price: 338 in the shop (217 coins, 121 diamonds), 66 with vouchers,
   38 with event currency (37 film, 1 golden keys), plus 5 free. 1,514 cannot be bought (`not_in_shop` 1,500,
   `reward` 14). One item has no known price at all (the Enchanted Workshop).
 - The 1,458 "999 diamonds" values are a "not for sale" placeholder and are stored as `not_in_shop` without a price.

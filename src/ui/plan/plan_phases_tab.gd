@@ -37,7 +37,7 @@ func refresh() -> void:
 	var eng := ctx.engine
 	if eng == null:
 		return
-	var sig := "%d|%s|%s|%s|%d" % [eng.version, ctx.active_phase, str(ctx.plan().get("phases", []).hash()), str(ctx.session.layout.profile.hash()), ctx.selection().size()]
+	var sig := "%d/%d|%s|%s|%s|%d" % [eng.get_instance_id(), eng.version, ctx.active_phase, str(ctx.plan().get("phases", []).hash()), str(ctx.session.layout.profile.hash()), ctx.selection().size()]
 	if sig == _sig:
 		return
 	_sig = sig

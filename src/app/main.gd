@@ -59,6 +59,8 @@ var _canvas_rect := Rect2()
 ## Image exports asked for by the Plan tabs run one after another.
 var _export_queue: Array = []
 var _exporting := false
+## Plan picture requests refused because they pointed into the program folder (tests read it).
+var export_refused := 0
 var _placeholder_lib: AssetLibrary
 ## Planning layers <-> settings keys.
 const PLAN_LAYER_KEYS := {"plan_show_areas": "areas", "plan_show_progress": "progress", "plan_show_heatmap": "heatmap", "plan_show_guide": "guide"}
@@ -215,6 +217,7 @@ func _build_world() -> void:
 	plan_overlay.ctx = App.plan_ctx
 	world.add_child(plan_overlay.under)
 	renderer = ObjectRenderer.new()
+	plan_overlay.renderer = renderer
 	renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[App.settings.ambient_animation()])
 	world.add_child(renderer)
 	world.add_child(plan_overlay)
@@ -836,6 +839,8 @@ func _update_view_rect() -> void:
 	## The canvas the camera treats as unobstructed: between the side panels,
 	## under the top bar and above the tool pill (the dock's status line and
 	## contextual rows float over the farm).
+	if root == null or not is_instance_valid(root) or root.is_queued_for_deletion():
+		return   # mid UI rebuild (a UI scale change resizes the window first): _rebuild_ui() calls it again
 	_layout_panels()
 	var vs := root.get_viewport_rect().size
 	var l := (catalog.offset_right + 4.0) if catalog.visible else 0.0
@@ -1539,7 +1544,7 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_M when ctrl: _toggle_mode()
 		KEY_M when k.shift_pressed: toggle_minimap()
 		KEY_A when ctrl and k.shift_pressed: _open_asset_manager(_asset_focus_item())
-		KEY_A when ctrl: s.select_all()
+		KEY_A when ctrl: select_all_visible()
 		KEY_C when ctrl: _copy(false)
 		KEY_X when ctrl: _copy(true)
 		KEY_V when ctrl: controller.start_stamp()
@@ -1761,7 +1766,7 @@ func _on_context_id(id: int, uid: int) -> void:
 				s.set_active_item(o.item_id)
 		7: s.delete_selection()
 		10: controller.start_stamp()
-		11: s.select_all()
+		11: select_all_visible()
 		12: _fit()
 		13: go_home()
 
@@ -1976,6 +1981,18 @@ func set_object_layer(group: String, state: String) -> void:
 	App.settings.set_v("object_layers", ObjectLayers.with_state(ObjectLayers.normalize(App.settings.get_v("object_layers")), group, state))
 
 
+func select_all_visible() -> void:
+	## Ctrl+A / context menu: every object, except those hidden by an object layer
+	## (they can't be picked or box-selected either).
+	var s := App.session
+	if s == null:
+		return
+	if renderer.layer_hidden_count() == 0:
+		s.select_all()
+	else:
+		s.select_all(func(u: int) -> bool: return not renderer.is_layer_hidden(u))
+
+
 func _apply_object_layers() -> void:
 	renderer.set_layer_states(ObjectLayers.normalize(App.settings.get_v("object_layers")))
 	var s := App.session
@@ -1986,7 +2003,9 @@ func _apply_object_layers() -> void:
 			s.select(keep, false, false)
 		if overlay.hover_uid != 0 and renderer.is_layer_hidden(overlay.hover_uid):
 			overlay.hover_uid = 0
-			overlay.refresh()
+		# Issue outlines, heatmap and progress checks skip hidden objects.
+		overlay.refresh()
+		plan_overlay.refresh()
 	if minimap != null and is_instance_valid(minimap):
 		minimap.rebuild_objects()
 	if inspector != null and inspector.current_tab() == 2:
@@ -2518,10 +2537,28 @@ func _plan_calibration() -> void:
 
 
 func _plan_export(opts: Dictionary) -> void:
-	## ctx.request_export_image: queued, rendered one at a time.
-	_export_queue.append(opts.duplicate(true))
+	## ctx.request_export_image: queued, rendered one at a time. Requests never
+	## write into the program folder (whatever the art) and default to placeholder art.
+	var o := plan_export_request(opts)
+	if o.is_empty():
+		App.toast("Choose a folder outside the program folder (e.g. Documents).", "error")
+		export_refused += 1
+		return
+	_export_queue.append(o)
 	if not _exporting:
 		_drain_exports()
+
+
+static func plan_export_request(opts: Dictionary) -> Dictionary:
+	## A plan picture request as it will be rendered: placeholder art unless it
+	## asks for "installed"; {} = refused (a path inside the program folder).
+	var o := opts.duplicate(true)
+	if str(o.get("art", "")).is_empty():
+		o["art"] = "placeholder"
+	var p := str(o.get("path", ""))
+	if not p.is_empty() and PlanUiKit.is_inside_repo(p):
+		return {}
+	return o
 
 
 func _drain_exports() -> void:
@@ -2541,6 +2578,7 @@ func _ask_export_path(o: Dictionary) -> void:
 	fd.access = FileDialog.ACCESS_FILESYSTEM
 	fd.use_native_dialog = true
 	fd.filters = PackedStringArray(["*.png ; PNG image"])
+	fd.current_dir = PlanUiKit.documents_dir()   # never the program folder (the default working dir)
 	var stem := App.session.layout.name.validate_filename() if App.session else "farm"
 	fd.current_file = "%s_%s%s.png" % [stem, str(o.get("scope", "farm")), "_" + str(o.get("id")) if not str(o.get("id", "")).is_empty() else ""]
 	fd.file_selected.connect(func(p: String):
@@ -2620,6 +2658,9 @@ func export_plan_image(o: Dictionary) -> Error:
 	var path := str(o.get("path", ""))
 	var art := str(o.get("art", "placeholder"))
 	if not _export_path_ok(path, art):
+		return ERR_FILE_NO_PERMISSION
+	if path.is_empty() or path.begins_with("res://"):
+		App.toast("Choose a folder outside the program folder (e.g. Documents).", "error")
 		return ERR_FILE_NO_PERMISSION
 	var numbers := bool(o.get("guide_numbers", false))
 	var plan := {"areas": bool(o.get("areas", true)), "area_ids": [id] if scope == "area" else [],

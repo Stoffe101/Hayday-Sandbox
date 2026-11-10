@@ -195,7 +195,16 @@ static func _plain(v: Variant) -> Variant:
 	return v
 
 
+static func csv_text_guard(s: String) -> String:
+	## Spreadsheets run a cell that starts with = + - @ as a formula: text cells
+	## (never numbers) get a leading apostrophe so they stay plain text.
+	if not s.is_empty() and s[0] in ["=", "+", "-", "@"] and not s.is_valid_float():
+		return "'" + s
+	return s
+
+
 static func _csv(s: String) -> String:
+	s = csv_text_guard(s)
 	if s.contains(",") or s.contains("\"") or s.contains("\n") or s.contains("\r"):
 		return "\"%s\"" % s.replace("\"", "\"\"")
 	return s

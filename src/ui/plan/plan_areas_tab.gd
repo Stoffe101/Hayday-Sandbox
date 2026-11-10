@@ -128,6 +128,10 @@ func _row(a: Dictionary) -> PanelContainer:
 		var acts := PlanUI.flow()
 		acts.add_child(PlanUI.small_button("Picture…", "image-down", "Save a picture of this area (placeholder art)", func():
 			ctx.request_export_image.emit({"scope": "area", "id": id, "guide_numbers": false, "path": "", "art": "placeholder"})))
+		var st := PlanUI.small_button("Save as stamp", "copy-plus", "Keep this area's design as a stamp: place it anywhere from Stamps (fixed farm buildings are left out)", func():
+			ctx.request_area_stamp.emit(id))
+		st.disabled = t.objects == 0
+		acts.add_child(st)
 		var del := PlanUI.small_button("Delete", "trash", "Delete the area (objects stay; Ctrl+Z undoes it)", func():
 			ctx.set_active_area("")
 			ctx.set_plan(PlanDoc.without_area(ctx.plan(), id), "Delete area “%s”" % str(a.get("name", ""))))

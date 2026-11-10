@@ -21,6 +21,14 @@ const C_STEP := Color(0.98, 0.76, 0.22, 0.98)
 const C_STEP_NEXT := Color(0.62, 0.78, 0.98, 0.95)
 const C_DRAFT := Color(1.0, 1.0, 1.0, 0.95)
 const C_DRAFT_BAD := Color(1.0, 0.45, 0.4, 0.95)
+## "Compare with my farm" (Baseline.diff): footprint colours and object tints.
+const C_NEW := Color(0.36, 0.86, 0.42)
+const C_MOVED := Color(0.42, 0.66, 1.0)
+const C_REMOVED := Color(0.96, 0.36, 0.3)
+const C_UNCHANGED := Color(0.85, 0.85, 0.82)
+const TINT_UNCHANGED := Color(0.82, 0.82, 0.82, 0.8)
+const TINT_MOVED := Color(0.78, 0.9, 1.2)
+const TINT_NEW := Color(0.85, 1.15, 0.85)
 
 var ctx: PlanContext
 var zoom := 1.0
@@ -105,9 +113,15 @@ func _inv() -> float:
 
 # --- below the objects --------------------------------------------------------------------
 
+func _comparing() -> bool:
+	return ctx != null and ctx.compare and not _exporting() and ctx.has_baseline()
+
+
 func _draw_under(ci: Node2D) -> void:
 	if ctx == null or ctx.session == null:
 		return
+	if _comparing():
+		_draw_compare_under(ci)
 	if _layer("areas"):
 		for a: Dictionary in _shown_areas():
 			var poly := _area_world_polygon(a)
@@ -129,12 +143,15 @@ func _draw_heatmap(ci: Node2D) -> void:
 	if key != _heat_key:
 		_heat_key = key
 		_heat.clear()
-		for u: int in ctx.session.layout.objects:
-			var c: Variant = eng.object_cost(u, ctx.mode)
-			var st := "known"
-			if c == null:
-				st = str(eng.object_info(u).get("price_state", "unknown"))
-			_heat[u] = PlanScope.heat_bucket(c, st)
+		var objs: Dictionary = ctx.session.layout.objects
+		var m := ctx.mode
+		eng.batch(func():
+			for u: int in objs:
+				var c: Variant = eng.object_cost(u, m)
+				var st := "known"
+				if c == null:
+					st = str(eng.object_info(u).get("price_state", "unknown"))
+				_heat[u] = PlanScope.heat_bucket(c, st))
 	var lw := 1.2 * _inv()
 	for u: int in _heat:
 		var o: PlacedObject = ctx.session.layout.objects.get(u)
@@ -155,6 +172,73 @@ func _draw_heatmap(ci: Node2D) -> void:
 			_hatch(ci, poly, Color(1, 1, 1, 0.55) if b == PlanScope.HEAT_UNKNOWN else Color(0, 0, 0, 0.55), lw, o.size)
 
 
+func _in_view(r: Rect2i) -> bool:
+	return visible_rect.size == Vector2.ZERO or visible_rect.intersects(Iso.footprint_world_bounds(r.position, r.size))
+
+
+func _draw_compare_under(ci: Node2D) -> void:
+	## Soft footprint fills under the objects: new (green), moved (blue).
+	var d := ctx.compare_diff()
+	var layout := ctx.session.layout
+	for key: String in ["new", "moved"]:
+		var col := C_NEW if key == "new" else C_MOVED
+		for u in d.get(key, []):
+			var o := layout.get_obj(int(u))
+			if o == null or not _in_view(o.rect()):
+				continue
+			ci.draw_colored_polygon(Iso.footprint_polygon(o.origin, o.size), Color(col.r, col.g, col.b, 0.3))
+
+
+func _draw_compare(layout: FarmLayout) -> void:
+	## Above the objects: removed objects as a red dashed ghost at their old spot,
+	## moved ones as a dashed old footprint with a thin arrow to the new one, new
+	## ones outlined in green.
+	var d := ctx.compare_diff()
+	for e: Dictionary in d.get("removed", []):
+		var r: Rect2i = e["rect"]
+		if not _in_view(r):
+			continue
+		var poly := Iso.grid_rect_polygon(r)
+		draw_colored_polygon(poly, Color(C_REMOVED.r, C_REMOVED.g, C_REMOVED.b, 0.24))
+		_dashed(poly, Color(C_REMOVED.r, C_REMOVED.g, C_REMOVED.b, 0.95))
+		# A small cross in screen pixels, so even a 1×1 ghost reads at low zoom.
+		var c := Iso.footprint_center(r.position, r.size)
+		var k := 4.5 * _inv()
+		draw_line(c + Vector2(-k, -k), c + Vector2(k, k), Color(0.15, 0.02, 0.02, 0.6), 3.4 * _inv(), true)
+		draw_line(c + Vector2(-k, k), c + Vector2(k, -k), Color(0.15, 0.02, 0.02, 0.6), 3.4 * _inv(), true)
+		draw_line(c + Vector2(-k, -k), c + Vector2(k, k), C_REMOVED, 1.8 * _inv(), true)
+		draw_line(c + Vector2(-k, k), c + Vector2(k, -k), C_REMOVED, 1.8 * _inv(), true)
+	var moves: Dictionary = d.get("moves", {})
+	for u in moves:
+		var m: Dictionary = moves[u]
+		var a: Rect2i = m["from"]
+		var b: Rect2i = m["to"]
+		if not (_in_view(a) or _in_view(b)):
+			continue
+		_dashed(Iso.grid_rect_polygon(a), Color(C_MOVED.r, C_MOVED.g, C_MOVED.b, 0.85))
+		_outline(Iso.grid_rect_polygon(b), C_MOVED, 1.6)
+		_arrow(Iso.footprint_center(a.position, a.size), Iso.footprint_center(b.position, b.size), C_MOVED)
+	for u in d.get("new", []):
+		var o := layout.get_obj(int(u))
+		if o != null and _in_view(o.rect()):
+			_outline(Iso.footprint_polygon(o.origin, o.size), C_NEW, 1.6)
+
+
+func _arrow(from: Vector2, to: Vector2, col: Color) -> void:
+	## A thin line with a small head, in screen-size pixels.
+	var inv := _inv()
+	var dist := from.distance_to(to)
+	if dist < 2.0 * inv:
+		return
+	var dir := (to - from) / dist
+	var side := Vector2(-dir.y, dir.x)
+	var hs := minf(9.0 * inv, dist * 0.45)
+	draw_line(from, to - dir * hs * 0.6, Color(0.05, 0.08, 0.15, 0.55), 3.2 * inv, true)
+	draw_line(from, to - dir * hs * 0.6, col, 1.6 * inv, true)
+	draw_circle(from, 2.6 * inv, col)
+	draw_colored_polygon(PackedVector2Array([to, to - dir * hs + side * hs * 0.55, to - dir * hs - side * hs * 0.55]), col)
+
+
 static func _hatch(ci: CanvasItem, poly: PackedVector2Array, col: Color, w: float, size: Vector2i) -> void:
 	## Stripes across a footprint diamond (top, right, bottom, left corners).
 	var n := maxi(3, (size.x + size.y) * 2)
@@ -172,16 +256,20 @@ func _draw() -> void:
 	var layout := ctx.session.layout
 	if _layer("heatmap"):
 		_draw_heatmap(self)
+	if _comparing():
+		_draw_compare(layout)
+	var comparing := _comparing()
 	if not _exporting():
 		_draw_phase_highlight(layout)
 		_draw_highlight(layout)
-		if _layer("progress"):
+		# The comparison is its own view: no progress checks or step numbers on top.
+		if _layer("progress") and not comparing:
 			_draw_progress(layout)
 	if _layer("areas"):
 		for a: Dictionary in _shown_areas():
 			_draw_area_label(a)
 	# Step numbers last: they must stay readable over area names.
-	if _layer("guide") and (_exporting() or guide_active or ctx.guide_step >= 1):
+	if _layer("guide") and not comparing and (_exporting() or guide_active or ctx.guide_step >= 1):
 		_draw_guide()
 	_draw_draft()
 
@@ -240,11 +328,13 @@ func _draw_progress(layout: FarmLayout) -> void:
 	if placed.is_empty() and not bl is Dictionary:
 		return
 	var r := 7.0 * _inv()
+	# One cached set per engine version (is_placed() per object re-checks the plan: seconds at 10k).
+	var placed_set: Dictionary = eng.placed_set() if bl is Dictionary else {}
 	for o: PlacedObject in layout.objects.values():
 		var c := Iso.footprint_center(o.origin, o.size)
 		if visible_rect.size != Vector2.ZERO and not visible_rect.has_point(c):
 			continue
-		if not (placed.has(str(o.uid)) or (bl is Dictionary and eng.is_placed(o.uid))):
+		if not (placed.has(str(o.uid)) or placed_set.has(o.uid)):
 			continue
 		draw_circle(c, r, Color(0.06, 0.2, 0.1, 0.85))
 		draw_circle(c, r * 0.82, C_CHECK)

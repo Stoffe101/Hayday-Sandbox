@@ -1076,6 +1076,90 @@ func _build_calibration_section(rv: VBoxContainer, locked: bool) -> void:
 		rv.add_child(UI.label(status, "Faint", true))
 
 
+func _build_object_layers(s: EditorSession) -> void:
+	## Show / dim / hide objects by category group: a way of looking only
+	## (remembered in the settings; the layout and its file never change).
+	var states := ObjectLayers.normalize(App.settings.get_v("object_layers"))
+	var head := UI.hbox(6)
+	var sec := UI.section("Object layers")
+	sec.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(sec)
+	if not states.is_empty():
+		var reset := UI.button("Show all", "eye", "Show every object again", "Ghost")
+		reset.add_theme_font_size_override("font_size", 12)
+		reset.pressed.connect(func(): action.emit("object_layers_reset", null))
+		head.add_child(reset)
+	_body.add_child(head)
+	var card := UI.card()
+	var v := UI.vbox(4)
+	card.add_child(v)
+	var counts := ObjectLayers.counts(s.layout, s.db)
+	for g in ObjectLayers.GROUPS:
+		var gid: String = g[0]
+		var row := UI.hbox(6)
+		row.add_child(UI.icon_rect(str(g[2]), 16, UiTheme.c("text_dim")))
+		var l := UI.label("%s  %s" % [g[1], UI.fmt_int(int(counts.get(gid, 0)))], "Dim")
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l.clip_text = true
+		l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		l.custom_minimum_size.x = 60
+		l.tooltip_text = "%s: %d object%s" % [g[1], int(counts.get(gid, 0)), "" if int(counts.get(gid, 0)) == 1 else "s"]
+		l.mouse_filter = Control.MOUSE_FILTER_PASS
+		row.add_child(l)
+		var seg := PlanUiKit.segmented([[ObjectLayers.SHOW, "Show", "Draw them normally"], [ObjectLayers.DIM, "Dim", "Draw them faded"],
+			[ObjectLayers.HIDE, "Hide", "Don't draw them; they can't be clicked or selected"]], ObjectLayers.state_of(states, gid),
+			func(st: String): action.emit("object_layer", [gid, st]))
+		seg.set_meta("layer_group", gid)
+		var pad := Vector4(7, 2, 7, 2)
+		for b in seg.get_child(0).get_children():
+			var btn := b as Button
+			btn.add_theme_font_size_override("font_size", 12)
+			btn.custom_minimum_size.x = 0
+			btn.add_theme_stylebox_override("normal", UiTheme.box(Color.TRANSPARENT, 999, Color.TRANSPARENT, 0, pad))
+			btn.add_theme_stylebox_override("hover", UiTheme.box(UiTheme.c("elevated_hover"), 999, Color.TRANSPARENT, 0, pad))
+			btn.add_theme_stylebox_override("pressed", UiTheme.box(UiTheme.c("accent") if btn.get_meta("id") == ObjectLayers.SHOW else (UiTheme.c("warn") if btn.get_meta("id") == ObjectLayers.DIM else UiTheme.c("danger")), 999, Color.TRANSPARENT, 0, pad))
+			btn.add_theme_stylebox_override("hover_pressed", UiTheme.box(UiTheme.c("accent_hover") if btn.get_meta("id") == ObjectLayers.SHOW else (UiTheme.c("warn") if btn.get_meta("id") == ObjectLayers.DIM else UiTheme.c("danger")), 999, Color.TRANSPARENT, 0, pad))
+		row.add_child(seg)
+		v.add_child(row)
+	v.add_child(UI.label("Only changes what you see: nothing is moved, deleted or saved differently.", "Faint", true))
+	_body.add_child(card)
+
+
+func _build_compare_mine() -> void:
+	## Before / after with the real farm (plan.baseline): tints, arrows, ghosts.
+	var ctx: PlanContext = App.plan_ctx
+	_body.add_child(UI.section("Compare with my farm"))
+	var card := UI.card()
+	var v := UI.vbox(4)
+	card.add_child(v)
+	if not ctx.has_baseline():
+		v.add_child(UI.label("Take a snapshot of your real farm first (“My real farm”): then the farm shows what stays, what moves (arrows from the old spot), what is new and what goes.", "Dim", true))
+		var b := UI.button("My real farm…", "house", "Snapshot of your farm as it is in Hay Day now (from this or another saved layout)")
+		b.pressed.connect(func(): action.emit("baseline", null))
+		v.add_child(b)
+	else:
+		var cb := CheckButton.new()
+		cb.text = "Compare with my farm"
+		cb.tooltip_text = "Tint unchanged, moved and new objects; ghosts where removed ones stood"
+		cb.button_pressed = ctx.compare
+		cb.toggled.connect(func(on): action.emit("compare_mine", on))
+		v.add_child(cb)
+		var c := ctx.compare_counts()
+		var grid := GridContainer.new()
+		grid.columns = 2
+		grid.add_theme_constant_override("h_separation", 12)
+		for k: Array in CompareLegend.KEYS:
+			var h := UI.hbox(6)
+			h.add_child(PlanUiKit.color_dot(k[2], 10))
+			h.add_child(UI.label("%s %s" % [UI.fmt_int(int(c.get(k[0], 0))), k[1]], "Dim"))
+			grid.add_child(h)
+		v.add_child(grid)
+		var b2 := UI.button("My real farm…", "house", "Retake or remove the snapshot", "Ghost")
+		b2.pressed.connect(func(): action.emit("baseline", null))
+		v.add_child(b2)
+	_body.add_child(card)
+
+
 func _build_view(s: EditorSession) -> void:
 	_build_world_section(s)
 	_body.add_child(UI.section("Layers"))
@@ -1090,6 +1174,7 @@ func _build_view(s: EditorSession) -> void:
 		cb.toggled.connect(func(on): action.emit("view", [t[0], on]))
 		v.add_child(cb)
 	_body.add_child(card)
+	_build_object_layers(s)
 	_body.add_child(UI.section("Planning layers"))
 	var pc := UI.card()
 	var pv := UI.vbox(2)
@@ -1105,17 +1190,26 @@ func _build_view(s: EditorSession) -> void:
 		cb.button_pressed = bool(App.settings.get_v(t[0]))
 		cb.toggled.connect(func(on): action.emit("view", [t[0], on]))
 		pv.add_child(cb)
+	var mm := CheckButton.new()
+	mm.text = "Overview map   Shift+M"
+	mm.tooltip_text = "A small map of the farm in a canvas corner: click or drag on it to move the view"
+	mm.button_pressed = bool(App.settings.get_v("minimap_visible"))
+	mm.toggled.connect(func(on): action.emit("view", ["minimap_visible", on]))
+	pv.add_child(mm)
+	if bool(App.settings.get_v("minimap_visible")) and bool(view_state.get("minimap_no_room", false)):
+		pv.add_child(UI.label("Hidden for now: the canvas is too small (close a side panel or lower the UI scale).", "Faint", true))
 	var open := UI.button("Open the plan", "layers", "Budget, areas, phases, shopping list, checklist and guide (J)", "Ghost")
 	open.pressed.connect(func(): action.emit("plan", "budget"))
 	pv.add_child(open)
 	_body.add_child(pc)
+	_build_compare_mine()
 	_body.add_child(UI.section("Screenshot references"))
 	var rc := UI.card()
 	var rv := UI.vbox(6)
 	rc.add_child(rv)
 	_build_reference_section(rv)
 	_body.add_child(rc)
-	_body.add_child(UI.section("Compare"))
+	_body.add_child(UI.section("Compare with another design"))
 	var cc := UI.card()
 	var cv := UI.vbox(6)
 	cc.add_child(cv)

@@ -41,6 +41,45 @@ static func make_prices(d: ItemDatabase) -> PriceBook:
 	return p
 
 
+static func ref_breakdown(e: BudgetEngine, l: FarmLayout, uids: Variant, mode: String) -> Dictionary:
+	## Slow reference for BudgetEngine.item_breakdown() from the per-object API
+	## (object_info), the way the first implementation summed it slot by slot.
+	var list: Array = l.objects.keys() if uids == null else uids
+	var acc := {}
+	for u in list:
+		var info := e.object_info(int(u))
+		if info.is_empty():
+			continue
+		var id: String = info["item"]
+		if not acc.has(id):
+			acc[id] = {"used": 0, "owned": 0, "acquired": 0, "to_buy": 0, "placed": 0, "charged": 0, "known": 0,
+				"unknown": 0, "not_buyable": 0, "cost": {}, "k_min": 0, "k_max": 0}
+		var en: Dictionary = acc[id]
+		en["used"] += 1
+		var st: String = info["status"]
+		en[st] += 1
+		if info["placed"]:
+			en["placed"] += 1
+		var charged := mode == BudgetEngine.MODE_DESIGN or (st != BudgetEngine.STATUS_OWNED
+			and not (mode == BudgetEngine.MODE_REMAINING and st == BudgetEngine.STATUS_ACQUIRED))
+		if not charged:
+			continue
+		en["charged"] += 1
+		var k: int = info["design_copy"] if mode == BudgetEngine.MODE_DESIGN else info["purchase_number"]
+		en["k_min"] = k if int(en["k_min"]) == 0 else mini(int(en["k_min"]), k)
+		en["k_max"] = maxi(int(en["k_max"]), k)
+		var c: Variant = info["cost"][mode]
+		if c == null:
+			if info["price_state"] == "not_buyable":
+				en["not_buyable"] += 1
+			else:
+				en["unknown"] += 1
+		else:
+			en["known"] += 1
+			Currency.add_into(en["cost"], c)
+	return acc
+
+
 static func two_phase_plan() -> Dictionary:
 	## a1 = x 0..4, a2 = x 5..9 (both y 0..9); p1 builds a1 first, then p2 builds a2.
 	var plan := PlanDoc.empty()
@@ -446,6 +485,154 @@ func test_in_place_edit_without_signal_is_detected() -> void:
 	var o := make_obj(db.get_item("t_long"), Vector2i(3, 0))
 	layout.add_objects([o], false)
 	assert_eq(eng.totals().objects, 2, "added without a signal")
+
+
+func test_batch_skips_in_place_detection_until_end() -> void:
+	_owned({"t_long": 0})
+	var u := _place("t_long", Vector2i(0, 0))
+	assert_eq(_coins(eng.totals(null, REMAINING)), 10)
+	var out: Variant = eng.batch(func() -> Variant:
+		assert_true(eng.in_batch())
+		layout.planning["acquired"]["t_long"] = 1      # in place, no signal
+		assert_eq(_coins(eng.totals(null, REMAINING)), 10, "in-place edits wait for the end of the batch")
+		eng.begin_batch()                               # nested
+		var b := _place("t_long", Vector2i(2, 0))       # with a signal: applies at once
+		assert_eq(eng.status_of(b), BudgetEngine.STATUS_TO_BUY)
+		eng.end_batch()
+		assert_true(eng.in_batch(), "still inside the outer batch")
+		return 42)
+	assert_eq(out, 42, "batch() returns what the callable returns")
+	assert_false(eng.in_batch())
+	assert_eq(eng.status_of(u), BudgetEngine.STATUS_ACQUIRED, "found by the first query after the batch")
+	assert_eq(_coins(eng.totals(null, REMAINING)), 15, "copy #2 remains")
+	# A batch starts with one full check: an in-place edit made before it is seen.
+	layout.profile["owned"]["t_long"] = 2
+	eng.begin_batch()
+	assert_eq(eng.totals(null, TO_BUY).owned_objects, 2)
+	eng.end_batch()
+	eng.end_batch()   # unbalanced end is harmless
+	assert_false(eng.in_batch())
+	# The old way (auto_detect off) keeps working.
+	eng.auto_detect = false
+	layout.profile["owned"]["t_long"] = 0
+	assert_eq(eng.totals(null, TO_BUY).owned_objects, 2, "auto_detect off: in-place edit not seen")
+	eng.auto_detect = true
+	assert_eq(eng.totals(null, TO_BUY).owned_objects, 0)
+
+
+func test_area_uids_match_plan_doc_after_random_edits() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7311
+	var plan := two_phase_plan()
+	plan["areas"].append({"id": "poly", "name": "Concave", "points": [[1, 1], [12.5, 2.25], [6, 6], [13, 13.7], [0.5, 11]]})
+	plan["areas"].append({"id": "tri", "name": "Thin", "points": [[3.2, 0], [3.9, 19.6], [4.1, 0.3]]})
+	plan["areas"].append({"id": "flat", "name": "Two points", "points": [[0, 0], [5, 5]]})
+	plan["phases"].append({"id": "p3", "name": "Third", "areas": ["poly"]})
+	layout.set_planning(PlanDoc.normalize(plan))
+	var ids := ["t_long", "t_fence", "t_bakery", "t_lamp", "t_path", "t_film"]
+	for i in 40:
+		_place(ids[rng.randi() % ids.size()], Vector2i(rng.randi_range(-2, 18), rng.randi_range(-2, 18)))
+	var bad := 0
+	for step in 120:
+		var keys: Array = layout.objects.keys()
+		var u: int = keys[rng.randi() % keys.size()]
+		match rng.randi() % 4:
+			0:
+				_place(ids[rng.randi() % ids.size()], Vector2i(rng.randi_range(-2, 18), rng.randi_range(-2, 18)))
+			1:
+				if keys.size() > 10:
+					layout.remove_objects([u])
+			_:
+				layout.move_objects([u], Vector2i(rng.randi_range(-5, 5), rng.randi_range(-5, 5)))
+		for a in PlanDoc.areas(layout.planning):
+			var want := PlanDoc.objects_in_area(layout, a)
+			var got := eng.area_uids(str(a["id"]))
+			if got != want:
+				bad += 1
+				if bad <= 3:
+					fail("step %d area %s: %s != %s" % [step, a["id"], str(got), str(want)])
+			if step % 10 == 0:
+				assert_eq(eng.area_totals(str(a["id"]), DESIGN).to_dict(), eng.totals(want, DESIGN).to_dict())
+	assert_eq(bad, 0, "area membership == PlanDoc.objects_in_area after every edit")
+	assert_eq(eng.area_uids("nope"), [])
+
+
+func test_rollups_and_bulk_getters_match_per_object_reference() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 99017
+	var plan := two_phase_plan()
+	plan["areas"].append({"id": "poly", "name": "P", "points": [[0, 0], [14, 3], [9, 16]]})
+	plan["phases"].append({"id": "p3", "name": "Third", "areas": ["poly"]})
+	layout.set_planning(PlanDoc.normalize(plan))
+	_owned({"t_long": 2, "t_fence": 1, "t_bakery": 0, "t_voucher": 1, "t_prize": 0}, {"t_long": 3})
+	var ids := ["t_long", "t_fence", "t_fence_stone", "t_bakery", "t_lamp", "t_path", "t_voucher", "t_prize", "t_limited"]
+	for i in 30:
+		_place(ids[rng.randi() % ids.size()], Vector2i(rng.randi() % 20, rng.randi() % 20))
+	var bad := 0
+	for step in 80:
+		var keys: Array = layout.objects.keys()
+		var u: int = keys[rng.randi() % keys.size()]
+		match rng.randi() % 7:
+			0:
+				_place(ids[rng.randi() % ids.size()], Vector2i(rng.randi() % 20, rng.randi() % 20))
+			1:
+				if keys.size() > 8:
+					layout.remove_objects([u])
+			2:
+				layout.move_objects([u], Vector2i(rng.randi_range(-6, 6), rng.randi_range(-6, 6)))
+			3:
+				_plan_edit(func(p: Dictionary) -> Dictionary: return PlanDoc.with_placed(p, layout, [u], rng.randf() < 0.6))
+			4:
+				var it: String = ids[rng.randi() % ids.size()]
+				var n := rng.randi() % 3
+				_plan_edit(func(p: Dictionary) -> Dictionary: return PlanDoc.with_acquired(p, it, n))
+			5:
+				var ph := ["", "p1", "p2", "p3"][rng.randi() % 4] as String
+				_plan_edit(func(p: Dictionary) -> Dictionary: return PlanDoc.with_assignment(p, [u], ph))
+			6:
+				layout.set_property([u], "item_id", [ids[rng.randi() % ids.size()]])
+		keys = layout.objects.keys()
+		var sel: Array = keys.slice(0, rng.randi_range(1, keys.size()))
+		var scopes: Array = [null, sel, eng.phase_uids("p1"), eng.phase_uids(""), eng.area_uids("poly"), eng.area_uids("a2")]
+		for m in BudgetEngine.MODES:
+			for sc in scopes:
+				var got := eng.item_breakdown(sc, m)
+				var want := ref_breakdown(eng, layout, sc, m)
+				if got != want:
+					bad += 1
+					if bad <= 3:
+						fail("step %d mode %s scope %s: %s != %s" % [step, m, str(sc), str(got), str(want)])
+				var t := eng.totals(sc, m)
+				assert_true(is_same(t, eng.totals(sc, m)), "uid-list totals cached per version")
+		var ps := eng.placed_set()
+		for k in keys:
+			if ps.has(k) != eng.is_placed(k):
+				bad += 1
+		for id in ids:
+			var order := eng.alloc_order(id)
+			for j in order.size():
+				if int(eng.object_info(order[j])["design_copy"]) != j + 1:
+					bad += 1
+	assert_eq(bad, 0, "kept per-item entries == per-object reference after every edit")
+
+
+func test_item_revision_changes_with_the_item() -> void:
+	_owned({"t_long": 0, "t_lamp": 0})
+	var a := _place("t_long", Vector2i(0, 0))
+	_place("t_lamp", Vector2i(3, 0))
+	var r_long := eng.item_revision("t_long")
+	var r_lamp := eng.item_revision("t_lamp")
+	assert_true(r_long >= 0)
+	assert_eq(eng.item_revision("not_in_design"), -1)
+	layout.move_objects([a], Vector2i(0, 2))
+	assert_true(eng.item_revision("t_long") != r_long, "moved object: its item changed")
+	assert_eq(eng.item_revision("t_lamp"), r_lamp, "other items keep their revision")
+	r_long = eng.item_revision("t_long")
+	_plan_edit(func(p: Dictionary) -> Dictionary: return PlanDoc.with_placed(p, layout, [a], true))
+	assert_true(eng.item_revision("t_long") != r_long, "placed mark")
+	r_lamp = eng.item_revision("t_lamp")
+	_plan_edit(func(p: Dictionary) -> Dictionary: return PlanDoc.with_acquired(p, "t_lamp", 1))
+	assert_true(eng.item_revision("t_lamp") != r_lamp, "acquired copies")
 
 
 func test_prices_change_updates_engine() -> void:

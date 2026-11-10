@@ -161,3 +161,26 @@ src/core/calibration_math.gd   least-squares affine fit from N points, per-point
 UI (no logic): budget widget on the canvas, a Plan panel (Budget, Areas, Phases, Shopping, Checklist, Guide,
 Accuracy), area drawing tool, inventory and price-override dialogs, canvas overlays (areas, phase highlight,
 guide numbers, progress, cost heatmap).
+
+## 6. Planning extras (view only unless noted)
+
+* **Object layers** (`src/core/object_layers.gd`, View tab): show / dim / hide Decorations, Production
+  buildings, Animal homes, Trees & bushes, Fences, Paths, Fields & other. Remembered in the settings
+  (`object_layers`); hidden objects are not drawn and not pickable (click, box select, erase drag). Never changes
+  the layout or its file.
+* **Overview map** (`src/ui/minimap.gd`, View tab / Shift+M): owned land, locked plots, road, water, fixed
+  buildings, objects in category colours (the active phase in its colour), area outlines and the camera's view;
+  click / drag moves the camera. Only shown when the free canvas is at least 700×420 logical px (so not at
+  1920×1080 with 200 % UI scale). Two one-pixel-per-tile images; object edits repaint only their tiles.
+* **Compare with my farm** (`PlanContext.compare`, View tab / Build tab header / canvas legend): tints from
+  `Baseline.diff` — unchanged faded, moved blue with a thin arrow from the old footprint, new green, removed as a
+  red dashed ghost with a cross. Progress checks and guide numbers are hidden meanwhile. Without a baseline the
+  toggle opens “My real farm” (BaselineDialog).
+* **Area → stamp** (Areas tab › Save as stamp, `StampLibrary.from_area`): the area's objects with their relative
+  positions into the stamp library (landmarks / fixed items refused like any stamp); placed with the normal stamp
+  tool. The layout is not edited.
+* **Can I build this?** (`src/core/planning/readiness.gd`, top of Plan › Budget): blocking rows (overlaps /
+  invalid placement, fixed landmarks, locked land, expansions above the farm level, items above the farm level —
+  Realistic only —, over the maximum count, can't be bought, other areas) and checks (unverified footprints,
+  unknown items, no inventory record). Built from the ConflictIndex, the cached Realistic report and the budget's
+  can't-buy counts, cached per edit; each row selects and frames its objects.

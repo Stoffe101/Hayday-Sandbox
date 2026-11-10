@@ -50,52 +50,84 @@ static func build(engine: BudgetEngine, uids: Variant = null, mode: String = Bud
 	##   sources, notes, info.
 	## Supply rows (kind "supply", group "Expansion supplies"): item = currency id,
 	##   name, needed, have (balance), missing, plots (ids), unknown_plots.
+	## Rows are read-only: an item row is reused by later builds while nothing
+	## about its item changed (kept in engine.view_cache), so never modify one.
+	## Speed: one engine batch for the whole build; per-item breakdowns from
+	## BudgetEngine.item_rollups() (kept per item for the whole farm); rows rebuilt
+	## only for items whose breakdown or revision changed; the sort uses cached
+	## natural name ranks instead of a script comparator.
+	engine.begin_batch()
 	var rows: Array = []
-	var bd := engine.item_breakdown(uids, mode)
-	var pb := engine.prices
-	for id: String in bd:
-		var e: Dictionary = bd[id]
-		var it: ItemDef = engine.db.get_item(id) if engine.db != null else null
-		var st := engine.item_state(id)
-		var rec: Dictionary = pb.resolved(id) if pb != null else PriceBook.empty_record()
-		var known_item := it != null
-		var k_min := int(e["k_min"])
-		var k_max := int(e["k_max"])
-		var next: Variant = null
-		var lo: Variant = null
-		var hi: Variant = null
-		if known_item and pb != null and int(e["charged"]) > 0:
-			next = pb.copy_price(id, k_min)
-			lo = next
-			hi = pb.copy_price(id, k_max)
-		elif known_item and pb != null:
-			# Nothing to pay in this scope: show what the next purchase would cost.
-			var nk := int(st["purchased"]) + maxi(0, int(st["count"]) - int(st["owned"])) + 1
-			next = pb.copy_price(id, nk)
-		var total: Dictionary = e["cost"]
-		var mc := int(st["max_count"])
-		var method_s: String = rec["method"] if known_item else PriceBook.METHOD_UNKNOWN
-		var row := {
-			"kind": KIND_ITEM, "item": id, "name": it.name if it != null else id,
-			"category": it.category if it != null else "", "group": group_of_category(it.category) if it != null else GROUP_OTHER,
-			"used": e["used"], "owned": e["owned"], "acquired": e["acquired"], "missing": e["to_buy"],
-			"placed": e["placed"], "charged": e["charged"],
-			"owned_total": st["owned"], "owned_known": st["owned_known"], "acquired_total": st["acquired"],
-			"next_price": next, "price_min": lo, "price_max": hi, "progressive": bool(rec.get("progressive", false)),
-			"total": total, "unknown_copies": e["unknown"], "not_buyable_copies": e["not_buyable"],
-			"currencies": Currency.currencies_of(total if not total.is_empty() else next),
-			"method": method_s, "method_text": pb.method_text(id) if (pb != null and known_item) else "Unknown item",
-			"buyable": known_item and method_s in PriceBook.COST_METHODS,
-			"routes": rec.get("routes", []), "unlock_level": it.unlock_level if it != null else -1,
-			"availability": rec.get("availability", "unknown"), "confidence": rec.get("confidence", "unknown"),
-			"verified": str(rec.get("confidence", "")) == "confirmed", "origin": rec.get("origin", PriceBook.ORIGIN_NONE),
-			"max_count": mc, "count_total": st["count"], "over_max": mc > 0 and int(st["count"]) > mc,
-			"sources": rec.get("sources", []), "notes": rec.get("notes", ""), "info": rec.get("info", ""),
-		}
+	var cache := _row_cache(engine, mode)
+	for r: Array in engine.item_rollups(uids, mode):
+		var id: String = r[0]
+		var e: Dictionary = r[1]
+		var c: Variant = cache.get(id)
+		if c != null and c[1] == r[2] and (is_same(c[0], e) or c[0] == e):
+			rows.append(c[2])
+			continue
+		var row := _item_row(engine, id, e)
+		cache[id] = [e, r[2], row]
 		rows.append(row)
 	if include_land:
 		rows.append_array(supply_rows(engine, uids, mode))
-	return sort_rows(rows, "group")
+	var out := _sorted_by_group(rows)
+	engine.end_batch()
+	return out
+
+
+static func _row_cache(engine: BudgetEngine, mode: String) -> Dictionary:
+	## item id -> [breakdown entry, item revision, row] for this engine and mode.
+	var pv := engine.prices.version if engine.prices != null else -1
+	var key := "shopping_rows/" + mode
+	var c: Variant = engine.view_cache.get(key)
+	if c == null or int(c["prices"]) != pv or (c["rows"] as Dictionary).size() > 4096:
+		c = {"prices": pv, "rows": {}}
+		engine.view_cache[key] = c
+	return c["rows"]
+
+
+static func _item_row(engine: BudgetEngine, id: String, e: Dictionary) -> Dictionary:
+	## One item row (see build()) from its breakdown entry.
+	var pb := engine.prices
+	var it: ItemDef = engine.db.get_item(id) if engine.db != null else null
+	var st := engine.item_state(id)
+	var rec: Dictionary = pb.resolved(id) if pb != null else PriceBook.empty_record()
+	var known_item := it != null
+	var k_min := int(e["k_min"])
+	var k_max := int(e["k_max"])
+	var next: Variant = null
+	var lo: Variant = null
+	var hi: Variant = null
+	# PriceBook.record_copy_price(rec, k) == pb.copy_price(id, k) (rec is resolved(id)).
+	if known_item and pb != null and int(e["charged"]) > 0:
+		next = PriceBook.record_copy_price(rec, k_min)
+		lo = next
+		hi = PriceBook.record_copy_price(rec, k_max)
+	elif known_item and pb != null:
+		# Nothing to pay in this scope: show what the next purchase would cost.
+		var nk := int(st["purchased"]) + maxi(0, int(st["count"]) - int(st["owned"])) + 1
+		next = PriceBook.record_copy_price(rec, nk)
+	var total: Dictionary = e["cost"]
+	var mc := int(st["max_count"])
+	var method_s: String = rec["method"] if known_item else PriceBook.METHOD_UNKNOWN
+	return {
+		"kind": KIND_ITEM, "item": id, "name": it.name if it != null else id,
+		"category": it.category if it != null else "", "group": group_of_category(it.category) if it != null else GROUP_OTHER,
+		"used": e["used"], "owned": e["owned"], "acquired": e["acquired"], "missing": e["to_buy"],
+		"placed": e["placed"], "charged": e["charged"],
+		"owned_total": st["owned"], "owned_known": st["owned_known"], "acquired_total": st["acquired"],
+		"next_price": next, "price_min": lo, "price_max": hi, "progressive": bool(rec.get("progressive", false)),
+		"total": total, "unknown_copies": e["unknown"], "not_buyable_copies": e["not_buyable"],
+		"currencies": Currency.currencies_of(total if not total.is_empty() else next),
+		"method": method_s, "method_text": PriceBook.record_method_text(rec) if (pb != null and known_item) else "Unknown item",
+		"buyable": known_item and method_s in PriceBook.COST_METHODS,
+		"routes": rec.get("routes", []), "unlock_level": it.unlock_level if it != null else -1,
+		"availability": rec.get("availability", "unknown"), "confidence": rec.get("confidence", "unknown"),
+		"verified": str(rec.get("confidence", "")) == "confirmed", "origin": rec.get("origin", PriceBook.ORIGIN_NONE),
+		"max_count": mc, "count_total": st["count"], "over_max": mc > 0 and int(st["count"]) > mc,
+		"sources": rec.get("sources", []), "notes": rec.get("notes", ""), "info": rec.get("info", ""),
+	}
 
 
 static func supply_rows(engine: BudgetEngine, uids: Variant = null, mode: String = BudgetEngine.MODE_REMAINING) -> Array:
@@ -166,16 +198,96 @@ static func group_rows(rows: Array) -> Array:
 static func sort_rows(rows: Array, key: String = "group", descending: bool = false) -> Array:
 	## Sorted copy. Keys: group (group order, then name), name, missing, used,
 	## total (first currency in display order), unlock_level, next_price.
-	var out := rows.duplicate()
-	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		var c := ShoppingList._compare(a, b, key)
-		if c == 0:
-			c = ShoppingList._compare(a, b, "name")
-		return c > 0 if descending else c < 0)
+	## Same order as comparing rows with _compare(key), then _compare("name")
+	## (rows equal on both keep their input order); sorted natively on
+	## precomputed keys (names by their cached natural-order rank).
+	if key == "group" and not descending:
+		return _sorted_by_group(rows)
+	var ranks := _name_ranks(rows)
+	var keys: Array = []
+	keys.resize(rows.size())
+	for i in rows.size():
+		var r: Dictionary = rows[i]
+		var v: Variant
+		match key:
+			"group":
+				v = [GROUPS.find(str(r.get("group", GROUP_OTHER))), 0 if r.get("kind") == KIND_ITEM else 1]
+			"name":
+				v = 0
+			"total", "next_price":
+				v = _cost_key(r.get(key))
+			_:
+				v = r.get(key, 0)
+		keys[i] = [v, ranks[i], i]
+	keys.sort()
+	var out: Array = []
+	out.resize(rows.size())
+	var n := rows.size()
+	for i in n:
+		out[n - 1 - i if descending else i] = rows[int(keys[i][2])]
+	return out
+
+
+static func _sorted_by_group(rows: Array) -> Array:
+	## sort_rows(rows, "group"): group order, items before supplies, then name.
+	var ranks := _name_ranks(rows)
+	var keys := PackedInt64Array()
+	keys.resize(rows.size())
+	for i in rows.size():
+		var r: Dictionary = rows[i]
+		var g := GROUPS.find(str(r.get("group", GROUP_OTHER))) + 1   # -1 (unknown group) sorts first, as before
+		keys[i] = (g << 52) | ((0 if r.get("kind") == KIND_ITEM else 1) << 51) | (ranks[i] << 24) | i
+	keys.sort()
+	var out: Array = []
+	out.resize(rows.size())
+	for i in keys.size():
+		out[i] = rows[keys[i] & 0xFFFFFF]
+	return out
+
+
+# Natural, case-insensitive order of row names (String.naturalnocasecmp_to), as a
+# rank per name: names are added to one sorted list by binary search the first
+# time they are seen, so sorting rows needs no script comparator. Names that
+# compare equal share a rank.
+static var _rank_list := PackedStringArray()
+static var _rank_of: Dictionary = {}
+
+
+static func _name_ranks(rows: Array) -> PackedInt32Array:
+	var added := false
+	for r: Dictionary in rows:
+		var nm := str(r.get("name", ""))
+		if _rank_of.has(nm):
+			continue
+		if _rank_list.size() >= 65536:
+			_rank_list = PackedStringArray()
+			_rank_of.clear()
+		var lo := 0
+		var hi := _rank_list.size()
+		while lo < hi:
+			var mid := (lo + hi) >> 1
+			if _rank_list[mid].naturalnocasecmp_to(nm) <= 0:
+				lo = mid + 1
+			else:
+				hi = mid
+		_rank_list.insert(lo, nm)
+		_rank_of[nm] = -1
+		added = true
+	if added:
+		var rank := 0
+		for i in _rank_list.size():
+			if i > 0 and _rank_list[i - 1].naturalnocasecmp_to(_rank_list[i]) != 0:
+				rank += 1
+			_rank_of[_rank_list[i]] = rank
+	var out := PackedInt32Array()
+	out.resize(rows.size())
+	for i in rows.size():
+		out[i] = _rank_of[str((rows[i] as Dictionary).get("name", ""))]
 	return out
 
 
 static func _compare(a: Dictionary, b: Dictionary, key: String) -> int:
+	## Reference row comparison (sort_rows() orders exactly like it).
 	var va: Variant
 	var vb: Variant
 	match key:

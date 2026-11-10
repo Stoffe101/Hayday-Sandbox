@@ -9,6 +9,7 @@ extends PlanTab
 const LIST_MAX := 10
 
 var _mode_btns: Dictionary = {}
+var _ready_box: VBoxContainer
 var _body: VBoxContainer
 var _sig := ""
 
@@ -17,6 +18,8 @@ func _build() -> void:
 	tab_id = "budget"
 	title = "Budget"
 	icon = "coins"
+	_ready_box = UI.vbox(0)
+	add_child(_ready_box)
 	var seg := PanelContainer.new()
 	seg.theme_type_variation = "SegmentBar"
 	var sh := UI.hbox(2)
@@ -62,14 +65,17 @@ func refresh() -> void:
 	var eng := ctx.engine
 	if eng == null:
 		return
-	var sig := "%d|%s|%s|%s|%s|%s|%d" % [eng.version, ctx.mode, str(ctx.selection()), ctx.active_area, ctx.active_phase,
-		str(ctx.layers.get("heatmap")), ctx.session.stack.version]
+	var sig := "%d|%s|%s|%s|%s|%s|%d|%s|%d" % [eng.version, ctx.mode, str(ctx.selection()), ctx.active_area, ctx.active_phase,
+		str(ctx.layers.get("heatmap")), ctx.session.stack.version, ctx.session.layout.mode, ctx.session.layout.profile.hash()]
 	if sig == _sig:
 		return
 	_sig = sig
 	for m in _mode_btns:
 		(_mode_btns[m] as Button).set_pressed_no_signal(m == ctx.mode)
 	UI.clear(_body)
+	# What blocks building it comes first, apart from what it costs.
+	UI.clear(_ready_box)
+	_ready_box.add_child(ReadinessCard.build(ctx))
 	_body.add_child(UI.label(str(PlanScope.MODE_HELP[ctx.mode]), "Faint", true))
 	_totals_section()
 	var sc := ctx.scope()
@@ -325,18 +331,48 @@ func _targets_section() -> void:
 	var card := UI.card()
 	var v := UI.vbox(4)
 	card.add_child(v)
+	var kinds := {}
+	for r: Array in rows:
+		kinds[r[0]] = true
+	var last_kind := ""
 	for r: Array in rows:
 		var rec: Dictionary = r[1]
 		var t: BudgetEngine.Totals = r[2]
+		if kinds.size() > 1 and r[0] != last_kind:
+			v.add_child(UI.label("Areas" if r[0] == "Area" else "Phases", "Faint"))
+		last_kind = r[0]
 		var over := PlanScope.over_target(t.cost, rec["target"])
-		var txt := "%s “%s”: %s of %s" % [r[0], str(rec.get("name", "")), Currency.format_line(t.cost, "nothing"), Currency.format_line(rec["target"])]
-		var l := UI.label(("Over target by %s — " % Currency.format_line(over) if not over.is_empty() else "") + txt, "Dim", true)
+		var txt := target_text(str(rec.get("name", "")), t.cost, rec["target"], t.is_exact())
+		var l := UI.label(txt + (" · over by %s" % Currency.format_line(over) if not over.is_empty() else ""), "Dim", true)
+		l.tooltip_text = "%s “%s”: what it costs (%s) against its target budget" % [r[0], str(rec.get("name", "")), str(PlanScope.MODE_LABELS[ctx.mode]).to_lower()]
+		l.mouse_filter = Control.MOUSE_FILTER_PASS
 		if not over.is_empty():
 			l.add_theme_color_override("font_color", UiTheme.c("danger"))
-		elif not t.is_exact():
-			l.text += " (some prices unknown)"
 		v.add_child(l)
 	_body.add_child(card)
+
+
+static func target_text(name: String, cost: Dictionary, target: Dictionary, exact: bool) -> String:
+	## "Flower Garden: 1,902 of 20,000 coins target · 20 diamonds (no diamond
+	## target) · some prices unknown": every currency of the cost or the target,
+	## each against its own target (currencies are never converted).
+	var parts: PackedStringArray = []
+	var ids := {}
+	for k in cost:
+		ids[k] = true
+	for k in target:
+		ids[k] = true
+	for k: String in Currency.sorted_ids(ids.keys()):
+		var have := int(cost.get(k, 0))
+		if target.has(k) and int(target[k]) > 0:
+			parts.append("%s of %s %s target" % [Currency.format_amount(have), Currency.format_amount(int(target[k])), Currency.unit_name(k, int(target[k]))])
+		elif have > 0:
+			parts.append("%s %s (no %s target)" % [Currency.format_amount(have), Currency.unit_name(k, have), Currency.unit_name(k, 1)])
+	if parts.is_empty():
+		parts.append("nothing to pay")
+	if not exact:
+		parts.append("some prices unknown")
+	return "%s: %s" % [name, " · ".join(parts)]
 
 
 func _expensive_section(uids: Variant, where: String) -> void:

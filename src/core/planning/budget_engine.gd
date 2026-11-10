@@ -22,6 +22,18 @@ extends RefCounted
 ## only). Everything is lazy: signal handlers just mark work and bump `version`
 ## (+ `changed`); the next query does the work once. recompute_full() forces the
 ## full path (tests compare both).
+##
+## Batching: every query first checks for changes made without a signal (it
+## hashes the planning / profile dictionaries, see auto_detect). A view that asks
+## many questions about one state wraps them in batch(f) (or begin_batch() /
+## end_batch()): one full check at the start, then each query only applies
+## signalled changes. Per-object loops (overlays, checklists) should batch or use
+## the bulk getters (placed_set(), primary_phases()).
+##
+## Caches derived per version: whole-farm / phase / area / uid-list totals,
+## per-item breakdowns (whole farm: kept per item and rebuilt only for the items
+## an edit touched), area membership (updated per edited object). Everything a
+## query returns from a cache is shared: read it, never modify it.
 
 signal changed
 
@@ -105,6 +117,12 @@ var auto_detect: bool = true
 ## Diagnostics (tests, perf).
 var full_recomputes: int = 0
 var item_recomputes: int = 0
+## Scratch storage for views derived from this engine (ShoppingList keeps its
+## reusable rows here). The engine never reads it; emptied when prices change.
+var view_cache: Dictionary = {}
+
+var _batch_depth := 0
+var _synced := false                  ## up to date since the last signal (batch fast path)
 
 # --- per object (slot arrays; uid -> slot) ---
 var _slot: Dictionary = {}
@@ -134,7 +152,10 @@ var _i_owned_known := PackedByteArray()
 var _i_acquired := PackedInt32Array()
 var _i_purchased := PackedInt32Array()
 var _i_max := PackedInt32Array()
+var _i_rev := PackedInt32Array()      ## bumped when anything about the item may have changed (see item_revision())
+var _rev_counter: int = 0
 var _kcid: Dictionary = {}            ## idx * 2^20 + k -> cost id
+var _roll: Dictionary = {}            ## idx -> [design, to_buy, remaining] whole-farm breakdown entries (lazy)
 
 # --- interned costs ---
 var _costs: Array = [{}]
@@ -184,6 +205,7 @@ var _cache: Dictionary = {}
 var _phase_slots: Array = []          ## phase index -> PackedInt32Array (built lazily)
 var _plot_phase: Dictionary = {}      ## locked plot index -> earliest phase index (built lazily)
 var _derived_ok := false
+var _areas: Dictionary = {}           ## area id -> membership entry (see _area_entry()), kept across edits
 
 
 func _init(l: FarmLayout, item_db: ItemDatabase, price_book: PriceBook, farm_map: FarmMap = null) -> void:
@@ -249,6 +271,7 @@ func invalidate() -> void:
 
 func _bump() -> void:
 	version += 1
+	_synced = false
 	_cache.clear()
 	_derived_ok = false
 	changed.emit()
@@ -257,6 +280,44 @@ func _bump() -> void:
 func recompute_full() -> void:
 	## Full recompute now (the reference path the incremental one must match).
 	_full(_current_plan())
+
+
+# --- batching -------------------------------------------------------------------------------
+
+func begin_batch() -> void:
+	## Starts a batch of queries about one state: brings the engine up to date
+	## now (including the check for dictionaries edited in place), then skips that
+	## check (a hash of the whole planning document per query) and the other
+	## per-query checks until the matching end_batch(). Changes that come with a
+	## signal still apply at once. Nestable; always pair with end_batch() (or use
+	## batch()). Replaces toggling auto_detect around a view's queries.
+	if _batch_depth == 0:
+		_ensure()
+	_batch_depth += 1
+
+
+func end_batch() -> void:
+	if _batch_depth > 0:
+		_batch_depth -= 1
+
+
+func in_batch() -> bool:
+	return _batch_depth > 0
+
+
+func batch(f: Callable) -> Variant:
+	## Calls `f` between begin_batch() and end_batch(); returns what it returns.
+	begin_batch()
+	var out: Variant = f.call()
+	end_batch()
+	return out
+
+
+func sync() -> int:
+	## Brings everything up to date now (normally done by the first query);
+	## returns `version`.
+	_ensure()
+	return version
 
 
 # --- public queries -----------------------------------------------------------------------
@@ -356,36 +417,65 @@ func item_state(item_id: String) -> Dictionary:
 		"kind": ["priced", "unknown", "not_buyable"][_i_kind[idx]]}
 
 
+func item_revision(item_id: String) -> int:
+	## A number that changes whenever anything about the item may have changed
+	## (inventory, allocation, placed marks, prices); -1 for an item not seen yet.
+	## Views use it to reuse per-item results (ShoppingList rows).
+	_ensure()
+	var idx: int = _item_idx.get(_item_key(item_id), -1)
+	return -1 if idx < 0 else _i_rev[idx]
+
+
 func alloc_order(item_id: String) -> Array:
 	## uids of an item's objects in allocation order.
 	_ensure()
 	var idx: int = _item_idx.get(_item_key(item_id), -1)
 	if idx < 0:
 		return []
-	var pairs: Array = []
+	# Every bucket is kept in allocation order (copy numbers 1, 2, ... = position).
+	var out: Array = []
 	for s: int in _bucket[idx]:
-		pairs.append([_s_dk[s], _s_uid[s]])
-	pairs.sort()
-	return pairs.map(func(p: Array) -> int: return p[1])
+		out.append(_s_uid[s])
+	return out
+
+
+func placed_set() -> Dictionary:
+	## uid -> true for every object counted as placed (is_placed()), cached per
+	## version: one call per redraw instead of is_placed() per object. Shared: don't modify.
+	_ensure()
+	if not _cache.has("placed_set"):
+		var out := {}
+		for s in _s_uid.size():
+			if _s_placed[s] == 1 and _s_item[s] >= 0:
+				out[_s_uid[s]] = true
+		_cache["placed_set"] = out
+	return _cache["placed_set"]
 
 
 func totals(uids: Variant = null, mode: String = MODE_TO_BUY) -> Totals:
 	## Sum over `uids` (Array of uids) or the whole farm (null). Each plot needed
-	## is counted once within the scope. Whole-farm results are cached per version.
+	## is counted once within the scope. Results are cached per version (whole
+	## farm, and the last uid lists asked for).
 	_ensure()
 	if uids == null:
 		var key := "farm/" + mode
 		if _cache.has(key):
 			return _cache[key]
-		var t := _sum(PackedInt32Array(_slot.values()), mode, null)
+		var t := _sum(_live_slots(), mode, null)
 		_cache[key] = t
 		return t
+	var ukey := "uids/%s/%d" % [mode, uids.hash()]
+	var hit: Variant = _cache.get(ukey)
+	if hit != null and hit[0] == uids:
+		return hit[1]
 	var slots := PackedInt32Array()
 	for u in uids:
 		var s: int = _slot.get(int(u), -1)
 		if s >= 0:
 			slots.append(s)
-	return _sum(slots, mode, null)
+	var res := _sum(slots, mode, null)
+	_cache[ukey] = [(uids as Array).duplicate() if uids is Array else uids, res]
+	return res
 
 
 func phase_totals(phase_id: String, mode: String = MODE_TO_BUY) -> Totals:
@@ -412,23 +502,43 @@ func phase_totals(phase_id: String, mode: String = MODE_TO_BUY) -> Totals:
 
 
 func phase_uids(phase_id: String) -> Array:
+	## Sorted uids of the phase's objects (a new array; cached per version).
 	_ensure()
 	_derive()
 	var pi := _phase_idx_of(phase_id)
-	var out: Array = []
-	if pi >= 0:
+	if pi < 0:
+		return []
+	var key := "phase_uids/%d" % pi
+	var l: Variant = _cache.get(key)
+	if l == null:
+		var out: Array = []
 		for s in _phase_slots[pi]:
 			out.append(_s_uid[s])
-	out.sort()
-	return out
+		out.sort()
+		l = out
+		_cache[key] = out
+		# item_rollups() recognises this list (the Shop tab passes it back).
+		_cache["scope/%d" % out.hash()] = pi
+	return (l as Array).duplicate()
 
 
 func area_uids(area_id: String) -> Array:
+	## Sorted uids of the objects with a footprint tile in the area (the
+	## PlanDoc.objects_in_area rule). Membership is kept per area and updated
+	## per edited object; the list is shared (don't modify it).
 	_ensure()
-	var key := "area_uids/" + area_id
-	if not _cache.has(key):
-		_cache[key] = PlanDoc.objects_in_area(layout, PlanDoc.area(_plan, area_id))
-	return _cache[key]
+	var a := PlanDoc.area(_plan, area_id)
+	if a.is_empty():
+		return []
+	var e: Dictionary = _areas.get(area_id, {})
+	if e.is_empty() or e["def"] != a:
+		e = _area_entry(a)
+		_areas[area_id] = e
+	if e["list"] == null:
+		var l: Array = (e["members"] as Dictionary).keys()
+		l.sort()
+		e["list"] = l
+	return e["list"]
 
 
 func area_totals(area_id: String, mode: String = MODE_TO_BUY) -> Totals:
@@ -530,45 +640,183 @@ func item_breakdown(uids: Variant = null, mode: String = MODE_TO_BUY) -> Diction
 	## Per item for a scope: item -> {used, owned, acquired, to_buy, placed,
 	## charged, known (charged with a price), unknown, not_buyable, cost (known
 	## part), k_min, k_max (copy / purchase numbers of the charged objects, 0 = none)}.
-	_ensure()
-	var slots := PackedInt32Array(_slot.values()) if uids == null else PackedInt32Array()
-	if uids != null:
-		for u in uids:
-			var s: int = _slot.get(int(u), -1)
-			if s >= 0:
-				slots.append(s)
-	var acc := {}
-	for s in slots:
-		var idx := _s_item[s]
-		var e: Dictionary
-		if acc.has(idx):
-			e = acc[idx]
-		else:
-			e = {"used": 0, "owned": 0, "acquired": 0, "to_buy": 0, "placed": 0, "charged": 0, "known": 0,
-				"unknown": 0, "not_buyable": 0, "cost": {}, "k_min": 0, "k_max": 0}
-			acc[idx] = e
-		e["used"] += 1
-		var st := _s_status[s]
-		e[STATUSES[st]] += 1
-		if _s_placed[s] == 1:
-			e["placed"] += 1
-		if not _charged(s, mode):
-			continue
-		e["charged"] += 1
-		var k := _s_dk[s] if mode == MODE_DESIGN else _s_bk[s]
-		e["k_min"] = k if int(e["k_min"]) == 0 else mini(int(e["k_min"]), k)
-		e["k_max"] = maxi(int(e["k_max"]), k)
-		var cid := _mode_cid(s, mode)
-		if cid == CID_UNKNOWN:
-			e["unknown"] += 1
-		elif cid == CID_NOT_BUYABLE:
-			e["not_buyable"] += 1
-		else:
-			e["known"] += 1
-			Currency.add_into(e["cost"], _costs[cid])
+	## The entries are the caller's own copies (item_rollups() shares them).
 	var out := {}
-	for idx: int in acc:
-		out[_items[idx]] = acc[idx]
+	for r: Array in item_rollups(uids, mode):
+		out[r[0]] = (r[1] as Dictionary).duplicate(true)
+	return out
+
+
+func item_rollups(uids: Variant = null, mode: String = MODE_TO_BUY) -> Array:
+	## item_breakdown() for views that list items: [[item id, entry, revision]]
+	## (revision = item_revision()). For the whole farm, and for the exact lists
+	## phase_uids() / area_uids() return, the entries are kept per item and
+	## rebuilt only for the items an edit touched (items in catalogue-id order);
+	## other uid lists are summed per call (items in order of first appearance)
+	## and cached per version. Entries are SHARED: read them, never modify them.
+	_ensure()
+	var mi: int = MODES.find(mode)
+	if mi < 0:
+		mi = 1   # same as To buy (any other mode charges like To buy)
+	if uids == null:
+		return _kept_entries(mi, mode, -1, {})
+	for aid: String in _areas:
+		var ae: Dictionary = _areas[aid]
+		if is_same(uids, ae["list"]):
+			return _kept_entries(mi, mode, -2, ae)
+	var h: int = uids.hash()
+	var pv: Variant = _cache.get("scope/%d" % h)
+	if pv != null and _cache.get("phase_uids/%d" % int(pv)) == uids:
+		_derive()
+		return _kept_entries(mi, mode, int(pv), {})
+	var key := "rollups/%s/%d" % [mode, h]
+	var hit: Variant = _cache.get(key)
+	if hit != null and hit[0] == uids:
+		return hit[1]
+	var slots := PackedInt32Array()
+	for u in uids:
+		var s: int = _slot.get(int(u), -1)
+		if s >= 0:
+			slots.append(s)
+	var out := _entries_of(slots, mode)
+	_cache[key] = [(uids as Array).duplicate() if uids is Array else uids, out]
+	return out
+
+
+func _kept_entries(mi: int, mode: String, phase: int, area: Dictionary) -> Array:
+	## Per-item entries kept across versions (dropped per item by _touch()) for
+	## the whole farm (phase -1), one phase (its index) or one area (phase -2,
+	## `area` = its membership entry). Items without objects in the scope are left out.
+	var out: Array = []
+	var members: Dictionary = area.get("members", {})
+	var sk: Variant = mi if phase == -1 else ("%d/%d" % [phase, mi] if phase >= 0 else "a:%s/%d" % [str(area["def"].get("id")), mi])
+	for idx in _items.size():
+		var b: PackedInt32Array = _bucket[idx]
+		if b.is_empty():
+			continue
+		var per: Variant = _roll.get(idx)
+		if per == null:
+			per = {}
+			_roll[idx] = per
+		var e: Variant = per.get(sk, false)
+		if e is bool:
+			var slots := b
+			if phase != -1:
+				slots = PackedInt32Array()
+				for s in b:
+					if (phase >= 0 and _s_phase[s] == phase) or (phase == -2 and members.has(_s_uid[s])):
+						slots.append(s)
+			e = _entry_of(slots, mode) if not slots.is_empty() else null
+			per[sk] = e
+		if e != null:
+			out.append([_items[idx], e, _i_rev[idx]])
+	return out
+
+
+func _entry_of(slots: PackedInt32Array, mode: String) -> Dictionary:
+	## Breakdown entry of one item's slots (see item_breakdown()).
+	var design := mode == MODE_DESIGN
+	var remaining := mode == MODE_REMAINING
+	var n_st := PackedInt32Array([0, 0, 0])
+	var placed := 0
+	var charged := 0
+	var known := 0
+	var unknown := 0
+	var nb := 0
+	var k_min := 0
+	var k_max := 0
+	var per_cid := {}
+	var ss := _s_status
+	for s in slots:
+		var st := ss[s]
+		n_st[st] += 1
+		placed += _s_placed[s]
+		var cid: int
+		var k: int
+		if design:
+			cid = _s_dcid[s]
+			k = _s_dk[s]
+		elif st == _ST_OWNED or (remaining and st == _ST_ACQUIRED):
+			continue
+		else:
+			cid = _s_bcid[s]
+			k = _s_bk[s]
+		charged += 1
+		k_min = k if k_min == 0 else mini(k_min, k)
+		k_max = maxi(k_max, k)
+		if cid == CID_UNKNOWN:
+			unknown += 1
+		elif cid == CID_NOT_BUYABLE:
+			nb += 1
+		else:
+			known += 1
+			per_cid[cid] = int(per_cid.get(cid, 0)) + 1
+	var cost := {}
+	for cid: int in per_cid:
+		Currency.add_into(cost, _costs[cid], per_cid[cid])
+	return {"used": slots.size(), "owned": n_st[_ST_OWNED], "acquired": n_st[_ST_ACQUIRED], "to_buy": n_st[_ST_TO_BUY],
+		"placed": placed, "charged": charged, "known": known, "unknown": unknown, "not_buyable": nb, "cost": cost,
+		"k_min": k_min, "k_max": k_max}
+
+
+func _entries_of(slots: PackedInt32Array, mode: String) -> Array:
+	## [[item id, entry, revision]] for any slots, items in order of first appearance.
+	var ni := _items.size()
+	var design := mode == MODE_DESIGN
+	var remaining := mode == MODE_REMAINING
+	# per item: used, owned, acquired, to_buy, placed, charged, known, unknown, not_buyable, k_min, k_max
+	var acc := PackedInt32Array()
+	acc.resize(ni * 11)
+	acc.fill(0)
+	var order := PackedInt32Array()
+	var per_cid := {}   ## idx * 2^24 + cost id -> count (first-appearance order)
+	var si := _s_item
+	var ss := _s_status
+	var sp := _s_placed
+	for s in slots:
+		var idx := si[s]
+		var b := idx * 11
+		if acc[b] == 0:
+			order.append(idx)
+		acc[b] += 1
+		var st := ss[s]
+		acc[b + 1 + st] += 1
+		acc[b + 4] += sp[s]
+		var cid: int
+		var k: int
+		if design:
+			cid = _s_dcid[s]
+			k = _s_dk[s]
+		elif st == _ST_OWNED or (remaining and st == _ST_ACQUIRED):
+			continue
+		else:
+			cid = _s_bcid[s]
+			k = _s_bk[s]
+		acc[b + 5] += 1
+		acc[b + 9] = k if acc[b + 9] == 0 else mini(acc[b + 9], k)
+		acc[b + 10] = maxi(acc[b + 10], k)
+		if cid == CID_UNKNOWN:
+			acc[b + 7] += 1
+		elif cid == CID_NOT_BUYABLE:
+			acc[b + 8] += 1
+		else:
+			acc[b + 6] += 1
+			var ck := idx * 16777216 + cid
+			per_cid[ck] = int(per_cid.get(ck, 0)) + 1
+	var costs := {}
+	for ck: int in per_cid:
+		@warning_ignore("integer_division")
+		var idx := ck / 16777216
+		if not costs.has(idx):
+			costs[idx] = {}
+		Currency.add_into(costs[idx], _costs[ck - idx * 16777216], per_cid[ck])
+	var out: Array = []
+	for idx in order:
+		var b := idx * 11
+		out.append([_items[idx], {"used": acc[b], "owned": acc[b + 1], "acquired": acc[b + 2], "to_buy": acc[b + 3],
+			"placed": acc[b + 4], "charged": acc[b + 5], "known": acc[b + 6], "unknown": acc[b + 7],
+			"not_buyable": acc[b + 8], "cost": costs.get(idx, {}), "k_min": acc[b + 9], "k_max": acc[b + 10]},
+			_i_rev[idx]])
 	return out
 
 
@@ -582,7 +830,10 @@ func _current_plan() -> Dictionary:
 func _ensure() -> void:
 	## Brings everything up to date (does nothing when nothing changed). Changes
 	## found without a signal (dictionaries edited in place, objects added with
-	## emit = false) also bump `version`.
+	## emit = false) also bump `version`. Inside a batch, nothing to do until the
+	## next signal (only the object count is still compared).
+	if _synced and _batch_depth > 0 and layout.objects.size() == _slot.size():
+		return
 	var silent := false
 	if map != null and _locked.size() != map.plots.size():
 		_need_full = true
@@ -617,6 +868,7 @@ func _ensure() -> void:
 			_derived_ok = false
 	if silent:
 		version += 1
+	_synced = true
 
 
 func _pending_net() -> int:
@@ -636,7 +888,7 @@ func _sync_context() -> void:
 	var plan := _current_plan()
 	var prof := layout.profile
 	var check := _ctx_dirty or not is_same(plan, _plan) or not is_same(prof, _profile_ref)
-	if not check and auto_detect:
+	if not check and auto_detect and _batch_depth == 0:
 		check = _context_hash(plan, prof) != _ctx_hash
 	if check:
 		_diff_context(plan, prof)
@@ -856,6 +1108,9 @@ func _reset_items() -> void:
 	_i_acquired = PackedInt32Array()
 	_i_purchased = PackedInt32Array()
 	_i_max = PackedInt32Array()
+	_i_rev = PackedInt32Array()
+	_roll.clear()
+	view_cache.clear()
 	_kcid.clear()
 	_costs = [{}]
 	_cost_index.clear()
@@ -867,6 +1122,8 @@ func _full(plan: Dictionary) -> void:
 	_slot.clear()
 	_free = PackedInt32Array()
 	_s_plots.clear()
+	_roll.clear()
+	_areas.clear()
 	var pv := prices.version if prices != null else 0
 	if pv != _prices_version:
 		_reset_items()   # the item table and interned prices survive a full recompute otherwise
@@ -1022,14 +1279,18 @@ func _new_slot() -> int:
 
 
 func _apply_pending() -> void:
+	var track_areas := not _areas.is_empty()
 	for u: int in _pending:
 		var o: PlacedObject = layout.objects.get(u)
 		var s: int = _slot.get(u, -1)
+		if track_areas:
+			_area_update(u, o)
 		if o == null:
 			if s >= 0:
 				var old := _s_item[s]
 				_bucket_remove(old, s)
 				_dirty_items[old] = true
+				_touch(old)
 				_s_item[s] = -1
 				_s_plot[s] = -1
 				_s_plots.erase(s)
@@ -1038,6 +1299,7 @@ func _apply_pending() -> void:
 			continue
 		var idx := _idx_of_raw(o.item_id)
 		var base := _is_base(o, idx)
+		_touch(idx)   # placed marks change without a re-allocation
 		if s < 0:
 			s = _new_slot()
 			_s_uid[s] = o.uid
@@ -1102,6 +1364,7 @@ func _intern_item(id: String) -> int:
 	_i_acquired.append(0)
 	_i_purchased.append(0)
 	_i_max.append(-1)
+	_i_rev.append(0)
 	_setup_price(idx)
 	_setup_inv(idx, _inventory_dicts())
 	return idx
@@ -1131,6 +1394,7 @@ func _setup_price(idx: int) -> void:
 	_i_kind[idx] = kind
 	_i_const[idx] = cst
 	_i_max[idx] = mx
+	_touch(idx)
 
 
 func _inventory_dicts() -> Array:
@@ -1154,6 +1418,15 @@ func _setup_inv(idx: int, inv: Array) -> void:
 	_i_acquired[idx] = maxi(0, int(acq)) if (acq is int or acq is float) else 0
 	var pv: Variant = (inv[1] as Dictionary).get(id)
 	_i_purchased[idx] = maxi(0, int(pv)) if (pv is int or pv is float) else owned
+	_touch(idx)
+
+
+func _touch(idx: int) -> void:
+	## The item may have changed: new revision, drop its whole-farm breakdown.
+	_rev_counter += 1
+	_i_rev[idx] = _rev_counter
+	if not _roll.is_empty():
+		_roll.erase(idx)
 
 
 func _alloc(idx: int) -> void:
@@ -1162,6 +1435,7 @@ func _alloc(idx: int) -> void:
 	var n := b.size()
 	if n == 0:
 		item_recomputes += 1
+		_touch(idx)
 		return
 	var keys := PackedInt64Array()
 	keys.resize(n)
@@ -1178,6 +1452,7 @@ func _assign_copies(idx: int, keys: PackedInt64Array, start: int, n: int) -> Pac
 	## low 32 bits) their status, copy numbers and costs. Returns their slots in
 	## that order.
 	item_recomputes += 1
+	_touch(idx)
 	var out := PackedInt32Array()
 	out.resize(n)
 	var owned := _i_owned[idx]
@@ -1337,19 +1612,130 @@ func _derive() -> void:
 		return
 	_phase_slots.clear()
 	_plot_phase.clear()
-	var lists: Array = []
-	for i in _phase_ids.size() + 1:
-		lists.append([])
-	for u: int in _slot:
-		var s: int = _slot[u]
-		(lists[_s_phase[s]] as Array).append(s)
-		if _s_plot[s] >= 0:
+	var np := _phase_ids.size() + 1
+	var n := _s_uid.size()
+	var si := _s_item
+	var sph := _s_phase
+	var spl := _s_plot
+	var counts := PackedInt32Array()
+	counts.resize(np)
+	counts.fill(0)
+	for s in n:
+		if si[s] >= 0:
+			counts[sph[s]] += 1
+	# Counting sort by phase into one array, then one slice per phase.
+	var start := PackedInt32Array()
+	start.resize(np + 1)
+	start[0] = 0
+	for i in np:
+		start[i + 1] = start[i] + counts[i]
+	var at := start.duplicate()
+	var all := PackedInt32Array()
+	all.resize(start[np])
+	var locked := _locked
+	for s in n:
+		if si[s] < 0:
+			continue
+		var ph := sph[s]
+		all[at[ph]] = s
+		at[ph] += 1
+		if spl[s] >= 0:
 			for p in _slot_plots(s):
-				if _locked[p] == 1:
-					_plot_phase[p] = mini(int(_plot_phase.get(p, 1 << 30)), _s_phase[s])
-	for i in lists.size():
-		_phase_slots.append(PackedInt32Array(lists[i]))
+				if locked[p] == 1:
+					_plot_phase[p] = mini(int(_plot_phase.get(p, 1 << 30)), ph)
+	for i in np:
+		_phase_slots.append(all.slice(start[i], start[i + 1]))
 	_derived_ok = true
+
+
+func _live_slots() -> PackedInt32Array:
+	return PackedInt32Array(_slot.values())
+
+
+# --- area membership ---------------------------------------------------------------------
+
+func _area_entry(a: Dictionary) -> Dictionary:
+	## Membership of one area: every object with a footprint tile in it
+	## (PlanDoc.objects_in_area / rect_in_area rule). Polygon tiles are
+	## rasterised once with the same even-odd test and arithmetic as
+	## PlanDoc.point_in_polygon (tile centres, row by row).
+	var b := PlanDoc.area_bounds(a)
+	var is_rect: bool = a.get("rect") is Array
+	var mask := PackedByteArray()
+	if not is_rect and b.size.x > 0 and b.size.y > 0:
+		mask = _polygon_mask(PlanDoc.polygon(a), b)
+	var e := {"def": a.duplicate(true), "bounds": b, "rect": is_rect, "mask": mask, "members": {}, "list": null}
+	var members: Dictionary = e["members"]
+	for o: PlacedObject in layout.objects.values():
+		if _in_area(e, o):
+			members[o.uid] = true
+	return e
+
+
+static func _polygon_mask(pts: PackedVector2Array, b: Rect2i) -> PackedByteArray:
+	## 1 per tile of `b` whose centre is inside the polygon (even-odd rule).
+	var mask := PackedByteArray()
+	mask.resize(b.get_area())
+	mask.fill(0)
+	var n := pts.size()
+	if n < 3:
+		return mask
+	var w := b.size.x
+	for y in range(b.position.y, b.end.y):
+		var py: float = Vector2(0.0, y + 0.5).y
+		var xs := PackedFloat64Array()
+		var j := n - 1
+		for i in n:
+			var pa := pts[i]
+			var pb := pts[j]
+			if (pa.y > py) != (pb.y > py):
+				xs.append(pa.x + (py - pa.y) * (pb.x - pa.x) / (pb.y - pa.y))
+			j = i
+		if xs.is_empty():
+			continue
+		xs.sort()
+		var cnt := xs.size()
+		var k := 0   # crossings at or left of the tile centre
+		var row := (y - b.position.y) * w - b.position.x
+		for x in range(b.position.x, b.end.x):
+			var px: float = Vector2(x + 0.5, 0.0).x
+			while k < cnt and xs[k] <= px:
+				k += 1
+			if ((cnt - k) & 1) == 1:
+				mask[row + x] = 1
+	return mask
+
+
+static func _in_area(e: Dictionary, o: PlacedObject) -> bool:
+	var r := Rect2i(o.origin, o.size)
+	var b: Rect2i = e["bounds"]
+	if not r.intersects(b):
+		return false
+	if e["rect"]:
+		return true
+	var c := r.intersection(b)
+	var mask: PackedByteArray = e["mask"]
+	var w := b.size.x
+	for y in range(c.position.y, c.end.y):
+		var row := (y - b.position.y) * w - b.position.x
+		for x in range(c.position.x, c.end.x):
+			if mask[row + x] == 1:
+				return true
+	return false
+
+
+func _area_update(u: int, o: PlacedObject) -> void:
+	## One object added / moved / removed: update every kept area membership.
+	for id: String in _areas:
+		var e: Dictionary = _areas[id]
+		var members: Dictionary = e["members"]
+		var now := o != null and _in_area(e, o)
+		if now != members.has(u):
+			if now:
+				members[u] = true
+			else:
+				members.erase(u)
+			e["list"] = null
 
 
 func _phase_idx_of(phase_id: String) -> int:
@@ -1419,14 +1805,19 @@ func _sum(slots: PackedInt32Array, mode: String, plot_list: Variant) -> Totals:
 	var sb := _s_bcid
 	var spl := _s_plot
 	var locked := _locked
+	var seen_items := PackedInt32Array()   ## items / costs met, so the expansion below skips the zeros
+	var seen_costs := PackedInt32Array()
+	var has_multi := not _s_plots.is_empty()
 	for s in slots:
 		var idx := si[s]
+		if per_item[idx] == 0:
+			seen_items.append(idx)
 		per_item[idx] += 1
 		var st := ss[s]
 		st_n[st] += 1
 		placed += sp[s]
 		if collect_plots and spl[s] >= 0:
-			if _s_plots.has(s):
+			if has_multi and _s_plots.has(s):
 				for p in _s_plots[s]:
 					if locked[p] == 1:
 						plots[p] = true
@@ -1441,6 +1832,8 @@ func _sum(slots: PackedInt32Array, mode: String, plot_list: Variant) -> Totals:
 			cid = sb[s]
 		charged += 1
 		if cid >= 0:
+			if per_cost[cid] == 0:
+				seen_costs.append(cid)
 			per_cost[cid] += 1
 		elif cid == CID_NOT_BUYABLE:
 			nb_n += 1
@@ -1456,16 +1849,13 @@ func _sum(slots: PackedInt32Array, mode: String, plot_list: Variant) -> Totals:
 	t.charged_objects = charged
 	t.unknown_price_objects = unknown_n
 	t.not_buyable_objects = nb_n
-	for cid in per_cost.size():
-		var n := per_cost[cid]
-		if n > 0:
-			Currency.add_into(t.object_cost, _costs[cid], n)
+	seen_costs.sort()   # ascending: same order as a scan of every cost id
+	for cid in seen_costs:
+		Currency.add_into(t.object_cost, _costs[cid], per_cost[cid])
 	var types := 0
 	var over: Array = []
-	for idx in ni:
-		var cnt := per_item[idx]
-		if cnt == 0:
-			continue
+	seen_items.sort()
+	for idx in seen_items:
 		types += 1
 		var f := flags[idx]
 		if (f & 1) != 0:

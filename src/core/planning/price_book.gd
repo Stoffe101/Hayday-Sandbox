@@ -268,7 +268,12 @@ func copy_price(item_id: String, k: int) -> Variant:
 	## Cost of copy #k (1-based) or null when unknown / not purchasable:
 	## schedule[k-1] when there is a schedule (past its end: the last entry only
 	## when schedule_repeats_last, else unknown), else price + step × (k - 1).
-	var r := resolved(item_id)
+	return record_copy_price(resolved(item_id), k)
+
+
+static func record_copy_price(r: Dictionary, k: int) -> Variant:
+	## copy_price() for an already resolved record (see resolved()): callers that
+	## hold the record (shopping list rows) skip the id lookups.
 	var m: String = r["method"]
 	if not m in COST_METHODS or k < 1:
 		return null
@@ -326,7 +331,11 @@ func price_of_copies(item_id: String, first_k: int, count: int) -> Dictionary:
 
 func method_text(item_id: String) -> String:
 	## Friendly how-to-get text: "Shop", "Vouchers", "Can't be bought: derby reward".
-	var r := resolved(item_id)
+	return record_method_text(resolved(item_id))
+
+
+static func record_method_text(r: Dictionary) -> String:
+	## method_text() for an already resolved record.
 	var m: String = r["method"]
 	if m in NOT_BUYABLE_METHODS:
 		var why: PackedStringArray = []

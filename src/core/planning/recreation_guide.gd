@@ -74,6 +74,9 @@ static func build(layout: FarmLayout, map: FarmMap, plan: Dictionary, options: D
 	##   baseline: Dictionary   overrides plan["baseline"] ({} = ignore the baseline)
 	##   include_planned: bool  include planned ghosts (default true)
 	##   big_area: int          tile threshold for structures / water (default BIG_AREA)
+	##   primary: Dictionary    uid -> primary phase id when already known (e.g.
+	##                          BudgetEngine.primary_phases(), the same rule as
+	##                          PlanDoc.primary_phases(), which is used otherwise)
 	## Returns {steps, progress, has_baseline, skipped_markers, phase_names, stages}.
 	var db: ItemDatabase = options.get("db") as ItemDatabase
 	var bv: Variant = options["baseline"] if options.has("baseline") else plan.get("baseline", {})
@@ -82,7 +85,7 @@ static func build(layout: FarmLayout, map: FarmMap, plan: Dictionary, options: D
 	var include_planned := bool(options.get("include_planned", true))
 	var big_area := int(options.get("big_area", BIG_AREA))
 	var diff: Dictionary = Baseline.diff(layout, baseline, db) if has_base else {}
-	var primary := PlanDoc.primary_phases(layout, plan)
+	var primary: Dictionary = options["primary"] if options.get("primary") is Dictionary else PlanDoc.primary_phases(layout, plan)
 	var world := _world_info(map, layout)
 	var skipped := 0
 	# Design objects the guide is about.
@@ -287,8 +290,11 @@ static func describe_location(map: FarmMap, layout: FarmLayout, r: Rect2i, world
 	var c := Vector2(r.position) + Vector2(r.size) * 0.5
 	var best: Landmark = null
 	var best_d := INF
-	for lm: Landmark in w.get("landmarks", []):
-		var lc := Vector2(lm.origin) + Vector2(lm.footprint) * 0.5
+	var lms: Array = w.get("landmarks", [])
+	var lcs: Variant = w.get("landmark_centers")   # same expression, computed once per build
+	for i in lms.size():
+		var lm: Landmark = lms[i]
+		var lc: Vector2 = lcs[i] if lcs != null else Vector2(lm.origin) + Vector2(lm.footprint) * 0.5
 		var dd := lc.distance_squared_to(c)
 		if dd < best_d - 0.000001 or (absf(dd - best_d) <= 0.000001 and best != null and lm.id < best.id):
 			best = lm
@@ -337,14 +343,35 @@ static func _land_drafts(layout: FarmLayout, map: FarmMap, plan: Dictionary, des
 		return out
 	var owned := map.canonical_unlocked(Baseline.unlocked_plots(baseline) if has_base and Baseline.has_unlocked_plots(baseline) else layout.unlocked_plots)
 	var needed := {}     # plot id -> [uids]
+	# map.plot_id_at() / is_plot_unlocked() per tile, with the per-plot answers
+	# looked up once (plot index -> id, or "" when already unlocked).
+	var mw := map.size.x
+	var mh := map.size.y
+	var plot_of := map.plot_of
+	var direct := plot_of.size() == mw * mh
+	var locked_id := PackedStringArray()
+	for p in map.plots:
+		var pid := str(p["id"])
+		locked_id.append("" if map.is_plot_unlocked(pid, owned) else pid)
 	for o: PlacedObject in design:
 		var r := o.rect()
 		var seen := {}
 		for y in range(r.position.y, r.end.y):
 			for x in range(r.position.x, r.end.x):
-				var pid := map.plot_id_at(Vector2i(x, y))
-				if pid.is_empty() or seen.has(pid) or map.is_plot_unlocked(pid, owned):
-					continue
+				var pid := ""
+				if direct:
+					if x < 0 or y < 0 or x >= mw or y >= mh:
+						continue
+					var pi := plot_of[y * mw + x]
+					if pi < 0:
+						continue
+					pid = locked_id[pi]
+					if pid.is_empty() or seen.has(pid):
+						continue
+				else:
+					pid = map.plot_id_at(Vector2i(x, y))
+					if pid.is_empty() or seen.has(pid) or map.is_plot_unlocked(pid, owned):
+						continue
 				seen[pid] = true
 				if not needed.has(pid):
 					needed[pid] = []
@@ -465,24 +492,11 @@ static func _clusters(entries: Array, stage: int, kind: String, rect_key: String
 	var gkeys: Array = groups.keys()
 	gkeys.sort()
 	for gk in gkeys:
-		var list: Array = groups[gk]
-		list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["uid"]) < int(b["uid"]))
+		var list: Array = _sorted_by_uid(groups[gk])
 		var parent: Array = []
 		for i in list.size():
 			parent.append(i)
-		var at := {}
-		for i in list.size():
-			var r: Rect2i = list[i][rect_key]
-			for y in range(r.position.y, r.end.y):
-				for x in range(r.position.x, r.end.x):
-					at[Vector2i(x, y)] = i
-		for i in list.size():
-			var g: Rect2i = (list[i][rect_key] as Rect2i).grow(1)
-			for y in range(g.position.y, g.end.y):
-				for x in range(g.position.x, g.end.x):
-					var j: Variant = at.get(Vector2i(x, y))
-					if j != null and int(j) != i:
-						_union(parent, i, int(j))
+		_link_touching(list, rect_key, parent)
 		var members := {}
 		for i in list.size():
 			var root := _find(parent, i)
@@ -527,6 +541,82 @@ static func _union(parent: Array, a: int, b: int) -> void:
 		parent[maxi(ra, rb)] = mini(ra, rb)
 
 
+static func _sorted_by_uid(list: Array) -> Array:
+	## Entries by uid (native sort of packed keys; equal uids keep their order).
+	if list.size() < 2:
+		return list
+	var keys := PackedInt64Array()
+	keys.resize(list.size())
+	for i in list.size():
+		keys[i] = (int(list[i]["uid"]) << 24) | i
+	keys.sort()
+	var out: Array = []
+	out.resize(list.size())
+	for i in keys.size():
+		out[i] = list[keys[i] & 0xFFFFFF]
+	return out
+
+
+static func _link_touching(list: Array, rect_key: String, parent: Array) -> void:
+	## Unions entries whose rects touch (8-neighbourhood: a tile of one within
+	## the other grown by 1). The components are what matters (each root is the
+	## smallest index of its component), so any exact touch test gives the same
+	## clusters: rect pairs for small groups, a tile grid for large ones.
+	var n := list.size()
+	if n < 2:
+		return
+	var rects: Array[Rect2i] = []
+	var bounds := Rect2i()
+	var degenerate := false
+	for i in n:
+		var r: Rect2i = list[i][rect_key]
+		rects.append(r)
+		degenerate = degenerate or r.size.x <= 0 or r.size.y <= 0
+		bounds = r if i == 0 else bounds.merge(r)
+	if not degenerate and n <= 24:
+		for i in n:
+			var g := rects[i].grow(1)
+			for j in range(i + 1, n):
+				if g.intersects(rects[j]):
+					_union(parent, i, j)
+		return
+	var gb := bounds.grow(1)
+	if degenerate or gb.get_area() > 4000000:
+		# Fallback (odd rects): tile -> last entry on it, as a dictionary.
+		var at := {}
+		for i in n:
+			var r := rects[i]
+			for y in range(r.position.y, r.end.y):
+				for x in range(r.position.x, r.end.x):
+					at[Vector2i(x, y)] = i
+		for i in n:
+			var g := rects[i].grow(1)
+			for y in range(g.position.y, g.end.y):
+				for x in range(g.position.x, g.end.x):
+					var j: Variant = at.get(Vector2i(x, y))
+					if j != null and int(j) != i:
+						_union(parent, i, int(j))
+		return
+	var w := gb.size.x
+	var grid := PackedInt32Array()
+	grid.resize(gb.get_area())
+	grid.fill(-1)
+	for i in n:
+		var r := rects[i]
+		for y in range(r.position.y, r.end.y):
+			var row := (y - gb.position.y) * w - gb.position.x
+			for x in range(r.position.x, r.end.x):
+				grid[row + x] = i
+	for i in n:
+		var g := rects[i].grow(1)
+		for y in range(g.position.y, g.end.y):
+			var row := (y - gb.position.y) * w - gb.position.x
+			for x in range(g.position.x, g.end.x):
+				var j := grid[row + x]
+				if j >= 0 and j != i:
+					_union(parent, i, j)
+
+
 static func _phase_rank(plan: Dictionary, phase: String) -> int:
 	return PlanDoc.phase_index(plan, phase) if not phase.is_empty() else (1 << 29)
 
@@ -550,8 +640,29 @@ static func _sort_keys(clusters: Array, plan: Dictionary) -> void:
 
 static func _ordered_clusters(clusters: Array, plan: Dictionary) -> Array:
 	_sort_keys(clusters, plan)
-	clusters.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return RecreationGuide._lex_less(a["_key"], b["_key"]))
-	return clusters
+	var out: Array = []
+	for i in _key_order(clusters):
+		out.append(clusters[i])
+	return out
+
+
+static func _key_order(clusters: Array) -> Array:
+	## Indices of `clusters` in _lex_less order of their "_key". Sorted natively
+	## (Array < compares element by element like _lex_less; the keys end with the
+	## cluster's first uid, so they are distinct and the order is the same).
+	var keyed: Array = []
+	keyed.resize(clusters.size())
+	for i in clusters.size():
+		var k: Array = (clusters[i]["_key"] as Array).duplicate()
+		k.append(i)
+		keyed[i] = k
+	keyed.sort()
+	var out: Array = []
+	out.resize(keyed.size())
+	for i in keyed.size():
+		var k: Array = keyed[i]
+		out[i] = k[k.size() - 1]
+	return out
 
 
 static func _ordered_moves(clusters: Array, plan: Dictionary) -> Array:
@@ -585,8 +696,7 @@ static func _ordered_moves(clusters: Array, plan: Dictionary) -> Array:
 		for b in deps:
 			outs[b][a] = true
 			indeg[a] += 1
-	var order: Array = range(n)
-	order.sort_custom(func(x: int, y: int) -> bool: return RecreationGuide._lex_less(clusters[x]["_key"], clusters[y]["_key"]))
+	var order: Array = _key_order(clusters)
 	var out: Array = []
 	var emitted := {}
 	var stored := {}
@@ -642,15 +752,29 @@ static func _lex_less(a: Array, b: Array) -> bool:
 static func _finish(d: Dictionary, layout: FarmLayout, map: FarmMap, plan: Dictionary, db: ItemDatabase, world: Dictionary) -> Dictionary:
 	var kind := str(d["kind"])
 	var stage := int(d["stage"])
-	var info := stage_info(stage)
+	# Per-build lookups kept in `world` (stage records, phases, item names).
+	if not world.has("_memo"):
+		world["_memo"] = {}
+	var memo: Dictionary = world["_memo"]
+	var info: Variant = memo.get(stage)
+	if info == null:
+		info = stage_info(stage)
+		memo[stage] = info
 	var item := str(d.get("item", ""))
 	var us: Array = d.get("uids", [])
 	var n := us.size()
-	var name := _item_name(db, item)
+	var nv: Variant = memo.get("n:" + item)
+	if nv == null:
+		nv = _item_name(db, item)
+		memo["n:" + item] = nv
+	var name: String = nv
 	var bounds: Rect2i = d["bounds"]
 	var from_b: Rect2i = d.get("from_bounds", bounds)
 	var ph := str(d.get("phase", ""))
-	var p := PlanDoc.phase(plan, ph)
+	var p: Variant = memo.get("p:" + ph)
+	if p == null:
+		p = PlanDoc.phase(plan, ph)
+		memo["p:" + ph] = p
 	var s := {
 		"stage": stage, "stage_key": info.get("key", ""), "stage_name": info.get("name", ""), "kind": kind,
 		"phase": ph, "phase_name": UNPHASED_NAME if ph.is_empty() else str(p.get("name", ph)),
@@ -763,10 +887,13 @@ static func _world_info(map: FarmMap, layout: FarmLayout) -> Dictionary:
 	if map == null:
 		return out
 	var lms: Array = []
+	var lcs: Array = []
 	for lm in map.landmarks:
 		if layout == null or layout.is_landmark_visible(lm.id, not lm.hidden_by_default):
 			lms.append(lm)
+			lcs.append(Vector2(lm.origin) + Vector2(lm.footprint) * 0.5)
 	out["landmarks"] = lms
+	out["landmark_centers"] = lcs
 	for s in map.sections:
 		for pid in s.get("plots", []):
 			out["side_of_plot"][str(pid)] = str(s.get("side", "main"))
@@ -785,7 +912,44 @@ static func _world_info(map: FarmMap, layout: FarmLayout) -> Dictionary:
 	for sc in map.scenery:
 		if str(sc.get("kind", "")) == "river":
 			out["river_rects"].append(sc["rect"])
+	# Summed-area tables of road and water tiles: "any road / water tile in this
+	# rectangle?" in O(1) (the per-step location texts ask it thousands of times).
+	var mw := map.size.x
+	var mh := map.size.y
+	if mw > 0 and mh > 0 and map.kinds.size() == mw * mh:
+		var road := PackedInt32Array()
+		var water := PackedInt32Array()
+		road.resize((mw + 1) * (mh + 1))
+		road.fill(0)
+		water.resize((mw + 1) * (mh + 1))
+		water.fill(0)
+		var kinds := map.kinds
+		for y in mh:
+			var rr := 0
+			var wr := 0
+			var o1 := (y + 1) * (mw + 1)
+			var o0 := y * (mw + 1)
+			for x in mw:
+				var k := kinds[y * mw + x]
+				rr += 1 if k == FarmMap.Kind.ROAD else 0
+				wr += 1 if k == FarmMap.Kind.WATER else 0
+				road[o1 + x + 1] = road[o0 + x + 1] + rr
+				water[o1 + x + 1] = water[o0 + x + 1] + wr
+		out["road_sum"] = road
+		out["water_sum"] = water
 	return out
+
+
+static func _any_in(sat: PackedInt32Array, mw: int, mh: int, x0: int, y0: int, x1: int, y1: int) -> bool:
+	## Any counted tile in tiles x0..x1-1, y0..y1-1 (clipped to the map)?
+	x0 = maxi(x0, 0)
+	y0 = maxi(y0, 0)
+	x1 = mini(x1, mw)
+	y1 = mini(y1, mh)
+	if x0 >= x1 or y0 >= y1:
+		return false
+	var s := mw + 1
+	return sat[y1 * s + x1] - sat[y0 * s + x1] - sat[y1 * s + x0] + sat[y0 * s + x0] > 0
 
 
 static func _across_road(map: FarmMap, r: Rect2i, w: Dictionary) -> bool:
@@ -798,10 +962,27 @@ static func _across_road(map: FarmMap, r: Rect2i, w: Dictionary) -> bool:
 		return false
 	# On the far side of a road: the straight line to the starting land crosses road tiles.
 	var to: Vector2 = w["main_center"]
+	var road: Variant = w.get("road_sum")
+	var mw := map.size.x
+	var mh := map.size.y
+	if road != null:
+		# Every sample below lies on the segment; no road tile in its bounding box
+		# (one tile of margin against rounding) means no sample can hit a road.
+		if not _any_in(road, mw, mh, floori(minf(c.x, to.x)) - 1, floori(minf(c.y, to.y)) - 1,
+				floori(maxf(c.x, to.x)) + 2, floori(maxf(c.y, to.y)) + 2):
+			return false
+	var kinds := map.kinds
+	var direct := kinds.size() == mw * mh
 	var steps := maxi(1, ceili(c.distance_to(to) * 2.0))
 	for i in range(1, steps):
 		var p := c.lerp(to, float(i) / steps)
-		if map.kind_at(Vector2i(floori(p.x), floori(p.y))) == FarmMap.Kind.ROAD:
+		var tx := floori(p.x)
+		var ty := floori(p.y)
+		if direct:
+			# map.kind_at() inlined: outside the map is VOID, never a road.
+			if tx >= 0 and ty >= 0 and tx < mw and ty < mh and kinds[ty * mw + tx] == FarmMap.Kind.ROAD:
+				return true
+		elif map.kind_at(Vector2i(tx, ty)) == FarmMap.Kind.ROAD:
 			return true
 	return false
 
@@ -811,6 +992,9 @@ static func _along_river(map: FarmMap, r: Rect2i, w: Dictionary) -> bool:
 	for rr: Rect2i in w["river_rects"]:
 		if rr.intersects(g):
 			return true
+	var water: Variant = w.get("water_sum")
+	if water != null:
+		return _any_in(water, map.size.x, map.size.y, g.position.x, g.position.y, g.end.x, g.end.y)
 	for y in range(g.position.y, g.end.y):
 		for x in range(g.position.x, g.end.x):
 			if map.kind_at(Vector2i(x, y)) == FarmMap.Kind.WATER:

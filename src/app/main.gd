@@ -29,6 +29,11 @@ var toasts: Toasts
 var modal_layer: Control
 var plan_panel: PlanPanel
 var budget: BudgetWidget
+var minimap: Minimap
+var compare_legend: CompareLegend
+## The minimap only shows where the free canvas is at least this big (logical px).
+const MINIMAP_MIN_CANVAS := Vector2(700, 420)
+var _compare_key := ""
 
 var _left_visible := true             ## catalogue expanded (else collapsed to its rail)
 var _right_visible := true            ## inspector shown when auto-hide is off
@@ -348,6 +353,22 @@ func _build_ui() -> void:
 	budget.open_tab.connect(open_plan)
 	budget.layout_changed.connect(_place_budget)
 	budget.setting.connect(func(k: String, v: Variant): App.settings.set_v(k, v))
+	minimap = Minimap.new()
+	minimap.name = "Minimap"
+	minimap.visible = false
+	root.add_child(minimap)
+	minimap.set_collapsed(bool(App.settings.get_v("minimap_collapsed")))
+	minimap.collapse_requested.connect(func(on: bool): App.settings.set_v("minimap_collapsed", on))
+	minimap.hide_requested.connect(func(): _set_view("minimap_visible", false))
+	minimap.navigate.connect(func(w: Vector2):
+		camera.stop_motion()
+		camera.center_on(w))
+	compare_legend = CompareLegend.new()
+	compare_legend.name = "CompareLegend"
+	compare_legend.visible = false
+	root.add_child(compare_legend)
+	compare_legend.setup(App.plan_ctx)
+	compare_legend.close_requested.connect(func(): App.plan_ctx.set_compare(false))
 	toasts = Toasts.new()
 	toasts.anchor_left = 1
 	toasts.anchor_right = 1
@@ -682,6 +703,7 @@ func _place_budget() -> void:
 	if budget == null or not is_instance_valid(budget):
 		return
 	budget.visible = bool(App.settings.get_v("budget_visible")) and not _panels_hidden and App.session != null
+	_place_overlays()
 	if not budget.visible:
 		return
 	budget.set_tight(_canvas_rect.size.x < 760.0 or _canvas_rect.size.y < 460.0)
@@ -707,6 +729,67 @@ func _settle_budget() -> void:
 	var sz := budget.get_combined_minimum_size()
 	budget.size = sz
 	budget.position = PlanScope.corner_position(budget.corner, _budget_rect(), sz, 0.0)
+	_place_overlays()
+
+
+func minimap_room() -> bool:
+	## The free canvas is big enough for the overview without crowding the farm
+	## (e.g. not at 1920×1080 with 200 % UI scale).
+	return _canvas_rect.size.x >= MINIMAP_MIN_CANVAS.x and _canvas_rect.size.y >= MINIMAP_MIN_CANVAS.y
+
+
+func minimap_shown() -> bool:
+	return minimap != null and is_instance_valid(minimap) and minimap.visible
+
+
+func _place_overlays() -> void:
+	## The overview map and the compare legend in the top corners of the free
+	## canvas that the budget chip doesn't use (the legend stacks under the map
+	## when both top corners are taken).
+	if minimap == null or not is_instance_valid(minimap):
+		return
+	var r := _budget_rect()
+	var chip_corner := budget.corner if budget != null and is_instance_valid(budget) and budget.visible else ""
+	var mm_corner := "tl" if chip_corner == "tr" else "tr"
+	var want := bool(App.settings.get_v("minimap_visible")) and not _panels_hidden and App.session != null and minimap_room()
+	_view_state["minimap_no_room"] = not minimap_room()
+	var was := minimap.visible
+	minimap.visible = want
+	var mm_rect := Rect2()
+	if want:
+		if not was:
+			minimap.sync()
+		minimap.set_map_width(clampf(r.size.x * 0.2, 180.0, 260.0))
+		minimap.reset_size()
+		var sz := minimap.get_combined_minimum_size()
+		minimap.size = sz
+		minimap.position = PlanScope.corner_position(mm_corner, r, sz, 0.0)
+		mm_rect = Rect2(minimap.position, sz)
+		if not was:
+			minimap.set_view_rect(camera.visible_world_rect())
+			minimap.queue_redraw()
+	if compare_legend == null or not is_instance_valid(compare_legend):
+		return
+	var ctx := App.plan_ctx
+	compare_legend.visible = ctx.compare and ctx.has_baseline() and not _panels_hidden and App.session != null
+	if not compare_legend.visible:
+		return
+	compare_legend.set_tight(r.size.x < 760.0 or r.size.y < 460.0)
+	compare_legend.refresh()
+	compare_legend.reset_size()
+	var ls := compare_legend.get_combined_minimum_size()
+	compare_legend.size = ls
+	var free_top := ""
+	for c in ["tl", "tr"]:
+		if c != chip_corner and not (want and c == mm_corner):
+			free_top = c
+			break
+	if not free_top.is_empty():
+		compare_legend.position = PlanScope.corner_position(free_top, r, ls, 0.0)
+	else:
+		# Both top corners taken: right under the overview map.
+		var below := Rect2(Vector2(r.position.x, mm_rect.end.y + GAP), Vector2(r.size.x, maxf(1.0, r.end.y - mm_rect.end.y - GAP)))
+		compare_legend.position = PlanScope.corner_position(mm_corner, below, ls, 0.0)
 
 
 func _budget_rect() -> Rect2:
@@ -794,6 +877,10 @@ func _auto_scale() -> float:
 
 
 func _rebuild_ui() -> void:
+	if minimap != null and is_instance_valid(minimap):
+		minimap.unbind_signals()
+	if compare_legend != null and is_instance_valid(compare_legend) and App.plan_ctx.changed.is_connected(compare_legend.refresh):
+		App.plan_ctx.changed.disconnect(compare_legend.refresh)
 	ui_layer.queue_free()
 	await get_tree().process_frame
 	_apply_ui_scale()
@@ -877,7 +964,11 @@ func _on_session_changed() -> void:
 	grid.show_grid = bool(App.settings.get_v("show_grid"))
 	grid.show_occupancy = bool(App.settings.get_v("show_occupancy"))
 	renderer.show_shadows = bool(App.settings.get_v("show_shadows"))
+	renderer.set_layer_states(ObjectLayers.normalize(App.settings.get_v("object_layers")))
 	renderer.bind(s.layout, s.db, App.assets)
+	_compare_key = ""
+	_sync_compare()
+	minimap.bind(s.layout, s.map, s.db, App.plan_ctx, renderer)
 	_lm_hover = ""
 	_refresh_world()
 	overlay.layout = s.layout
@@ -995,6 +1086,7 @@ func _on_map_changed() -> void:
 	_refresh_world()
 	_refresh_level_blocks()
 	_refresh_issues()
+	minimap.bind(s.layout, s.map, s.db, App.plan_ctx, renderer)
 	controller.refresh_hover()
 	inspector.queue_rebuild()
 
@@ -1361,6 +1453,8 @@ func _on_view_changed() -> void:
 		plan_overlay.zoom = z
 		plan_overlay.visible_rect = overlay.visible_rect
 		plan_overlay.refresh()
+	if minimap_shown():
+		minimap.set_view_rect(overlay.visible_rect)
 	if App.session:
 		# In place: the saved views (camera.bookmarks) live in the same dictionary.
 		var cam: Dictionary = App.session.layout.camera
@@ -1443,6 +1537,7 @@ func _unhandled_input(e: InputEvent) -> void:
 		KEY_E when ctrl: _export_dialog()
 		KEY_F when ctrl: catalog.focus_search()
 		KEY_M when ctrl: _toggle_mode()
+		KEY_M when k.shift_pressed: toggle_minimap()
 		KEY_A when ctrl and k.shift_pressed: _open_asset_manager(_asset_focus_item())
 		KEY_A when ctrl: s.select_all()
 		KEY_C when ctrl: _copy(false)
@@ -1844,6 +1939,14 @@ func _on_inspector_action(a: String, arg: Variant) -> void:
 			_ref_drag = bool(arg)
 			_view_state["ref_move"] = _ref_drag
 		"compare": _compare_pick()
+		"object_layer": set_object_layer(str(arg[0]), str(arg[1]))
+		"object_layers_reset": App.settings.set_v("object_layers", {})
+		"compare_mine":
+			if bool(arg) and not App.plan_ctx.has_baseline():
+				_plan_baseline()
+			else:
+				App.plan_ctx.set_compare(bool(arg))
+		"baseline": _plan_baseline()
 		"plan": open_plan(str(arg))
 		"selection_cost":
 			# Budget of the selection: follow it, show the breakdown.
@@ -1858,6 +1961,62 @@ func _on_inspector_action(a: String, arg: Variant) -> void:
 			_view_state.erase("diff_summary")
 			overlay.refresh()
 			inspector.rebuild()
+
+
+func toggle_minimap() -> void:
+	## Shift+M: the overview map on / off (it only shows where the canvas has room).
+	var on := not bool(App.settings.get_v("minimap_visible"))
+	_set_view("minimap_visible", on)
+	if on and not minimap_room():
+		App.toast("The overview needs a bigger canvas: close a side panel or lower the UI scale", "info")
+
+
+func set_object_layer(group: String, state: String) -> void:
+	## View tab: show / dim / hide a category group (remembered; never edits the layout).
+	App.settings.set_v("object_layers", ObjectLayers.with_state(ObjectLayers.normalize(App.settings.get_v("object_layers")), group, state))
+
+
+func _apply_object_layers() -> void:
+	renderer.set_layer_states(ObjectLayers.normalize(App.settings.get_v("object_layers")))
+	var s := App.session
+	if s != null:
+		# Hidden objects can't be picked: let go of them in the selection too.
+		var keep: Array = s.selection.filter(func(u): return not renderer.is_layer_hidden(int(u)))
+		if keep.size() != s.selection.size():
+			s.select(keep, false, false)
+		if overlay.hover_uid != 0 and renderer.is_layer_hidden(overlay.hover_uid):
+			overlay.hover_uid = 0
+			overlay.refresh()
+	if minimap != null and is_instance_valid(minimap):
+		minimap.rebuild_objects()
+	if inspector != null and inspector.current_tab() == 2:
+		inspector.queue_rebuild()
+
+
+func _sync_compare() -> void:
+	## "Compare with my farm": object tints from Baseline.diff (view only), the
+	## legend and the plan overlay. Recomputed only when the diff changed.
+	var ctx := App.plan_ctx
+	var on := ctx.compare and ctx.has_baseline() and App.session != null
+	var key := ""
+	var d := {}
+	if on:
+		d = ctx.compare_diff()
+		key = ctx.compare_key()
+	if key == _compare_key:
+		return
+	_compare_key = key
+	var tints := {}
+	if on:
+		for u in d.get("unchanged", []):
+			tints[int(u)] = PlanOverlay.TINT_UNCHANGED
+		for u in d.get("moved", []):
+			tints[int(u)] = PlanOverlay.TINT_MOVED
+		for u in d.get("new", []):
+			tints[int(u)] = PlanOverlay.TINT_NEW
+	renderer.set_view_tints(tints)
+	plan_overlay.refresh()
+	_place_overlays()
 
 
 func _set_view(key: String, on: bool) -> void:
@@ -1897,6 +2056,14 @@ func _on_setting_changed(key: String) -> void:
 				inspector.queue_rebuild()
 		"plan_show_areas", "plan_show_progress", "plan_show_heatmap", "plan_show_guide":
 			App.plan_ctx.set_layer(PLAN_LAYER_KEYS[key], bool(App.settings.get_v(key)))
+		"object_layers":
+			_apply_object_layers()
+		"minimap_visible", "minimap_collapsed":
+			if minimap != null and is_instance_valid(minimap):
+				minimap.set_collapsed(bool(App.settings.get_v("minimap_collapsed")))
+			_place_overlays()
+			if inspector != null and inspector.current_tab() == 2:
+				inspector.queue_rebuild()
 
 
 func _on_settings_dialog(what: String) -> void:
@@ -2152,8 +2319,11 @@ func _wire_plan_context() -> void:
 	ctx.request_inventory.connect(_plan_inventory)
 	ctx.request_price_edit.connect(_plan_price)
 	ctx.request_calibration.connect(_plan_calibration)
+	ctx.request_area_stamp.connect(_plan_area_stamp)
+	ctx.request_baseline.connect(_plan_baseline)
 	ctx.view_changed.connect(_on_plan_view_changed)
 	ctx.changed.connect(plan_overlay.refresh)
+	ctx.changed.connect(_sync_compare)
 
 
 func _on_plan_view_changed() -> void:
@@ -2292,6 +2462,50 @@ func _plan_price(item_id: String) -> void:
 			sc.call("open", App.plan_ctx, item_id)
 			return
 	App.toast("Price editing isn't available in this build", "info")
+
+
+func _plan_baseline() -> void:
+	## "My real farm" (BaselineDialog): the snapshot the comparison and budgets use.
+	if App.session != null:
+		BaselineDialog.open(App.plan_ctx)
+
+
+func area_to_stamp(area_id: String, stamp_name: String = "") -> Dictionary:
+	## Areas tab › Save as stamp: the area's objects (relative positions kept;
+	## fixed / landmark items refused like any stamp) into the stamp library.
+	## Returns the saved stamp ({} when nothing usable). The layout is unchanged.
+	var s := App.session
+	var a := PlanDoc.area(s.layout.planning, area_id) if s else {}
+	if a.is_empty():
+		return {}
+	var r := StampLibrary.from_area(s.layout, a, s.stamp_refusal, stamp_name)
+	var st: Dictionary = r["stamp"]
+	if st.is_empty():
+		App.toast("Nothing in “%s” can go into a stamp%s" % [str(a.get("name", "")), (": " + str(r["reason"])) if not str(r["reason"]).is_empty() else ""], "info")
+		return {}
+	var err := layout_tools.stamps.save(st, s.db)
+	if err != OK:
+		App.toast("Can't save the stamp (%s)" % error_string(err), "error")
+		return {}
+	var n := (st["items"] as Array).size()
+	var msg := "Saved “%s” as a stamp (%d object%s)" % [str(st["name"]), n, "" if n == 1 else "s"]
+	if int(r["dropped"]) > 0:
+		msg += ", %d left out: %s" % [int(r["dropped"]), str(r["reason"])]
+	App.toast(msg + " — place it from Stamps", "success")
+	layout_tools.panel.refresh()
+	return st
+
+
+func _plan_area_stamp(area_id: String) -> void:
+	var st := area_to_stamp(area_id)
+	if st.is_empty():
+		return
+	# Show it in the stamps panel, chosen and ready to place.
+	layout_tools.panel.visible = true
+	dock.set_stamps_open(true)
+	layout_tools.panel.refresh()
+	layout_tools.panel.select_id(str(st["id"]))
+	_raise_toasts()
 
 
 func _plan_calibration() -> void:

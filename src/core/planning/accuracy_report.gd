@@ -342,7 +342,7 @@ static func _sections(r: Dictionary) -> Array:
 		sl_solid = sl_solid and _is_solid(str(s))
 	out.append({"id": "start_land", "title": "Starting land", "lines": sl_lines, "status": "ok" if sl_solid else "warn"})
 	var ex: Dictionary = r["expansion"]
-	var ex_lines: Array = ["%d plots drawn (%s)" % [int(ex["plots"]), _counts_text(ex["by_section"])],
+	var ex_lines: Array = ["%d plots drawn (%s)" % [int(ex["plots"]), _counts_text(ex["by_section"], false, "%d in %s")],
 		"Geometry: %s" % _counts_text(ex["geometry"]),
 		"Cost known for %d, unknown for %d; unlock level known for %d" % [int(ex["cost_known"]), int(ex["cost_unknown"]), int(ex["level_known"])]]
 	if int(ex["unmapped_sections"]) > 0:
@@ -394,7 +394,12 @@ static func _sections(r: Dictionary) -> Array:
 	return out
 
 
-static func _counts_text(d: Dictionary, keep_zero: bool = false) -> String:
+## Status / confidence ids as words after a count ("52 approximate").
+const COUNT_WORDS := {"approximation": "approximate", "game_data": "from game data", "verified-in-data": "verified in the data"}
+
+
+static func _counts_text(d: Dictionary, keep_zero: bool = false, pattern: String = "%d %s") -> String:
+	## "52 approximate, 3 confirmed": the count first, then what it counts.
 	if d.is_empty():
 		return "none"
 	var parts: PackedStringArray = []
@@ -402,7 +407,8 @@ static func _counts_text(d: Dictionary, keep_zero: bool = false) -> String:
 	keys.sort()
 	for k in keys:
 		if keep_zero or int(d[k]) != 0:
-			parts.append("%s %d" % [str(k).replace("_", " "), int(d[k])])
+			var word := str(COUNT_WORDS.get(str(k), str(k).replace("_", " ").replace("-", " ")))
+			parts.append(pattern % [int(d[k]), word])
 	return ", ".join(parts) if not parts.is_empty() else "none"
 
 

@@ -311,3 +311,186 @@ func test_exports() -> void:
 	assert_has(txt, "1. Unlock land")
 	# include_done = false leaves finished steps out.
 	assert_eq(GuideExport.to_csv(g, {"include_done": false}).strip_edges().split("\n").size(), n)
+
+
+# --- fast paths == the first implementation ---------------------------------------------------
+
+static func _ref_clusters(entries: Array, stage: int, kind: String, rect_key: String) -> Array:
+	## The first RecreationGuide._clusters() (tile dictionary, script sort).
+	var groups := {}
+	for e: Dictionary in entries:
+		var gk := "%s|%s" % [e["phase"], e["item"]]
+		if e.has("delta"):
+			gk += "|%d,%d" % [(e["delta"] as Vector2i).x, (e["delta"] as Vector2i).y]
+		if not groups.has(gk):
+			groups[gk] = []
+		groups[gk].append(e)
+	var out: Array = []
+	var gkeys: Array = groups.keys()
+	gkeys.sort()
+	for gk in gkeys:
+		var list: Array = groups[gk]
+		list.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["uid"]) < int(b["uid"]))
+		var parent: Array = []
+		for i in list.size():
+			parent.append(i)
+		var at := {}
+		for i in list.size():
+			var r: Rect2i = list[i][rect_key]
+			for y in range(r.position.y, r.end.y):
+				for x in range(r.position.x, r.end.x):
+					at[Vector2i(x, y)] = i
+		for i in list.size():
+			var g: Rect2i = (list[i][rect_key] as Rect2i).grow(1)
+			for y in range(g.position.y, g.end.y):
+				for x in range(g.position.x, g.end.x):
+					var j: Variant = at.get(Vector2i(x, y))
+					if j != null and int(j) != i:
+						RecreationGuide._union(parent, i, int(j))
+		var members := {}
+		for i in list.size():
+			var root := RecreationGuide._find(parent, i)
+			if not members.has(root):
+				members[root] = []
+			members[root].append(list[i])
+		var roots: Array = members.keys()
+		roots.sort()
+		for root in roots:
+			var ms: Array = members[root]
+			var us: Array = []
+			var b: Rect2i = ms[0]["rect"]
+			var fb: Rect2i = ms[0].get("from", ms[0]["rect"])
+			var reused := 0
+			for m: Dictionary in ms:
+				us.append(int(m["uid"]))
+				b = b.merge(m["rect"])
+				fb = fb.merge(m.get("from", m["rect"]))
+				reused += 1 if bool(m.get("reused", false)) else 0
+			us.sort()
+			var rects: Array = []
+			var from_rects: Array = []
+			for m: Dictionary in ms:
+				rects.append(m["rect"])
+				from_rects.append(m.get("from", m["rect"]))
+			out.append({"stage": stage, "kind": kind, "phase": str(ms[0]["phase"]), "item": str(ms[0]["item"]),
+				"uids": us, "bounds": b, "from_bounds": fb, "rects": rects, "from_rects": from_rects, "reused": reused})
+	return out
+
+
+static func _ref_land_needed(layout: FarmLayout, map: FarmMap, design: Array, owned: Dictionary) -> Dictionary:
+	## The first per-tile loop of _land_drafts(): plot id -> uids needing it.
+	var needed := {}
+	for o: PlacedObject in design:
+		var r := o.rect()
+		var seen := {}
+		for y in range(r.position.y, r.end.y):
+			for x in range(r.position.x, r.end.x):
+				var pid := map.plot_id_at(Vector2i(x, y))
+				if pid.is_empty() or seen.has(pid) or map.is_plot_unlocked(pid, owned):
+					continue
+				seen[pid] = true
+				if not needed.has(pid):
+					needed[pid] = []
+				needed[pid].append(o.uid)
+	return needed
+
+
+func _random_entries(rng: RandomNumberGenerator, n: int, with_from: bool) -> Array:
+	var out: Array = []
+	for i in n:
+		var big := rng.randf() < 0.3
+		var r := Rect2i(rng.randi_range(-3, 40), rng.randi_range(-3, 25), rng.randi_range(1, 3), rng.randi_range(1, 3))
+		var e := {"uid": (i * 7919 + n * 13) % 100003 + 1, "item": ["a", "b", "c"][rng.randi() % (1 if big else 3)],
+			"phase": ["", "p1"][rng.randi() % 2], "rect": r, "reused": rng.randf() < 0.2}
+		if with_from:
+			var d := Vector2i(rng.randi_range(-2, 2), rng.randi_range(-2, 2))
+			e["from"] = Rect2i(r.position - d, r.size)
+			e["delta"] = d
+		out.append(e)
+	return out
+
+
+func test_clusters_and_order_match_reference() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 8128
+	var plan := PlanDoc.with_phase(PlanDoc.empty(), {"id": "p1", "name": "One", "areas": []})
+	for round in 40:
+		var n: int = [3, 12, 30, 90, 200][round % 5]
+		var with_from := round % 3 == 0
+		var entries := _random_entries(rng, n, with_from)
+		for key in (["rect", "from"] if with_from else ["rect"]):
+			var got := RecreationGuide._clusters(entries, 5, "place", key)
+			var want := _ref_clusters(entries, 5, "place", key)
+			assert_eq(got, want, "round %d (%d entries, %s): clusters" % [round, n, key])
+			# Order: native key sort == script _lex_less sort.
+			var a := RecreationGuide._ordered_clusters(got.duplicate(), plan)
+			RecreationGuide._sort_keys(want, plan)
+			want.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return RecreationGuide._lex_less(x["_key"], y["_key"]))
+			assert_eq(a, want, "round %d: cluster order" % round)
+			var order: Array = range(want.size())
+			order.sort_custom(func(x: int, y: int) -> bool: return RecreationGuide._lex_less(want[x]["_key"], want[y]["_key"]))
+			assert_eq(RecreationGuide._key_order(want), order, "round %d: move order" % round)
+	# Degenerate (empty) rects still cluster like the reference.
+	var odd := [{"uid": 1, "item": "a", "phase": "", "rect": Rect2i(2, 2, 0, 0)},
+		{"uid": 2, "item": "a", "phase": "", "rect": Rect2i(2, 2, 1, 1)}, {"uid": 3, "item": "a", "phase": "", "rect": Rect2i(4, 4, 1, 1)}]
+	assert_eq(RecreationGuide._clusters(odd, 7, "place", "rect"), _ref_clusters(odd, 7, "place", "rect"))
+
+
+func test_location_texts_match_reference() -> void:
+	var real := FarmMap.load_file("res://data/maps/hayday_farm.json")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 6174
+	for m: FarmMap in [map, real]:
+		var world := RecreationGuide._world_info(m, layout)
+		# The first implementation = the fallbacks taken without the precomputed tables.
+		var plain := world.duplicate()
+		for k in ["landmark_centers", "road_sum", "water_sum"]:
+			plain.erase(k)
+		var bad := 0
+		for i in 1500:
+			var r := Rect2i(rng.randi_range(-4, m.size.x + 2), rng.randi_range(-4, m.size.y + 2), rng.randi_range(1, 6), rng.randi_range(1, 6))
+			if RecreationGuide._across_road(m, r, world) != RecreationGuide._across_road(m, r, plain):
+				bad += 1
+			if RecreationGuide._along_river(m, r, world) != RecreationGuide._along_river(m, r, plain):
+				bad += 1
+			if RecreationGuide.describe_location(m, layout, r, world) != RecreationGuide.describe_location(m, layout, r, plain):
+				bad += 1
+		assert_eq(bad, 0, "location helpers == first implementation on %s" % m.id)
+		assert_true(world.has("road_sum") and world.has("water_sum"))
+
+
+func test_land_and_primary_option_match_reference() -> void:
+	var real := FarmMap.load_file("res://data/maps/hayday_farm.json")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1729
+	var items := ["t_fence", "t_path", "g_rose", "t_lamp", "g_bench", "t_bakery", "g_mill"]
+	for m: FarmMap in [map, real]:
+		layout = FarmLayout.new()
+		for i in 120:
+			var o := make_obj(db.get_item(items[rng.randi() % items.size()]), Vector2i(rng.randi_range(-2, m.size.x), rng.randi_range(-2, m.size.y)))
+			layout.add_objects([o])
+		layout.set_unlocked(m.plots.slice(0, 3).map(func(p: Dictionary) -> String: return str(p["id"])))
+		var design: Array = layout.objects.values()
+		var owned := m.canonical_unlocked(layout.unlocked_plots)
+		var want := _ref_land_needed(layout, m, design, owned)
+		var got := {}
+		for d: Dictionary in RecreationGuide._land_drafts(layout, m, PlanDoc.empty(), design, {}, false, {}):
+			if not (d["needed_by"] as Array).is_empty():
+				got[d["plot"]] = d["needed_by"]
+		var want_sorted := {}
+		for pid in want:
+			var l: Array = want[pid].duplicate()
+			l.sort()
+			want_sorted[pid] = l
+		assert_eq(got, want_sorted, "plots needed on %s" % m.id)
+		var plan := PlanDoc.empty()
+		plan = PlanDoc.with_area(plan, {"id": "a1", "name": "A", "rect": [0, 0, 12, 12]})
+		plan = PlanDoc.with_area(plan, {"id": "a2", "name": "B", "points": [[10, 0], [30, 5], [14, 20]]})
+		plan = PlanDoc.with_phase(plan, {"id": "p1", "name": "One", "areas": ["a2"]})
+		plan = PlanDoc.with_phase(plan, {"id": "p2", "name": "Two", "areas": ["a1"]})
+		layout.set_planning(plan)
+		var eng := BudgetEngine.new(layout, db, null, m)
+		var a := RecreationGuide.build(layout, m, plan, {"db": db})
+		var b := RecreationGuide.build(layout, m, plan, {"db": db, "primary": eng.primary_phases()})
+		eng.dispose()
+		assert_eq(GuideExport.to_json(b), GuideExport.to_json(a), "options.primary gives the same guide on %s" % m.id)

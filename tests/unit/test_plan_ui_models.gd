@@ -92,15 +92,17 @@ func test_safe_file_stem_and_guide_image_names() -> void:
 
 
 func test_batch_restores_auto_detect() -> void:
+	## PlanUiModels.batch now uses the engine's own batch (begin_batch/end_batch).
 	_place("t_long", Vector2i(0, 0))
 	assert_true(eng.auto_detect)
 	var seen: Array = []
 	var out: Variant = M.batch(eng, func() -> Variant:
-		seen.append(eng.auto_detect)
+		seen.append(eng.in_batch())
 		return eng.totals(null, TO_BUY).objects)
 	assert_eq(out, 1)
-	assert_eq(seen, [false], "paused inside")
-	assert_true(eng.auto_detect, "restored")
+	assert_eq(seen, [true], "batched inside")
+	assert_false(eng.in_batch(), "batch ended")
+	assert_true(eng.auto_detect, "auto_detect untouched")
 	# In-place edits made before the batch are still detected by its first sync.
 	layout.profile["owned"] = {"t_long": 1}
 	var st: Variant = M.batch(eng, func() -> Variant: return eng.status_of(1))

@@ -543,6 +543,7 @@ func _integration() -> void:
 	await _session_wiring_check()
 	await _ui_panels_check()
 	await _plan_check()
+	await _plan_extras_check()
 
 
 func _importer_check() -> void:
@@ -2810,3 +2811,178 @@ func _plan_check() -> void:
 	ctx.set_mode(str(keep["budget_mode"]))
 	ctx.set_scope_pin(str(keep["budget_scope"]))
 	main._update_view_rect()
+
+
+# --- planning extras: object layers, compare with my farm, area stamps, readiness, minimap ----
+
+func _layout_json() -> String:
+	return JSON.stringify(LayoutIO.to_dict(_s().layout))
+
+
+func _plan_extras_check() -> void:
+	print("Planning extras")
+	var ctx: PlanContext = App.plan_ctx
+	var st: AppSettings = App.settings
+	var keep := {}
+	for k in ["object_layers", "minimap_visible", "minimap_collapsed"]:
+		keep[k] = st.get_v(k)
+	st.set_v("object_layers", {}, false)
+	App.open_layout(App.new_layout("Extras farm", "starter"))
+	main._fit_or_restore()
+	main.camera.smooth = false
+	main.camera.zoom = Vector2(1.5, 1.5)
+	main.camera.target_zoom = 1.5
+	await _frames(3)
+	var s := _s()
+	var r: ObjectRenderer = main.renderer
+	var bench := App.db.get_item("bench")
+	var apple := App.db.get_item("apple_tree")
+	var fence := _first_item(func(it: ItemDef) -> bool: return it.category == "fence" and it.footprint == Vector2i.ONE and s.item_block_reason(it.id).is_empty())
+	var b_at := _free_origin(bench, Vector2i(10, 24))
+	var b_uid: int = s.place_objects([s.make_object(bench, b_at)], "Bench")[0]
+	var a_at := _free_origin(apple, b_at + Vector2i(3, 0))
+	var a_uid: int = s.place_objects([s.make_object(apple, a_at)], "Apple tree")[0]
+	var f_at := _free_origin(fence, b_at + Vector2i(0, 3))
+	var f_uid: int = s.place_objects([s.make_object(fence, f_at)], "Fence")[0]
+	await _frames(2)
+	check(ObjectLayers.group_of(App.db, "bench") == "decorations" and ObjectLayers.group_of(App.db, "apple_tree") == "trees" and ObjectLayers.group_of(App.db, fence.id) == "fences",
+		"object layers group the catalogue (bench: decorations, apple tree: trees, %s: fences)" % fence.id)
+	# Object layers are view only.
+	s.select([b_uid, a_uid])
+	var json0 := _layout_json()
+	var v0 := s.stack.version
+	var dirty0 := s.stack.is_dirty()
+	var b_pt := Iso.footprint_center(b_at, s.layout.get_obj(b_uid).size)
+	check(r.pick(b_pt) == b_uid, "the bench can be picked while its layer is shown")
+	main.set_object_layer("decorations", ObjectLayers.HIDE)
+	main.set_object_layer("trees", ObjectLayers.DIM)
+	await _frames(2)
+	check(ObjectLayers.normalize(st.get_v("object_layers")) == {"decorations": "hide", "trees": "dim"}, "layer states are remembered in the settings")
+	check(r.is_layer_hidden(b_uid) and not r.is_layer_hidden(a_uid) and not r.is_layer_hidden(f_uid), "hiding decorations hides the bench only (trees dimmed, fences shown)")
+	check(r.pick(b_pt) != b_uid and int(r.pick_any(b_pt).get("uid", 0)) != b_uid, "a hidden object can't be picked")
+	var big := Iso.footprint_world_bounds(Vector2i(-5, -5), s.map.size + Vector2i(10, 10))
+	var boxed: Array = r.uids_in_world_rect(big)
+	check(not b_uid in boxed and a_uid in boxed and f_uid in boxed, "box selection skips hidden objects")
+	check(not b_uid in s.selection and a_uid in s.selection, "hiding a layer lets go of its selected objects")
+	check(_layout_json() == json0 and s.stack.version == v0 and s.stack.is_dirty() == dirty0, "layer toggles never change the layout or its save data")
+	main.set_object_layer("decorations", ObjectLayers.SHOW)
+	main.set_object_layer("trees", ObjectLayers.SHOW)
+	await _frames(1)
+	check(ObjectLayers.normalize(st.get_v("object_layers")).is_empty() and r.layer_hidden_count() == 0 and r.pick(b_pt) == b_uid, "showing them again restores drawing and picking")
+	check(_layout_json() == json0, "the save data is still the same afterwards")
+	# Compare with my farm.
+	ctx.set_plan(PlanDoc.with_baseline(ctx.plan(), Baseline.snapshot(s.layout, "Mine")), "Set my real farm")
+	await _frames(1)
+	check(ctx.has_baseline() and int(ctx.compare_counts().get("unchanged", -1)) == s.layout.count(), "right after the snapshot everything is unchanged (%s)" % str(ctx.compare_counts()))
+	var mv_to := _free_origin(bench, b_at + Vector2i(0, 4))
+	s.execute(EditCommands.MoveObjects.new([b_uid], mv_to - b_at))
+	s.execute(EditCommands.RemoveObjects.new([f_uid], "Remove fence"))
+	var n_uid: int = s.place_objects([s.make_object(apple, _free_origin(apple, a_at + Vector2i(4, 2)))], "New tree")[0]
+	ctx.set_compare(true)
+	await _frames(3)
+	var d := Baseline.diff(s.layout, s.layout.planning["baseline"], s.db)
+	var c := ctx.compare_counts()
+	check(int(c.get("unchanged", -1)) == (d["unchanged"] as Array).size() and int(c.get("moved", -1)) == (d["moved"] as Array).size()
+		and int(c.get("new", -1)) == (d["new"] as Array).size() and int(c.get("removed", -1)) == (d["removed"] as Array).size(),
+		"compare counts match Baseline.diff (%s)" % str(c))
+	check(int(c.get("moved", 0)) == 1 and int(c.get("removed", 0)) == 1 and int(c.get("new", 0)) == 1 and n_uid in d["new"], "one moved, one removed, one new")
+	check(r.view_tint_count() == s.layout.count(), "every design object gets a compare tint (%d of %d)" % [r.view_tint_count(), s.layout.count()])
+	check(main.compare_legend.visible and main.compare_legend._title.text.contains("Mine"), "the compare legend names the snapshot")
+	var v1 := s.stack.version
+	ctx.set_compare(false)
+	await _frames(2)
+	check(r.view_tint_count() == 0 and not main.compare_legend.visible and s.stack.version == v1, "turning compare off clears the tints and the legend (no edit)")
+	ctx.set_compare(true)
+	await _frames(1)
+	s.stack.undo()   # the new tree
+	await _frames(2)
+	check(int(ctx.compare_counts().get("new", -1)) == 0 and r.view_tint_count() == s.layout.count(), "compare follows undo")
+	s.stack.redo()
+	ctx.set_compare(false)
+	await _frames(1)
+	# Area -> stamp round trip.
+	var lo := Vector2i(mini(mv_to.x, a_at.x), mini(mv_to.y, a_at.y)) - Vector2i.ONE
+	var hi := Vector2i(maxi(mv_to.x, a_at.x), maxi(mv_to.y, a_at.y)) + Vector2i(3, 3)
+	var aid := PlanDoc.next_id(ctx.plan(), "a")
+	ctx.set_plan(PlanDoc.with_area(ctx.plan(), PlanScope.rect_area(Rect2i(lo, hi - lo), "Corner garden")), "Add area")
+	var area := PlanDoc.area(ctx.plan(), aid)
+	var inside: Array = PlanDoc.objects_in_area(s.layout, area)
+	var v2 := s.stack.version
+	var json2 := _layout_json()
+	var stamp: Dictionary = main.area_to_stamp(aid)
+	check(not stamp.is_empty() and (stamp["items"] as Array).size() == inside.size() and inside.size() >= 2 and str(stamp["name"]) == "Corner garden",
+		"Save area as stamp keeps every object in the area (%d)" % inside.size())
+	check(s.stack.version == v2 and _layout_json() == json2, "saving an area as a stamp doesn't edit the layout")
+	var loaded: Dictionary = main.layout_tools.stamps.get_stamp(str(stamp.get("id", "")))
+	check(not loaded.is_empty() and (loaded["items"] as Array).size() == inside.size(), "the stamp is in the library")
+	var want := _relative_items(s.layout, inside)
+	var target := _free_block(Vector2i(10, 10))
+	var placed: Array = s.place_stamp(loaded, target + Vector2i.ONE) if target.x >= 0 and not loaded.is_empty() else []
+	check(placed.size() == inside.size() and _relative_items(s.layout, placed) == want, "placing it elsewhere keeps the relative positions (%d objects)" % placed.size())
+	var refused := StampLibrary.from_area(s.layout, area, func(id: String) -> String: return "fixed" if id == "apple_tree" else "")
+	var kept_n := (refused["stamp"]["items"] as Array).size() if not (refused["stamp"] as Dictionary).is_empty() else 0
+	check(int(refused["dropped"]) >= 1 and kept_n == inside.size() - int(refused["dropped"]), "refused items (landmarks, fixed) are left out of an area stamp")
+	main.layout_tools.stamps.delete(str(stamp.get("id", "")))
+	# Readiness.
+	var ready0: Dictionary = ctx.readiness()
+	var some := s.layout.get_obj(a_uid)
+	s.execute(EditCommands.AddObjects.new([s.make_object(bench, some.origin)]))
+	var over_uid: int = s.layout.objects.keys().max()
+	await _frames(1)
+	var ready1: Dictionary = ctx.readiness()
+	var prow: Dictionary = {}
+	for row: Dictionary in ready1.get("rows", []):
+		if row["id"] == Readiness.PLACEMENT:
+			prow = row
+	check(not prow.is_empty() and over_uid in prow["uids"] and int(ready1["blocking"]) > int(ready0.get("blocking", 0)), "an overlap shows up as a blocking readiness row")
+	check(is_same(ready1, ctx.readiness()), "readiness is cached between edits")
+	s.stack.undo()
+	await _frames(1)
+	var still := false
+	for row: Dictionary in ctx.readiness().get("rows", []):
+		still = still or (row["id"] == Readiness.PLACEMENT and over_uid in row["uids"])
+	check(not still, "undo clears the readiness row")
+	# Minimap.
+	st.set_v("minimap_visible", true, false)
+	main._update_view_rect()
+	await _frames(1)
+	var mm: Minimap = main.minimap
+	check(main.minimap_shown() == main.minimap_room(), "the overview shows only where the canvas has room (room: %s)" % str(main.minimap_room()))
+	var full0 := mm.full_repaints
+	var tiles0 := mm.tile_repaints
+	s.place_objects([s.make_object(apple, _free_origin(apple, a_at + Vector2i(0, 6)))], "One more")
+	await _frames(2)
+	check(mm.full_repaints == full0 and mm.tile_repaints > tiles0 and mm.tile_repaints - tiles0 <= 4, "an edit repaints only its tiles on the overview (%d)" % (mm.tile_repaints - tiles0))
+	if main.minimap_shown():
+		var w := Iso.tile_center(a_at)
+		check(mm.map_to_world(mm.world_to_map(w)).distance_to(w) < 1.0, "overview and world coordinates round-trip")
+		var before: float = main.camera.view_center().distance_to(w)
+		var e := InputEventMouseButton.new()
+		e.button_index = MOUSE_BUTTON_LEFT
+		e.pressed = true
+		e.position = mm.world_to_map(w)
+		mm._map_input(e)
+		e.pressed = false
+		mm._map_input(e)
+		await _frames(2)
+		var after: float = main.camera.view_center().distance_to(w)
+		check(after < 48.0 or after < before, "clicking the overview moves the camera there (%.0f px → %.0f px)" % [before, after])
+	_key(KEY_M, false, true)
+	check(not bool(st.get_v("minimap_visible")) and not main.minimap_shown(), "Shift+M hides the overview")
+	_key(KEY_M, false, true)
+	check(bool(st.get_v("minimap_visible")) and s.tool != "land", "Shift+M shows it again (and doesn't switch to the land tool)")
+	App.library.delete(s.layout.id)
+	for k in keep:
+		st.set_v(k, keep[k], false)
+
+
+func _relative_items(l: FarmLayout, uids: Array) -> Dictionary:
+	## "item@offset" of each object relative to the group's top corner.
+	var lo := Vector2i(1 << 30, 1 << 30)
+	for u in uids:
+		lo = lo.min(l.get_obj(int(u)).origin)
+	var out := {}
+	for u in uids:
+		var o := l.get_obj(int(u))
+		out["%s@%s" % [o.item_id, str(o.origin - lo)]] = true
+	return out

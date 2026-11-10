@@ -16,12 +16,7 @@ static func batch(engine: BudgetEngine, f: Callable) -> Variant:
 	## first and then skips the hash. Restores the previous setting.
 	if engine == null:
 		return f.call()
-	engine.phase_ids(false)   # one full sync (detects in-place edits once)
-	var prev := engine.auto_detect
-	engine.auto_detect = false
-	var out: Variant = f.call()
-	engine.auto_detect = prev
-	return out
+	return engine.batch(f)
 
 
 # --- small text helpers ------------------------------------------------------------------
@@ -436,7 +431,8 @@ static func object_states(engine: BudgetEngine, layout: FarmLayout, db: ItemData
 		var order := engine.alloc_order(id)
 		for j in order.size():
 			out[int(order[j])] = ST_ACQUIRED if j < covered else ST_NOT_ACQUIRED
-	var placed := placed_uids(layout, plan, db)
+	# The engine's cached set follows the same rule as placed_uids() (cheaper per refresh).
+	var placed: Dictionary = engine.placed_set() if engine != null else placed_uids(layout, plan, db)
 	for u in placed:
 		out[u] = ST_PLACED
 	return out

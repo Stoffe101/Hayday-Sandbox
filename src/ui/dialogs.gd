@@ -44,6 +44,8 @@ const SHORTCUTS := [
 	["Mouse wheel / + / -", "Zoom"], ["F / Shift+F", "Fit the selection (or the farm) / the whole world"],
 	["H / Home", "Home: centre the farmhouse"], ["1 … 9 / Ctrl+1 … 9", "Go to / save a view (saved with the layout)"],
 	["G", "Grid"], ["O", "Occupied-tile overlay"],
+	["Shift+M", "Overview map in a canvas corner (click or drag on it to move the view)"],
+	["View tab › Object layers", "Show, dim or hide decorations, buildings, trees, fences, paths… (view only)"],
 	["[ / ]", "Collapse the catalogue to its rail / show or hide the inspector"], ["Tab", "Hide / show all panels"],
 	["File & app", ""],
 	["Ctrl+F", "Search catalogue"], ["Ctrl+M", "Switch Creative / Realistic"], ["Ctrl+S", "Save (keeps a revision)"],

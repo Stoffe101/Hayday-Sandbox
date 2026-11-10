@@ -21,7 +21,8 @@ const ALL := ["overview", "place_valid", "place_invalid", "selection", "search",
 	"gallery", "help", "settings", "welcome", "reference", "compare", "export", "light",
 	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty", "landmarks", "migration",
 	"drag_blocked", "tools_symmetry", "tools_repeat", "winter",
-	"plan_budget", "plan_areas", "plan_phases", "plan_heatmap", "plan_shop", "plan_build", "plan_guide", "plan_accuracy"]
+	"plan_budget", "plan_areas", "plan_phases", "plan_heatmap", "plan_shop", "plan_build", "plan_guide", "plan_accuracy",
+	"plan_minimap", "plan_layers", "plan_compare", "plan_ready"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
 const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "anim_perf"]
 ## Asset scenarios install a synthetic pack generated from the built-in
@@ -41,6 +42,7 @@ var dump_objects := false  ## write <shot>.objects.json: id, footprint corners +
 var select_items: Array = ["field", "apple_tree"]   ## "selection" scenario (--select-items=a+b)
 var _migration_layout_open := false
 var _profile0: Variant = null       ## the showcase's profile before any plan scenario changed it
+var _undo_after := 0                ## layout edits a scenario made, undone by the next _reset
 
 
 func _ready() -> void:
@@ -127,6 +129,11 @@ func _reset() -> void:
 		_app().reload_assets()
 		_pack_installed = false
 	var s = _app().session
+	if s and _undo_after > 0:
+		# Edits a planning scenario made to the showcase (moved / new / removed objects).
+		for i in _undo_after:
+			s.stack.undo()
+		_undo_after = 0
 	if s and _migration_layout_open:
 		# Back to an ordinary farm after the migration scenario.
 		_migration_layout_open = false
@@ -189,8 +196,11 @@ func _reset_plan(s) -> void:
 	for k in ["areas", "progress", "guide"]:
 		ctx.set_layer(k, true)
 	ctx.set_layer("heatmap", false)
-	for k in ["budget_corner", "budget_collapsed", "budget_expanded", "budget_visible"]:
+	ctx.set_compare(false)
+	for k in ["budget_corner", "budget_collapsed", "budget_expanded", "budget_visible", "object_layers", "minimap_visible", "minimap_collapsed"]:
 		_app().settings.set_v(k, AppSettings.DEFAULTS[k], false)
+	main.renderer.set_view_tints({})
+	main._compare_key = ""
 	main.budget.configure("bl", false, false)
 	main._place_budget()
 
@@ -231,6 +241,97 @@ func _plan_tab(tab: String, with_phases: bool = true) -> void:
 	main._fit()
 	main.open_plan(tab)
 	await _frames(4)
+
+
+func _exec(cmd) -> void:
+	## A layout edit made by a scenario: undone again by the next _reset.
+	_session().execute(cmd)
+	_undo_after += 1
+
+
+func _movable_offset(o: PlacedObject, tries: Array) -> Vector2i:
+	var s = _session()
+	for d: Vector2i in tries:
+		if PlacementRules.check_group_move(s.layout, s.map, [o.uid], d).ok:
+			return d
+	return Vector2i.ZERO
+
+
+func _compare_edits() -> void:
+	## The showcase becomes "my real farm" (baseline), then the design changes:
+	## a few objects moved, two removed, three new ones. Made-up edits on the public sample.
+	var s = _session()
+	var ctx: PlanContext = _app().plan_ctx
+	var plan: Dictionary = s.layout.planning.duplicate(true)
+	plan = PlanDoc.with_baseline(plan, Baseline.snapshot(s.layout, "My farm", "", "2026-11-10T09:00:00Z"))
+	_exec(EditCommands.SetPlanning.new(s.layout.planning, plan, "Capture baseline"))
+	var objs: Array = s.layout.objects.values()
+	objs.sort_custom(func(a: PlacedObject, b: PlacedObject) -> bool: return a.uid < b.uid)
+	var moved := 0
+	var tries := [Vector2i(0, 3), Vector2i(3, 0), Vector2i(0, -3), Vector2i(-3, 0), Vector2i(2, 2), Vector2i(0, 5), Vector2i(5, 0)]
+	for o: PlacedObject in objs:
+		if moved >= 3:
+			break
+		if o.size.x < 2 or o.locked or not s.can_move_object(o):
+			continue
+		var d := _movable_offset(o, tries)
+		if d != Vector2i.ZERO:
+			_exec(EditCommands.MoveObjects.new([o.uid], d))
+			moved += 1
+	var gone: Array = []
+	for o: PlacedObject in objs:
+		if gone.size() >= 2:
+			break
+		if o.size == Vector2i.ONE and s.layout.get_obj(o.uid) != null and o.item_id.ends_with("_tree"):
+			gone.append(o.uid)
+	if not gone.is_empty():
+		_exec(EditCommands.RemoveObjects.new(gone, "Capture removal"))
+	var added: Array = []
+	for e: Array in [["bench", Vector2i(6, 12)], ["windmill", Vector2i(26, 24)], ["apple_tree", Vector2i(2, 24)]]:
+		var it: ItemDef = s.db.get_item(e[0])
+		if it == null:
+			continue
+		added.append(s.make_object(it, _find_free(e[0], e[1])))
+	if not added.is_empty():
+		_exec(EditCommands.AddObjects.new(added))
+	await _frames(2)
+	ctx.notify_changed()
+
+
+func _ready_issues() -> void:
+	## A few things that block rebuilding: Realistic mode at a low farm level, an
+	## overlap, a building on locked land and one copy over the game's limit.
+	var s = _session()
+	var p: Dictionary = s.layout.profile.duplicate(true)
+	p["level"] = 40
+	p["owned"] = {"barn": 1, "silo": 1, "bakery": 1, "feed_mill": 1, "chicken_coop": 1, "field": 20}
+	_exec(EditCommands.SetProfile.new(s.layout.profile, p, "Capture level"))
+	s.set_mode(FarmLayout.MODE_REALISTIC)
+	var extra: Array = []
+	var bakery: ItemDef = s.db.get_item("bakery")
+	var first: PlacedObject = null
+	for o: PlacedObject in s.layout.objects.values():
+		if o.item_id == "bakery":
+			first = o
+	if first != null and bakery != null:
+		# A second bakery half on top of the first: an overlap and one over the game's limit.
+		extra.append(s.make_object(bakery, first.origin + Vector2i(1, 1)))
+	var wm: ItemDef = s.db.get_item("windmill")
+	if wm != null:
+		# On the locked plot nearest the farm.
+		var best: Vector2 = Vector2(-1, -1)
+		for pl in s.map.plots:
+			var c: Variant = pl.get("center")
+			if s.map.is_plot_unlocked(str(pl["id"]), s.layout.unlocked_plots) or not c is Vector2 or int(pl.get("tiles", 0)) < 16:
+				continue
+			if best.x < 0 or (c as Vector2).distance_to(Vector2(16, 16)) < best.distance_to(Vector2(16, 16)):
+				best = c
+		if best.x >= 0:
+			extra.append(s.make_object(wm, Vector2i(best.floor()) - Vector2i(1, 1)))
+	if not extra.is_empty():
+		_exec(EditCommands.AddObjects.new(extra))
+	await _frames(2)
+	_app().plan_ctx.notify_changed()
 
 
 func _dump_objects(path: String, px_per_logical: Vector2, export_rect := Rect2(), export_scale := 0.0) -> void:
@@ -737,6 +838,50 @@ func _scenario(sc: String) -> bool:
 			await _plan_tab("guide")
 		"plan_accuracy":
 			await _plan_tab("accuracy")
+		"plan_minimap":
+			# The overview map: land, objects (the active phase in its colour),
+			# area outlines and the camera's view rectangle while zoomed in.
+			await _plan_tab("phases")
+			var ph1 := str(PlanDoc.phases(s.layout.planning)[0].get("id"))
+			_app().plan_ctx.set_active_phase(ph1)
+			main.camera.smooth = false
+			main.camera.set_zoom_level(1.4)
+			main.camera.zoom = Vector2(1.4, 1.4)
+			main.camera.target_zoom = 1.4
+			main.camera.center_on(Iso.grid_to_world(Vector2(16, 20)))
+			await _frames(3)
+			main._place_budget()
+			print("MINIMAP shown=%s room=%s" % [str(main.minimap_shown()), str(main.minimap_room())])
+		"plan_layers":
+			# Decorations hidden and trees dimmed (view only), with the View tab.
+			await _plan_layout(false)
+			main.set_object_layer("decorations", ObjectLayers.HIDE)
+			main.set_object_layer("trees", ObjectLayers.DIM)
+			main.inspector.show_tab(2)
+			main.inspector.rebuild()
+			main._fit()
+			print("LAYERS hidden=%d" % main.renderer.layer_hidden_count())
+		"plan_compare":
+			# Before / after with the real farm: tints, arrows, ghosts, legend, Build counts.
+			await _plan_layout(true)
+			await _compare_edits()
+			_app().plan_ctx.set_compare(true)
+			main._fit()
+			main.open_plan("build")
+			await _frames(3)
+			main._sync_compare()
+			main._place_budget()
+			print("COMPARE %s" % str(_app().plan_ctx.compare_counts()))
+		"plan_ready":
+			# "Can I build this?" with a few blocking issues (top of the Budget tab).
+			await _plan_layout(false)
+			await _ready_issues()
+			main._fit()
+			main.open_plan("budget")
+			await _frames(3)
+			var rr: Dictionary = _app().plan_ctx.readiness()
+			print("READY blocking=%d checks=%d rows=%s" % [int(rr.get("blocking", 0)), int(rr.get("checks", 0)),
+				str((rr.get("rows", []) as Array).map(func(r: Dictionary) -> String: return str(r["id"])))])
 		"light":
 			_app().settings.set_v("theme", "light", false)
 			await main._rebuild_ui()

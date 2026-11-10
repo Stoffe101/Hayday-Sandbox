@@ -648,7 +648,8 @@ func _end(e: InputEventMouseButton) -> void:
 		"erase_rect":
 			var r := Iso.rect_from_corners(_press_tile, tile_at(e.position))
 			for u in session.layout.uids_in_rect(r):
-				_erase_uids[u] = true
+				if not renderer.is_layer_hidden(u):   # hidden layers are out of reach
+					_erase_uids[u] = true
 			_commit_erase()
 		"zone":
 			var r := Iso.rect_from_corners(_press_tile, tile_at(e.position))

@@ -16,6 +16,8 @@ var _unmark_btn: Button
 var _show_btn: Button
 var _unfinished: CheckButton
 var _moved_box: VBoxContainer
+var _compare_l: Label
+var _compare_btn: Button
 var _phases_box: VBoxContainer
 var _highlighting := false
 
@@ -40,6 +42,19 @@ func _build() -> void:
 	hv.add_child(_overall_bar)
 	_overall_counts = PlanUiKit.wrap_label("", "Faint")
 	hv.add_child(_overall_counts)
+	# Before / after with the real farm (plan.baseline): counts and the canvas view.
+	var cr := UI.hbox(6)
+	_compare_l = PlanUiKit.wrap_label("", "Faint")
+	cr.add_child(_compare_l)
+	_compare_btn = UI.button("", "git-compare", "", "Ghost")
+	_compare_btn.add_theme_font_size_override("font_size", 13)
+	_compare_btn.pressed.connect(func():
+		if ctx.has_baseline():
+			ctx.set_compare(not ctx.compare)
+		else:
+			ctx.request_baseline.emit())
+	cr.add_child(_compare_btn)
+	hv.add_child(cr)
 	add_child(head)
 	var acts := PlanUiKit.flow(6, 6)
 	_mark_btn = UI.button("Mark selected placed", "check", "The selected objects stand in your Hay Day farm now (Ctrl+Z undoes)")
@@ -101,6 +116,7 @@ func _render() -> void:
 	_overall_l.text = "%s placed in Hay Day" % PlanUiModels.pct_text(float(ov.get("percent", 0.0))) if total > 0 else "Nothing to build yet"
 	_overall_bar.value = float(ov.get(PlanUiModels.ST_PLACED, 0)) / maxf(1.0, total)
 	_overall_counts.text = PlanUiModels.counts_text(ov) if total > 0 else "Place objects on the farm to get a checklist."
+	_render_compare()
 	_render_moved()
 	UI.clear(_phases_box)
 	var cl := PlanUiModels.filter_unfinished(checklist) if _unfinished.button_pressed else checklist
@@ -109,6 +125,18 @@ func _render() -> void:
 		_phases_box.add_child(PlanUiKit.wrap_label("Everything is placed." if total > 0 else "No objects yet.", "Dim"))
 	for p: Dictionary in phases:
 		_phases_box.add_child(_phase_card(p))
+
+
+func _render_compare() -> void:
+	var c := ctx.compare_counts()
+	if c.is_empty():
+		_compare_l.text = "No snapshot of your real farm yet: take one to see what stays, moves, is new or goes."
+		_compare_btn.text = "My real farm…"
+		_compare_btn.tooltip_text = "Take a snapshot of your farm as it is in Hay Day now"
+		return
+	_compare_l.text = "Vs. your farm: %d unchanged · %d moved · %d new · %d removed" % [int(c["unchanged"]), int(c["moved"]), int(c["new"]), int(c["removed"])]
+	_compare_btn.text = "Hide" if ctx.compare else "Show"
+	_compare_btn.tooltip_text = "Compare with my farm on the canvas (tints, arrows from the old spots, removed ghosts)"
 
 
 func _render_moved() -> void:

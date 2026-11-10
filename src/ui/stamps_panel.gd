@@ -78,6 +78,14 @@ func _thumb(st: Dictionary) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
+func select_id(id: String) -> void:
+	## Chooses a stamp in the list (e.g. one just saved from a planning area).
+	var i := _ids.find(id)
+	if i >= 0:
+		_list.select(i)
+		_list.ensure_current_is_visible()
+
+
 func selected_id() -> String:
 	var sel := _list.get_selected_items()
 	return _ids[sel[0]] if not sel.is_empty() and sel[0] < _ids.size() else ""

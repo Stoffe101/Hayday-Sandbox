@@ -61,6 +61,21 @@ static func from_objects(stamp_name: String, objs: Array, refuse: Callable) -> D
 	return {"stamp": stamp, "dropped": dropped, "reason": reason}
 
 
+static func from_area(layout: FarmLayout, area: Dictionary, refuse: Callable, stamp_name: String = "") -> Dictionary:
+	## A planning area as a reusable design: every object with a footprint tile in
+	## the area (PlanDoc membership), relative positions kept, refused items left
+	## out like from_objects(). {"stamp", "dropped", "reason", "objects": in the area}.
+	var objs: Array = []
+	for u in PlanDoc.objects_in_area(layout, area):
+		var o := layout.get_obj(int(u))
+		if o != null:
+			objs.append(o)
+	var nm := stamp_name if not stamp_name.strip_edges().is_empty() else str(area.get("name", "Area"))
+	var r := from_objects(nm, objs, refuse) if not objs.is_empty() else {"stamp": {}, "dropped": 0, "reason": ""}
+	r["objects"] = objs.size()
+	return r
+
+
 static func parse(data: Variant, refuse: Callable) -> Dictionary:
 	## Validates a parsed file. {"stamp": {} on error, "dropped": n, "reason",
 	## "error": text or ""}. Entries that are malformed or refused are dropped;

@@ -52,6 +52,10 @@ const DEFAULTS := {
 	"plan_show_progress": true,
 	"plan_show_heatmap": false,
 	"plan_show_guide": true,
+	## Object layers by category (ObjectLayers): {group: "dim" | "hide"}; {} = all shown.
+	"object_layers": {},
+	"minimap_visible": true,    ## overview map in a canvas corner (only where the canvas has room)
+	"minimap_collapsed": false,
 }
 ## Stored values of "ambient_animation", in the order the settings dialog lists them.
 const AMBIENT_CHOICES := ["off", "reduced", "full"]

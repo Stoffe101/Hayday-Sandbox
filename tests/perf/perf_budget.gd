@@ -15,6 +15,8 @@ extends SceneTree
 ##   * totals_uids   totals over all N uids (no cache)
 ##   * totals_farm   whole-farm totals right after an edit (cache cleared)
 ##   * query_idle    a getter with nothing changed (cost of change detection)
+##   * query_batch   the same inside engine.begin_batch() / end_batch()
+## (tests/perf/perf_planning.gd covers the rest of the planning stack.)
 ## Timings only; no game data is printed.
 
 var sizes: Array = [2000, 5000, 10000]
@@ -107,6 +109,10 @@ func _run(n: int, db: ItemDatabase, pb: PriceBook, map: FarmMap, pool: Array[Ite
 		layout.move_objects([keys[0]], Vector2i(1, 0) if rng.randf() < 0.5 else Vector2i(-1, 0))
 		eng.totals(null, BudgetEngine.MODE_REMAINING))
 	r["query_idle"] = _time(func() -> void: eng.status_of(keys[1]))
+	if eng.has_method("begin_batch"):
+		eng.call("begin_batch")
+		r["query_batch"] = _time(func() -> void: eng.status_of(keys[1]))
+		eng.call("end_batch")
 	var t := eng.totals(null, BudgetEngine.MODE_TO_BUY)
 	print("\nN = %d objects (%d types, %d unknown-price, %d not-buyable objects, %d plots needed; %d full recomputes)" % [
 		layout.objects.size(), t.types, t.unknown_price_objects, t.not_buyable_objects, t.plots.size(), eng.full_recomputes])

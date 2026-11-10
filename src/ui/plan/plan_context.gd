@@ -35,6 +35,11 @@ signal request_price_edit(item_id: String)
 ## Ask to calibrate a screenshot reference (Accuracy tab): main.gd opens the
 ## inspector's View tab, where references are added and calibrated.
 signal request_calibration
+## Ask to keep an area's objects as a reusable stamp (Areas tab; main.gd saves it
+## in the stamp library and opens the stamps panel).
+signal request_area_stamp(area_id: String)
+## Ask for the "My real farm" dialog (BaselineDialog), e.g. from the compare toggle.
+signal request_baseline
 ## Cost mode, budget scope, active area / phase, guide step or a planning layer
 ## changed (view state, not document data; `changed` follows as well).
 signal view_changed
@@ -52,6 +57,12 @@ var active_phase: String = ""
 var guide_step: int = -1
 ## Planning layers on the canvas: areas, progress, heatmap, guide (main keeps them in the settings).
 var layers: Dictionary = {"areas": true, "progress": true, "heatmap": false, "guide": true}
+## "Compare with my farm" (Baseline.diff on the canvas). View state, not saved.
+var compare := false
+var _diff: Dictionary = {}
+var _diff_key := ""
+var _ready_cache: Dictionary = {}
+var _ready_key := ""
 
 var session: EditorSession          ## the open layout's editing session (null while loading)
 var engine: BudgetEngine            ## budget for `session` (owned by the session)
@@ -72,6 +83,10 @@ func bind(s: EditorSession, e: BudgetEngine, p: PriceBook, d: ItemDatabase, m: F
 	map = m
 	_guide = {}
 	_guide_key = ""
+	_diff = {}
+	_diff_key = ""
+	_ready_cache = {}
+	_ready_key = ""
 	if s == null or PlanDoc.area(plan(), active_area).is_empty():
 		active_area = ""
 	if s == null or PlanDoc.phase(plan(), active_phase).is_empty():
@@ -177,6 +192,64 @@ func set_layer(key: String, on: bool) -> void:
 	if bool(layers.get(key, false)) != on:
 		layers[key] = on
 		_view_changed()
+
+
+func set_compare(on: bool) -> void:
+	## "Compare with my farm" on the canvas (needs plan.baseline to show anything).
+	if on != compare:
+		compare = on
+		_view_changed()
+
+
+func has_baseline() -> bool:
+	return session != null and Baseline.is_valid(plan().get("baseline"))
+
+
+func compare_diff() -> Dictionary:
+	## Baseline.diff of the design against plan.baseline ({} without a baseline),
+	## recomputed only after an edit or a new baseline.
+	if not has_baseline():
+		return {}
+	var bl: Dictionary = plan()["baseline"]
+	var key := "%d|%d|%d|%d" % [session.stack.version, session.layout.get_instance_id(), session.layout.objects.size(), bl.hash()]
+	if key != _diff_key:
+		_diff = Baseline.diff(session.layout, bl, db)
+		_diff_key = key
+	return _diff
+
+
+func compare_key() -> String:
+	## Changes whenever compare_diff() was recomputed (callers cache on it).
+	return _diff_key
+
+
+func compare_counts() -> Dictionary:
+	## {unchanged, moved, new, removed} of compare_diff() ({} without a baseline).
+	var d := compare_diff()
+	if d.is_empty():
+		return {}
+	return {"unchanged": (d["unchanged"] as Array).size(), "moved": (d["moved"] as Array).size(),
+		"new": (d["new"] as Array).size(), "removed": (d["removed"] as Array).size()}
+
+
+func readiness() -> Dictionary:
+	## "Can I build this?" (Readiness.build) from the session's cached conflicts,
+	## Realistic analysis and the budget's can't-buy counts; cached per edit.
+	if session == null:
+		return {}
+	var key := "%d|%d|%s|%d|%d" % [session.stack.version, session.layout.get_instance_id(), session.layout.mode,
+		engine.version if engine != null else -1, session.layout.profile.hash()]
+	if key != _ready_key:
+		var nb := {}
+		if engine != null:
+			var br := engine.item_breakdown(null, BudgetEngine.MODE_TO_BUY)
+			for item: String in br:
+				var n := int((br[item] as Dictionary).get("not_buyable", 0))
+				if n > 0:
+					nb[item] = n
+		_ready_cache = Readiness.build(session.layout, db, session.conflicts(), session.analysis(), nb)
+		_ready_key = key
+	return _ready_cache
 
 
 func selection() -> Array:

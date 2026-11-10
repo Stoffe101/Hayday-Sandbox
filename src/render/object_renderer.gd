@@ -59,6 +59,14 @@ var _flat_order := DepthSorter.KeyedOrder.new()
 var _spatial: Dictionary = {}      ## Vector2i cell -> Array[id] (picking)
 var _hidden: Dictionary = {}
 var _tints: Dictionary = {}        ## uid -> Color
+## View-only layers (ObjectLayers): group -> "dim" | "hide"; objects of hidden
+## groups are not drawn and not pickable (_lhidden), dimmed ones are faded.
+var _layer_states: Dictionary = {}
+var _lhidden: Dictionary = {}      ## uid -> true (hidden by a layer)
+var _group_cache: Dictionary = {}  ## item id -> ObjectLayers group
+## View tints (e.g. "Compare with my farm"): uid -> Color, multiplied in after _tints.
+var _vtints: Dictionary = {}
+const DIM_ALPHA := 0.28
 var _preview: Dictionary = {}      ## uid -> true (drag preview active)
 var _lifted: Dictionary = {}       ## uid -> true
 var last_sort_ms := 0.0
@@ -143,6 +151,8 @@ func rebuild_all() -> void:
 		_free_vis(v)
 	_vis.clear()
 	_hidden.clear()
+	_lhidden.clear()
+	_group_cache.clear()
 	_preview.clear()
 	_lifted.clear()
 	_pending.clear()
@@ -353,11 +363,26 @@ func _apply_modulate(v: Vis, o: PlacedObject) -> void:
 		m = MISSING_TINT
 	if _tints.has(o.uid):
 		m *= _tints[o.uid]
+	if _vtints.has(o.uid):
+		m *= _vtints[o.uid]
+	var lstate := ObjectLayers.SHOW
+	if not _layer_states.is_empty():
+		var g: Variant = _group_cache.get(o.item_id)
+		if g == null:
+			g = ObjectLayers.group_of(db, o.item_id)
+			_group_cache[o.item_id] = g
+		lstate = str(_layer_states.get(g, ObjectLayers.SHOW))
+	if lstate == ObjectLayers.HIDE:
+		_lhidden[o.uid] = true
+	else:
+		_lhidden.erase(o.uid)
+		if lstate == ObjectLayers.DIM:
+			m.a *= DIM_ALPHA
 	RenderingServer.canvas_item_set_modulate(v.ci, m)
-	var visible := not _hidden.has(o.uid)
+	var visible := not _hidden.has(o.uid) and lstate != ObjectLayers.HIDE
 	RenderingServer.canvas_item_set_visible(v.ci, visible)
 	if v.sci.is_valid():
-		RenderingServer.canvas_item_set_visible(v.sci, visible and not o.planned)
+		RenderingServer.canvas_item_set_visible(v.sci, visible and not o.planned and lstate != ObjectLayers.DIM)
 
 
 func _on_added(uids: Array) -> void:
@@ -379,7 +404,9 @@ func _on_removed(uids: Array) -> void:
 			_free_vis(v)
 			_vis.erase(u)
 			_hidden.erase(u)
+			_lhidden.erase(u)
 			_tints.erase(u)
+			_vtints.erase(u)
 			_preview.erase(u)
 			_lifted.erase(u)
 			_pending[u] = true
@@ -476,6 +503,56 @@ func set_tints(tints: Dictionary) -> void:
 		var o := layout.get_obj(u) if layout else null
 		if v and o:
 			_apply_modulate(v, o)
+
+
+func set_view_tints(tints: Dictionary) -> void:
+	## View-only tints (Compare with my farm), on top of set_tints(); {} clears.
+	var touched := {}
+	for u in _vtints:
+		if not tints.has(u) or tints[u] != _vtints[u]:
+			touched[u] = true
+	for u in tints:
+		if not _vtints.has(u) or tints[u] != _vtints[u]:
+			touched[u] = true
+	_vtints = tints.duplicate()
+	for u in touched:
+		var v: Vis = _vis.get(u)
+		var o := layout.get_obj(u) if layout else null
+		if v and o:
+			_apply_modulate(v, o)
+
+
+func view_tint_count() -> int:
+	return _vtints.size()
+
+
+func set_layer_states(states: Dictionary) -> void:
+	## Object layers (ObjectLayers): {group: "dim" | "hide"}; {} shows everything.
+	## View only: the layout is never touched. O(objects) per call.
+	var st := ObjectLayers.normalize(states)
+	if st == _layer_states:
+		return
+	_layer_states = st
+	_group_cache.clear()
+	if layout == null:
+		return
+	for u in _vis:
+		var o := layout.get_obj(u)
+		if o:
+			_apply_modulate(_vis[u], o)
+
+
+func layer_states() -> Dictionary:
+	return _layer_states.duplicate()
+
+
+func is_layer_hidden(uid: int) -> bool:
+	## Hidden by an object layer (not drawn, not pickable).
+	return _lhidden.has(uid)
+
+
+func layer_hidden_count() -> int:
+	return _lhidden.size()
 
 
 func refresh_theme() -> void:
@@ -1065,7 +1142,7 @@ func pick(world_pos: Vector2, include_hidden: bool = false) -> int:
 	var up: Dictionary = _order.seq.label
 	var fl: Dictionary = _flat_order.seq.label
 	for u: int in _spatial.get(k, []):
-		if u <= 0 or (not include_hidden and _hidden.has(u)):
+		if u <= 0 or (not include_hidden and _hidden.has(u)) or _lhidden.has(u):
 			continue
 		var v: Vis = _vis.get(u)
 		if v == null or not v.bounds.has_point(world_pos):
@@ -1077,10 +1154,26 @@ func pick(world_pos: Vector2, include_hidden: bool = false) -> int:
 		best_rank = r
 	if best != 0:
 		return best
-	var o := layout.object_at(Iso.world_to_tile(world_pos)) if layout else null
-	if o and (include_hidden or not _hidden.has(o.uid)):
-		return o.uid
-	return 0
+	var o := _tile_object(Iso.world_to_tile(world_pos), include_hidden)
+	return o.uid if o else 0
+
+
+func _tile_object(t: Vector2i, include_hidden: bool) -> PlacedObject:
+	## Top object whose footprint covers the tile, skipping layer-hidden ones
+	## (and drag/erase-hidden ones unless include_hidden).
+	if layout == null:
+		return null
+	var o := layout.object_at(t)
+	if o == null or (not include_hidden and _hidden.has(o.uid)):
+		return null
+	if not _lhidden.has(o.uid):
+		return o
+	var stacked: Array = layout.occupancy.all_at(t)
+	for i in range(stacked.size() - 1, -1, -1):
+		var u: int = stacked[i]
+		if not _lhidden.has(u) and (include_hidden or not _hidden.has(u)):
+			return layout.get_obj(u)
+	return null
 
 
 func pick_any(world_pos: Vector2, include_hidden: bool = false) -> Dictionary:
@@ -1099,7 +1192,7 @@ func pick_any(world_pos: Vector2, include_hidden: bool = false) -> Dictionary:
 		if v == null or not v.bounds.has_point(world_pos):
 			continue
 		if id > 0:
-			if not include_hidden and _hidden.has(id):
+			if (not include_hidden and _hidden.has(id)) or _lhidden.has(id):
 				continue
 		elif not v.selectable or not v.visible:
 			continue
@@ -1111,8 +1204,8 @@ func pick_any(world_pos: Vector2, include_hidden: bool = false) -> Dictionary:
 	if best != null:
 		return _pick_result(best)
 	var t := Iso.world_to_tile(world_pos)
-	var o := layout.object_at(t) if layout else null
-	if o and (include_hidden or not _hidden.has(o.uid)):
+	var o := _tile_object(t, include_hidden)
+	if o:
 		return {"kind": "object", "uid": o.uid, "key": ""}
 	for v: Vis in _wvis.values():
 		if v.selectable and v.visible and v.rect.has_point(t):
@@ -1139,7 +1232,7 @@ func pick_all(world_pos: Vector2, include_hidden: bool = false) -> Array:
 		if v == null or not v.bounds.has_point(world_pos):
 			continue
 		if id > 0:
-			if not include_hidden and _hidden.has(id):
+			if (not include_hidden and _hidden.has(id)) or _lhidden.has(id):
 				continue
 		elif not v.selectable or not v.visible:
 			continue
@@ -1157,7 +1250,7 @@ func pick_all(world_pos: Vector2, include_hidden: bool = false) -> Array:
 		var stacked: Array = layout.occupancy.all_at(t)
 		stacked.reverse()
 		for u in stacked:
-			if not seen.has(u) and (include_hidden or not _hidden.has(u)):
+			if not seen.has(u) and not _lhidden.has(u) and (include_hidden or not _hidden.has(u)):
 				seen[u] = true
 				out.append({"kind": "object", "uid": u, "key": ""})
 	var lms: Array = []
@@ -1180,7 +1273,7 @@ func uids_in_world_rect(r: Rect2) -> Array:
 	## Objects whose footprint centre lies inside a world-space rectangle.
 	var out: Array = []
 	for v: Vis in _vis.values():
-		if r.has_point(v.center):
+		if r.has_point(v.center) and not _lhidden.has(v.uid):
 			out.append(v.uid)
 	return out
 

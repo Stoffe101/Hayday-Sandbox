@@ -11,6 +11,7 @@ All layers run locally (Windows or Linux) and in CI (`.github/workflows/ci.yml`)
 | Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 266 tests / 11,239 assertions, 0 failed |
 | Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 329 checks, 0 failed |
 | Performance | `godot --headless --path . -- --selftest=perf` | synthetic farms 2k/5k/10k, densely packed real map, world layer, thumbnails | 7 checks, 0 failed (numbers below) |
+| Planning perf | `godot --headless --path . --script res://tests/perf/perf_planning.gd [-- --sizes=2000,5000,10000 --reps=30]` | budget engine, scopes, phases, checklist, shopping list, guide + exports on 2k/5k/10k real-item farms | table of mean / p95 / max (numbers below) |
 | Leak guard | `python3 tools/ci/check_private_leaks.py [--self-test]` | private art can't enter git (see PRIVATE_ASSETS.md) | self-test 56/56; tracked tree OK |
 | Export check | `python3 tools/ci/check_export_contents.py --self-test` | PCK contents scanner | OK |
 | Coverage | `python3 tools/catalog/coverage_report.py` + `git diff --exit-code docs/CATALOG_COVERAGE.md` | report is current | OK |
@@ -132,6 +133,46 @@ images decoded 1,474 → 741 (1,967 items). World layer: scenery build ~12 ms, g
 Canvas share at 1920×1080 with nothing selected: 48.3 % → 71.1 % after the panel changes.
 
 Rendering frame times are not measured: headless runs have no renderer, and CI uses Mesa llvmpipe (CPU).
+
+## Planning performance (`tests/perf/perf_planning.gd`, Windows development PC)
+
+Windows: `powershell -ExecutionPolicy Bypass -File tools\ci\run_godot.ps1 -TimeoutSec 1800 --script
+res://tests/perf/perf_planning.gd`. Each size: N real catalogue items from 500 item types (fixed seed) on the real
+map, real price file, 5 areas (2 polygons), 4 phases, a baseline (30 % in place, 5 % moved, 2 % removed), 10 %
+marked placed. Mean / p95 / max over 30 repetitions (10 or 5 for the slow cases). "Before" = HEAD b256fbc, "after" =
+this change, run back to back on 2026-11-10 while the PC was busy (expect ±30 % noise; compare columns, not runs).
+Outputs were checked to be identical: 485 hashed outputs (shopping rows in every mode and scope, breakdowns, totals,
+area lists, allocation order, guide JSON / CSV / HTML) on three real-catalogue layouts with edits in between, plus
+the equivalence unit tests in `test_shopping.gd`, `test_budget.gd` and `test_guide.gd`.
+
+| Case (mean ms) | 2k before | 2k after | 5k before | 5k after | 10k before | 10k after |
+|---|---:|---:|---:|---:|---:|---:|
+| Shop tab data, whole farm, after an edit (rows + supplies + totals) | 39.4 | 4.3 | 47.0 | 6.1 | 60.0 | 9.1 |
+| Shop tab data, phase, after an edit | 29.8 | 4.2 | 48.3 | 8.1 | 54.7 | 13.7 |
+| `ShoppingList.build` whole farm, after an edit (batched / unbatched) | 40.3 / 105.7 | 1.7 / 1.6 | 43.0 / 158.9 | 2.3 / 1.8 | 64.5 / 247.8 | 2.3 / 2.0 |
+| `ShoppingList.sort_rows` by name (500 rows) | 7.5 | 1.0 | 7.0 | 1.4 | 6.8 | 1.0 |
+| Totals of a 500-object selection | 0.90 | 0.08 | 1.27 | 0.16 | 1.17 | 0.30 |
+| `area_totals` rect + polygon, after a move | 9.4 | 2.0 | 23.6 | 3.9 | 56.7 | 6.1 |
+| `is_placed` for every object (overlay pattern), plain / batched | 283 / 6.9 | 282 / 1.6 | 1,140 / 17.0 | 1,213 / 4.6 | 3,755 / 29.7 | 3,671 / 10.0 |
+| `placed_set()` + a lookup per object | – | 0.41 | – | 0.98 | – | 1.67 |
+| `RecreationGuide.build` (1,565 / 3,714 / 7,170 steps) | 282 | 181 | 711 | 459 | 1,242 | 825 |
+| Edit (place / move / delete / undo / redo) + whole-farm refresh | 1.7–1.9 | 1.8–2.2 | 3.1–3.3 | 3.3–3.5 | 5.9–7.7 | 5.5–7.7 |
+| Full recompute + totals | 11.4 | 12.3 | 25.8 | 27.0 | 53.0 | 49.9 |
+| Phases tab (totals + status of every phase, cold) | 4.8 | 4.5 | 10.7 | 9.3 | 21.3 | 17.2 |
+| Mark 1 placed (PlanDoc + SetPlanning, engine) | 4.5, 10.3 | 4.8, 10.2 | 7.9, 20.9 | 7.3, 23.3 | 13.4, 33.0 | 12.8, 28.9 |
+| Build tab model (`PlanUiModels.checklist`) | 32.7 | 30.5 | 77.1 | 67.6 | 130.5 | 105.0 |
+| `GuideExport.to_html` / `to_csv` / `to_json` (10k: 2.7 / 1.4 / 7.0 MB) | 25 / 17 / 101 | 24 / 16 / 101 | 55 / 38 / 269 | 64 / 36 / 222 | 105 / 81 / 446 | 120 / 87 / 487 |
+
+What changed: `BudgetEngine` keeps per-item breakdowns (whole farm, and the exact lists `phase_uids()` /
+`area_uids()` return) and rebuilds them only for the items an edit touched; caches totals of uid lists per version;
+keeps area membership and updates it per edited object (polygons rasterised once, same arithmetic as
+`PlanDoc.point_in_polygon`); `begin_batch()` / `end_batch()` / `batch(f)` skip the per-query hash of the planning
+document; `placed_set()` for per-object loops. `ShoppingList.build` reuses rows whose item did not change (rows are
+read-only) and sorts on cached natural-order name ranks. `RecreationGuide` uses summed-area tables for "across the
+road" / "along the river", native sorts for cluster order, a rect test for small cluster groups and per-plot lookups
+for land; `options.primary` takes precomputed primary phases. Unchanged: the full recompute, single-edit refresh and
+the phases tab are dominated by one pass over every object (`_sum`, `_derive`); `PlanDoc.objects_in_area`,
+`Baseline.diff` and the guide exports are outside this change.
 
 ## Visual tests (`tests/visual/capture.gd`)
 

@@ -22,7 +22,7 @@ const ALL := ["overview", "place_valid", "place_invalid", "selection", "search",
 	"asset_manager", "asset_review", "asset_packs", "original_art", "asset_empty", "landmarks", "migration",
 	"drag_blocked", "tools_symmetry", "tools_repeat", "winter", "terrain_pack", "terrain_pack_winter", "terrain_pack_river",
 	"plan_budget", "plan_areas", "plan_phases", "plan_heatmap", "plan_shop", "plan_build", "plan_guide", "plan_accuracy",
-	"plan_minimap", "plan_layers", "plan_compare", "plan_ready"]
+	"plan_minimap", "plan_layers", "plan_compare", "plan_ready", "game_data"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
 const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "anim_perf"]
 ## Asset scenarios install a synthetic pack generated from the built-in
@@ -39,6 +39,7 @@ var main: Node
 var tag := ""
 var _pack_installed := false
 var _terrain_installed := false
+var _client_installed := false
 var real_art := false
 var outline_all := false   ## at_* scenarios select everything, so every footprint is outlined
 var hide_panels := false   ## hide top bar + side panels (Tab) for unobstructed QA shots
@@ -141,6 +142,14 @@ func _reset() -> void:
 		PackInstaller.uninstall(SynTerrain.PACK_ID)
 		_app().reload_assets()
 		_terrain_installed = false
+	if _client_installed:
+		ClientPrices.remove()
+		for f in [PriceBook.DEFAULT_CLIENT.get_basename() + ClientPrices.PREVIOUS_SUFFIX, ClientPrices.REPORT_PATH,
+				ClientPrices.REPORT_PATH.get_basename() + ".md"]:
+			if FileAccess.file_exists(f):
+				DirAccess.remove_absolute(ProjectSettings.globalize_path(f))
+		_app().reload_client_prices()
+		_client_installed = false
 	var s = _app().session
 	if s and _undo_after > 0:
 		# Edits a planning scenario made to the showcase (moved / new / removed objects).
@@ -624,6 +633,30 @@ func _scenario(sc: String) -> bool:
 			var ok_2: bool = await _asset_manager("bakery", 2)
 			if not ok_2:
 				return false
+		"game_data":
+			# Asset manager > Game data with an invented client-price supplement
+			# (real game data only with --real-art, whose shots go to the private root).
+			if not real_art:
+				var recs := ClientPrices.records_from_reference({"format": ClientPrices.REFERENCE_FORMAT, "records": [
+					{"table": "decorations", "source_name": "Bench", "purchase_price_fields": {"coins": 120}, "voucher_requirements": [], "can_buy_game_flag": true},
+					{"table": "deco_fences", "source_name": "Fence", "purchase_price_fields": {"coins": 4}, "voucher_requirements": [], "price_increase": 3, "increase_every_n_objects": 2},
+					{"table": "decorations", "source_name": "Water Dragon Steps", "purchase_price_fields": {}, "voucher_requirements": [{"game_currency": "Voucher3", "amount": 12}]},
+					{"table": "decorations", "source_name": "Moon Fountain", "purchase_price_fields": {"pearls": 40}, "voucher_requirements": []},
+					{"table": "decorations", "source_name": "Hay Bales", "purchase_price_fields": {"coins": 30}, "voucher_requirements": []},
+					{"table": "customization_house", "source_name": "RoofInvented", "purchase_price_fields": {"coins": 5000}, "voucher_requirements": []}]})
+				var pb0: PriceBook = _app().prices.derived(null)
+				var doc := ClientPrices.new().build(recs, _app().db, {}, {}, "0.0.0-synthetic", {"kind": "synthetic"})
+				var res := ClientPrices.install(doc, ClientPrices.build_report(doc, pb0, _app().db))
+				if not bool(res["ok"]):
+					print("FAIL synthetic client prices: ", res["error"])
+					return false
+				_client_installed = true
+				_app().reload_client_prices()
+			main._fit()
+			var amg = main._open_asset_manager("bakery")
+			await _frames(6)
+			amg.show_tab(3)
+			await _frames(20)
 		"asset_empty":
 			# What a user sees before installing any pack.
 			main._fit()

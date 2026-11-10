@@ -9,10 +9,10 @@ on 2026-11-09 at HEAD 8c93360 (logs in `artifacts\checks\docs\`) and were not re
 
 | Layer | Command (Linux form) | What it covers | Result |
 |---|---|---|---|
-| Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 147 scripts, 0 failed (end of the planning wave) |
+| Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 162 scripts, 0 failed (end of the game-data wave) |
 | Data | `python3 tools/ci/validate_data.py` | manifests, maps, asset pack refs, samples, price file (`data/prices/`), **licence guard** | 1,967 items, 0 errors, 0 warnings † |
-| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 427 tests / 15,243 assertions, 0 failed (end of the planning wave) |
-| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 506 checks, 0 failed (end of the planning wave; adds the "QA journeys" section) |
+| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 481 tests / 15,740 assertions, 0 failed (end of the game-data wave) |
+| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 515 checks, 0 failed (end of the game-data wave; QA 9b covers client prices) |
 | Performance | `godot --headless --path . -- --selftest=perf` | synthetic farms 2k/5k/10k, densely packed real map, world layer, thumbnails | 7 checks, 0 failed (numbers below) † |
 | Planning perf | `godot --headless --path . --script res://tests/perf/perf_planning.gd [-- --sizes=2000,5000,10000 --reps=30]` | budget engine, scopes, phases, checklist, shopping list, guide + exports on 2k/5k/10k real-item farms | table of mean / p95 / max (numbers below) |
 | Budget perf | `godot --headless --path . --script res://tests/perf/perf_budget.gd [-- --sizes=... --reps=20]` | `BudgetEngine` alone: full recompute, incremental edits | not part of the runners; run by hand |
@@ -113,6 +113,8 @@ Test counts per file are the `func test_*` functions at a511d0c (417 in total).
 | `test_layout_tools` | 29 | mirror lines, symmetry, repeat, align, distribute, brushes, stamps (`.hdstamp`) |
 | `test_references` | 12 | several reference images, migration from one image, 2/3-point calibration, one undo step per edit |
 | `test_terrain` | 11 | procedural terrain built from the map, only without game data, deterministic, keeps off buildable land, seamless textures, owned/locked frontier, a pack world replaces it |
+| `test_client_prices` | 17 | client-price supplement with invented tables: voucher mapping, pearls, 999 placeholder, continuation rows, copy limits, matching rules and review queue, shop/gift twins, precedence and merge, every-N rises, shop price → purchase counter, install / rollback, budget and shopping list agree |
+| `test_client_level` / `test_world_validator` | 18 | level-table parsing and the world check against synthetic client tables (`docs/research/WORLD_VALIDATION.md`) |
 | `test_terrain_pack` | 15 | pack terrain (`docs/TERRAIN_PACKS.md`) with the generated synthetic pack: manifest diagnostics, theme → variant, tile variants, piece expansion, `tile_types[].art`, AssetLibrary lookup, cached rebuilds, per-element fallback, Off/Reduced/Full |
 | `test_ambient` | 12 | animation sheets, Off/Reduced modes and OS default, mirror art, theme variants only when they exist |
 | `test_calibration` | 12 | N-point calibration: exact 2/3-point fits, least squares, outliers and verdicts, residual units, landmark anchors, reference layer uses the same fit |

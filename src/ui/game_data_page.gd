@@ -25,7 +25,17 @@ func _ready() -> void:
 
 func refresh() -> void:
 	UI.clear(_box)
-	_box.add_child(UI.label("Private data from your own game files makes the planner match the game. It stays in your private data folder (%s) and is never added to the project or shared." % ProjectSettings.globalize_path(ClientPrices.DATA_DIR), "Dim", true))
+	var intro := UI.hbox(8)
+	var il := UI.label("Private data from your own game files makes the planner match the game. It stays in your private data folder and is never added to the project or shared.", "Dim", true)
+	il.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	intro.add_child(il)
+	var of := UI.button("Open folder", "folder-open")
+	of.tooltip_text = "The private data folder of this app (prices, reports, your decisions)"
+	of.pressed.connect(func():
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(ClientPrices.DATA_DIR))
+		OS.shell_open(ProjectSettings.globalize_path(ClientPrices.DATA_DIR)))
+	intro.add_child(of)
+	_box.add_child(intro)
 	_status = UI.label("", "Dim", true)
 	_box.add_child(_status)
 	_box.add_child(_overview_card())
@@ -67,8 +77,9 @@ func _overview_card() -> PanelContainer:
 	var info: Dictionary = App.prices.client_info
 	var prices := "none: prices come from public research (%d items) and your own corrections" % App.prices.price_db_count()
 	if not info.is_empty():
-		prices = "client prices for game %s (%d items, %d appearance parts), imported %s" % [str(info["game_version"]),
-			int(info["items"]), int(info["components"]), str(info["generated"]).left(10)]
+		prices = "client prices for game %s (%d item%s, %d appearance part%s), imported %s" % [str(info["game_version"]),
+			int(info["items"]), "" if int(info["items"]) == 1 else "s", int(info["components"]),
+			"" if int(info["components"]) == 1 else "s", str(info["generated"]).left(10)]
 	_kv(grid, "Art pack", art)
 	_kv(grid, "World data", world)
 	_kv(grid, "Prices", prices)

@@ -51,7 +51,7 @@ step-by-step guide.
   [PLANNING.md](docs/PLANNING.md)):
   * **Budget chip** on the canvas: what the selection, active area, active phase or whole farm costs, per currency
     (coins, diamonds, vouchers and event currencies are never converted into each other), in three modes:
-    *Design cost*, *To buy* (owned copies deducted) and *Remaining* (also what you bought during the project).
+    *Design cost*, *Still to buy* (owned copies deducted) and *Remaining cost* (also what you bought during the project).
     Unknown prices, items that can't be bought and items with no inventory record are counted next to the total,
     never treated as 0.
   * **Plan panel** (J) with the tabs Budget, Areas, Phases, Shop, Build, Guide and Accuracy. Areas are rectangles

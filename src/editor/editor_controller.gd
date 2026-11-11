@@ -8,8 +8,8 @@ extends Node
 ## picked pixel-accurately with ObjectRenderer.pick_any(): hovering highlights
 ## one, clicking selects it (EditorSession.select_landmark), and trying to drag,
 ## erase, eyedrop or rotate one only emits `fixed_refused` with the session's
-## friendly explanation (main.gd shows it near the cursor). Box selection only
-## ever selects placed objects.
+## friendly explanation (main.gd shows it near the cursor). Tile / box selection
+## only ever selects placed objects.
 ##
 ## Select tool, drag on empty ground (setting "select_style"): "tiles" (default)
 ## selects the ground tiles between the press and the pointer — every object

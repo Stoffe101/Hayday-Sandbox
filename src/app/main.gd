@@ -514,13 +514,13 @@ func _fixed_refusal(action: String) -> bool:
 func catalog_width(win_w: float) -> float:
 	## Expanded catalogue width: the remembered one (settings), else ~17.5 % of the window.
 	var saved := float(App.settings.get_v("catalog_width"))
-	var auto := clampf(win_w * 0.175, 272.0, 380.0)
+	var auto := clampf(win_w * 0.175, 272.0, 440.0)   # wide windows get a 4th tile column
 	return clampf(saved if saved > 0.0 else auto, CATALOG_MIN, _side_max(win_w, CATALOG_MIN))
 
 
 func inspector_width(win_w: float) -> float:
 	var saved := float(App.settings.get_v("inspector_width"))
-	var auto := clampf(win_w * 0.19, 296.0, 400.0)
+	var auto := clampf(win_w * 0.19, 296.0, 440.0)
 	return clampf(saved if saved > 0.0 else auto, INSPECTOR_MIN, _side_max(win_w, INSPECTOR_MIN))
 
 

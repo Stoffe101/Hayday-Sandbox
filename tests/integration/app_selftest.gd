@@ -1139,6 +1139,9 @@ func _perf() -> void:
 	check(r5["edit_resort_ms"] < 1500.0, "single edit incl. re-sort at %d objects: %.0f ms" % [r5["objects"], r5["edit_resort_ms"]])
 	check(r5["place_check_us"] < 2000.0, "placement check: %.0f µs" % r5["place_check_us"])
 	check(r5["pick_us"] < 5000.0, "pixel-accurate pick: %.0f µs" % r5["pick_us"])
+	var r10: Dictionary = results[10000]
+	check(float(r10["tile_query_ms"]["p95"]) < 50.0, "tile-selection drag query at %d objects: p95 %.2f ms" % [r10["objects"], r10["tile_query_ms"]["p95"]])
+	check(float(r10["tile_select_ms"]) + float(r10["tile_outline_ms"]) < 1500.0, "selecting %d objects by tiles + outline: %.0f + %.0f ms" % [r10["tile_selected"], r10["tile_select_ms"], r10["tile_outline_ms"]])
 	check(r5["save_ms"] < 3000.0 and r5["load_ms"] < 3000.0, "save %.0f ms / load %.0f ms" % [r5["save_ms"], r5["load_ms"]])
 	App.maps.erase(big.id)
 	var e5: Dictionary = r5["edits"]
@@ -1226,6 +1229,22 @@ func _bench(label: String, n: int, map: FarmMap) -> Dictionary:
 	for i in 200:
 		main.renderer.pick(Iso.tile_center(Vector2i(rng.randi_range(0, map.size.x), rng.randi_range(0, map.size.y))))
 	var pick_us := (Time.get_ticks_usec() - t0) / 200.0
+	# Tile selection: the live query a drag runs per tile change (growing rectangles),
+	# then a large release: select + the combined outline the underlay draws.
+	var tq: Array = []
+	for i in 40:
+		var a0 := Vector2i(rng.randi_range(0, map.size.x / 2), rng.randi_range(0, map.size.y / 2))
+		var tt := Time.get_ticks_usec()
+		TileRegion.rect_uids(l, Iso.rect_from_corners(a0, a0 + Vector2i(2 + i * 2, 2 + i)))
+		tq.append((Time.get_ticks_usec() - tt) / 1000.0)
+	t0 = Time.get_ticks_usec()
+	var big_sel := App.session.select_tiles(Rect2i(0, 0, mini(120, map.size.x), mini(120, map.size.y)))
+	var select_ms := (Time.get_ticks_usec() - t0) / 1000.0
+	t0 = Time.get_ticks_usec()
+	var area := TileRegion.of_footprints(l, App.session.selection)
+	var edges := area.boundary_edges().size() / 2
+	var outline_ms := (Time.get_ticks_usec() - t0) / 1000.0
+	App.session.clear_selection()
 	var free := Vector2i(-1, -1)
 	for y in map.size.y:
 		for x in map.size.x:
@@ -1269,7 +1288,9 @@ func _bench(label: String, n: int, map: FarmMap) -> Dictionary:
 		"sort_ms": snappedf(sort_ms, 0.1), "place_check_us": snappedf(place_us, 0.1), "pick_us": snappedf(pick_us, 0.1),
 		"edit_resort_ms": snappedf(edit_ms, 0.1), "save_ms": snappedf(save_ms, 0.1), "load_ms": snappedf(load_ms, 0.1),
 		"analyze_ms": snappedf(analyze_ms, 0.1), "file_kb": text.length() / 1024, "loaded": back.count() if back else -1,
-		"frame_ms": snappedf(frame_ms, 0.01), "mem_mb": snappedf(OS.get_static_memory_usage() / 1048576.0, 0.1), "edits": edits}
+		"frame_ms": snappedf(frame_ms, 0.01), "mem_mb": snappedf(OS.get_static_memory_usage() / 1048576.0, 0.1), "edits": edits,
+		"tile_query_ms": _stats(tq), "tile_select_ms": snappedf(select_ms, 0.1), "tile_selected": big_sel.size(),
+		"tile_outline_ms": snappedf(outline_ms, 0.1), "tile_outline_edges": edges}
 
 
 static func _stats(samples: Array) -> Dictionary:

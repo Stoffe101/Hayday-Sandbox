@@ -167,7 +167,8 @@ object are harmless and become valid again on undo.
   then `acquired` copies, the rest are *to buy* and get purchase numbers `purchased+1, +2, …` for progressive
   prices. Reordering phases changes who gets owned copies first.
 * **Cost modes.** *Design cost* (gross): every object priced as a purchase in that same order starting from copy
-  #1, ignoring inventory. *To buy*: objects not covered by owned copies. *Remaining*: objects not covered by
+  #1, ignoring inventory. *Still to buy* (mode id `to_buy`): objects not covered by owned copies. *Remaining cost*
+  (`remaining`): objects not covered by
   owned or acquired copies. Each object carries its own cost, so any scope (selection, rectangle, polygon, area,
   phase, group, whole farm) is a sum over a set of uids: nothing is counted twice.
 * **Land.** Expansion plots the design needs (objects standing on locked plots) add their supplies
@@ -225,7 +226,9 @@ src/render/plan_overlay.gd     areas, phase highlight, progress ticks, guide num
 src/editor/plan_controller.gd  area tool (rectangle / polygon / from selection)
 ```
 
-UI: the budget chip on the canvas; the Plan panel (J) with the tabs Budget, Areas, Phases, Shop, Build, Guide and
+UI: the budget card on the canvas (scope · objects, mode, amounts, affordability against the recorded balances,
+breakdown; `PlanScope.affordability_of`, `PlanScope.price_sources`), the inspector's cost section and the
+catalogue's next-copy prices (`PlanScope.next_copy_tag`), all from the session's BudgetEngine / PriceBook; the Plan panel (J) with the tabs Budget, Areas, Phases, Shop, Build, Guide and
 Accuracy; the area tool; the inventory, price and "My real farm" dialogs; the canvas overlays (areas, phase
 highlight, guide numbers, progress, cost heatmap, compare tints); the overview map. Tabs act only through
 `PlanContext` (`App.plan_ctx`), which emits `changed` at most once per frame; every document edit is one

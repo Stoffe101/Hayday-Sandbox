@@ -144,7 +144,9 @@ tests/ unit/ (headless, --script) integration/app_selftest.gd (in-app) visual/ca
   (`SetReference`), saved views (`SetCameraBookmark`) and the world look (`SetWorldStateCommand`). Continuous
   gestures produce one command; rapid nudges merge (`merge_key`). History is bounded (300) and tracks a save point
   for the dirty flag and a `version` counter for caches.
-* **`EditorSession`** owns selection, the landmark selection (mutually exclusive with the object selection), tool,
+* **`EditorSession`** owns selection, the selected ground (`selection_region`, a `TileRegion`: the tiles a tile
+  selection covered; `select_tiles(rect, replace|add|subtract)`; it moves with a drag-move of the selection and is
+  dropped when a selected object leaves it, never by planning or inventory edits), the landmark selection (mutually exclusive with the object selection), tool,
   active item, clipboard, symmetry settings, the **`ConflictIndex`** and the cached Realistic analysis
   (`RealisticAnalyzer.Cached`). UI and canvas read the same `conflicts()` and `analysis()`; widgets call session
   methods and never touch the layout directly.

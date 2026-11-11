@@ -495,7 +495,7 @@ func _empty_state() -> void:
 	card.add_child(v)
 	v.add_child(UI.icon_rect("mouse-pointer-2", 28, UiTheme.c("accent")))
 	v.add_child(UI.label("Nothing selected", "Heading"))
-	v.add_child(UI.label("Click an object to inspect it, drag on empty ground to box-select, or pick something from the catalogue to start placing.", "Dim", true))
+	v.add_child(UI.label("Click an object to inspect it, or drag across empty ground to select the tiles and everything standing on them (Shift adds, Ctrl removes). Pick something from the catalogue to start placing.", "Dim", true))
 	_body.add_child(card)
 	var s := App.session
 	_body.add_child(UI.section("This farm"))
@@ -1297,7 +1297,7 @@ func _build_view(s: EditorSession) -> void:
 			["plan_show_progress", "Progress marks", "A check on objects marked placed in Hay Day"],
 			["plan_show_heatmap", "Cost heatmap", "Objects coloured by what they cost (legend in Plan › Budget)"],
 			["plan_show_guide", "Guide step numbers", "The current guide step(s) and their numbers"],
-			["budget_visible", "Budget chip", "Cost of the selection, area, phase or farm in a corner of the canvas"]]:
+			["budget_visible", "Budget card", "What the selection, area, phase or farm costs, in a corner of the canvas"]]:
 		var cb := CheckButton.new()
 		cb.text = t[1]
 		cb.tooltip_text = t[2] + ". Never in exported pictures unless the export asks for it."

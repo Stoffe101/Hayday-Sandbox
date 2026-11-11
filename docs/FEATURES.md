@@ -19,10 +19,18 @@ Status: ✅ implemented & tested · 🟡 implemented, partially verified · ⬜ 
 * ✅ Favourites (right-click), recently placed, sort by relevance/name/level/size
 * ✅ Filters: fits my level, trusted sizes only, hide reference-only, only items with their own art
 * ✅ Thumbnail grid with progressive loading, detail card with size/level/price/status badges
+* ✅ Every tile shows the price of the next copy in this design (coin / diamond / voucher / pearl mark; ↑ when the
+  price rises per copy), "Not sold" or "? price"; the tooltip names the full price. Same PriceBook as the budget.
 * ✅ Variant picker for placed objects whose art has variants (inspector, undoable); art badges + variant counts
 
 ## Editing tools
-* ✅ Select, box select (marquee), Shift/Ctrl add, double-click selects all of a type, select all; click again to select the object behind; right-click "Objects here"
+* ✅ Select; **tile selection**: drag across empty ground and the ground tiles light up as whole diamonds; every
+  object whose footprint stands on one of them is selected (big buildings by any one tile; art that hangs over
+  other tiles never counts). Shift+drag adds tiles, Ctrl+drag removes them, a click on empty ground clears. The
+  selected ground stays highlighted under the objects (soft fill, tile lines, one outline around everything
+  selected) and moves with the selection when it is dragged. Settings › "Drag on empty ground selects" keeps the
+  classic screen rectangle for those who prefer it.
+* ✅ Shift/Ctrl+click add, double-click selects all of a type, select all; click again to select the object behind; right-click "Objects here"
 * ✅ Drag-move single/multi/groups with live preview, hysteresis, per-tile validity and blocker outlines; invalid drops snap back with a reason, or (Alt / setting) jump to the nearest free spot
 * ✅ Layout tools: symmetry placement (3 mirror lines), repeat arrays, align, equal spacing, fence/path line and outline brushes, stamps (`.hdstamp`, export/import)
 * ✅ Place: click, paint strokes, Shift line, Ctrl/“Fill” rectangle, repeat placement; per-tile green/red/orange preview with reasons
@@ -98,13 +106,22 @@ unless noted.
 * ✅ Import CSV or JSON (tolerant: header or none, `,` `;` or tab, names or ids, aliases; unknown and ambiguous
   rows are reported, not guessed) and export CSV / JSON. Apply = one undo step; Cancel discards.
 
-### Budget chip (canvas)
-* ✅ A chip in a corner of the canvas with the cost per currency (never converted), the scope and the mode.
+### Budget card (canvas)
+* ✅ A card in a corner of the canvas: what is counted ("Selected area · 24 objects", "Whole farm · 260 objects",
+  "Area: …", "Phase: …"), the mode, the cost per currency in large type (never converted), and one status line:
+  whether your recorded balances cover it ("Your balance covers it", "Short: 12,400 coins", "No balance recorded
+  for diamonds") — a missing balance is never treated as 0. The breakdown (⌄) lists per currency Needed / You
+  have / Missing, the counts, what the total leaves out and where the prices come from (your game files,
+  researched, your own price, unverified).
+* ✅ The inspector shows the cost too: the selected object's price (this copy, the next copy when prices rise,
+  copies in the design and owned, a price-source badge), a multi-selection's total in the current mode plus its
+  design cost, and the next copy's price of the item being placed. Placement previews add the cost of the copies
+  being placed ("6 × Fence · 6 fit · 582 coins").
 * ✅ Scope follows the selection, else the active area, else the active phase, else the whole farm; click the
   scope to pin it to the whole farm instead.
 * ✅ Modes (click the mode to switch): **Design cost** (every object priced as a purchase, inventory ignored),
-  **To buy** (owned copies deducted, plus the expansion supplies of locked plots the design stands on),
-  **Remaining** (also deducts copies bought during the project).
+  **Still to buy** (owned copies deducted, plus the expansion supplies of locked plots the design stands on),
+  **Remaining cost** (also deducts copies bought during the project).
 * ✅ A warning next to the total counts unknown prices, items that can't be bought and unknown ownership; click it
   for the breakdown. The ⋮ menu shows or hides the breakdown, shrinks it to one line, moves it to another corner,
   opens the Budget tab or hides it (View tab › Planning layers › Budget chip brings it back). Size, corner,

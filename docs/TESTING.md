@@ -10,10 +10,10 @@ on 2026-11-09 at HEAD 8c93360 (logs in `artifacts\checks\docs\`) and were not re
 
 | Layer | Command (Linux form) | What it covers | Result |
 |---|---|---|---|
-| Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 173 scripts, 0 failed (end of W5) |
+| Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 175 scripts, 0 failed (editor UX pass) |
 | Data | `python3 tools/ci/validate_data.py` | manifests, maps, asset pack refs, samples, price file (`data/prices/`), **licence guard** | 1,967 items, 0 errors, 0 warnings (end of W5) |
-| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 528 tests / 16,311 assertions, 0 failed (end of W5) |
-| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 539 checks, 0 failed (end of W5, fresh data folder); 544 with the private pack (copied data folder) |
+| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 537 tests / 16,354 assertions, 0 failed (editor UX pass) |
+| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 565 checks, 0 failed (editor UX pass, fresh data folder); 570 with the private pack (copied data folder) |
 | Performance | `godot --headless --path . -- --selftest=perf` | synthetic farms 2k/5k/10k, densely packed real map, world layer, thumbnails | 7 checks, 0 failed (numbers below) † |
 | Planning perf | `godot --headless --path . --script res://tests/perf/perf_planning.gd [-- --sizes=2000,5000,10000 --reps=30]` | budget engine, scopes, phases, checklist, shopping list, guide + exports on 2k/5k/10k real-item farms | table of mean / p95 / max (numbers below) |
 | Budget perf | `godot --headless --path . --script res://tests/perf/perf_budget.gd [-- --sizes=... --reps=20]` | `BudgetEngine` alone: full recompute, incremental edits | not part of the runners; run by hand |
@@ -22,7 +22,7 @@ on 2026-11-09 at HEAD 8c93360 (logs in `artifacts\checks\docs\`) and were not re
 | Coverage | `python3 tools/catalog/coverage_report.py` + `git diff --exit-code docs/CATALOG_COVERAGE.md` | report is current | OK (end of W5) |
 | Terrain pack | `godot --headless --path . --script res://tools/ci/check_terrain_pack.gd [-- <terrain.json>]` | a terrain pack manifest (no path: a generated synthetic pack) | `TERRAIN PACK OK` (end of W5) |
 | Exported build | `build/linux/HaydaySandbox.x86_64 --headless -- --selftest` | packaging of data/art/samples in an export | cloud box W5: 539 checks, 0 failed in 3 of 4 runs; the first crashed (segfault, KNOWN_ISSUES.md). Windows `.exe` exported and content-checked there, not executable (no Wine) |
-| Visual | `tools/ci/visual_tests.sh all` / `tools\ci\visual_tests.ps1 all` | 48 UI scenarios (12 of them planning) + extras, real rendering | screenshots, inspected by eye (W5b: the main scenarios at 4 resolutions × 4 UI scales, public and private) |
+| Visual | `tools/ci/visual_tests.sh all` / `tools\ci\visual_tests.ps1 all` | 51 UI scenarios (12 of them planning; tile_drag, tile_select and budget_breakdown added in the editor UX pass) + extras, real rendering | screenshots, inspected by eye (editor UX pass: the main scenarios at 5 resolution × scale configurations, public and private) |
 
 ## Running everything
 
@@ -138,7 +138,7 @@ Test counts per file are the `func test_*` functions at a511d0c (417 in total).
 | `test_plan_context` | 3 | the session owns and disposes its budget, `set_map` rebinds it, context view state and scope |
 | `test_planning_extras` | 10 | object layer groups / states / never touching the layout, readiness rows (ready, blocking, Realistic-only level, fixed landmarks), area → stamp, accuracy wording |
 
-## Integration self-test (`tests/integration/app_selftest.gd`, 539 checks at the end of W5)
+## Integration self-test (`tests/integration/app_selftest.gd`, 565 checks after the editor UX pass)
 
 Runs inside the real application (autoloads, UI, renderer, controller) and feeds synthetic mouse/keyboard events.
 Areas covered: catalogue/map/art/sample integrity; v1 and v2 layout migration (frame shift, landmarks moved to the

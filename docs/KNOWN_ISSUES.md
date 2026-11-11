@@ -1,5 +1,8 @@
 # Known issues and limitations
 
+Editor UX pass (2026-11-11): tile selection, the budget card, costs in the inspector and catalogue. Its own
+limits are listed under "Editor"; everything below still applies.
+
 State at the end of W5 (authentic visual fidelity + real-world verification; W5a = 7ce14cc, W5b = the commit after
 it), 2026-11-10. Checks at that state (cloud box, Godot 4.7.2): see the table in [TESTING.md](TESTING.md); with the
 private pack installed (copied data folder) the self-test passes too, and `--selftest=packcycle` shows that
@@ -108,6 +111,12 @@ collected under [Pending a real screenshot](#pending-a-real-screenshot-and-how-t
 * Scenery forest is decorative only and identical for every layout on a map.
 
 ## Editor
+* **Tile selection is a rectangle per drag.** Irregular areas are built with Shift/Ctrl drags; there is no tile
+  brush. The selected ground can't be dragged by its empty tiles: drag one of the selected objects to move them.
+  A press on ground that an object's art covers picks that object (pixel-accurate picking), so start a tile drag
+  on visible ground.
+* **Catalogue price chips sit on the bottom of the thumbnail** and can cover a little of the art; the name below
+  stays clear.
 * **Realistic Mode costs about 27 ms per edit at 10,000 objects** (`--selftest=perf`, cloud box 4-CPU llvmpipe,
   45 edits: mean 62.5 / p95 74.3 ms before the incremental report, 27.1 / 31.2 ms after; Creative about 0.6–0.8 ms).
   The report is incremental now (docs/PLANNING.md §7); what is left is mostly the issue list and marks main.gd

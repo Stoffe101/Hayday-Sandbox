@@ -163,7 +163,7 @@ func select_tiles(rect: Rect2i, op: String = "replace", keep: Callable = Callabl
 				region = selection_region.duplicate_region()
 				region.remove_rect(rect)
 		_:
-			selection = found
+			selection = found.duplicate()   # never share the returned array with `selection`
 			region = TileRegion.from_rect(rect)
 	selection_region = region if region != null and not region.is_empty() and not selection.is_empty() else null
 	selection_changed.emit()

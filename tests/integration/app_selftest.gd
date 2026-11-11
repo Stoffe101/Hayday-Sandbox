@@ -414,6 +414,8 @@ func _integration() -> void:
 	await _camera_check()
 	await _drag_check()
 	await _tile_select_check()
+	await _area_move_check()
+	_samples_fit_check()
 	await _motion_check()
 	await _world_art_check()
 	var bakery := App.db.get_item("bakery")
@@ -1132,6 +1134,7 @@ func _perf() -> void:
 	for n in [2000, 5000, 10000]:
 		results[n] = await _bench(str(n), n, big)
 	results["thumbnails"] = await _bench_thumbs()
+	results["area_move"] = await _bench_area_move()
 	for k in results:
 		print("PERF %s %s" % [k, JSON.stringify(results[k])])
 	var r5: Dictionary = results[5000]
@@ -1388,6 +1391,67 @@ func _bench_edits(l: FarmLayout, map: FarmMap, rng: RandomNumberGenerator) -> Di
 			"inspector_rebuild": _stats(inspector)}
 	s.set_mode(FarmLayout.MODE_CREATIVE)
 	await _frames(1)
+	return out
+
+
+func _bench_area_move() -> Dictionary:
+	## Dragging a tile-selected arrangement of N objects (one pointer event per
+	## frame, 20 steps) on a big synthetic map: ms per pointer event, mean / p95,
+	## and the drop. Real pointer events through main._on_canvas_input.
+	var out := {}
+	var big := FarmMap.make_simple(120, 120)
+	App.maps[big.id] = big
+	for n in [10, 100, 500, 1000, 2000]:
+		var l := FarmLayout.new()
+		l.map_id = big.id
+		l.set_unlocked(big.all_plot_ids(), false)
+		var side := int(ceil(sqrt(float(n) * 2.0)))
+		var objs: Array = []
+		var k := 0
+		for y in side:
+			for x in side:
+				if k < n and (x + y) % 2 == 0:
+					var po := PlacedObject.new()
+					po.item_id = "fence" if k % 3 == 0 else "stone_path"
+					po.origin = Vector2i(10 + x, 10 + y)
+					po.size = App.db.get_item(po.item_id).size_for(false)
+					if po.size == Vector2i.ONE:
+						objs.append(po)
+						k += 1
+		l.add_objects(objs, false)
+		App.open_layout(l)
+		await _frames(3)
+		var s := _s()
+		s.set_tool("select")
+		main.camera.smooth = false
+		main.camera.set_zoom_level(0.5)
+		main.camera.center_on(Iso.tile_center(Vector2i(10 + side / 2, 10 + side / 2)))
+		await _frames(3)
+		s.select_tiles(Rect2i(10, 10, side, side))
+		var empty := Vector2i(11, 10)   # (x + y) odd: no object there
+		var pa := _screen_of_tile(empty)
+		var pb := _screen_of_tile(empty + Vector2i(6, 3))
+		var first: PlacedObject = objs[0]
+		var o0 := first.origin
+		var steps0 := s.stack.size()
+		_move(pa)
+		_button(pa, true)
+		var ts: Array = []
+		for i in range(1, 21):
+			var t0 := Time.get_ticks_usec()
+			_move(pa.lerp(pb, i / 20.0), MOUSE_BUTTON_MASK_LEFT)
+			ts.append((Time.get_ticks_usec() - t0) / 1000.0)
+			await get_tree().process_frame
+		var t1 := Time.get_ticks_usec()
+		_button(pb, false)
+		var drop_ms := (Time.get_ticks_usec() - t1) / 1000.0
+		out[str(n)] = {"objects": s.selection.size(), "move_event_ms": _stats(ts), "drop_ms": snappedf(drop_ms, 0.1),
+			"moved": first.origin == o0 + Vector2i(6, 3) and s.stack.size() == steps0 + 1}
+		check(bool(out[str(n)]["moved"]), "area move of %d objects lands 6, 3 tiles away in one step" % s.selection.size())
+		check(float(out[str(n)]["move_event_ms"]["p95"]) < 400.0, "area move of %d objects: pointer event p95 %.1f ms, drop %.0f ms" % [s.selection.size(), out[str(n)]["move_event_ms"]["p95"], drop_ms])
+	App.maps.erase(big.id)
+	App.open_layout(App.new_layout("Perf end", "starter"))
+	await _frames(2)
 	return out
 
 
@@ -1973,7 +2037,10 @@ func _tile_select_check() -> void:
 	check(s.selection_region != null and s.selection_region.bounds() == Rect2i(area0.position + Vector2i(0, 2), area0.size), "the selected ground moves with it")
 	_key(KEY_Z, true)
 	check(small.origin == from and s.selection == [small.uid], "undo puts it back and keeps it selected (%s → %s, %s)" % [str(from), str(small.origin), str(s.selection)])
-	check(s.selection_region == null, "…and drops the area that no longer matches")
+	check(s.selection_region != null and s.selection_region.bounds() == area0, "…and the selected ground goes back with it")
+	_key(KEY_Z, true, true)
+	check(small.origin == from + Vector2i(0, 2) and s.selection_region != null and s.selection_region.bounds().position == area0.position + Vector2i(0, 2), "redo moves object and ground again")
+	_key(KEY_Z, true)
 	# 6. Planning/inventory edits keep the selected area.
 	_drag_tiles(at + Vector2i(13, 6), at)
 	var p: Dictionary = s.layout.profile.duplicate(true)
@@ -2014,6 +2081,216 @@ func _tile_select_check() -> void:
 	_button(qa, false)
 	check(s.selection.is_empty() and main.overlay.tile_drag.size == Vector2i.ZERO, "Esc cancels the tile drag")
 	# Clean up: undo everything this check placed.
+	while s.stack.size() > steps0 and s.stack.can_undo():
+		s.stack.undo()
+	s.clear_selection()
+	await _frames(2)
+
+
+func _samples_fit_check() -> void:
+	## Every bundled sample, opened as a new layout in the ACTIVE world (public map,
+	## or private game data with the real road and landmarks), has nothing on fixed ground.
+	print("Samples on this world")
+	for f in DirAccess.get_files_at("res://data/samples"):
+		if not f.ends_with(".hdlayout"):
+			continue
+		var l := App.library.load_path("res://data/samples/" + f, LayoutIO.LoadReport.new())
+		if l == null:
+			check(false, "%s loads" % f)
+			continue
+		var fit := WorldFit.plan(l, App.map, App.db)
+		WorldFit.apply_to_new(l, fit)
+		check(LayoutIO.find_collisions(l, App.map).is_empty(), "%s fits %s (%s)" % [f, "the private world" if App.map.is_game_data() else "the public map",
+			WorldFit.summary(fit) if not WorldFit.is_empty(fit) else "nothing to fit"])
+	for t in ["starter", "expanded", "new_farm"]:
+		check(LayoutIO.find_collisions(App.new_layout("check", t), App.map).is_empty(), "template %s has nothing on fixed ground" % t)
+	# An open layout with a fence on the road: the Issues card offers the explicit
+	# repair; it is one undo step and touches nothing else.
+	var ss := _s()
+	var road := Vector2i(-9999, -9999)
+	for y in App.map.size.y:
+		for x in App.map.size.x:
+			if road.x == -9999 and App.map.kind_at(Vector2i(x, y)) == FarmMap.Kind.ROAD and ss.layout.occupancy.at(Vector2i(x, y)) == 0:
+				road = Vector2i(x, y)
+	if road.x == -9999:
+		check(false, "a road tile for the repair check")
+		return
+	var po := PlacedObject.new()
+	po.item_id = "fence"
+	po.origin = road
+	po.size = Vector2i.ONE
+	ss.layout.add_objects([po])   # as an old layout might have it (bypasses the placement rules)
+	ss.conflict_index.invalidate_all()
+	main._refresh_issues()
+	ss.clear_selection()
+	main.inspector.show_tab(0)
+	main.inspector.rebuild()
+	check("Fit to this farm…" in _qa_texts(main.inspector), "the Issues card offers “Fit to this farm…” for an object on the road")
+	var n0 := ss.layout.count()
+	var st := ss.stack.size()
+	var done := ss.fit_to_world(ss.conflicts().keys())
+	check(ss.layout.get_obj(po.uid) == null and ss.layout.count() == n0 - 1 and ss.stack.size() == st + 1, "…which removes just that fence piece, in one step (%s)" % WorldFit.summary(done))
+	ss.stack.undo()
+	check(ss.layout.get_obj(po.uid) != null, "undo puts it back (nothing is lost)")
+	ss.layout.remove_objects([po.uid])
+
+
+func _ground_under_art(o: PlacedObject) -> Vector2i:
+	## A ground tile near `o` that no footprint covers but o's art does (x = -9999: none).
+	var s := _s()
+	for d in range(1, 4):
+		for dy in range(-d, 1):
+			for dx in range(-d, 1):
+				var t := o.origin + Vector2i(dx, dy)
+				if s.layout.occupancy.at(t) != 0:
+					continue
+				var st: Array = main.controller.objects_here(Iso.tile_center(t))
+				if not st.is_empty() and int(st[0]["uid"]) == o.uid:
+					return t
+	return Vector2i(-9999, -9999)
+
+
+func _area_move_check() -> void:
+	## Moving a whole arrangement by its selected ground: a drag from any selected
+	## tile (empty, or covered by art) moves every selected object together, one
+	## undo step, all or nothing; Shift/Ctrl in the area still add / remove tiles;
+	## a click there moves nothing; Alt+drag selects ground under any art.
+	print("Area move")
+	var s := _s()
+	var cam: FarmCamera = main.camera
+	var ctl: EditorController = main.controller
+	s.set_tool("select")
+	s.clear_selection()
+	var at := _free_area(Vector2i(18, 4), Vector2i(14, 8))
+	if at.x == -9999:
+		check(false, "free area for the area-move checks")
+		return
+	cam.set_zoom_level(1.0)
+	cam.center_on(Iso.tile_center(at + Vector2i(8, 5)))
+	await _frames(3)
+	var steps0 := s.stack.size()
+	# A small garden with gaps: a bakery, a tree, a bench, a fence line, path tiles.
+	var objs: Array = [_put("bakery", at + Vector2i(1, 1)), _put("apple_tree", at + Vector2i(6, 1)), _put("bench", at + Vector2i(6, 4))]
+	for i in 4:
+		objs.append(_put("fence", at + Vector2i(1 + i, 6)))
+	for i in 3:
+		objs.append(_put("stone_path", at + Vector2i(8, 1 + i)))
+	var ok_all := true
+	for o in objs:
+		ok_all = ok_all and o != null
+	check(ok_all, "area move: a garden of %d objects placed" % objs.size())
+	if not ok_all:
+		return
+	var garden := Rect2i(at, Vector2i(9, 7))
+	_drag_tiles(garden.end - Vector2i.ONE, garden.position)
+	check(s.selection.size() == objs.size() and s.selection_region != null, "the garden is tile-selected (%d of %d)" % [s.selection.size(), objs.size()])
+	var before := {}
+	for o: PlacedObject in objs:
+		before[o.uid] = o.origin
+	# An empty selected tile (no footprint on it).
+	var empty := Vector2i(-9999, -9999)
+	for y in range(garden.position.y, garden.end.y):
+		for x in range(garden.position.x, garden.end.x):
+			var t := Vector2i(x, y)
+			if empty.x == -9999 and s.layout.occupancy.at(t) == 0 and s.selection_region.has(t) and ctl.objects_here(Iso.tile_center(t)).is_empty():
+				empty = t
+	check(empty.x != -9999, "an empty tile inside the selected garden")
+	# 1. Hover shows a move cursor there.
+	ctl._update_hover(empty, _screen_of_tile(empty))
+	check(main.overlay.region_hover and main.canvas_area.mouse_default_cursor_shape == Control.CURSOR_MOVE, "hovering the selected ground shows the move cursor")
+	# 2. A click there moves nothing and keeps the selection.
+	var steps1 := s.stack.size()
+	_click_tile(empty)
+	check(s.stack.size() == steps1 and s.selection.size() == objs.size() and s.selection_region != null, "clicking an empty selected tile keeps the selection and moves nothing")
+	# 3. Dragging it moves the whole arrangement, one step, shape intact.
+	_drag_tiles(empty, empty + Vector2i(5, 0))
+	var moved_ok := true
+	for o: PlacedObject in objs:
+		moved_ok = moved_ok and o.origin == (before[o.uid] as Vector2i) + Vector2i(5, 0)
+	check(moved_ok and s.stack.size() == steps1 + 1, "dragging an empty selected tile moves all %d objects by 5 tiles in one step" % objs.size())
+	check(s.selection.size() == objs.size() and s.selection_region != null and s.selection_region.bounds().position == garden.position + Vector2i(5, 0), "selection and selected ground follow the arrangement")
+	# 4. Undo / redo move everything (and the ground) back and forth.
+	_key(KEY_Z, true)
+	var back := true
+	for o: PlacedObject in objs:
+		back = back and o.origin == before[o.uid]
+	check(back and s.selection_region != null and s.selection_region.bounds().position == garden.position, "undo restores every object and the selected ground")
+	_key(KEY_Z, true, true)
+	check(objs[0].origin == (before[objs[0].uid] as Vector2i) + Vector2i(5, 0), "redo moves them again")
+	_key(KEY_Z, true)
+	# 5. All or nothing: a drop onto blocked ground moves nobody.
+	var steps2 := s.stack.size()
+	_drag_tiles(empty, empty + Vector2i(-60, 0))
+	var still := true
+	for o: PlacedObject in objs:
+		still = still and o.origin == before[o.uid]
+	check(still and s.stack.size() == steps2, "a drop outside the farm moves nothing (atomic)")
+	# 6. Esc during the drag cancels it.
+	var pa := _screen_of_tile(empty)
+	_move(pa)
+	_button(pa, true)
+	for i in range(1, 6):
+		_move(pa.lerp(_screen_of_tile(empty + Vector2i(3, 0)), i / 5.0), MOUSE_BUTTON_MASK_LEFT)
+	check(main.overlay.move_active, "the move preview carries the selected ground along")
+	ctl.cancel()
+	_button(_screen_of_tile(empty + Vector2i(3, 0)), false)
+	check(objs[0].origin == before[objs[0].uid] and s.stack.size() == steps2 and not main.overlay.move_active, "Esc cancels the area move")
+	# 7. Shift / Ctrl inside the area change the tiles, never move.
+	_drag_tiles(empty, empty + Vector2i(0, 1), true)
+	check(s.stack.size() == steps2 and objs[0].origin == before[objs[0].uid], "Shift-drag inside the area adds tiles, moves nothing")
+	_drag_tiles(at + Vector2i(9, 3), at + Vector2i(8, 1), false, true)
+	check(not (objs[8].uid in s.selection) and s.stack.size() == steps2, "Ctrl-drag inside the area removes those tiles' objects, moves nothing")
+	# 8. A locked object in the area: the area refuses to move (nothing is left behind).
+	_drag_tiles(garden.end - Vector2i.ONE, garden.position)
+	s.select([objs[2].uid])
+	_key(KEY_L)
+	_drag_tiles(garden.end - Vector2i.ONE, garden.position)
+	var steps3 := s.stack.size()
+	_drag_tiles(empty, empty + Vector2i(4, 0))
+	check(s.stack.size() == steps3 and objs[0].origin == before[objs[0].uid], "an area with a locked object doesn't move (nothing left behind)")
+	s.select([objs[2].uid])
+	_key(KEY_L)
+	# 9. Saved and loaded, the moved arrangement keeps its shape and object ids.
+	_drag_tiles(garden.end - Vector2i.ONE, garden.position)
+	_drag_tiles(empty, empty + Vector2i(4, 1))
+	var copy := LayoutIO.from_dict(LayoutIO.to_dict(s.layout), App.db)
+	var same := copy != null
+	for o: PlacedObject in objs:
+		var c := copy.get_obj(o.uid) if copy else null
+		same = same and c != null and c.origin == (before[o.uid] as Vector2i) + Vector2i(4, 1) and c.item_id == o.item_id
+	check(same, "a saved and reloaded layout keeps the moved arrangement and its object ids")
+	# 10. Ground under oversized art: a plain press picks the object, Alt+drag selects the ground.
+	var tree: PlacedObject = objs[0]
+	main.renderer.ensure_sorted()
+	var under := _ground_under_art(tree)
+	check(under.x != -9999, "a ground tile covered only by the bakery's art (%s)" % str(under))
+	if under.x != -9999:
+		s.clear_selection()
+		var pu := _screen_of_tile(under)
+		var pv := _screen_of_tile(under + Vector2i(-2, -1))
+		_move(pu)
+		var ea := InputEventMouseButton.new()
+		ea.position = pu
+		ea.button_index = MOUSE_BUTTON_LEFT
+		ea.pressed = true
+		ea.alt_pressed = true
+		ea.button_mask = MOUSE_BUTTON_MASK_LEFT
+		main._on_canvas_input(ea)
+		for i in range(1, 6):
+			_move(pu.lerp(pv, i / 5.0), MOUSE_BUTTON_MASK_LEFT)
+		check(ctl._gesture == "tiles" and main.overlay.tile_drag.size != Vector2i.ZERO, "Alt+drag on art over empty ground starts a ground selection")
+		var er := InputEventMouseButton.new()
+		er.position = pv
+		er.button_index = MOUSE_BUTTON_LEFT
+		er.alt_pressed = true
+		main._on_canvas_input(er)
+		var ground := Iso.rect_from_corners(under, under + Vector2i(-2, -1))
+		check(ctl._gesture == "" and (not (tree.uid in s.selection) or ground.intersects(tree.rect())),
+			"…and selects by the ground tiles, not the object whose art covers them (%s)" % str(s.selection))
+		s.clear_selection()
+		var steps4 := s.stack.size()
+		_click_tile(under)
+		check(s.selection == [tree.uid] and s.stack.size() == steps4, "a plain click on that art still selects the object")
 	while s.stack.size() > steps0 and s.stack.can_undo():
 		s.stack.undo()
 	s.clear_selection()

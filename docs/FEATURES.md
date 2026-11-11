@@ -30,6 +30,14 @@ Status: ✅ implemented & tested · 🟡 implemented, partially verified · ⬜ 
   selected ground stays highlighted under the objects (soft fill, tile lines, one outline around everything
   selected) and moves with the selection when it is dragged. Settings › "Drag on empty ground selects" keeps the
   classic screen rectangle for those who prefer it.
+* ✅ **Move a whole arrangement by its ground**: press anywhere on the selected tiles — an empty one, or one a
+  tree's or building's art hangs over — and drag: every selected object moves together, relative positions intact
+  (✥ cursor over the selected ground; a click there changes nothing). The preview shows the real art at the
+  destination, the selected ground travelling with it, and red tiles plus a reason where it can't land. It all
+  moves or nothing does (an area with a locked object refuses and says why); one undo step, and undo / redo / arrow
+  nudges carry the selected ground along.
+* ✅ **Alt+drag selects the ground even under oversized art** (a plain click on that art still picks the object;
+  Alt+click is still the eyedropper).
 * ✅ Shift/Ctrl+click add, double-click selects all of a type, select all; click again to select the object behind; right-click "Objects here"
 * ✅ Drag-move single/multi/groups with live preview, hysteresis, per-tile validity and blocker outlines; invalid drops snap back with a reason, or (Alt / setting) jump to the nearest free spot
 * ✅ Layout tools: symmetry placement (3 mirror lines), repeat arrays, align, equal spacing, fence/path line and outline brushes, stamps (`.hdstamp`, export/import)
@@ -105,6 +113,14 @@ unless noted.
   baseline uses (recorded counts are never lowered).
 * ✅ Import CSV or JSON (tolerant: header or none, `,` `;` or tab, names or ids, aliases; unknown and ambiguous
   rows are reported, not guessed) and export CSV / JSON. Apply = one undo step; Cancel discards.
+
+### Samples on your world
+* ✅ The bundled samples are drawn on the public map. Opened as a new layout in another world (private game data
+  with the real road, driveway and landmarks), objects that would stand where the game never allows them are
+  fitted: fence / path pieces and 1×1 items there are left out, larger objects move to the nearest free spot; a
+  message says how many. `tools/ci/check_samples.gd` reports this per sample for the active world.
+* ✅ An open layout with objects on the road, water or a fixed landmark gets **Fit to this farm…** in its Issues
+  list: the same repair, after a confirmation, as one undo step. Saved layouts are never changed by themselves.
 
 ### Budget card (canvas)
 * ✅ A card in a corner of the canvas: what is counted ("Selected area · 24 objects", "Whole farm · 260 objects",

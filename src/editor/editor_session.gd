@@ -42,11 +42,13 @@ var selected_landmark: String = ""
 ## Tile selection (Select tool, drag on empty ground): the ground area the
 ## object selection was made from. null when the selection came from clicks,
 ## the catalogue, commands, … A drag-move of the selection takes it along
-## (move_selection_region); it is dropped when an edit moves a selected object
+## (and with nudges, undo and redo of such moves); it is dropped when an edit moves a selected object
 ## off it (undo of that move, resize, …), never by planning or inventory edits.
 var selection_region: TileRegion = null
-var _region_move := Vector2i.ZERO
-var _region_moving := false
+## Where each selected object stood when the area last matched the selection: an
+## edit that moves ALL of them by the same offset (drag, nudge, undo, redo) moves
+## the area along; any other change that takes a selected object off it drops it.
+var _region_origins: Dictionary = {}
 var tool: String = "select"
 var brush: String = "single"     ## single | line | rect   (place tool)
 var active_item: String = ""
@@ -110,30 +112,85 @@ static func fixed_item_ids(item_db: ItemDatabase, farm_map: FarmMap) -> Dictiona
 
 
 func _on_stack_changed() -> void:
-	if selection_region != null and _region_moving:
-		selection_region.translate(_region_move)
-	_region_moving = false
 	history_changed.emit()
 
 
-func _on_objects_changed(uids: Array) -> void:
-	## A selected object left the selected ground: the area no longer describes the selection.
-	if selection_region == null or _region_moving:
+func _snap_region() -> void:
+	_region_origins = {}
+	if selection_region == null:
 		return
-	var sel := {}
 	for u in selection:
-		sel[u] = true
-	for u in uids:
 		var o := layout.get_obj(u)
-		if o != null and sel.has(u) and not selection_region.overlaps(o.rect()):
+		if o != null:
+			_region_origins[u] = o.origin
+
+
+func _on_objects_changed(uids: Array) -> void:
+	## The selected objects all moved by one offset: the area moves along. A
+	## selected object left the area some other way: the area is dropped.
+	if selection_region == null:
+		return
+	var delta: Variant = null
+	var same := true
+	var hit := 0
+	for u in uids:
+		if not _region_origins.has(u):
+			continue
+		var o := layout.get_obj(u)
+		if o == null:
+			continue
+		hit += 1
+		var d: Vector2i = o.origin - (_region_origins[u] as Vector2i)
+		if delta == null:
+			delta = d
+		elif d != delta:
+			same = false
+	if hit == 0:
+		return
+	if same and delta != Vector2i.ZERO and hit == _region_origins.size():
+		selection_region.translate(delta)
+		_snap_region()
+		return
+	for u in selection:
+		var o2 := layout.get_obj(u)
+		if o2 != null and not selection_region.overlaps(o2.rect()):
 			selection_region = null
+			_region_origins = {}
 			return
+	_snap_region()
 
 
-func move_selection_region(delta: Vector2i) -> void:
-	## The next command moves the selection by `delta`: the tile area moves with it.
-	_region_move = delta
-	_region_moving = selection_region != null
+func world_fit_plan(uids: Variant = null) -> Dictionary:
+	## WorldFit.plan() for this layout on this world (objects on roads, water,
+	## landmarks … that the game never allows).
+	return WorldFit.plan(layout, map, db, uids)
+
+
+func fit_to_world(uids: Variant = null) -> Dictionary:
+	## Explicit repair, one undo step: objects standing on fixed ground are moved
+	## to a free spot nearby (buildings) or removed (fence / path pieces, 1×1
+	## items). Returns the plan that was applied ({} moves/removes when nothing).
+	var p := world_fit_plan(uids)
+	if WorldFit.is_empty(p):
+		return p
+	var mu: Array = []
+	var md: Array = []
+	for m: Dictionary in p["moves"]:
+		mu.append(int(m["uid"]))
+		md.append(m["delta"])
+	var cmds: Array = []
+	if not mu.is_empty():
+		cmds.append(EditCommands.MoveEach.new(mu, md, "Move off fixed ground"))
+	if not (p["removes"] as Array).is_empty():
+		cmds.append(EditCommands.RemoveObjects.new(p["removes"]))
+	execute(EditCommands.Composite.new(cmds, "Fit to this farm (%s)" % WorldFit.summary(p)))
+	return p
+
+
+func move_selection_region(_delta: Vector2i) -> void:
+	## Kept for callers: the area now follows any move of the whole selection
+	## by itself (_on_objects_changed), so there is nothing to prepare.
+	pass
 
 
 func select_tiles(rect: Rect2i, op: String = "replace", keep: Callable = Callable()) -> Array:
@@ -166,6 +223,7 @@ func select_tiles(rect: Rect2i, op: String = "replace", keep: Callable = Callabl
 			selection = found.duplicate()   # never share the returned array with `selection`
 			region = TileRegion.from_rect(rect)
 	selection_region = region if region != null and not region.is_empty() and not selection.is_empty() else null
+	_snap_region()
 	selection_changed.emit()
 	return found
 
@@ -174,6 +232,7 @@ func _on_removed(uids: Array) -> void:
 	var before := selection.size()
 	for u in uids:
 		selection.erase(u)
+		_region_origins.erase(u)
 	if selection.size() != before:
 		selection_changed.emit()
 

@@ -60,6 +60,11 @@ var _gesture := ""             ## pan | move | tiles | marquee | paint | line | 
 var _tile_rect := Rect2i()
 var _tile_op := "replace"      ## replace | add (Shift) | subtract (Ctrl)
 var _tile_count := 0           ## objects the current rectangle covers
+## The press landed on the selected ground: a drag moves the whole selection
+## (even from an empty tile, or one covered by another object's art).
+var _region_grab := false
+## The canvas control (main.gd) whose cursor shape the hover sets.
+var cursor_control: Control
 var _move_uids: Array = []
 var _move_delta := Vector2i.ZERO
 var _paint_objs: Array = []
@@ -303,6 +308,14 @@ func _update_hover(t: Vector2i, screen: Vector2) -> void:
 		landmark_hovered.emit(lid)
 	overlay.hover_tile = t
 	overlay.show_hover_tile = session.tool in ["select", "annotate"]
+	# Over the selected ground the whole selection can be dragged: say so with the cursor.
+	var reg := session.selection_region
+	var on_area := session.tool == "select" and _gesture.is_empty() and reg != null and reg.has(t) and not session.selection.is_empty()
+	if on_area != overlay.region_hover:
+		overlay.region_hover = on_area
+		overlay.refresh()
+	if cursor_control != null and session.tool == "select":
+		cursor_control.mouse_default_cursor_shape = Control.CURSOR_MOVE if on_area else Control.CURSOR_ARROW
 	overlay.line_tiles = []
 	if session.tool == "place" or stamp_mode:
 		_update_place_ghost(t)
@@ -327,6 +340,8 @@ func _update_hover(t: Vector2i, screen: Vector2) -> void:
 
 func _status_for_hover(t: Vector2i, uid: int) -> void:
 	var parts := PackedStringArray(["Tile %d, %d" % [t.x, t.y]])
+	if overlay.region_hover:
+		parts.append("Drag to move the %d selected objects" % session.selection.size())
 	var k := session.map.kind_at(t)
 	match k:
 		FarmMap.Kind.PLOT:
@@ -450,7 +465,13 @@ func _left_press(e: InputEventMouseButton) -> void:
 	if calibrating:
 		calibration_point.emit(w)
 		return
-	if e.alt_pressed and session.tool in ["select", "place"]:
+	if e.alt_pressed and session.tool == "select" and not stamp_mode:
+		# Alt+drag = select the GROUND under any art (Shift/Ctrl still add/remove);
+		# Alt+click without a drag = eyedropper, as before.
+		_tile_op = "subtract" if e.ctrl_pressed else ("add" if e.shift_pressed else "replace")
+		_gesture = "alt_ground"
+		return
+	if e.alt_pressed and session.tool == "place":
 		_eyedrop(w)
 		return
 	if stamp_mode:
@@ -460,7 +481,15 @@ func _left_press(e: InputEventMouseButton) -> void:
 	match session.tool:
 		"select":
 			_tile_op = "replace"
+			_region_grab = false
 			_press_stack = objects_here(w)
+			# On the selected ground (no Shift/Ctrl): a drag moves the whole selection,
+			# whatever art covers the tile; a plain click still selects what it hits.
+			var reg := session.selection_region
+			if reg != null and reg.has(_press_tile) and not (e.shift_pressed or e.ctrl_pressed) and not session.selection.is_empty():
+				_region_grab = true
+				_gesture = "move"
+				return
 			var si := _selected_index(_press_stack)
 			_press_repeat = si >= 0 and _press_stack.size() >= 2 and session.selection.size() <= 1 \
 				and not (e.shift_pressed or e.ctrl_pressed) and _is_repeat_click(w)
@@ -546,6 +575,16 @@ func _update_tiles(t: Vector2i) -> void:
 
 
 func _start_drag() -> void:
+	if _gesture == "alt_ground":
+		_gesture = "tiles"
+		return
+	if _gesture == "move" and _region_grab:
+		var stay := session.selection.size() - session.editable_selection().size()
+		if stay > 0:
+			# An area moves as a whole or not at all: never leave objects behind.
+			_gesture = ""
+			fixed_refused.emit("%d object%s in the selected area can't move (locked or fixed) — unlock them (L) or Ctrl-drag over them to leave them out" % [stay, "" if stay == 1 else "s"], _press_pos)
+			return
 	match _gesture:
 		"landmark":
 			_refuse_fixed(_press_lm, "drag", _press_pos)
@@ -614,7 +653,14 @@ func _update_move(screen: Vector2) -> void:
 		overlay.ghosts = gs
 		overlay.ghost_result = res
 	_set_blockers(res)
-	overlay.cursor_text = "Move %d · Δ %d, %d%s" % [_move_uids.size(), _move_delta.x, _move_delta.y, " · snapped" if snapped else ""]
+	overlay.move_active = true
+	overlay.move_delta = _move_delta
+	overlay.move_ok = res.ok
+	var stay := session.selection.size() - _move_uids.size()
+	overlay.cursor_text = "Move %d · Δ %d, %d%s%s" % [_move_uids.size(), _move_delta.x, _move_delta.y, " · snapped" if snapped else "",
+		(" · %d locked stay" % stay) if stay > 0 and not _region_grab else ""]
+	if not res.ok:
+		overlay.cursor_text += " · can't drop here"
 	overlay.cursor_reasons = _result_reasons(res)
 
 
@@ -631,6 +677,9 @@ func _stop_move_visuals() -> void:
 	_drag_live = false
 	overlay.end_drag()
 	overlay.water_zones = []
+	overlay.move_active = false
+	overlay.move_delta = Vector2i.ZERO
+	overlay.move_ok = true
 
 
 func _update_drag(t: Vector2i, screen: Vector2) -> void:
@@ -682,11 +731,20 @@ func _end(e: InputEventMouseButton) -> void:
 						session.execute(EditCommands.MoveObjects.new(_move_uids, _move_delta))
 					else:
 						session.message.emit("Can't drop here: " + r.message(session.layout, session.db, session.map), "warn")
+			elif _region_grab:
+				# A click on the selected ground: an object there is selected as usual;
+				# empty ground keeps the selection (nothing moves).
+				if not _press_stack.is_empty():
+					select_stack_entry(_press_stack[0])
+				_finish_click(e)
 			else:
 				_finish_click(e)
+			_region_grab = false
 			_move_uids = []
 			overlay.ghosts = []
 			overlay.ghost_result = null
+		"alt_ground":
+			_eyedrop(_press_world)   # Alt+click without a drag
 		"tiles":
 			if was_drag:
 				session.select_tiles(Iso.rect_from_corners(_press_tile, tile_at(e.position)), _tile_op, _keep_pickable())
@@ -726,6 +784,7 @@ func _end(e: InputEventMouseButton) -> void:
 
 
 func _clear_tiles() -> void:
+	_region_grab = false
 	_tile_rect = Rect2i()
 	_tile_count = 0
 	if overlay:

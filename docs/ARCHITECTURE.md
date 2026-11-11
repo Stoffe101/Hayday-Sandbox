@@ -161,6 +161,10 @@ tests/ unit/ (headless, --script) integration/app_selftest.gd (in-app) visual/ca
   `check_rect(…, zone_item)`; per object the flag comes from `FarmLayout.zone_items` (set by `EditorSession` from the
   catalogue, like `fixed_items`), so `ConflictIndex`, `find_conflicts`, moves, pastes and `LayoutTools.fit_mask`
   agree. The editor overlay draws the zones while such an item is armed or dragged.
+* **`WorldFit`** (pure) lists objects a layout puts on a world's fixed ground (the world collision codes of
+  `LayoutIO.COLLISION_CODES`, never overlaps between objects) and proposes a repair: pieces and 1×1 items are
+  removed, larger objects move to the nearest legal free spot. New layouts from a sample apply it directly
+  (main.gd `_open_template`); an open layout only through `EditorSession.fit_to_world()` (one Composite command).
 * **Renderers** subscribe to layout signals and update incrementally; they never mutate the model.
 * **`LayoutToolController`** sees canvas input before `EditorController` and commits only through
   `EditorSession`. `StampLibrary` owns `user://stamps/`. `main.gd` owns panel widths and visibility (remembered in

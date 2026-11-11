@@ -984,8 +984,16 @@ func _open_template(path: String, name: String) -> void:
 	l.id = LayoutLibrary.new_id()
 	l.name = name
 	l.created = ""
+	# Samples are drawn on the public map: on another world (e.g. private game data
+	# with the real road and landmarks) some objects may stand where the game never
+	# allows them. The fresh copy is fitted to the active world, and says so.
+	var fit := WorldFit.plan(l, App.map, App.db)
+	if not WorldFit.is_empty(fit):
+		WorldFit.apply_to_new(l, fit)
 	App.open_layout(l, rep)
 	App.session.stack._dirty_counter = 1
+	if not WorldFit.is_empty(fit):
+		App.toast("Sample fitted to this farm's real road and landmarks: %s." % WorldFit.summary(fit), "info")
 
 
 func _on_session_changed() -> void:
@@ -1374,6 +1382,7 @@ func _on_tool_changed() -> void:
 		"pick": canvas_area.mouse_default_cursor_shape = Control.CURSOR_CROSS
 		"place", "annotate": canvas_area.mouse_default_cursor_shape = Control.CURSOR_CROSS
 		"land": canvas_area.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	controller.cursor_control = canvas_area
 	if s.tool != "place":
 		overlay.ghosts = []
 		overlay.ghost_result = null
@@ -1892,6 +1901,17 @@ func _on_inspector_action(a: String, arg: Variant) -> void:
 		"landmark_skin": s.set_landmark_skin(str(arg[0]), str(arg[1]))
 		"landmark_visible": s.set_landmark_visible(str(arg[0]), bool(arg[1]))
 		"landmark_focus": focus_landmark(str(arg))
+		"fit_world":
+			# Issues list: objects on the road / landmarks / water (explicit, one undo step).
+			var plan := s.world_fit_plan(s.conflicts().keys())
+			if WorldFit.is_empty(plan):
+				App.toast("Nothing stands on fixed ground", "info")
+				return
+			Modal.confirm(modal_layer, "Fit to this farm",
+				"%s.\n\nBuildings standing on the road, water or a fixed landmark move to the nearest free spot; fence and path pieces and 1×1 items there are removed (the game would not allow them). Everything else stays where it is. It is one step: Ctrl+Z undoes it." % WorldFit.summary(plan).capitalize(),
+				"Fit to this farm", false, func():
+					var done := s.fit_to_world(s.conflicts().keys())
+					App.toast("Fitted to this farm: %s — Ctrl+Z undoes it" % WorldFit.summary(done), "success"))
 		"select_uids":
 			# Issues list: select one group and show it.
 			var live: Array = []

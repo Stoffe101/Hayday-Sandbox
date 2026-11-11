@@ -38,7 +38,8 @@ func _signature() -> int:
 	var reg := _region()
 	var h := hash([overlay.selection.size(), overlay.drag_uids.is_empty(), overlay.landmark_selected, overlay.accent,
 		overlay.tile_drag, overlay.tile_drag_op, overlay.tile_drag_uids.size(), reg.get_instance_id() if reg else 0,
-		reg.bounds() if reg else Rect2i(), reg.size() if reg else 0, snappedf(overlay.zoom, 0.05)])
+		reg.bounds() if reg else Rect2i(), reg.size() if reg else 0, snappedf(overlay.zoom, 0.05),
+		overlay.move_active, overlay.move_delta, overlay.move_ok, overlay.region_hover])
 	for u in overlay.selection:
 		var o := overlay.layout.get_obj(u)
 		if o:
@@ -57,11 +58,13 @@ func _draw() -> void:
 		return
 	var sel_col := EditorOverlay.C_SELECT
 	var reg := _region()
-	if overlay.drag_uids.is_empty():
-		# Selected ground: soft fill + faint tile lines.
+	if overlay.move_active and reg != null and not reg.is_empty():
+		_draw_moving_region(reg)
+	elif overlay.drag_uids.is_empty():
+		# Selected ground: soft fill + faint tile lines (a little brighter under the pointer: it can be dragged).
 		if reg != null and not reg.is_empty():
 			var f := sel_col
-			f.a = 0.26
+			f.a = 0.34 if overlay.region_hover else 0.26
 			var grid := overlay.zoom >= GRID_MIN_ZOOM and reg.size() <= GRID_MAX_TILES
 			var line := sel_col
 			line.a = 0.32
@@ -96,6 +99,21 @@ func _draw() -> void:
 	if r:
 		for i in r.tiles.size():
 			draw_colored_polygon(Iso.footprint_polygon(r.tiles[i], Vector2i.ONE), EditorOverlay.tile_color(r.codes[i]))
+
+
+func _draw_moving_region(reg: TileRegion) -> void:
+	## The selected ground travels with the arrangement: drawn at its destination,
+	## sky blue when the drop fits, red when something blocks it (the blocking
+	## tiles and objects are marked by the drag preview itself).
+	var off := Iso.grid_to_world(Vector2(overlay.move_delta)) - Iso.grid_to_world(Vector2.ZERO)
+	var col := EditorOverlay.C_SELECT if overlay.move_ok else EditorOverlay.C_REMOVE
+	var f := col
+	f.a = 0.2
+	draw_set_transform(off, 0.0, Vector2.ONE)
+	for t: Vector2i in reg.tiles():
+		draw_colored_polygon(Iso.footprint_polygon(t, Vector2i.ONE), f)
+	_edges(reg.boundary_edges(), Color(1, 1, 1, 0.95) if overlay.move_ok else col.lightened(0.25))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _edges(seg: PackedVector2Array, col: Color) -> void:

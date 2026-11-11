@@ -112,9 +112,14 @@ collected under [Pending a real screenshot](#pending-a-real-screenshot-and-how-t
 
 ## Editor
 * **Tile selection is a rectangle per drag.** Irregular areas are built with Shift/Ctrl drags; there is no tile
-  brush. The selected ground can't be dragged by its empty tiles: drag one of the selected objects to move them.
-  A press on ground that an object's art covers picks that object (pixel-accurate picking), so start a tile drag
-  on visible ground.
+  brush. A plain press on ground that an object's art covers picks that object (pixel-accurate picking); Alt+drag
+  selects the ground there instead.
+* **An area move is all or nothing.** A selected area with a locked or fixed object refuses to move (it says so);
+  an object drag of a mixed selection still moves the unlocked objects and says how many stay.
+* **Samples are fitted, not redrawn, on a private world.** Opening a sample there leaves out the fence / path
+  pieces that would stand on the real road, driveway or landmarks (meadow showcase: 11 left out, 2 buildings
+  moved; symmetrical estate: 29 left out; natural countryside: 3), so some rows and rings have gaps. A
+  "My first farm" saved before this fix keeps its objects until you choose **Fit to this farm…**.
 * **Catalogue price chips sit on the bottom of the thumbnail** and can cover a little of the art; the name below
   stays clear.
 * **Realistic Mode costs about 27 ms per edit at 10,000 objects** (`--selftest=perf`, cloud box 4-CPU llvmpipe,

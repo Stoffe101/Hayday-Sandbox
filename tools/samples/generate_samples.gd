@@ -51,6 +51,14 @@ func _begin(name: String, desc: String, plots: Array) -> void:
 
 func _save(file: String) -> void:
 	var path := "res://data/samples/%s%s" % [file, LayoutIO.FILE_EXT]
+	# Never ship a sample with objects on fixed ground (road, water, landmarks, outside).
+	var col := LayoutIO.find_collisions(l, map)
+	if not col.is_empty():
+		for c in col:
+			var o := l.get_obj(int(c["uid"]))
+			printerr("SAMPLE %s: %s at %s — %s" % [file, o.item_id, o.origin, c["reason"]])
+		printerr("SAMPLE %s NOT written: %d object(s) on fixed ground" % [file, col.size()])
+		return
 	var d := LayoutIO.to_dict(l)
 	d["app_version"] = "sample"
 	JsonUtil.write_atomic(path, JsonUtil.stringify(d, true), false)

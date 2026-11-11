@@ -153,6 +153,8 @@ func _build_selection(s: EditorSession) -> void:
 		_body.add_child(UI.label("Selected area: %s · objects span %d × %d" % [area_txt, r.size.x, r.size.y], "Dim", true))
 	else:
 		_body.add_child(UI.label("Spans %d × %d tiles" % [r.size.x, r.size.y], "Dim"))
+	if s.selection_region != null:
+		_body.add_child(UI.label("Drag anywhere on the selected ground to move everything together.", "Faint", true))
 	_cost_card(s, objs, "")
 	_variant_picker(s, objs)
 	_object_actions(s, objs)
@@ -495,7 +497,7 @@ func _empty_state() -> void:
 	card.add_child(v)
 	v.add_child(UI.icon_rect("mouse-pointer-2", 28, UiTheme.c("accent")))
 	v.add_child(UI.label("Nothing selected", "Heading"))
-	v.add_child(UI.label("Click an object to inspect it, or drag across empty ground to select the tiles and everything standing on them (Shift adds, Ctrl removes). Pick something from the catalogue to start placing.", "Dim", true))
+	v.add_child(UI.label("Click an object to inspect it, or drag across empty ground to select the tiles and everything standing on them (Shift adds, Ctrl removes, Alt selects ground under trees and buildings). Pick something from the catalogue to start placing.", "Dim", true))
 	_body.add_child(card)
 	var s := App.session
 	_body.add_child(UI.section("This farm"))
@@ -548,6 +550,15 @@ func _issues_card() -> void:
 		b.pressed.connect(func(): action.emit("select_uids", uids))
 		row.add_child(b)
 		v.add_child(row)
+	# Objects on fixed ground (road, water, landmarks): offer the explicit repair.
+	var s := App.session
+	if s != null:
+		var fit := s.world_fit_plan(s.conflicts().keys())
+		if not WorldFit.is_empty(fit):
+			var fb := UI.button("Fit to this farm…", "wand-sparkles", "Move buildings off the road / landmarks to a free spot nearby and remove fence and path pieces standing there (%s). One undo step." % WorldFit.summary(fit), "Ghost")
+			fb.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			fb.pressed.connect(func(): action.emit("fit_world", null))
+			v.add_child(fb)
 	_body.add_child(card)
 
 

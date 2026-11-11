@@ -31,6 +31,13 @@ var session: EditorSession
 var tile_drag := Rect2i()
 var tile_drag_op := "replace"
 var tile_drag_uids: Array = []
+## A move of the selection is in progress: the selected ground is drawn at
+## its destination (offset by move_delta tiles), green-blue or red by move_ok.
+var move_active := false
+var move_delta := Vector2i.ZERO
+var move_ok := true
+## The pointer is over the selected ground (Select tool, no gesture): it can be dragged.
+var region_hover := false
 var assets: AssetLibrary
 var renderer: ObjectRenderer
 var accent := Color("#3fae6a")

@@ -25,7 +25,7 @@ const ALL := ["overview", "place_valid", "place_invalid", "selection", "search",
 	"terrain_pack_fg", "terrain_pack_blend", "terrain_pack_zoomout",
 	"plan_budget", "plan_areas", "plan_phases", "plan_heatmap", "plan_shop", "plan_build", "plan_guide", "plan_accuracy",
 	"plan_minimap", "plan_layers", "plan_compare", "plan_ready", "game_data", "game_data_review", "object_glow",
-	"tile_drag", "tile_select", "budget_breakdown"]
+	"tile_drag", "tile_select", "budget_breakdown", "area_drag", "area_blocked"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
 const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "anim_perf", "wz_<item id>", "anim_farm_perf",
 	"camera_perf", "drag_perf", "ghost_art", "fence_junctions"]
@@ -1177,6 +1177,35 @@ func _tile_select(hold: bool) -> bool:
 	return true
 
 
+func _area_drag(delta: Vector2i) -> bool:
+	## After _tile_select: press on an empty selected tile and drag the whole
+	## selection by `delta` tiles; the shot is taken while the button is held
+	## (the next scenario's reset cancels the gesture). Prints "AREA ...".
+	var s = _session()
+	var reg: TileRegion = s.selection_region
+	if reg == null:
+		print("FAIL area drag: no selected ground")
+		return false
+	var empty := Vector2i(-99999, -99999)
+	for t: Vector2i in reg.tiles():
+		if empty.x == -99999 and s.layout.occupancy.at(t) == 0 and main.controller.objects_here(Iso.tile_center(t)).is_empty():
+			empty = t
+	if empty.x == -99999:
+		print("FAIL area drag: no empty selected tile")
+		return false
+	var a: Vector2 = main.camera.world_to_screen(Iso.tile_center(empty))
+	var b: Vector2 = main.camera.world_to_screen(Iso.tile_center(empty + delta))
+	_canvas_move(a, 0)
+	_canvas_button(a, true)
+	for i in range(1, 13):
+		_canvas_move(a.lerp(b, i / 12.0), MOUSE_BUTTON_MASK_LEFT)
+		await get_tree().process_frame
+	main.overlay.cursor_world = Iso.tile_center(empty + delta)
+	print("AREA delta=%s ok=%s objects=%d text=%s" % [str(main.overlay.move_delta), str(main.overlay.move_ok), s.selection.size(), main.overlay.cursor_text])
+	await _frames(10)
+	return true
+
+
 func _drag_pair() -> Array:
 	## [mover, a nearby object to drop it on, the mover's tile that picks it].
 	var s = _session()
@@ -1241,6 +1270,13 @@ func _scenario(sc: String) -> bool:
 				await _frames(8)
 				var a: Dictionary = main.budget.last_afford
 				print("BUDGET state=%s cost=%s afford=%s" % [str(a.get("state")), str(main.budget.last_cost), str(a.get("shortfall"))])
+		"area_drag", "area_blocked":
+			var ok_ad: bool = await _tile_select(false)
+			if not ok_ad:
+				return false
+			var ok_am: bool = await _area_drag(Vector2i(6, 2) if sc == "area_drag" else Vector2i(-9, 0))
+			if not ok_am:
+				return false
 		"asset_manager":
 			var ok_0: bool = await _asset_manager("bakery", 0)
 			if not ok_0:

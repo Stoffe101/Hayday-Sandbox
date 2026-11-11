@@ -26,9 +26,9 @@ these layouts in the real game, so **never invent facts** — unknown data stays
 Linux / cloud box (counts at the end of W5, 2026-11-10; refreshed at the end of each wave):
 ```bash
 godot --headless --path . --import                                   # after adding class_name scripts / assets
-godot --headless --path . --script res://tools/ci/check_scripts.gd   # compile every script (175)
-godot --headless --path . --script res://tests/run_tests.gd          # unit tests (537 tests / 16,354 assertions)
-godot --headless --path . -- --selftest                              # in-app integration test (565 checks)
+godot --headless --path . --script res://tools/ci/check_scripts.gd   # compile every script (178)
+godot --headless --path . --script res://tests/run_tests.gd          # unit tests (543 tests / 16,403 assertions)
+godot --headless --path . -- --selftest                              # in-app integration test (597 checks)
 godot --headless --path . -- --selftest=perf                         # benchmarks (7 checks)
 godot --headless --path . --script res://tests/perf/perf_planning.gd # planning benchmarks (2k/5k/10k)
 godot --headless --path . --script res://tools/ci/check_terrain_pack.gd [-- <terrain.json>] # terrain pack check

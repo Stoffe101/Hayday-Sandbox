@@ -8,7 +8,7 @@ const DARK := {
 	"name": "dark",
 	"panel": Color("#1d2124f2"), "panel_solid": Color("#1d2124"), "panel_alt": Color("#262b2f"),
 	"elevated": Color("#30363b"), "elevated_hover": Color("#3a4147"), "border": Color("#3b4248"),
-	"text": Color("#eceae4"), "text_dim": Color("#a9ada8"), "text_faint": Color("#7a807b"),
+	"text": Color("#eceae4"), "text_dim": Color("#b3b7b1"), "text_faint": Color("#8b918c"),
 	"accent": Color("#4cc27a"), "accent_hover": Color("#62d38e"), "accent_text": Color("#0e1a12"),
 	"accent_soft": Color("#4cc27a33"), "warn": Color("#f2b33d"), "danger": Color("#ef5b4f"), "info": Color("#5aa9e6"),
 	"shadow": Color(0, 0, 0, 0.45), "scrim": Color(0.04, 0.05, 0.05, 0.55), "planned": Color("#7fb3e6"),
@@ -17,7 +17,7 @@ const LIGHT := {
 	"name": "light",
 	"panel": Color("#fbf8f1f2"), "panel_solid": Color("#fbf8f1"), "panel_alt": Color("#f1ece0"),
 	"elevated": Color("#ffffff"), "elevated_hover": Color("#f4f0e6"), "border": Color("#e0d9c8"),
-	"text": Color("#2a2925"), "text_dim": Color("#68645a"), "text_faint": Color("#9a958a"),
+	"text": Color("#2a2925"), "text_dim": Color("#5f5b52"), "text_faint": Color("#857f73"),
 	"accent": Color("#2f9a5a"), "accent_hover": Color("#37ad66"), "accent_text": Color("#ffffff"),
 	"accent_soft": Color("#2f9a5a26"), "warn": Color("#c98a12"), "danger": Color("#d6453a"), "info": Color("#2f7fc0"),
 	"shadow": Color(0.25, 0.2, 0.1, 0.22), "scrim": Color(0.2, 0.18, 0.12, 0.35), "planned": Color("#3f7fc4"),
@@ -124,7 +124,7 @@ static func build(dark: bool) -> Theme:
 	t.set_type_variation("Section", "Label")
 	t.set_font("font", "Section", font_heavy)
 	t.set_font_size("font_size", "Section", 12)
-	t.set_color("font_color", "Section", P["text_faint"])
+	t.set_color("font_color", "Section", P["text_dim"])
 	t.set_type_variation("BadgeLabel", "Label")
 	t.set_font("font", "BadgeLabel", font_bold)
 	t.set_font_size("font_size", "BadgeLabel", 12)
@@ -258,7 +258,7 @@ static func build(dark: bool) -> Theme:
 	t.set_stylebox("hovered_selected", "ItemList", box(P["accent_soft"], 12, P["accent"], 2, Vector4(4, 4, 4, 4)))
 	t.set_stylebox("cursor", "ItemList", StyleBoxEmpty.new())
 	t.set_stylebox("cursor_unfocused", "ItemList", StyleBoxEmpty.new())
-	t.set_color("font_color", "ItemList", P["text_dim"])
+	t.set_color("font_color", "ItemList", P["text"])
 	t.set_color("font_selected_color", "ItemList", P["text"])
 	t.set_color("font_hovered_color", "ItemList", P["text"])
 	t.set_color("guide_color", "ItemList", Color.TRANSPARENT)
@@ -266,7 +266,7 @@ static func build(dark: bool) -> Theme:
 	t.set_constant("v_separation", "ItemList", 6)
 	t.set_constant("icon_margin", "ItemList", 4)
 	t.set_constant("line_separation", "ItemList", 2)
-	t.set_font_size("font_size", "ItemList", 12)
+	t.set_font_size("font_size", "ItemList", 13)
 	t.set_font("font", "ItemList", font_bold)
 	for sb in ["VScrollBar", "HScrollBar"]:
 		t.set_stylebox("scroll", sb, box(Color.TRANSPARENT, 999, Color.TRANSPARENT, 0, Vector4(3, 3, 3, 3)))
@@ -290,7 +290,7 @@ static func build(dark: bool) -> Theme:
 	t.set_constant("item_end_padding", "PopupMenu", 12)
 	t.set_stylebox("panel", "TooltipPanel", box(P["text"], 8, Color.TRANSPARENT, 0, Vector4(10, 6, 10, 6)))
 	t.set_color("font_color", "TooltipLabel", P["panel_solid"])
-	t.set_font_size("font_size", "TooltipLabel", 13)
+	t.set_font_size("font_size", "TooltipLabel", 14)
 	t.set_font("font", "TooltipLabel", font_bold)
 	t.set_stylebox("embedded_border", "Window", modal)
 	t.set_stylebox("embedded_unfocused_border", "Window", modal)

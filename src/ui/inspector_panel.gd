@@ -45,6 +45,14 @@ func _ready() -> void:
 	_refresh_timer.wait_time = 0.2
 	_refresh_timer.timeout.connect(rebuild)
 	add_child(_refresh_timer)
+	# The cost card follows the budget mode (Design cost / Still to buy / Remaining cost).
+	var last_mode := [""]
+	if App.plan_ctx:
+		App.plan_ctx.view_changed.connect(func():
+			if App.plan_ctx.mode != last_mode[0]:
+				last_mode[0] = App.plan_ctx.mode
+				if _tab == 0:
+					queue_rebuild())
 
 
 func show_tab(i: int) -> void:
@@ -88,6 +96,7 @@ func _build_selection(s: EditorSession) -> void:
 		if it:
 			_body.add_child(UI.section("Placing"))
 			_item_card(it, null)
+			_cost_card(s, [], it.id)
 			var row := UI.hbox(6)
 			var flip := UI.button("Rotate", "rotate-cw", "Mirror the item (R)")
 			flip.disabled = not it.flippable
@@ -102,6 +111,7 @@ func _build_selection(s: EditorSession) -> void:
 			row.add_child(plan)
 			_body.add_child(row)
 			_body.add_child(_brush_row(s))
+			_data_card(it)
 			_body.add_child(UI.label("Click to place · drag to paint · Shift-drag line · Ctrl-drag fill · right-click or Esc to stop.", "Faint", true))
 			return
 		_empty_state()
@@ -111,11 +121,14 @@ func _build_selection(s: EditorSession) -> void:
 		var it := s.db.get_item(o.item_id)
 		_body.add_child(UI.section("Selected object"))
 		_item_card(it, o)
-		_variant_picker(s, [o])
 		_issue_list(o)
+		_cost_card(s, [o], o.item_id)
+		_variant_picker(s, [o])
 		_object_actions(s, [o])
 		_plan_hooks(s, [o])
 		_note_editor(s, o)
+		if it:
+			_data_card(it)
 		return
 	# Multi-selection summary
 	_body.add_child(UI.section("%d objects selected" % objs.size()))
@@ -134,21 +147,124 @@ func _build_selection(s: EditorSession) -> void:
 		list.add_child(UI.label("+ %d more types" % (ids.size() - 12), "Faint"))
 	_body.add_child(card)
 	var r := s.layout.bounds_of(s.selection)
-	_body.add_child(UI.label("Area: %d × %d tiles" % [r.size.x, r.size.y], "Dim"))
+	if s.selection_region != null:
+		var rb := s.selection_region.bounds()
+		var area_txt := ("%d × %d tiles" % [rb.size.x, rb.size.y]) if s.selection_region.is_rect() else ("%s tiles" % UI.fmt_int(s.selection_region.size()))
+		_body.add_child(UI.label("Selected area: %s · objects span %d × %d" % [area_txt, r.size.x, r.size.y], "Dim", true))
+	else:
+		_body.add_child(UI.label("Spans %d × %d tiles" % [r.size.x, r.size.y], "Dim"))
+	_cost_card(s, objs, "")
 	_variant_picker(s, objs)
 	_object_actions(s, objs)
 	_plan_hooks(s, objs)
 
 
+var cost_card_totals: BudgetEngine.Totals   ## what the cost card shows for a multi-selection (tests)
+
+
+func _cost_card(s: EditorSession, objs: Array, item_id: String) -> void:
+	## What the selection (or the item being placed) costs, from the shared
+	## BudgetEngine / PriceBook: amounts large, then what they mean.
+	cost_card_totals = null
+	if App.prices == null:
+		return
+	var ctx := App.plan_ctx
+	var mode := ctx.mode if ctx else BudgetEngine.MODE_TO_BUY
+	_body.add_child(UI.section("Cost" if objs.size() <= 1 else "Cost of selection"))
+	var card := UI.card()
+	var v := UI.vbox(6)
+	card.add_child(v)
+	if objs.size() <= 1:
+		var counts := s.layout.item_counts(true)
+		var n := int(counts.get(item_id, 0))
+		var cost: Variant = null
+		var caption := ""
+		if objs.size() == 1 and s.budget != null:
+			cost = s.budget.object_cost(int(objs[0].uid), BudgetEngine.MODE_DESIGN)
+			caption = "This copy"
+		else:
+			var tag := PlanScope.next_copy_tag(App.prices, item_id, n)
+			cost = tag["cost"] if str(tag["state"]) in ["price", "free"] else null
+			caption = ("Next copy (#%d)" % int(tag["copy"])) if n > 0 else "Price"
+		v.add_child(_amount_row(caption, cost, item_id))
+		if not App.prices.is_constant(item_id) and App.prices.is_buyable(item_id):
+			var nxt: Variant = App.prices.copy_price(item_id, n + 1)
+			if objs.size() == 1 and nxt != null:
+				v.add_child(UI.kv("Next copy", Currency.format_line(nxt)))
+			v.add_child(UI.label("Rises with every copy: " + PlanUiModels.price_summary(App.prices, item_id), "Faint", true))
+		var owned := -1
+		if s.layout.profile.get("owned") is Dictionary:
+			owned = int((s.layout.profile["owned"] as Dictionary).get(item_id, -1))
+		var own_txt := "%d in this design" % n
+		if owned >= 0:
+			own_txt += " · you own %d" % owned
+		v.add_child(UI.kv("Copies", own_txt))
+		var ob := PlanScope.origin_badge(App.prices, item_id)
+		var orow := UI.hbox(6)
+		var ok := UI.label("Source", "Dim")
+		ok.custom_minimum_size.x = 96
+		orow.add_child(ok)
+		var badge := UI.badge(str(ob[0]), UiTheme.c(str(ob[1])))
+		badge.tooltip_text = str(ob[2])
+		badge.mouse_filter = Control.MOUSE_FILTER_STOP
+		orow.add_child(badge)
+		v.add_child(orow)
+	elif s.budget != null:
+		var t := s.budget.totals(s.selection, mode)
+		cost_card_totals = t
+		v.add_child(_amount_row(str(PlanScope.MODE_LABELS.get(mode, mode)), t.cost, "", t.is_exact()))
+		if mode != BudgetEngine.MODE_DESIGN:
+			var d := s.budget.totals(s.selection, BudgetEngine.MODE_DESIGN)
+			v.add_child(UI.kv("Design cost", Currency.format_line(d.cost, "nothing", "no known price")))
+			v.add_child(UI.kv("Owned", "%d owned · %d to buy" % [t.owned_objects, t.charged_objects]))
+		if t.unknown_price_objects > 0:
+			v.add_child(_warn_label("%d with unknown price — not in the total" % t.unknown_price_objects))
+		if t.not_buyable_objects > 0:
+			v.add_child(_warn_label("%d can't be bought (rewards, not in the shop)" % t.not_buyable_objects))
+		var src := PlanScope.price_sources_text(PlanScope.price_sources(s.budget, App.prices, s.selection, mode))
+		if not src.is_empty():
+			v.add_child(UI.label("Prices: " + src, "Faint", true))
+	_body.add_child(card)
+
+
+func _amount_row(caption: String, cost: Variant, item_id: String, exact: bool = true) -> Control:
+	## Caption, then the amounts large (glyph + bold number); unknown or unbuyable
+	## prices are said in words, never shown as 0.
+	var box := UI.vbox(2)
+	box.add_child(UI.label(caption, "Dim"))
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 14)
+	row.add_theme_constant_override("v_separation", 4)
+	if cost is Dictionary and not (cost as Dictionary).is_empty():
+		for c: String in Currency.sorted_ids((cost as Dictionary).keys()):
+			row.add_child(BudgetWidget.big_chip(c, int(cost[c])))
+		if not exact:
+			row.add_child(_warn_label("+ unknown"))
+	elif cost is Dictionary:
+		var free := item_id.is_empty() or App.prices.method(item_id) == PriceBook.METHOD_FREE
+		var l := UI.label("Free" if free else "Nothing to pay")
+		l.add_theme_font_size_override("font_size", 17)
+		row.add_child(l)
+	else:
+		var why := App.prices.method_text(item_id) if not item_id.is_empty() else "No known price"
+		var l2 := _warn_label(why)
+		l2.add_theme_font_size_override("font_size", 15)
+		row.add_child(l2)
+	box.add_child(row)
+	return box
+
+
+func _warn_label(text: String) -> Label:
+	var l := UI.label(text, "", true)
+	l.add_theme_color_override("font_color", UiTheme.c("warn"))
+	return l
+
+
 func _plan_hooks(s: EditorSession, objs: Array) -> void:
-	## Planning shortcuts for the selection: its cost (budget chip) and, for one
-	## item type, the price the user knows (price dialog).
+	## For one item type: enter the price the user knows (price dialog).
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 6)
 	row.add_theme_constant_override("v_separation", 6)
-	var cost := UI.button("Cost of selection", "coins", "Show what the selection costs in the budget chip (selection scope)", "Ghost")
-	cost.pressed.connect(func(): action.emit("selection_cost", null))
-	row.add_child(cost)
 	var items := {}
 	for o: PlacedObject in objs:
 		items[o.item_id] = true
@@ -157,11 +273,8 @@ func _plan_hooks(s: EditorSession, objs: Array) -> void:
 		var price := UI.button("Edit price…", "pencil", "Enter the price you know for this item (kept on this PC)", "Ghost")
 		price.pressed.connect(func(): action.emit("edit_price", item))
 		row.add_child(price)
-		if s.budget != null and objs.size() == 1:
-			var c: Variant = s.budget.object_cost(int(objs[0].uid), BudgetEngine.MODE_DESIGN)
-			var txt := Currency.format_line(c, "free") if c != null else App.prices.method_text(item)
-			_body.add_child(UI.label("Price (design cost of this copy): %s" % txt, "Faint", true))
-	_body.add_child(row)
+	if row.get_child_count() > 0:
+		_body.add_child(row)
 
 
 var variant_option: OptionButton    ## exposed for tests
@@ -483,7 +596,8 @@ func _item_card(it: ItemDef, o: PlacedObject) -> void:
 	if o:
 		v.add_child(UI.kv("Position", "%d, %d" % [o.origin.x, o.origin.y]))
 	v.add_child(UI.kv("Unlocks", "Level %d" % it.unlock_level if it.unlock_level > 0 else "Unknown"))
-	v.add_child(UI.kv("Cost", PlanUiModels.price_summary(App.prices, it.id)))
+	if o == null and s != null and s.tool != "place":
+		v.add_child(UI.kv("Cost", PlanUiModels.price_summary(App.prices, it.id)))
 	var mx := int(App.prices.resolved(it.id).get("max_count", -1)) if App.prices != null else it.max_count
 	if mx > 0:
 		v.add_child(UI.kv("Max", "%d per farm" % mx))
@@ -491,7 +605,6 @@ func _item_card(it: ItemDef, o: PlacedObject) -> void:
 	if not it.movable:
 		v.add_child(UI.label("Fixed in place in the game.", "Faint", true))
 	_body.add_child(card)
-	_data_card(it)
 
 
 func _data_card(it: ItemDef) -> void:

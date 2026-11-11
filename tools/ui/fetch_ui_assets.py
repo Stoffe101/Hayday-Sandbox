@@ -12,7 +12,8 @@ lock-open eye eye-off grid-3x3 layers scan zoom-in zoom-out panel-left panel-rig
 sparkles factory house paw-print sprout apple cherry fence footprints droplets flower-2 trees lamp landmark snowflake
 mountain map-pin image git-compare wand-sparkles clipboard-check coins gem square-dashed minus pencil download upload
 filter arrow-up-down clock-arrow-up crosshair box tag keyboard sun moon file-plus copy-plus ellipsis-vertical maximize-2
-square-dashed-mouse-pointer ruler package-open circle-x list-checks spline tent-tree target""".split()
+square-dashed-mouse-pointer ruler package-open circle-x list-checks spline tent-tree target chevron-down chevron-up
+circle-check shopping-cart wallet""".split()
 BASE = "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/"
 def get(url):
     with urllib.request.urlopen(url, timeout=30) as r:

@@ -58,6 +58,11 @@ var _detail_is_hint := true        ## the detail card shows only the placing hin
 ## Height of the badge row above each thumbnail (_draw_icon draws the thumbnail below it).
 const BADGE_ROW_H := 18.0
 var _chip_boxes: Dictionary = {}   ## Color -> StyleBoxFlat for the tile badges
+## Copies of each item in the open design, for the price of the next copy on the
+## tiles (rebuilt when the layout's history moves on).
+var _counts: Dictionary = {}
+var _counts_key := ""
+var show_prices := true
 
 
 func _ready() -> void:
@@ -580,6 +585,58 @@ func _draw_badges() -> void:
 		_list.draw_circle(dot, 3.2, Color(UI.status_color(it.footprint_status), dim))
 		if _favs.has(it.id) and star:
 			_list.draw_texture_rect(star, Rect2(Vector2(r.end.x - 3.0 - lw - 15.0, r.position.y + 4), Vector2(13, 13)), false, UiTheme.c("warn"))
+		if show_prices:
+			_draw_price(i, it, r, font, dim)
+
+
+func _design_counts() -> Dictionary:
+	var s := App.session
+	if s == null:
+		return {}
+	var key := "%d/%d" % [s.get_instance_id(), s.stack.version]
+	if key != _counts_key:
+		_counts_key = key
+		_counts = s.layout.item_counts(true)
+	return _counts
+
+
+func redraw_prices() -> void:
+	## The design changed: next-copy prices on the tiles may have moved.
+	if _list:
+		_list.queue_redraw()
+
+
+func price_tag(item_id: String) -> Dictionary:
+	## The next copy's price in the open design (PlanScope.next_copy_tag).
+	return PlanScope.next_copy_tag(App.prices, item_id, int(_design_counts().get(item_id, 0)))
+
+
+func _draw_price(i: int, it: ItemDef, r: Rect2, font: Font, dim: float) -> void:
+	## Bottom-left of the thumbnail: the next copy's price (first currency, "+" when
+	## it costs more than one), "Not sold" or "?" — the full price is in the details.
+	var tag := price_tag(it.id)
+	var box := icon_rect(r)
+	var fs := 11
+	var h := font.get_height(fs) + 2.0
+	var at := Vector2(r.position.x + 3.0, box.end.y - h - 1.0)
+	match str(tag["state"]):
+		"price":
+			var cost: Dictionary = tag["cost"]
+			var ids := Currency.sorted_ids(cost.keys())
+			var cur: String = ids[0]
+			var txt := PlanScope.abbreviate(int(cost[cur])) + ("+" if ids.size() > 1 else "") + ("↑" if bool(tag["rising"]) else "")
+			var w := font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 8.0 + h
+			if not _chip_boxes.has("price"):
+				_chip_boxes["price"] = UiTheme.box(Color(0, 0, 0, 0.62), 6, Color.TRANSPARENT, 0, Vector4.ZERO)
+			_list.draw_style_box(_chip_boxes["price"], Rect2(at, Vector2(w, h)))
+			BudgetWidget.Glyph.paint(_list, cur, Rect2(at + Vector2(3, 2), Vector2(h - 4.0, h - 4.0)))
+			_list.draw_string(font, at + Vector2(h + 1.0, 1.0 + font.get_ascent(fs)), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 1, 1, 0.97 * dim))
+		"free":
+			_chip(font, fs, at, "Free", Color(0, 0, 0, 0.55 * dim), Color(1, 1, 1, 0.95 * dim), false)
+		"not_sold":
+			_chip(font, fs, at, "Not sold", Color(0, 0, 0, 0.32 * dim), Color(1, 1, 1, 0.62 * dim), false)
+		_:
+			_chip(font, fs, at, "? price", Color(0, 0, 0, 0.45 * dim), Color(1, 0.85, 0.5, 0.85 * dim), false)
 
 
 func icon_rect(item_rect: Rect2) -> Rect2:
@@ -685,6 +742,8 @@ func _tooltip(it: ItemDef, state: String = RealisticAnalyzer.AVAILABLE) -> Strin
 			lines.append("Unlock level unknown — not checked against your level")
 	if not it.placeable:
 		lines.append("Reference only — fixed scenery in the game")
+	if App.prices != null:
+		lines.append("Price: " + PlanUiModels.price_summary(App.prices, it.id))
 	if _favs.has(it.id):
 		lines.append("★ Favourite")
 	return "\n".join(lines)

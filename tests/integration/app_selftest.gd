@@ -413,6 +413,7 @@ func _integration() -> void:
 	await _world_ui_check()
 	await _camera_check()
 	await _drag_check()
+	await _tile_select_check()
 	await _motion_check()
 	await _world_art_check()
 	var bakery := App.db.get_item("bakery")
@@ -1858,6 +1859,144 @@ func _free_area(near: Vector2i, size: Vector2i) -> Vector2i:
 				if PlacementRules.check_rect(s.layout, s.map, a).ok and not _touches_landmark(a):
 					return o
 	return Vector2i(-9999, -9999)
+
+
+func _tile_select_check() -> void:
+	## Select tool, drag on empty ground = tile selection (TileRegion): objects whose
+	## footprint stands on a dragged-over tile are selected; Shift adds, Ctrl removes;
+	## a plain click on empty ground clears; a drag that starts on an object still
+	## moves it (and the selected area moves along); the classic screen rectangle is
+	## a setting. The selection's cost is the same number everywhere.
+	print("Tile selection")
+	var s := _s()
+	var cam: FarmCamera = main.camera
+	var ctl: EditorController = main.controller
+	s.set_tool("select")
+	s.clear_selection()
+	var at := _free_area(Vector2i(20, 6), Vector2i(16, 10))
+	if at.x == -9999:
+		check(false, "free area for the tile-selection checks")
+		return
+	cam.set_zoom_level(1.0)
+	cam.center_on(Iso.tile_center(at + Vector2i(8, 5)))
+	await _frames(3)
+	var steps0 := s.stack.size()
+	var big := _put("bakery", at + Vector2i(2, 2))
+	var small := _put("bench", at + Vector2i(10, 2))
+	check(big != null and small != null, "tile selection: two objects placed")
+	if big == null or small == null:
+		return
+	# Drags start below-right of the objects: art reaches up and left from a
+	# footprint, so a press there would pick the object (and move it) instead.
+	var corner := big.origin + big.size - Vector2i.ONE
+	# 1. Dragging over one corner tile of a large footprint selects the whole object.
+	_drag_tiles(corner + Vector2i(1, 1), corner)
+	var reg: TileRegion = s.selection_region
+	check(s.selection == [big.uid], "dragging over one tile of the bakery's footprint selects it (%s)" % str(s.selection))
+	check(reg != null and reg.bounds() == Rect2i(corner, Vector2i(2, 2)), "the selected ground is the 2×2 tiles dragged over, corners included (%s)" % (str(reg.bounds()) if reg else "none"))
+	check(ctl._gesture == "" and main.overlay.tile_drag.size == Vector2i.ZERO, "the drag preview is gone after the release")
+	# 2. Shift adds, Ctrl removes.
+	var sc := small.origin + small.size - Vector2i.ONE
+	_drag_tiles(sc + Vector2i(1, 1), sc, true)
+	var both := s.selection.duplicate()
+	both.sort()
+	var want := [big.uid, small.uid]
+	want.sort()
+	check(both == want, "Shift-drag adds the objects on the new tiles")
+	check(s.selection_region != null and s.selection_region.size() == 4 + 4, "…and the new tiles join the selected ground (%d tiles)" % (s.selection_region.size() if s.selection_region else 0))
+	_drag_tiles(corner + Vector2i(1, 1), corner, false, true)
+	check(s.selection == [small.uid], "Ctrl-drag removes the objects on those tiles")
+	# 3. Budget: the selection's cost is the engine's, in the chip and in the inspector.
+	_drag_tiles(at + Vector2i(13, 6), at)
+	await _frames(2)
+	main.budget.refresh()
+	main.inspector.rebuild()
+	var t := s.budget.totals(s.selection, App.plan_ctx.mode)
+	check(main.budget.last_totals != null and Currency.equal(main.budget.last_totals.cost, t.cost) and main.budget.last_totals.objects == s.selection.size(),
+		"the budget card shows the selection's engine totals (%s)" % Currency.format_line(t.cost))
+	check(main.budget.scope_title(App.plan_ctx.scope(), t).begins_with("Selected area"), "the budget card says it counts the selected area")
+	check(main.inspector.cost_card_totals != null and Currency.equal(main.inspector.cost_card_totals.cost, t.cost), "the inspector's cost card shows the same total")
+	var tag: Dictionary = main.catalog.price_tag("bakery")
+	var n_bak := int(s.layout.item_counts(true).get("bakery", 0))
+	check(str(tag["state"]) != "price" or Currency.equal(tag["cost"], App.prices.copy_price("bakery", n_bak + 1)), "the catalogue tile shows the next copy's PriceBook price")
+	# Affordability against recorded balances (never against an invented balance).
+	var cost: Dictionary = main.budget.last_cost
+	if not cost.is_empty():
+		var ids := Currency.sorted_ids(cost.keys())
+		var a1 := PlanScope.affordability_of(cost, true, {})
+		var poor := {}
+		var rich := {}
+		for k in ids:
+			poor[k] = 0
+			rich[k] = int(cost[k]) + 1
+		check(str(a1["state"]) == "unknown", "no balance recorded: affordability is unknown, not 'short'")
+		check(str(PlanScope.affordability_of(cost, true, rich)["state"]) == "ok" and str(PlanScope.affordability_of(cost, true, poor)["state"]) == "short",
+			"balances above / below the cost read as covered / short")
+	# 4. A plain click on empty ground clears the selection and its area.
+	_click_tile(at + Vector2i(14, 8))
+	check(s.selection.is_empty() and s.selection_region == null, "clicking empty ground clears the selection")
+	# 5. A drag that starts on a selected object moves it; the selected ground moves along.
+	_drag_tiles(sc + Vector2i(1, 1), small.origin)
+	check(s.selection == [small.uid] and s.selection_region != null, "tile selection of the bench")
+	var area0: Rect2i = s.selection_region.bounds() if s.selection_region else Rect2i()
+	var from := small.origin
+	var grab := small.origin
+	main.renderer.ensure_sorted()
+	for y in small.size.y:
+		for x in small.size.x:
+			if main.renderer.pick(Iso.tile_center(small.origin + Vector2i(x, y))) == small.uid:
+				grab = small.origin + Vector2i(x, y)
+	var steps1 := s.stack.size()
+	_drag_tiles(grab, grab + Vector2i(0, 2))
+	check(small.origin == from + Vector2i(0, 2) and s.stack.size() == steps1 + 1, "dragging the selected object moves it in one step (not a new tile selection)")
+	check(s.selection_region != null and s.selection_region.bounds() == Rect2i(area0.position + Vector2i(0, 2), area0.size), "the selected ground moves with it")
+	_key(KEY_Z, true)
+	check(small.origin == from and s.selection == [small.uid], "undo puts it back and keeps it selected (%s → %s, %s)" % [str(from), str(small.origin), str(s.selection)])
+	check(s.selection_region == null, "…and drops the area that no longer matches")
+	# 6. Planning/inventory edits keep the selected area.
+	_drag_tiles(at + Vector2i(13, 6), at)
+	var p: Dictionary = s.layout.profile.duplicate(true)
+	p["balances"] = {"coins": 1}
+	s.execute(EditCommands.SetProfile.new(s.layout.profile, p))
+	check(s.selection_region != null, "an inventory edit keeps the selected area")
+	_key(KEY_Z, true)
+	# 7. Locked objects are selected (moving them is refused elsewhere); hidden layers are not.
+	s.select([big.uid])
+	_key(KEY_L)
+	check(big.locked, "L locks the bakery")
+	_drag_tiles(corner + Vector2i(1, 1), corner)
+	check(s.selection == [big.uid], "a locked object on the tiles is selected (for inspection)")
+	_key(KEY_L)
+	_key(KEY_Z, true)
+	_key(KEY_Z, true)
+	# 8. The classic screen rectangle is still available as a setting.
+	App.settings.set_v("select_style", "marquee", false)
+	var pa := _screen_of_tile(at + Vector2i(13, 6))
+	var pb := _screen_of_tile(at)
+	_move(pa)
+	_button(pa, true)
+	for i in range(1, 6):
+		_move(pa.lerp(pb, i / 5.0), MOUSE_BUTTON_MASK_LEFT)
+	check(ctl._gesture == "marquee" and main.overlay.marquee.size != Vector2.ZERO and main.overlay.tile_drag.size == Vector2i.ZERO, "the classic setting draws a screen rectangle")
+	_button(pb, false)
+	check(s.selection_region == null, "…and remembers no tile area")
+	App.settings.set_v("select_style", "tiles", false)
+	# 9. Escape cancels a tile drag without changing the selection.
+	s.clear_selection()
+	var qa := _screen_of_tile(at + Vector2i(14, 8))
+	_move(qa)
+	_button(qa, true)
+	for i in range(1, 6):
+		_move(qa.lerp(_screen_of_tile(at + Vector2i(8, 4)), i / 5.0), MOUSE_BUTTON_MASK_LEFT)
+	check(main.overlay.tile_drag.size == Vector2i(7, 5) and main.overlay.cursor_text.contains("7 × 5 tiles"), "the drag previews whole tiles with their count (%s)" % main.overlay.cursor_text)
+	ctl.cancel()
+	_button(qa, false)
+	check(s.selection.is_empty() and main.overlay.tile_drag.size == Vector2i.ZERO, "Esc cancels the tile drag")
+	# Clean up: undo everything this check placed.
+	while s.stack.size() > steps0 and s.stack.can_undo():
+		s.stack.undo()
+	s.clear_selection()
+	await _frames(2)
 
 
 func _motion_check() -> void:

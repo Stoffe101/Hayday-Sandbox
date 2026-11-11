@@ -41,7 +41,7 @@ const MODE_DESIGN := "design"
 const MODE_TO_BUY := "to_buy"
 const MODE_REMAINING := "remaining"
 const MODES := [MODE_DESIGN, MODE_TO_BUY, MODE_REMAINING]
-const MODE_NAMES := {MODE_DESIGN: "Design cost", MODE_TO_BUY: "To buy", MODE_REMAINING: "Remaining"}
+const MODE_NAMES := {MODE_DESIGN: "Design cost", MODE_TO_BUY: "Still to buy", MODE_REMAINING: "Remaining cost"}
 
 const STATUS_OWNED := "owned"
 const STATUS_ACQUIRED := "acquired"

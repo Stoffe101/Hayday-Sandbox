@@ -1384,6 +1384,7 @@ func _on_tool_changed() -> void:
 
 func _on_history_changed() -> void:
 	top_bar.update_state(App.session)
+	catalog.redraw_prices()
 	_refresh_issues()
 	inspector.queue_rebuild()
 	_update_title()
@@ -1689,7 +1690,7 @@ func _copy(cut: bool) -> int:
 
 
 func _undo() -> void:
-	controller.cancel()
+	controller.cancel_gesture()   # a drag in progress, never the selection
 	var l := App.session.stack.undo()
 	if not l.is_empty():
 		dock.set_status("Undid: " + l)

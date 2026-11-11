@@ -39,6 +39,14 @@ var map: FarmMap
 var selection: Array = []
 ## Id of the selected fixed landmark ("" = none). Never part of `selection`.
 var selected_landmark: String = ""
+## Tile selection (Select tool, drag on empty ground): the ground area the
+## object selection was made from. null when the selection came from clicks,
+## the catalogue, commands, … A drag-move of the selection takes it along
+## (move_selection_region); it is dropped when an edit moves a selected object
+## off it (undo of that move, resize, …), never by planning or inventory edits.
+var selection_region: TileRegion = null
+var _region_move := Vector2i.ZERO
+var _region_moving := false
 var tool: String = "select"
 var brush: String = "single"     ## single | line | rect   (place tool)
 var active_item: String = ""
@@ -66,6 +74,7 @@ func _init(l: FarmLayout, item_db: ItemDatabase, farm_map: FarmMap, prices: Pric
 	stack = CommandStack.new(layout)
 	stack.changed.connect(_on_stack_changed)
 	layout.objects_removed.connect(_on_removed)
+	layout.objects_changed.connect(_on_objects_changed)
 	layout.fixed_items = fixed_item_ids(db, map)
 	layout.zone_items = PlacementRules.zone_item_ids(db)
 	conflict_index = ConflictIndex.new(layout, map)
@@ -101,7 +110,64 @@ static func fixed_item_ids(item_db: ItemDatabase, farm_map: FarmMap) -> Dictiona
 
 
 func _on_stack_changed() -> void:
+	if selection_region != null and _region_moving:
+		selection_region.translate(_region_move)
+	_region_moving = false
 	history_changed.emit()
+
+
+func _on_objects_changed(uids: Array) -> void:
+	## A selected object left the selected ground: the area no longer describes the selection.
+	if selection_region == null or _region_moving:
+		return
+	var sel := {}
+	for u in selection:
+		sel[u] = true
+	for u in uids:
+		var o := layout.get_obj(u)
+		if o != null and sel.has(u) and not selection_region.overlaps(o.rect()):
+			selection_region = null
+			return
+
+
+func move_selection_region(delta: Vector2i) -> void:
+	## The next command moves the selection by `delta`: the tile area moves with it.
+	_region_move = delta
+	_region_moving = selection_region != null
+
+
+func select_tiles(rect: Rect2i, op: String = "replace", keep: Callable = Callable()) -> Array:
+	## Tile selection: objects whose footprint overlaps the tile rectangle
+	## (groups complete), combined with the current selection by `op`:
+	## "replace", "add" (Shift) or "subtract" (Ctrl). Remembers the tile area in
+	## selection_region. Returns the objects the rectangle covered.
+	clear_landmark_selection()
+	var found := layout.expand_to_groups(TileRegion.rect_uids(layout, rect, keep))
+	var region: TileRegion = null
+	match op:
+		"add":
+			var have := {}
+			for u in selection:
+				have[u] = true
+			for u in found:
+				if not have.has(u):
+					selection.append(u)
+			region = selection_region.duplicate_region() if selection_region != null else TileRegion.new()
+			region.add_rect(rect)
+		"subtract":
+			var drop := {}
+			for u in found:
+				drop[u] = true
+			selection = selection.filter(func(u): return not drop.has(u))
+			if selection_region != null:
+				region = selection_region.duplicate_region()
+				region.remove_rect(rect)
+		_:
+			selection = found
+			region = TileRegion.from_rect(rect)
+	selection_region = region if region != null and not region.is_empty() and not selection.is_empty() else null
+	selection_changed.emit()
+	return found
 
 
 func _on_removed(uids: Array) -> void:
@@ -271,6 +337,7 @@ func select_landmark(id: String) -> bool:
 	var lm: Landmark = map.landmark(id) if map else null
 	if lm == null or not lm.selectable:
 		return false
+	selection_region = null
 	if not selection.is_empty():
 		selection.clear()
 		selection_changed.emit()
@@ -374,6 +441,7 @@ func set_mode(m: String) -> void:
 
 func select(uids: Array, additive: bool = false, expand_groups: bool = true) -> void:
 	clear_landmark_selection()
+	selection_region = null
 	var list := layout.expand_to_groups(uids) if expand_groups else uids.duplicate()
 	list = list.filter(func(u): return layout.objects.has(u))
 	if additive:
@@ -390,6 +458,7 @@ func select(uids: Array, additive: bool = false, expand_groups: bool = true) -> 
 func clear_selection() -> void:
 	## Clears the object selection and the landmark selection.
 	clear_landmark_selection()
+	selection_region = null
 	if selection.is_empty():
 		return
 	selection.clear()
@@ -401,6 +470,7 @@ func select_all(keep: Callable = Callable()) -> void:
 	## `keep(uid) -> bool` leaves objects out (main.gd: those hidden by an object
 	## layer, which can't be picked either).
 	clear_landmark_selection()
+	selection_region = null
 	selection = layout.objects.keys()
 	if keep.is_valid():
 		selection = selection.filter(func(u): return keep.call(int(u)))

@@ -32,13 +32,13 @@ const CORNERS := ["bl", "br", "tl", "tr"]
 const CORNER_NAMES := {"bl": "Bottom left", "br": "Bottom right", "tl": "Top left", "tr": "Top right"}
 
 ## Mode texts (labels + the tooltips that explain them, docs/PLANNING.md §4).
-const MODE_LABELS := {"design": "Design cost", "to_buy": "To buy", "remaining": "Remaining"}
+const MODE_LABELS := {"design": "Design cost", "to_buy": "Still to buy", "remaining": "Remaining cost"}
 ## Button labels where space is tight (segmented mode switches).
 const MODE_SHORT := {"design": "Design", "to_buy": "To buy", "remaining": "Remaining"}
 const MODE_HELP := {
-	"design": "Design cost: every object priced as a purchase (copy #1, #2, … in build order), ignoring your inventory. What the whole design would cost from scratch.",
-	"to_buy": "To buy: objects not covered by the copies you own, plus the land the design needs. What you still have to buy.",
-	"remaining": "Remaining: like To buy, but copies you already bought during this project (shopping list) are deducted too.",
+	"design": "Design cost: what every object would cost to buy from scratch (copy #1, #2, … at the game's rising prices). Your inventory is ignored.",
+	"to_buy": "Still to buy: what you still need to buy — objects your owned copies don't cover, plus the land the design needs.",
+	"remaining": "Remaining cost: like Still to buy, but copies you already bought for this project (ticked in the shopping list) are deducted too.",
 }
 const MODE_DEDUCTS := {
 	"design": "Inventory ignored", "to_buy": "Owned copies deducted", "remaining": "Owned + bought copies deducted",
@@ -240,6 +240,110 @@ static func abbreviate(n: int) -> String:
 		return neg + (("%.1fk" % k) if k < 100.0 else ("%dk" % int(k)))
 	var m := floorf(a / 10000.0) / 100.0
 	return neg + (("%.2fM" % m) if m < 10.0 else ("%.1fM" % m))
+
+
+static func affordability_of(cost: Dictionary, exact: bool, spendable: Dictionary) -> Dictionary:
+	## Can recorded balances pay `cost`? (currencies never converted)
+	## {state: "nothing" | "unknown" | "short" | "ok", shortfall: {currency: missing},
+	##  no_balance: [currencies needed without a recorded balance], partial: bool}.
+	## "ok" with partial = true: the known part is covered, but some prices are
+	## unknown, so the real total may be more. A currency without a recorded
+	## balance never counts as 0 here: it makes the answer "unknown" unless
+	## another currency is already short.
+	var out := {"state": "nothing", "shortfall": {}, "no_balance": [], "partial": not exact}
+	var need: Dictionary = {}
+	for k in cost:
+		if int(cost[k]) > 0:
+			need[k] = int(cost[k])
+	if need.is_empty():
+		out["state"] = "nothing" if exact else "unknown"
+		return out
+	var short := {}
+	var none: Array = []
+	for k in need:
+		if not spendable.has(k):
+			none.append(k)
+		elif int(need[k]) > int(spendable[k]):
+			short[k] = int(need[k]) - int(spendable[k])
+	out["shortfall"] = short
+	out["no_balance"] = Currency.sorted_ids(none)
+	out["state"] = "short" if not short.is_empty() else ("unknown" if not none.is_empty() else "ok")
+	return out
+
+
+static func next_copy_tag(prices: PriceBook, item_id: String, in_design: int) -> Dictionary:
+	## What copy #(in_design + 1) of an item costs: {state: "price" | "free" |
+	## "not_sold" | "unknown", cost: {currency: amount}, copy: k (1-based),
+	## rising: bool (later copies cost more)}. From the PriceBook, never guessed.
+	var out := {"state": "unknown", "cost": {}, "copy": in_design + 1, "rising": false}
+	if prices == null:
+		return out
+	out["rising"] = not prices.is_constant(item_id)
+	if prices.is_not_buyable(item_id):
+		out["state"] = "not_sold"
+		return out
+	var c: Variant = prices.copy_price(item_id, in_design + 1)
+	if c == null:
+		return out
+	out["cost"] = c
+	out["state"] = "free" if Currency.is_zero(c) else "price"
+	return out
+
+
+static func origin_badge(prices: PriceBook, item_id: String) -> Array:
+	## [text, theme colour key, tooltip] for where an item's price comes from.
+	if prices == null:
+		return ["Price unknown", "warn", "No price book loaded."]
+	var rec := prices.resolved(item_id)
+	var conf := str(rec.get("confidence", ""))
+	match str(rec.get("origin", "")):
+		PriceBook.ORIGIN_CLIENT:
+			return ["From your game files", "accent", "Read from your own client data (private, on this PC)."]
+		PriceBook.ORIGIN_USER:
+			return ["Your price", "planned", "A price you entered (Edit price…). It replaces every other source for this item."]
+		PriceBook.ORIGIN_NONE:
+			return ["Price unknown", "warn", "No source states a price for this item. It is counted as unknown, never as 0."]
+	if conf in ["unverified", "unknown"]:
+		return ["Unverified", "warn", "Sources disagree or are old. Use Edit price… if you know the current price."]
+	return ["Researched", "info", "From community sources (wikis); confidence: %s." % (conf if not conf.is_empty() else "not stated")]
+
+
+static func price_sources(engine: BudgetEngine, prices: PriceBook, uids: Variant, mode: String) -> Dictionary:
+	## Where the prices of the charged item types in a scope come from:
+	## {client: n, user: n, researched: n, unverified: n} (item types, not objects).
+	var out := {"client": 0, "user": 0, "researched": 0, "unverified": 0}
+	if engine == null or prices == null:
+		return out
+	for r: Array in engine.item_rollups(uids, mode):
+		var e: Dictionary = r[1]
+		if int(e.get("known", 0)) <= 0:
+			continue
+		var rec := prices.resolved(str(r[0]))
+		match str(rec.get("origin", "")):
+			PriceBook.ORIGIN_CLIENT:
+				out["client"] += 1
+			PriceBook.ORIGIN_USER:
+				out["user"] += 1
+			_:
+				if str(rec.get("confidence", "")) in ["unverified", "unknown"]:
+					out["unverified"] += 1
+				else:
+					out["researched"] += 1
+	return out
+
+
+static func price_sources_text(src: Dictionary) -> String:
+	## "12 from your game files · 3 researched · 1 your price · 1 unverified" ("" when none).
+	var parts: PackedStringArray = []
+	if int(src.get("client", 0)) > 0:
+		parts.append("%d from your game files" % int(src["client"]))
+	if int(src.get("researched", 0)) > 0:
+		parts.append("%d researched" % int(src["researched"]))
+	if int(src.get("user", 0)) > 0:
+		parts.append("%d your own price%s" % [int(src["user"]), "" if int(src["user"]) == 1 else "s"])
+	if int(src.get("unverified", 0)) > 0:
+		parts.append("%d unverified" % int(src["unverified"]))
+	return " · ".join(parts)
 
 
 static func unknown_text(t: BudgetEngine.Totals) -> String:

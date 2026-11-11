@@ -31,6 +31,9 @@ const DEFAULTS := {
 	"smooth_zoom": true,
 	"wheel_zoom_factor": 1.15,  ## zoom per mouse-wheel notch
 	"drag_snap_valid": false,   ## dragged objects jump to the nearest free spot
+	## Select tool, drag on empty ground: "tiles" = the ground tiles the drag covers
+	## (objects standing on them are selected), "marquee" = the old screen rectangle.
+	"select_style": "tiles",
 	"catalog_icon_size": 76,
 	"catalog_sort": "relevance",
 	"show_unplaceable": false,

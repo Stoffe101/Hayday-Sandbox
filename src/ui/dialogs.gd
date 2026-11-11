@@ -237,6 +237,14 @@ static func settings(parent: Control, on_change: Callable) -> void:
 	ah.tooltip_text = "The inspector appears when you select or place something; ] or the top-bar button keeps it open"
 	ah.toggled.connect(func(on): s.set_v("inspector_auto_hide", on))
 	grid.add_child(ah)
+	grid.add_child(UI.label("Drag on empty ground selects", "Dim"))
+	var sst := OptionButton.new()
+	sst.add_item("Ground tiles")
+	sst.add_item("Screen rectangle (classic)")
+	sst.selected = 1 if str(s.get_v("select_style")) == "marquee" else 0
+	sst.tooltip_text = "Ground tiles: the tiles you drag across light up and every object standing on them is selected.\nScreen rectangle: the classic box around the artwork."
+	sst.item_selected.connect(func(i): s.set_v("select_style", "marquee" if i == 1 else "tiles"))
+	grid.add_child(sst)
 	grid.add_child(UI.label("Dragged objects snap to free space", "Dim"))
 	var snap := CheckButton.new()
 	snap.button_pressed = bool(s.get_v("drag_snap_valid"))

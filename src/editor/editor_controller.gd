@@ -10,6 +10,11 @@ extends Node
 ## erase, eyedrop or rotate one only emits `fixed_refused` with the session's
 ## friendly explanation (main.gd shows it near the cursor). Box selection only
 ## ever selects placed objects.
+##
+## Select tool, drag on empty ground (setting "select_style"): "tiles" (default)
+## selects the ground tiles between the press and the pointer — every object
+## whose footprint stands on one of them joins the selection; Shift adds, Ctrl
+## removes. "marquee" is the classic screen rectangle (Shift/Ctrl toggle).
 
 signal status_changed(text: String)
 signal hover_changed(tile: Vector2i, uid: int)
@@ -50,7 +55,11 @@ var _press_pos := Vector2.ZERO
 var _press_tile := Vector2i.ZERO
 var _press_button := 0
 var _dragging := false
-var _gesture := ""             ## pan | move | marquee | paint | line | rect | erase | erase_rect | zone | stamp
+var _gesture := ""             ## pan | move | tiles | marquee | paint | line | rect | erase | erase_rect | zone | stamp
+# Tile selection drag
+var _tile_rect := Rect2i()
+var _tile_op := "replace"      ## replace | add (Shift) | subtract (Ctrl)
+var _tile_count := 0           ## objects the current rectangle covers
 var _move_uids: Array = []
 var _move_delta := Vector2i.ZERO
 var _paint_objs: Array = []
@@ -414,6 +423,7 @@ func _update_place_ghost(t: Vector2i) -> void:
 	var txt := "%s · %d×%d" % [item.name, item.size_for(flipped).x, item.size_for(flipped).y]
 	if not item.is_footprint_trusted():
 		txt += " · size unverified"
+	txt += cost_text(item.id, 1)
 	overlay.cursor_text = txt
 	overlay.cursor_reasons = _result_reasons(r)
 	_set_blockers(r)
@@ -449,6 +459,7 @@ func _left_press(e: InputEventMouseButton) -> void:
 	_press_lm = ""
 	match session.tool:
 		"select":
+			_tile_op = "replace"
 			_press_stack = objects_here(w)
 			var si := _selected_index(_press_stack)
 			_press_repeat = si >= 0 and _press_stack.size() >= 2 and session.selection.size() <= 1 \
@@ -475,7 +486,7 @@ func _left_press(e: InputEventMouseButton) -> void:
 					session.select([uid])
 				_gesture = "move"
 			else:
-				_gesture = "marquee"
+				_gesture = _ground_gesture(e)
 		"place":
 			if e.ctrl_pressed:
 				_gesture = "rect"
@@ -503,6 +514,37 @@ func _left_press(e: InputEventMouseButton) -> void:
 			_gesture = "zone"
 
 
+func _ground_gesture(e: InputEventMouseButton) -> String:
+	## What a drag from empty ground does with the Select tool (and which way it combines).
+	_tile_op = "subtract" if e.ctrl_pressed else ("add" if e.shift_pressed else "replace")
+	return _ground_gesture_for(_tile_op)
+
+
+func _ground_gesture_for(_op: String) -> String:
+	return "marquee" if str(App.settings.get_v("select_style")) == "marquee" else "tiles"
+
+
+func _keep_pickable() -> Callable:
+	## Objects an object layer hides can't be picked, so they aren't selected either.
+	if renderer == null or renderer.layer_hidden_count() == 0:
+		return Callable()
+	return func(u: int) -> bool: return not renderer.is_layer_hidden(u)
+
+
+func _update_tiles(t: Vector2i) -> void:
+	var r := Iso.rect_from_corners(_press_tile, t)
+	if r == _tile_rect and overlay.tile_drag == r:
+		return
+	_tile_rect = r
+	var found := TileRegion.rect_uids(session.layout, r, _keep_pickable())
+	_tile_count = found.size()
+	overlay.tile_drag = r
+	overlay.tile_drag_op = _tile_op
+	overlay.tile_drag_uids = found if found.size() <= EditorOverlay.TILE_PREVIEW_MAX else []
+	var verb: String = {"add": "Add ", "subtract": "Remove "}.get(_tile_op, "")
+	overlay.cursor_text = "%s%d × %d tiles · %s object%s" % [verb, r.size.x, r.size.y, UI.fmt_int(_tile_count), "" if _tile_count == 1 else "s"]
+
+
 func _start_drag() -> void:
 	match _gesture:
 		"landmark":
@@ -511,7 +553,7 @@ func _start_drag() -> void:
 		"move":
 			_move_uids = session.editable_selection()
 			if _move_uids.is_empty():
-				_gesture = "marquee" if session.selection.is_empty() else ""
+				_gesture = _ground_gesture_for(_tile_op) if session.selection.is_empty() else ""
 				if not session.selection.is_empty():
 					var why := session.move_refusal_message()
 					if why.is_empty() or why.begins_with("Locked"):
@@ -595,6 +637,8 @@ func _update_drag(t: Vector2i, screen: Vector2) -> void:
 	match _gesture:
 		"move":
 			_update_move(screen)
+		"tiles":
+			_update_tiles(t)
 		"marquee", "erase_rect", "zone":
 			var a := _press_world
 			var b := world_at(screen)
@@ -634,6 +678,7 @@ func _end(e: InputEventMouseButton) -> void:
 				if _move_delta != Vector2i.ZERO:
 					var r := PlacementRules.check_group_move(session.layout, session.map, _move_uids, _move_delta)
 					if r.ok:
+						session.move_selection_region(_move_delta)
 						session.execute(EditCommands.MoveObjects.new(_move_uids, _move_delta))
 					else:
 						session.message.emit("Can't drop here: " + r.message(session.layout, session.db, session.map), "warn")
@@ -642,6 +687,12 @@ func _end(e: InputEventMouseButton) -> void:
 			_move_uids = []
 			overlay.ghosts = []
 			overlay.ghost_result = null
+		"tiles":
+			if was_drag:
+				session.select_tiles(Iso.rect_from_corners(_press_tile, tile_at(e.position)), _tile_op, _keep_pickable())
+			elif _tile_op == "replace":
+				session.clear_selection()
+			_clear_tiles()
 		"marquee":
 			if was_drag:
 				var uids := renderer.uids_in_world_rect(overlay.marquee.abs())
@@ -674,9 +725,18 @@ func _end(e: InputEventMouseButton) -> void:
 	overlay.refresh()
 
 
+func _clear_tiles() -> void:
+	_tile_rect = Rect2i()
+	_tile_count = 0
+	if overlay:
+		overlay.tile_drag = Rect2i()
+		overlay.tile_drag_uids = []
+
+
 func _cancel_gesture() -> void:
 	if renderer and _gesture == "move" and _dragging:
 		_stop_move_visuals()
+	_clear_tiles()
 	if _gesture == "pan" or (_gesture == "rpan" and _dragging):
 		camera.end_user_pan()
 	_gesture = ""
@@ -699,6 +759,14 @@ func _cancel_gesture() -> void:
 func _cancel_gesture_soft() -> void:
 	_gesture = ""
 	_dragging = false
+
+
+func cancel_gesture() -> bool:
+	## Cancels a drag / stroke in progress only (undo and redo use this; Esc uses cancel()).
+	if _gesture.is_empty():
+		return false
+	_cancel_gesture()
+	return true
 
 
 func cancel() -> bool:
@@ -751,7 +819,34 @@ func _paint_at(t: Vector2i) -> void:
 		gs.append({"item": item, "origin": po.origin, "flipped": po.flipped, "variant": po.variant})
 	overlay.ghosts = gs
 	overlay.ghost_result = null
+	overlay.cursor_text = "%d × %s%s" % [_paint_objs.size(), item.name, cost_text(item.id, _paint_objs.size())]
+	overlay.cursor_world = Iso.tile_center(t)
 	overlay.refresh()
+
+
+var _cost_counts: Dictionary = {}
+var _cost_key := ""
+
+
+func cost_text(item_id: String, count: int) -> String:
+	## " · 1,200 coins" for the next `count` copies of an item in the open design
+	## (rising prices included), " · price unknown" / " · can't be bought" when
+	## the price book has none. "" without prices.
+	if App.prices == null or count <= 0 or session == null:
+		return ""
+	var key := "%d/%d" % [session.get_instance_id(), session.stack.version]
+	if key != _cost_key:
+		_cost_key = key
+		_cost_counts = session.layout.item_counts(true)
+	if App.prices.is_not_buyable(item_id):
+		return " · can't be bought"
+	var p := App.prices.price_of_copies(item_id, int(_cost_counts.get(item_id, 0)) + 1, count)
+	if int(p["known"]) == 0:
+		return " · price unknown"
+	var t := " · " + Currency.format_line(p["cost"], "free")
+	if int(p["unknown"]) > 0:
+		t += " + %d unknown" % int(p["unknown"])
+	return t
 
 
 func _commit_paint() -> void:
@@ -810,7 +905,7 @@ func _preview_multi(t: Vector2i) -> void:
 	for r in rects:
 		if PlacementRules.check_rect(session.layout, session.map, r, {}, true, zone).ok:
 			valid += 1
-	overlay.cursor_text = "%d × %s · %d fit" % [origins.size(), item.name, valid]
+	overlay.cursor_text = "%d × %s · %d fit%s" % [origins.size(), item.name, valid, cost_text(item.id, valid)]
 
 
 func _commit_multi(t: Vector2i) -> void:
@@ -1099,6 +1194,7 @@ func refresh_hover() -> void:
 func _update_overlay_state() -> void:
 	if overlay and session:
 		overlay.selection = session.selection
+		overlay.session = session
 		overlay.refresh()
 
 

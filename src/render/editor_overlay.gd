@@ -14,9 +14,23 @@ const C_OUT := Color(0.4, 0.4, 0.4, 0.45)
 const C_FIXED := Color(0.62, 0.66, 0.78, 0.5)
 ## Selected / hovered fixed landmark (distinct from the object-selection accent).
 const C_LANDMARK := Color(1.0, 0.86, 0.52)
+## Selection (objects and selected ground tiles): a light sky blue that stays
+## readable on grass, paths and water and never reads as "valid" green or
+## "blocked" red. Tile selection drawn to remove tiles (Ctrl) uses C_REMOVE.
+const C_SELECT := Color(0.56, 0.84, 1.0)
+const C_REMOVE := Color(1.0, 0.52, 0.45)
+## A tile-selection drag previews the objects it would select up to this many.
+const TILE_PREVIEW_MAX := 4000
 
 var layout: FarmLayout
 var db: ItemDatabase
+## The editing session (its selection_region is the selected ground; read by SelectionUnderlay).
+var session: EditorSession
+## Tile-selection drag in progress: the tile rectangle (size 0 = none), how it
+## combines (replace | add | subtract) and the objects it covers (preview).
+var tile_drag := Rect2i()
+var tile_drag_op := "replace"
+var tile_drag_uids: Array = []
 var assets: AssetLibrary
 var renderer: ObjectRenderer
 var accent := Color("#3fae6a")
@@ -69,6 +83,8 @@ var _ghost_glows: Array = []        ## [sprite, centre, flipped, tint] of this r
 
 ## Above this many selected objects, footprints are outlined instead of silhouettes.
 const SILHOUETTE_MAX := 150
+## Up to this many selected objects get an outline drawn over their art.
+const OUTLINE_ABOVE_MAX := 12
 const SILHOUETTE_CACHE := 400
 const SILHOUETTE_TEX_MAX := 180     ## long side the mask is reduced to before tracing
 const C_BLOCK := Color(1.0, 0.28, 0.24, 0.95)
@@ -283,14 +299,13 @@ func _draw() -> void:
 			_dashed(poly, Color(0.98, 0.72, 0.2, 0.55))
 	# Selection: the fill is under the objects (SelectionUnderlay); here only outlines.
 	if drag_uids.is_empty():
-		var sil := selection.size() <= SILHOUETTE_MAX
-		for u in selection:
-			var o := layout.get_obj(u)
-			if o:
-				_outline_object(o, accent.lightened(0.2), 2.5, sil)
-		if selection.size() > 1:
-			var r := layout.bounds_of(selection)
-			_dashed(Iso.grid_rect_polygon(r.grow(0)), Color(1, 1, 1, 0.85))
+		# Outlines above the art only for small selections: larger ones are shown on the
+		# ground (SelectionUnderlay: footprint fill + one outline around the whole area).
+		if selection.size() <= OUTLINE_ABOVE_MAX:
+			for u in selection:
+				var o := layout.get_obj(u)
+				if o:
+					_outline_object(o, C_SELECT, 2.5, true)
 	_draw_landmark_marks()
 	# Hover
 	if hover_uid != 0 and not hover_uid in selection:

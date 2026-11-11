@@ -24,7 +24,8 @@ const ALL := ["overview", "place_valid", "place_invalid", "selection", "search",
 	"drag_blocked", "tools_symmetry", "tools_repeat", "winter", "terrain_pack", "terrain_pack_winter", "terrain_pack_river",
 	"terrain_pack_fg", "terrain_pack_blend", "terrain_pack_zoomout",
 	"plan_budget", "plan_areas", "plan_phases", "plan_heatmap", "plan_shop", "plan_build", "plan_guide", "plan_accuracy",
-	"plan_minimap", "plan_layers", "plan_compare", "plan_ready", "game_data", "game_data_review", "object_glow"]
+	"plan_minimap", "plan_layers", "plan_compare", "plan_ready", "game_data", "game_data_review", "object_glow",
+	"tile_drag", "tile_select", "budget_breakdown"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
 const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "anim_perf", "wz_<item id>", "anim_farm_perf",
 	"camera_perf", "drag_perf", "ghost_art", "fence_junctions"]
@@ -1121,6 +1122,61 @@ func _anim_perf() -> void:
 	print("PERF terrain build_ms=%.2f" % (main.ground._terrain.last_build_usec / 1000.0))
 
 
+func _tile_select(hold: bool) -> bool:
+	## Tile selection with the Select tool through real pointer events: a drag from
+	## empty ground across the fields (tile_drag: the shot is taken while the
+	## button is still down; tile_select: after the release). Prints
+	## "SEL tiles=<w>x<h> objects=<n> selected=<n>" for checks.
+	var s = _session()
+	s.set_tool("select")
+	s.clear_selection()
+	var uids: Array = []
+	for o: PlacedObject in s.layout.objects.values():
+		if o.item_id in select_items:
+			uids.append(o.uid)
+	if uids.is_empty():
+		print("FAIL %s: no %s objects" % ["tile_drag" if hold else "tile_select", "+".join(select_items)])
+		return false
+	var r: Rect2i = s.layout.bounds_of(uids)
+	var area := r.grow(1)
+	# Start on a free tile near the area's top corner (nothing picked there).
+	var start := Vector2i(-99999, -99999)
+	for d in 6:
+		for t: Vector2i in [area.position + Vector2i(d, 0), area.position + Vector2i(0, d), area.position + Vector2i(d, d)]:
+			if start.x == -99999 and main.controller.objects_here(Iso.tile_center(t)).is_empty():
+				start = t
+	if start.x == -99999:
+		print("FAIL tile select: no free start tile")
+		return false
+	var end := area.end - Vector2i.ONE
+	main.camera.smooth = false
+	main.camera.set_zoom_level(1.0)
+	main.camera.center_on(Iso.footprint_center(area.position, area.size))
+	await _frames(15)
+	var a: Vector2 = main.camera.world_to_screen(Iso.tile_center(start))
+	var b: Vector2 = main.camera.world_to_screen(Iso.tile_center(end))
+	_canvas_move(a, 0)
+	_canvas_button(a, true)
+	for i in range(1, 13):
+		_canvas_move(a.lerp(b, i / 12.0), MOUSE_BUTTON_MASK_LEFT)
+		await get_tree().process_frame
+	var rect := Iso.rect_from_corners(start, end)
+	if hold:
+		main.overlay.cursor_world = Iso.tile_center(end)
+		print("SEL tiles=%dx%d objects=%d selected=%d" % [rect.size.x, rect.size.y, main.controller._tile_count, s.selection.size()])
+		await _frames(10)
+		return true
+	_canvas_button(b, false)
+	await _frames(10)
+	var want := TileRegion.from_rect(rect).uids_in(s.layout)
+	var reg: TileRegion = s.selection_region
+	print("SEL tiles=%dx%d objects=%d selected=%d region=%s" % [rect.size.x, rect.size.y, want.size(), s.selection.size(), str(reg.bounds()) if reg else "none"])
+	if s.selection.size() != s.layout.expand_to_groups(want).size() or reg == null:
+		print("FAIL tile_select: selection does not match the tiles")
+		return false
+	return true
+
+
 func _drag_pair() -> Array:
 	## [mover, a nearby object to drop it on, the mover's tile that picks it].
 	var s = _session()
@@ -1171,6 +1227,20 @@ func _scenario(sc: String) -> bool:
 		var ok_wz: bool = await _water_zone_shot(sc.substr(3))
 		return ok_wz
 	match sc:
+		"tile_drag", "tile_select", "budget_breakdown":
+			var ok_ts: bool = await _tile_select(sc == "tile_drag")
+			if not ok_ts:
+				return false
+			if sc == "budget_breakdown":
+				# Balances recorded, so the card can answer "can I afford it?" (undone by the next _reset).
+				var p: Dictionary = s.layout.profile.duplicate(true)
+				p["balances"] = {"coins": 25000, "diamonds": 40}
+				s.execute(EditCommands.SetProfile.new(s.layout.profile, p))
+				_undo_after += 1
+				main.budget.set_expanded(true)
+				await _frames(8)
+				var a: Dictionary = main.budget.last_afford
+				print("BUDGET state=%s cost=%s afford=%s" % [str(a.get("state")), str(main.budget.last_cost), str(a.get("shortfall"))])
 		"asset_manager":
 			var ok_0: bool = await _asset_manager("bakery", 0)
 			if not ok_0:

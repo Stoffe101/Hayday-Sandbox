@@ -27,7 +27,7 @@ Linux / cloud box (counts at the end of W5, 2026-11-10; refreshed at the end of 
 ```bash
 godot --headless --path . --import                                   # after adding class_name scripts / assets
 godot --headless --path . --script res://tools/ci/check_scripts.gd   # compile every script (173)
-godot --headless --path . --script res://tests/run_tests.gd          # unit tests (528 tests / 16,309 assertions)
+godot --headless --path . --script res://tests/run_tests.gd          # unit tests (528 tests / 16,311 assertions)
 godot --headless --path . -- --selftest                              # in-app integration test (539 checks)
 godot --headless --path . -- --selftest=perf                         # benchmarks (7 checks)
 godot --headless --path . --script res://tests/perf/perf_planning.gd # planning benchmarks (2k/5k/10k)

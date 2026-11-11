@@ -12,7 +12,7 @@ on 2026-11-09 at HEAD 8c93360 (logs in `artifacts\checks\docs\`) and were not re
 |---|---|---|---|
 | Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 173 scripts, 0 failed (end of W5) |
 | Data | `python3 tools/ci/validate_data.py` | manifests, maps, asset pack refs, samples, price file (`data/prices/`), **licence guard** | 1,967 items, 0 errors, 0 warnings (end of W5) |
-| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 528 tests / 16,309 assertions, 0 failed (end of W5) |
+| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 528 tests / 16,311 assertions, 0 failed (end of W5) |
 | Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 539 checks, 0 failed (end of W5, fresh data folder); 544 with the private pack (copied data folder) |
 | Performance | `godot --headless --path . -- --selftest=perf` | synthetic farms 2k/5k/10k, densely packed real map, world layer, thumbnails | 7 checks, 0 failed (numbers below) † |
 | Planning perf | `godot --headless --path . --script res://tests/perf/perf_planning.gd [-- --sizes=2000,5000,10000 --reps=30]` | budget engine, scopes, phases, checklist, shopping list, guide + exports on 2k/5k/10k real-item farms | table of mean / p95 / max (numbers below) |

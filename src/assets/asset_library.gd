@@ -23,29 +23,66 @@ const REVIEW_FILE := "review.json"
 const BASE_VARIANT := "@base"
 ## Item art for a world theme is the variant named THEME_VARIANT_PREFIX + theme.
 const THEME_VARIANT_PREFIX := "theme_"
+## Pack variants "<look>__<theme>" are the client's seasonal skins of a look (themed_variant).
+const THEME_SKIN_SEP := "__"
 
 
 ## Ambient animation of a sprite (pack entry field "anim"):
 ## {"sheet": <image>, "frames": N, "fps": F, "mode": "overlay" | "replace",
-##  "columns": <default N>, "anchor": [x, y] <frame pixel at the ground centre, default the sprite's>}.
+##  "columns": <default N>, "anchor": [x, y] <frame pixel at the ground centre, default the sprite's>,
+##  "rect": [x, y, w, h], "cell": [cw, ch], "cell_padding": p, "glow_sheet": <image>}.
+## With "rect" the frames REPLACE that rectangle of the static image (static-image pixels): each cell (cw x ch
+## px, drawn stretched over the rectangle) is a full re-render of it, so nothing is drawn twice; "cell_padding" px
+## of edge pixels surround every cell in the sheet; "glow_sheet" holds the frames' additive glow (same cells).
+## Such sheets load on first use (an object whose animation is off never loads them).
 class AnimInfo:
-	var sheet: Texture2D
+	var sheet: Texture2D:
+		get:
+			if sheet == null and not _sheet_path.is_empty():
+				sheet = AssetLibrary._load_texture(_sheet_path, _fix_edges)
+				_sheet_path = ""
+			return sheet
+	var glow_sheet: Texture2D:
+		get:
+			if glow_sheet == null and not _glow_path.is_empty():
+				glow_sheet = AssetLibrary._load_texture(_glow_path, _fix_edges)
+				_glow_path = ""
+			return glow_sheet
 	var frames := 1
 	var columns := 1
 	var fps := 6.0
 	var overlay := true          ## false = "replace": the frames take the place of the static image
 	var frame_size := Vector2.ZERO
 	var anchor := Vector2.ZERO
+	var rect := Rect2()          ## "rect" (static px); empty = frames are whole images at `anchor`
+	var padding := 0             ## "cell_padding"
+	var has_glow := false        ## the sheet has a glow sheet
+	var _sheet_path := ""
+	var _glow_path := ""
+	var _fix_edges := true
 
 	func frame_rect(i: int) -> Rect2:
 		var f := posmod(i, frames)
-		return Rect2(Vector2(f % columns, f / columns) * frame_size, frame_size)
+		var cell := frame_size + Vector2(2 * padding, 2 * padding)
+		return Rect2(Vector2(f % columns, f / columns) * cell + Vector2(padding, padding), frame_size)
+
+	func has_rect() -> bool:
+		return rect.size.x > 0.0 and rect.size.y > 0.0
+
+	func loaded_sheets() -> Array[Texture2D]:
+		## The sheets already in memory (never loads one).
+		var out: Array[Texture2D] = []
+		if _sheet_path.is_empty() and sheet != null:
+			out.append(sheet)
+		if has_glow and _glow_path.is_empty() and glow_sheet != null:
+			out.append(glow_sheet)
+		return out
 
 	func world_rect(center: Vector2, flipped: bool, sprite_scale: float) -> Rect2:
-		var sz := frame_size * sprite_scale
-		var pos := center - anchor * sprite_scale
+		var sz := (rect.size if has_rect() else frame_size) * sprite_scale
+		var pos := center - (anchor - rect.position if has_rect() else anchor) * sprite_scale
 		if flipped:
-			pos.x = center.x - (sz.x - anchor.x * sprite_scale)
+			pos.x = center.x - (pos.x - center.x) - sz.x
 		return Rect2(pos, sz)
 
 
@@ -60,6 +97,7 @@ class SpriteInfo:
 	var path: String = ""
 	var variant: String = ""     ## variant actually used ("" = base sprite)
 	var anim: AnimInfo           ## null = static
+	var glow: Texture2D          ## additive layer over the sprite (pack field "glow"), same size and anchor; null = none
 	var mirror: SpriteInfo       ## drawn unflipped instead of flipping this sprite (pack field "mirror")
 	var _hit: BitMap
 	var _hit_failed := false
@@ -378,21 +416,34 @@ func default_variant_of(art_key: String) -> String:
 
 
 func themed_variant(art_key: String, variant: String, theme: String) -> String:
-	## The variant to draw under a world theme: "theme_<theme>" when the winning
-	## pack really has it and the object has no variant of its own; otherwise
-	## `variant` unchanged (a look is never invented).
-	if not variant.is_empty() or theme.is_empty() or theme == FarmLayout.DEFAULT_THEME:
+	## The variant to draw under a world theme, when the winning pack really has
+	## it (a look is never invented); otherwise `variant` unchanged:
+	## * "theme_<theme>" for an object without a variant of its own;
+	## * "<look>__<theme>": the client's own seasonal skin of that look ("" / BASE_VARIANT
+	##   = the base image, e.g. "__winter", "lvl_2__winter"), as LandmarkView does for landmarks.
+	if theme.is_empty() or theme == FarmLayout.DEFAULT_THEME:
 		return variant
-	var themed := THEME_VARIANT_PREFIX + theme
 	var vs: Variant = entry_of(art_key).get("variants")
-	return themed if vs is Dictionary and (vs as Dictionary).has(themed) else variant
+	if not vs is Dictionary:
+		return variant
+	if variant.is_empty() and (vs as Dictionary).has(THEME_VARIANT_PREFIX + theme):
+		return THEME_VARIANT_PREFIX + theme
+	if variant.find(THEME_SKIN_SEP) >= 0:
+		return variant   # already a seasonal skin, chosen by hand
+	var look := variant
+	if look.is_empty():
+		look = default_variant_of(art_key)
+	elif look == BASE_VARIANT:
+		look = ""
+	var skin := look + THEME_SKIN_SEP + theme
+	return skin if (vs as Dictionary).has(skin) else variant
 
 
 func has_theme_variants(art_key: String) -> bool:
 	var vs: Variant = entry_of(art_key).get("variants")
 	if vs is Dictionary:
 		for k: String in vs:
-			if k.begins_with(THEME_VARIANT_PREFIX):
+			if k.begins_with(THEME_VARIANT_PREFIX) or k.find(THEME_SKIN_SEP) >= 0:
 				return true
 	return false
 
@@ -408,6 +459,8 @@ func item_themes() -> Array:
 					for k: String in e["variants"]:
 						if k.begins_with(THEME_VARIANT_PREFIX):
 							found[k.substr(THEME_VARIANT_PREFIX.length())] = true
+						elif k.find(THEME_SKIN_SEP) >= 0:
+							found[k.substr(k.find(THEME_SKIN_SEP) + THEME_SKIN_SEP.length())] = true
 		var list: Array = found.keys()
 		list.sort()
 		_item_themes = list
@@ -569,6 +622,7 @@ func _make_info(pack: Dictionary, entry: Dictionary) -> SpriteInfo:
 			info.shadow = stex
 			var sa: Array = sh.get("anchor", [stex.get_width() * 0.5, stex.get_height() * 0.5])
 			info.shadow_anchor = Vector2(float(sa[0]), float(sa[1]))
+	info.glow = _glow_from(pack, entry, info)
 	info.anim = _anim_from(pack, entry, info)
 	var mv: Variant = entry.get("mirror", null)
 	if mv is Dictionary:
@@ -593,21 +647,65 @@ func _anim_from(pack: Dictionary, entry: Dictionary, info: SpriteInfo) -> AnimIn
 	if rel.is_empty() or frames < 1 or fps <= 0.0:
 		errors.append("Bad animation on %s in pack %s" % [info.path, pack["id"]])
 		return null
-	var sheet := _texture(str(pack["base"]).path_join(rel), false, not pack.get("alpha_bleed", false))
-	if sheet == null:
-		errors.append("Missing image %s in pack %s" % [rel, pack["id"]])
-		return null
 	var a := AnimInfo.new()
-	a.sheet = sheet
 	a.frames = frames
 	a.columns = clampi(int(d.get("columns", frames)), 1, frames)
 	a.fps = fps
 	a.overlay = str(d.get("mode", "overlay")) != "replace"
-	var rows := ceili(float(frames) / a.columns)
-	a.frame_size = Vector2(sheet.get_width() / float(a.columns), sheet.get_height() / float(rows))
 	var an: Variant = d.get("anchor", null)
 	a.anchor = Vector2(float(an[0]), float(an[1])) if an is Array and (an as Array).size() == 2 else info.anchor
+	var path := str(pack["base"]).path_join(rel)
+	var rc: Variant = d.get("rect", null)
+	var cell: Variant = d.get("cell", null)
+	if rc is Array and (rc as Array).size() == 4 and cell is Array and (cell as Array).size() == 2:
+		# Patch animation: lazily loaded sheet, frames replace a rectangle of the static image.
+		a.rect = Rect2(float(rc[0]), float(rc[1]), float(rc[2]), float(rc[3]))
+		a.frame_size = Vector2(float(cell[0]), float(cell[1]))
+		a.padding = maxi(0, int(d.get("cell_padding", 0)))
+		a.anchor = info.anchor
+		a.overlay = false
+		var tex_rect := Rect2(Vector2.ZERO, info.texture.get_size())
+		if not tex_rect.encloses(a.rect) or a.frame_size.x < 1.0 or a.frame_size.y < 1.0:
+			errors.append("Bad animation rect on %s in pack %s" % [info.path, pack["id"]])
+			return null
+		if not _exists(path):
+			errors.append("Missing image %s in pack %s" % [rel, pack["id"]])
+			return null
+		a._sheet_path = path
+		a._fix_edges = not pack.get("alpha_bleed", false)
+		var grel := PackOverrides.safe_rel_path(str(d.get("glow_sheet", "")))
+		if not grel.is_empty() and _exists(str(pack["base"]).path_join(grel)):
+			a._glow_path = str(pack["base"]).path_join(grel)
+			a.has_glow = true
+		return a
+	var sheet := _texture(path, false, not pack.get("alpha_bleed", false))
+	if sheet == null:
+		errors.append("Missing image %s in pack %s" % [rel, pack["id"]])
+		return null
+	a.sheet = sheet
+	var rows := ceili(float(frames) / a.columns)
+	a.frame_size = Vector2(sheet.get_width() / float(a.columns), sheet.get_height() / float(rows))
 	return a
+
+
+func _glow_from(pack: Dictionary, entry: Dictionary, info: SpriteInfo) -> Texture2D:
+	## Additive glow layer (pack entry field "glow": {"file", "blend": "add"}); null when absent or unusable
+	## (a bad one is reported, the sprite draws without it).
+	var g: Variant = entry.get("glow", null)
+	if not g is Dictionary:
+		return null
+	var rel := PackOverrides.safe_rel_path(str((g as Dictionary).get("file", "")))
+	if rel.is_empty() or str(g.get("blend", "add")) != "add":
+		errors.append("Bad glow on %s in pack %s" % [info.path, pack["id"]])
+		return null
+	var tex := _texture(str(pack["base"]).path_join(rel), false, not pack.get("alpha_bleed", false))
+	if tex == null:
+		errors.append("Missing image %s in pack %s" % [rel, pack["id"]])
+		return null
+	if Vector2(tex.get_size()) != Vector2(info.texture.get_size()):
+		errors.append("Glow %s does not match the size of %s in pack %s" % [rel, info.path, pack["id"]])
+		return null
+	return tex
 
 
 func pack_image(pack_id: String, rel: String) -> Texture2D:
@@ -864,7 +962,7 @@ func pack_stats(pack_id: String) -> Dictionary:
 	if p.is_empty():
 		return {}
 	var files := {}
-	var counts := {"variants": 0, "connections": 0, "shadows": 0, "thumbs": 0, "anims": 0, "mirrors": 0}
+	var counts := {"variants": 0, "connections": 0, "shadows": 0, "thumbs": 0, "anims": 0, "mirrors": 0, "glows": 0}
 	for key in p["sprites"]:
 		if p["sprites"][key] is Dictionary:
 			_collect_files(p["sprites"][key], files, counts)
@@ -885,7 +983,7 @@ func pack_stats(pack_id: String) -> Dictionary:
 	missing.sort()
 	var st := {"id": p["id"], "name": p["name"], "version": p["version"], "sprites": (p["sprites"] as Dictionary).size(),
 		"variants": counts["variants"], "connections": counts["connections"], "shadows": counts["shadows"],
-		"thumbs": counts["thumbs"], "anims": counts["anims"], "mirrors": counts["mirrors"], "files": files.size(), "missing_files": missing,
+		"thumbs": counts["thumbs"], "anims": counts["anims"], "mirrors": counts["mirrors"], "glows": counts["glows"], "files": files.size(), "missing_files": missing,
 		"verified": (p["verified"] as Dictionary).size(), "rejected": (p["rejected"] as Dictionary).size(),
 		"assigned": (p["assigned"] as Dictionary).size(), "review_items": review_queue(p["id"]).size(),
 		"override_errors": (p["override_errors"] as Array) + (p.get("apply_errors", []) as Array) + terrain_problems,
@@ -908,6 +1006,11 @@ func _collect_files(e: Dictionary, files: Dictionary, counts: Dictionary) -> voi
 	if e.get("anim") is Dictionary and not str(e["anim"].get("sheet", "")).is_empty():
 		files[str(e["anim"]["sheet"])] = true
 		counts["anims"] += 1
+		if not str(e["anim"].get("glow_sheet", "")).is_empty():
+			files[str(e["anim"]["glow_sheet"])] = true
+	if e.get("glow") is Dictionary and not str(e["glow"].get("file", "")).is_empty():
+		files[str(e["glow"]["file"])] = true
+		counts["glows"] += 1
 	if e.get("mirror") is Dictionary:
 		counts["mirrors"] += 1
 		_collect_files(e["mirror"], files, counts)

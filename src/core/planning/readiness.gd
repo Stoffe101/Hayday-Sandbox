@@ -45,32 +45,56 @@ static func build(layout: FarmLayout, db: ItemDatabase, conflicts: Dictionary, r
 		acc[id] = {"uids": {}, "items": {}}
 	# Placement: from the conflict index (planned objects included: they are
 	# part of the design too). Locked land and fixed landmarks get their own rows.
+	var ll_u: Dictionary = acc[LOCKED_LAND]["uids"]
+	var ll_i: Dictionary = acc[LOCKED_LAND]["items"]
+	var fx_u: Dictionary = acc[FIXED]["uids"]
+	var fx_i: Dictionary = acc[FIXED]["items"]
+	var pl_u: Dictionary = acc[PLACEMENT]["uids"]
+	var pl_i: Dictionary = acc[PLACEMENT]["items"]
 	for u: int in conflicts:
 		var o: PlacedObject = layout.objects.get(u)
 		var res: PlacementRules.Result = conflicts[u]
 		if o == null or res == null:
 			continue
-		var other := false
-		for c in res.reason_counts:
-			if int(c) == PlacementRules.LOCKED_LAND:
-				_put(acc, LOCKED_LAND, u, o.item_id)
-			elif int(c) == PlacementRules.LANDMARK:
-				_put(acc, FIXED, u, o.item_id)
-			else:
-				other = true
-		if other:
-			_put(acc, PLACEMENT, u, o.item_id)
+		var rc := res.reason_counts
+		var n := rc.size()
+		if rc.has(PlacementRules.LOCKED_LAND):
+			ll_u[u] = true
+			ll_i[o.item_id] = true
+			n -= 1
+		if rc.has(PlacementRules.LANDMARK):
+			fx_u[u] = true
+			fx_i[o.item_id] = true
+			n -= 1
+		if n > 0:
+			pl_u[u] = true
+			pl_i[o.item_id] = true
 	if report != null:
+		# Row per issue code, looked up once per distinct code list (shared by
+		# every copy of an item) instead of once per object and code.
+		var seen_codes := {}
 		for u: int in report.issues:
+			var codes: Array = report.issues[u]
+			var rs: Variant = seen_codes.get(codes)
+			if rs == null:
+				var list: Array = []
+				for c in codes:
+					var row: String = ISSUE_ROWS.get(str(c), "")
+					if row == LEVEL and not realistic:
+						continue
+					if not row.is_empty() and not row in list:
+						list.append(row)
+				rs = list
+				seen_codes[codes] = list
+			if (rs as Array).is_empty():
+				continue
 			var o: PlacedObject = layout.objects.get(u)
 			if o == null:
 				continue
-			for c in report.issues[u]:
-				var row: String = ISSUE_ROWS.get(str(c), "")
-				if row == LEVEL and not realistic:
-					continue
-				if not row.is_empty():
-					_put(acc, row, u, o.item_id)
+			for row: String in rs:
+				var a: Dictionary = acc[row]
+				(a["uids"] as Dictionary)[u] = true
+				(a["items"] as Dictionary)[o.item_id] = true
 	# Can't buy / no inventory record: per item, every real (not planned) copy.
 	var owned: Dictionary = layout.profile.get("owned", {}) if layout.profile.get("owned") is Dictionary else {}
 	var nb := {}
@@ -80,14 +104,27 @@ static func build(layout: FarmLayout, db: ItemDatabase, conflicts: Dictionary, r
 	var nb_objects := 0
 	for k in nb:
 		nb_objects += int(nb[k])
+	# Per raw item id: [can't buy, no inventory record] (the same answer for every copy).
+	var per_item := {}
+	var cb_uids: Dictionary = acc[CANT_BUY]["uids"]
+	var cb_items: Dictionary = acc[CANT_BUY]["items"]
+	var ni_uids: Dictionary = acc[NO_INVENTORY]["uids"]
+	var ni_items: Dictionary = acc[NO_INVENTORY]["items"]
 	for o: PlacedObject in layout.objects.values():
 		if o.planned:
 			continue
-		var item := db.resolve_id(o.item_id) if db != null else o.item_id
-		if nb.has(item) or nb.has(o.item_id):
-			_put(acc, CANT_BUY, o.uid, o.item_id)
-		if db != null and db.get_item(o.item_id) != null and not owned.has(o.item_id) and not owned.has(item):
-			_put(acc, NO_INVENTORY, o.uid, o.item_id)
+		var flags: Variant = per_item.get(o.item_id)
+		if flags == null:
+			var item := db.resolve_id(o.item_id) if db != null else o.item_id
+			flags = [nb.has(item) or nb.has(o.item_id),
+				db != null and db.get_item(o.item_id) != null and not owned.has(o.item_id) and not owned.has(item)]
+			per_item[o.item_id] = flags
+		if flags[0]:
+			cb_uids[o.uid] = true
+			cb_items[o.item_id] = true
+		if flags[1]:
+			ni_uids[o.uid] = true
+			ni_items[o.item_id] = true
 	var rows: Array = []
 	var blocking := 0
 	var checks := 0

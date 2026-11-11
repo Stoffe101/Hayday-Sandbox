@@ -31,6 +31,7 @@ A pack is a folder with `pack.json`:
       "connections": {"5": {"file": "items/fence__m05.png", "anchor": [64, 70]}},  // fences/paths
       "anim": {"sheet": "items/bakery.anim.png", "frames": 6, "fps": 6.0, "mode": "overlay",  // optional, see below
                "columns": 6, "anchor": [148, 276]},
+      "glow": {"file": "items/bakery.glow.png", "blend": "add"},                // optional, see below
       "mirror": {"file": "items/bakery__mirror.png", "anchor": [120, 276]}      // optional, see below
     }
   }
@@ -40,10 +41,34 @@ A pack is a folder with `pack.json`:
 `anim` is an ambient animation: a sprite sheet of `frames` cells, read left to right in `columns` rows (default: one
 row). `mode` is `overlay` (frames over the static image, which must not contain the moving part) or `replace` (frames
 instead of it). `anchor` is the frame pixel at the ground centre and defaults to the sprite's. All sprites share one
-clock, only sprites in view change frame, and Settings → *Ambient animation* can reduce or stop them. A flipped
+clock, only sprites in view change frame, and Settings → *Ambient animation* can reduce or stop them.
+
+**Patch animations.** With `"rect": [x, y, w, h]` (static-image pixels) and `"cell": [cw, ch]` the frames *replace that
+rectangle* of the static image: every cell is a complete re-render of the rectangle (unchanged pixels included), drawn
+stretched over it, while the rest of the static image is drawn around it. Nothing is drawn twice, the static image
+itself is frame 0 (thumbnails, ghosts, exports and *Off* use it unchanged), and cells may be smaller than the
+rectangle (lower-resolution frames). `"cell_padding": p` = p px of each cell's edge pixels repeated around it in the
+sheet (no filtering bleed between frames); `"glow_sheet"` holds the frames' glow (same cells, additive, below). Such
+sheets load the first time the sprite is in view with animation on, never for objects that are not looked at.
+`mode`/`anchor` are ignored; `fps` is the playback rate (the private builder also records `source_fps`,
+`frame_step` and `loop_s`, which the app ignores).
+
+**Glow.** `glow` is an additive layer: an image of the same size as the sprite (same anchor) whose colour × alpha is
+*added* over the drawn sprite (`"blend": "add"`, the only blend accepted; a glow of another size is refused and
+reported). The app draws it on an additive child canvas item of the object (it follows the object's transform, tint,
+fade and visibility), on placement ghosts and in PNG exports. Catalogue thumbnails and UI previews cannot add light:
+packs bake the glow into the thumbnail instead (`thumb`, alpha = brightest channel); the inspector / Asset Manager
+preview show the sprite without it. It exists because add, screen and multiply blending (lights, flames, lanterns)
+cannot be carried by one straight-alpha image: drawn as normal alpha they look dull or show black boxes. The private
+builder composites such art exactly over an opaque backdrop: R(G) = C + T·G per channel (C = colour, T =
+transmittance), normal image alpha A = 1 − mean(T), colour min(C, A), glow = C − min(C, A). Add is exact; screen and
+multiply over pixels the art does not cover use the mean transmittance (error (T_c − mean T)·G). A flipped
 object whose sprite has `mirror` draws that image unflipped (`mirror` takes `shadow` too; without one, the base
 shadow is reused flipped). A variant named `theme_<theme>` is used for objects without a chosen variant while the
-layout's world theme is `<theme>`; a theme with no such variant leaves the object as it is.
+layout's world theme is `<theme>`; so is `<look>__<theme>`, the client's own seasonal skin of a look (`__winter` =
+the base image's winter skin, `lvl_2__winter` = level 2's), which is how the private builder names them. A theme with
+no such variant leaves the object as it is (`AssetLibrary.themed_variant`; placement ghosts, previews and the
+renderer all go through it).
 
 Variants inherit `pixels_per_world_px`/`scale` from their base sprite unless they set them. Variant id `@base`
 means "the base image" even when a `default_variant` is set. Textures load lazily on first use and are shared by

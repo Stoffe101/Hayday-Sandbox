@@ -270,6 +270,7 @@ func _build_world() -> void:
 	controller.ground = ground
 	add_child(controller)
 	exporter = Exporter.new()
+	exporter.capturing.connect(renderer.finish_motion)   # lift / drop motion is never in a picture
 	add_child(exporter)
 	controller.status_changed.connect(func(t): dock.set_status(t))
 	controller.request_text.connect(func(title, initial, cb): Modal.prompt(modal_layer, title, initial, cb))
@@ -1390,7 +1391,8 @@ func _on_history_changed() -> void:
 
 ## Placement conflict -> short reason, most telling first.
 const CONFLICT_REASONS := [
-	[PlacementRules.LANDMARK, "On a fixed landmark"], [PlacementRules.OCCUPIED, "Overlaps another object"],
+	[PlacementRules.LANDMARK, "On a fixed landmark"], [PlacementRules.WATER_DECO_ZONE, "Outside the river's decoration zones"],
+	[PlacementRules.OCCUPIED, "Overlaps another object"],
 	[PlacementRules.OUT_OF_BOUNDS, "Outside the farm"], [PlacementRules.ROAD, "On the road"],
 	[PlacementRules.WATER, "In the water"], [PlacementRules.BLOCKED, "On blocked ground"],
 	[PlacementRules.LOCKED_LAND, "On locked land"], [PlacementRules.NOT_PLACEABLE, "Can't be placed here"],

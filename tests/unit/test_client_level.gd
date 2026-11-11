@@ -25,7 +25,7 @@ func test_csv_reader() -> void:
 func test_level_sections_and_tilemap() -> void:
 	var lv := level()
 	assert_true(lv["ok"], str(lv["errors"]))
-	assert_eq(lv["sections"], ["TileMap", "SpecialObjects", "Objects", "Sounds", "Objects1"])
+	assert_eq(lv["sections"], ["TileMap", "SpecialObjects", "Objects", "Sounds", "Objects1", "WaterDecoZones"])
 	var tm: Dictionary = lv["tilemap"]
 	assert_eq(tm["width"], 8, "trailing empty label column ignored")
 	assert_eq(tm["height"], 6)

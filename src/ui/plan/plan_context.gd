@@ -72,6 +72,8 @@ var map: FarmMap
 ## Current guide (RecreationGuide.build result), rebuilt lazily by guide().
 var _guide: Dictionary = {}
 var _guide_key := ""
+## Finished guide steps of the last build (RecreationGuide.build options.memo).
+var _guide_memo: Dictionary = {}
 var _pending := false
 ## Design-customization budget (SkinBudget.compute), rebuilt lazily by customization().
 var _skin: Dictionary = {}
@@ -86,6 +88,7 @@ func bind(s: EditorSession, e: BudgetEngine, p: PriceBook, d: ItemDatabase, m: F
 	map = m
 	_guide = {}
 	_guide_key = ""
+	_guide_memo = {}
 	_skin = {}
 	_skin_key = ""
 	_diff = {}
@@ -128,10 +131,17 @@ func guide() -> Dictionary:
 		return {}
 	var key := "%d|%d|%d|%s" % [session.stack.version, plan().hash(), map.get_instance_id() if map else 0, _customization_key()]
 	if key != _guide_key:
-		var opts := {"db": db, "customization": customization()}
+		# Reuses what the session already keeps: the engine's primary phases, the
+		# compare diff (same baseline) and the finished steps of the last build
+		# (memo); the guide is identical to a build from scratch (tests).
+		var opts := {"db": db, "customization": customization(), "memo": _guide_memo}
+		if engine != null:
+			opts["primary"] = engine.primary_phases()
 		var bl: Variant = plan().get("baseline")
 		if bl is Dictionary:
 			opts["baseline"] = bl
+			if Baseline.is_valid(bl):
+				opts["diff"] = compare_diff()
 		_guide = RecreationGuide.build(session.layout, map, plan(), opts)
 		_guide_key = key
 	return _guide
@@ -278,17 +288,19 @@ func readiness() -> Dictionary:
 	## Realistic analysis and the budget's can't-buy counts; cached per edit.
 	if session == null:
 		return {}
-	var key := "%d|%d|%s|%d|%d" % [session.stack.version, session.layout.get_instance_id(), session.layout.mode,
-		engine.version if engine != null else -1, session.layout.profile.hash()]
+	# The report is recomputed (a new object) whenever anything it depends on
+	# changed, including a world swap or a catalogue change without an edit.
+	var rep := session.analysis()
+	var key := "%d|%d|%s|%d|%d|%d" % [session.stack.version, session.layout.get_instance_id(), session.layout.mode,
+		engine.version if engine != null else -1, session.layout.profile.hash(), rep.get_instance_id()]
 	if key != _ready_key:
 		var nb := {}
 		if engine != null:
-			var br := engine.item_breakdown(null, BudgetEngine.MODE_TO_BUY)
-			for item: String in br:
-				var n := int((br[item] as Dictionary).get("not_buyable", 0))
+			for row: Array in engine.item_rollups(null, BudgetEngine.MODE_TO_BUY):   # shared entries: read only
+				var n := int((row[1] as Dictionary).get("not_buyable", 0))
 				if n > 0:
-					nb[item] = n
-		_ready_cache = Readiness.build(session.layout, db, session.conflicts(), session.analysis(), nb)
+					nb[row[0]] = n
+		_ready_cache = Readiness.build(session.layout, db, session.conflicts(), rep, nb)
 		_ready_key = key
 	return _ready_cache
 

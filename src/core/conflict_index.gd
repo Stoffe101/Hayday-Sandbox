@@ -20,6 +20,13 @@ var _dirty_uids: Dictionary = {}
 var _dirty_rects: Array[Rect2i] = []
 var _all_dirty := true
 var _land_hash := 0
+## Change log for incremental consumers (RealisticAnalyzer.Cached): uids whose
+## verdict was re-checked or dropped, in order. Positions are absolute
+## (log_end()); the oldest entries are trimmed, and a full rebuild bumps
+## full_rebuilds, so a consumer that fell behind redoes everything.
+var _log := PackedInt64Array()
+var _log_start := 0
+const LOG_MAX := 65536
 
 
 func _init(l: FarmLayout, m: FarmMap) -> void:
@@ -46,6 +53,30 @@ func conflicts() -> Dictionary:
 	## callers must not modify it.
 	_flush()
 	return _conflicts
+
+
+func log_end() -> int:
+	## Position after the last change-log entry (call conflicts() first).
+	return _log_start + _log.size()
+
+
+func changed_since(pos: int) -> Variant:
+	## Uids whose entry in conflicts() may differ from what it was when log_end()
+	## returned `pos` (a uid can repeat), or null when that is no longer known
+	## (trimmed): then compare everything. A full rebuild (full_rebuilds) is not
+	## logged either. Call conflicts() first.
+	if pos < _log_start or pos > log_end():
+		return null
+	return _log.slice(pos - _log_start)
+
+
+func _logged(u: int) -> void:
+	_log.append(u)
+	if _log.size() > LOG_MAX:
+		@warning_ignore("integer_division")
+		var drop := LOG_MAX / 2
+		_log = _log.slice(drop)
+		_log_start += drop
 
 
 # --- change tracking --------------------------------------------------------------------
@@ -76,6 +107,8 @@ func _on_removed(uids: Array) -> void:
 		if had != null:
 			_dirty_rects.append(had)
 			_rects.erase(u)
+		if _conflicts.has(u):
+			_logged(u)
 		_conflicts.erase(u)
 		_dirty_uids.erase(u)
 
@@ -83,7 +116,7 @@ func _on_removed(uids: Array) -> void:
 func _flush() -> void:
 	# Safety net for edits that didn't signal (`emit = false` mutations, land set
 	# directly): the answer must never be stale.
-	var land := layout.unlocked_plots.hash()
+	var land := [layout.unlocked_plots.hash(), layout.zone_items.hash()].hash()
 	if land != _land_hash or layout.objects.size() != _rects.size():
 		_all_dirty = true
 	if _all_dirty or _dirty_uids.size() * 2 > layout.objects.size() + 16:
@@ -101,6 +134,7 @@ func _flush() -> void:
 		var o: PlacedObject = layout.objects.get(u)
 		if o != null:
 			_recheck(o)
+			_logged(u)
 	_dirty_uids = {}
 	_dirty_rects.clear()
 
@@ -123,9 +157,10 @@ func _recheck(o: PlacedObject) -> void:
 	rechecks += 1
 	var ignore := {o.uid: true}
 	var r := o.rect()
+	var zone := layout.zone_items.has(o.item_id)
 	for y in range(r.position.y, r.end.y):
 		for x in range(r.position.x, r.end.x):
-			if PlacementRules.tile_code(layout, map, Vector2i(x, y), ignore) != PlacementRules.OK_TILE:
-				_conflicts[o.uid] = PlacementRules.check_rect(layout, map, r, ignore)
+			if PlacementRules.tile_code(layout, map, Vector2i(x, y), ignore, zone) != PlacementRules.OK_TILE:
+				_conflicts[o.uid] = PlacementRules.check_rect(layout, map, r, ignore, true, zone)
 				return
 	_conflicts.erase(o.uid)

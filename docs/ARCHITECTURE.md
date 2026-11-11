@@ -12,7 +12,7 @@ src/
     item_def.gd            one item's metadata (no textures); scope (main_farm or another area), landmark link
     item_database.gd       loads data/items/*.json (+ user://items), validation, search, catalogue overrides
     farm_map.gd            map JSON (schema 2, game tile frame) → per-tile kind, plots, adjacency, unlock rules,
-                           landmarks, scenery, provenance
+                           landmarks, scenery, water-decoration zones, provenance
     landmark.gd            one fixed world structure (farmhouse, truck, …): footprint, blocking tiles, states,
                            skins, themes, confidence; never movable/rotatable; approximate ones don't block
     world_loader.gd        picks the world for a map id: public map, else a valid private pack world, then
@@ -52,13 +52,21 @@ src/
       guide_export.gd        guide as HTML / CSV / JSON / text (strings only, no file IO, no art)
       accuracy_report.gd     map provenance, landmark and footprint confidence, calibration results
       readiness.gd           "Can I build this?" rows from conflicts, the Realistic report, can't-buy counts
+      client_prices.gd       private client-price supplement from the user's own client tables
+      placement_check.gd     calibrated screenshot vs world: per-point errors, truck anchor readings
+      skin_budget.gd         design-customization budget (farmhouse / truck / shop looks)
     layout_library.gd      user layouts: list, duplicate, rename, trash, history snapshots, autosave
     realistic_analyzer.gd  "can I build this?" report (never mutates); Cached = per-layout memo
     layout_diff.gd         geometric comparison of two layouts
     json_util.gd           JSON + crash-safe atomic writes
+    terrain_pack.gd        pack terrain manifest ("hayday-sandbox-terrain", docs/TERRAIN_PACKS.md): variants per
+                           theme, ground tiles, pieces, diagnostics
+    client_level.gd        reader for the client's level CSV and tables (layout only; the files stay private)
+    world_validator.gd     compares world data with the client's level data (rules only, no coordinates)
   assets/
     asset_library.gd       layered asset packs → SpriteInfo (texture, anchor, scale, shadow, alpha hit mask,
-                           ambient animation sheet, hand-drawn mirror art), lazy textures + thumbnails,
+                           ambient animation sheet or lazily loaded patch sheet, additive glow layer,
+                           hand-drawn mirror art), lazy textures + thumbnails,
                            variants and "theme_<season>" variants, overrides, review queue, pack world data
     pack_overrides.gd      pure overrides.json / catalogue-overrides parsing and merging + auto-anchor maths
     pack_installer.gd      .zip pack install (validation, zip-slip guard, atomic replace)
@@ -67,6 +75,8 @@ src/
     terrain_layer.gd       original procedural ground of worlds without game terrain (grass, road, bridge,
                            river, forest, cliff), built from the map; a season change only re-tints it
     terrain_textures.gd    procedural seamless textures
+    pack_terrain_layer.gd  terrain art from a pack: background colour, ground tiles, pieces (meshes, blend modes,
+                           foreground), animated water clips in view; camera rect from the pieces
     ground_layer.gd        terrain runs (game-data worlds), raised land edge, locked-plot tint and hatching,
                            level-blocked plots, plot borders/labels
     scenery_layer.gd       decorative forest around the farm (never blocks)
@@ -144,6 +154,11 @@ tests/ unit/ (headless, --script) integration/app_selftest.gd (in-app) visual/ca
   (`EditorSession.set_map`) but not modified.
 * **`FarmMap`** is world data: regions, plots, landmarks, scenery, provenance. Landmarks are never `PlacedObject`s;
   a layout only stores how they look in this design (`world_state`: theme and per-landmark state/skin/visibility).
+  `water_deco_zones` (`[{id, name, rect: [x, y, w, h], enabled}]`, usually off the placement grid in the river) are
+  the only tiles where items tagged `water_deco` may stand: `PlacementRules.tile_code(…, zone_item)` /
+  `check_rect(…, zone_item)`; per object the flag comes from `FarmLayout.zone_items` (set by `EditorSession` from the
+  catalogue, like `fixed_items`), so `ConflictIndex`, `find_conflicts`, moves, pastes and `LayoutTools.fit_mask`
+  agree. The editor overlay draws the zones while such an item is armed or dragged.
 * **Renderers** subscribe to layout signals and update incrementally; they never mutate the model.
 * **`LayoutToolController`** sees canvas input before `EditorController` and commits only through
   `EditorSession`. `StampLibrary` owns `user://stamps/`. `main.gd` owns panel widths and visibility (remembered in

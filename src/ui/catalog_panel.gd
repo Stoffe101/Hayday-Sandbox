@@ -55,6 +55,8 @@ var _states: Array[String] = []    ## per row: RealisticAnalyzer level state
 var _favs: Dictionary = {}
 var _empty: Label                  ## "No items match …" over the empty grid
 var _detail_is_hint := true        ## the detail card shows only the placing hint
+## Height of the badge row above each thumbnail (_draw_icon draws the thumbnail below it).
+const BADGE_ROW_H := 18.0
 var _chip_boxes: Dictionary = {}   ## Color -> StyleBoxFlat for the tile badges
 
 
@@ -436,8 +438,9 @@ func refresh() -> void:
 		_list.set_item_tooltip(idx, _tooltip(it, st))
 		if not it.placeable or st == RealisticAnalyzer.ABOVE_LEVEL:
 			_list.set_item_custom_fg_color(idx, UiTheme.c("text_faint"))
-		if st == RealisticAnalyzer.ABOVE_LEVEL:
-			_list.set_item_icon_modulate(idx, Color(1, 1, 1, 0.4))
+		# The ItemList keeps the icon for its layout but doesn't show it: _draw_badges draws
+		# it below the badge row, so the badges never cover a thumbnail's top corners.
+		_list.set_item_icon_modulate(idx, Color(1, 1, 1, 0))
 		_ids.append(it.id)
 		_states.append(st)
 		_icon_queue.append(idx)
@@ -555,8 +558,9 @@ func _draw_badges() -> void:
 		if it == null:
 			continue
 		var dim := 0.45 if _states[i] == RealisticAnalyzer.ABOVE_LEVEL else 1.0
+		_draw_icon(i, r, 0.4 if _states[i] == RealisticAnalyzer.ABOVE_LEVEL else 1.0)
 		var tl := r.position + Vector2(3, 3)
-		_chip(font, fs, tl, "%d×%d" % [it.footprint.x, it.footprint.y], Color(0, 0, 0, 0.55 * dim), Color(1, 1, 1, 0.95 * dim), false)
+		var fw := _chip(font, fs, tl, "%d×%d" % [it.footprint.x, it.footprint.y], Color(0, 0, 0, 0.55 * dim), Color(1, 1, 1, 0.95 * dim), false)
 		var lv := ""
 		var lcol := Color(0, 0, 0, 0.55 * dim)
 		if it.unlock_level > 0:
@@ -567,17 +571,38 @@ func _draw_badges() -> void:
 			lcol = Color(UiTheme.c("danger"), 0.85)
 		elif real and _states[i] == RealisticAnalyzer.LEVEL_UNKNOWN:
 			lcol = Color(UiTheme.c("warn"), 0.85)
+		var lw := 0.0
 		if not lv.is_empty():
-			_chip(font, fs, Vector2(r.end.x - 3, r.position.y + 3), lv, lcol, Color(1, 1, 1, 0.95), true)
-		# Size source: a dot coloured like the footprint badge in the details.
-		var dot := Vector2(r.position.x + 9, r.position.y + 3 + 26)
+			lw = _chip(font, fs, Vector2(r.end.x - 3, r.position.y + 3), lv, lcol, Color(1, 1, 1, 0.95), true)
+		# Size source: a dot coloured like the footprint badge in the details, right of that badge.
+		var dot := Vector2(tl.x + fw + 6.0, tl.y + 7.5)
 		_list.draw_circle(dot, 4.5, Color(0, 0, 0, 0.5 * dim))
 		_list.draw_circle(dot, 3.2, Color(UI.status_color(it.footprint_status), dim))
 		if _favs.has(it.id) and star:
-			_list.draw_texture_rect(star, Rect2(Vector2(r.end.x - 17, r.position.y + 22), Vector2(13, 13)), false, UiTheme.c("warn"))
+			_list.draw_texture_rect(star, Rect2(Vector2(r.end.x - 3.0 - lw - 15.0, r.position.y + 4), Vector2(13, 13)), false, UiTheme.c("warn"))
 
 
-func _chip(font: Font, fs: int, at: Vector2, text: String, bg: Color, fg: Color, right: bool) -> void:
+func icon_rect(item_rect: Rect2) -> Rect2:
+	## Where a tile's thumbnail is drawn: the ItemList's icon box minus the badge row on top.
+	var box := Vector2(_list.fixed_icon_size)
+	var top := float(_list.get_theme_constant("icon_margin"))
+	return Rect2(item_rect.position + Vector2(floorf((item_rect.size.x - box.x) * 0.5), BADGE_ROW_H),
+		Vector2(box.x, maxf(8.0, box.y + top - BADGE_ROW_H)))
+
+
+func _draw_icon(i: int, r: Rect2, alpha: float) -> void:
+	var tex := _list.get_item_icon(i)
+	if tex == null:
+		return
+	var box := icon_rect(r)
+	var ts := tex.get_size()
+	var k := minf(box.size.x / maxf(1.0, ts.x), box.size.y / maxf(1.0, ts.y))
+	var sz := ts * k
+	_list.draw_texture_rect(tex, Rect2(box.position + (box.size - sz) * 0.5, sz), false, Color(1, 1, 1, alpha))
+
+
+func _chip(font: Font, fs: int, at: Vector2, text: String, bg: Color, fg: Color, right: bool) -> float:
+	## Draws one badge; returns its width.
 	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x + 8.0
 	var h := font.get_height(fs) + 2.0
 	var p := at - Vector2(w, 0) if right else at
@@ -585,6 +610,7 @@ func _chip(font: Font, fs: int, at: Vector2, text: String, bg: Color, fg: Color,
 		_chip_boxes[bg] = UiTheme.box(bg, 6, Color.TRANSPARENT, 0, Vector4.ZERO)
 	_list.draw_style_box(_chip_boxes[bg], Rect2(p, Vector2(w, h)))
 	_list.draw_string(font, p + Vector2(4, 1 + font.get_ascent(fs)), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, fg)
+	return w
 
 
 func _favs_changed() -> void:

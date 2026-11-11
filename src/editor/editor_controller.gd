@@ -31,6 +31,8 @@ const DRAG_THRESHOLD := 5.0
 ## sorted at the drop position); more use overlay ghosts, which stay cheap.
 const LIVE_DRAG_MAX := 120
 const LIFT_PX := 10.0
+## Newly placed objects land from this height (ObjectRenderer.drop).
+const PLACE_DROP_PX := 6.0
 ## Snap-to-valid only searches for selections up to this size.
 const SNAP_MAX := 24
 const BLOCKER_MAX := 40
@@ -297,6 +299,7 @@ func _update_hover(t: Vector2i, screen: Vector2) -> void:
 		_update_place_ghost(t)
 	else:
 		overlay.ghosts = []
+		overlay.water_zones = []
 		overlay.ghost_result = null
 		overlay.cursor_text = ""
 		overlay.cursor_reasons = PackedStringArray()
@@ -377,17 +380,22 @@ func _update_place_ghost(t: Vector2i) -> void:
 		var at := t - Vector2i((size.x - 1) / 2, (size.y - 1) / 2)
 		var rects: Array = []
 		var gs: Array = []
+		var zones: Array = []
 		for c in session.clipboard:
 			var it := session.db.get_item(c["item"])
 			gs.append({"item": it, "origin": at + (c["offset"] as Vector2i), "flipped": c["flipped"], "variant": c["variant"]})
 			rects.append(Rect2i(at + (c["offset"] as Vector2i), c["size"]))
+			zones.append(session.layout.zone_items.has(str(c["item"])))
 		overlay.ghosts = gs
-		overlay.ghost_result = PlacementRules.check_stamp(session.layout, session.map, rects)
+		overlay.water_zones = session.map.water_deco_zone_rects() if true in zones else []
+		overlay.ghost_result = PlacementRules.check_stamp(session.layout, session.map, rects, {}, zones)
 		overlay.cursor_text = "Paste %d object%s" % [gs.size(), "" if gs.size() == 1 else "s"]
 		overlay.cursor_reasons = _result_reasons(overlay.ghost_result)
 		_set_blockers(overlay.ghost_result)
 		return
 	var item := session.db.get_item(session.active_item)
+	# Water decorations go only into the river's zones: show them while one is armed.
+	overlay.water_zones = session.map.water_deco_zone_rects() if PlacementRules.is_zone_item(item) else []
 	if item == null:
 		overlay.ghosts = []
 		overlay.ghost_result = null
@@ -519,8 +527,9 @@ func _start_drag() -> void:
 			_drag_live = _move_uids.size() <= LIVE_DRAG_MAX
 			if _drag_live:
 				renderer.set_drag_preview(_move_uids, Vector2i.ZERO)
-				renderer.set_lift(_move_uids, LIFT_PX)
+				renderer.lift_to(_move_uids, LIFT_PX)
 				overlay.begin_drag(_move_uids, LIFT_PX)
+				overlay.water_zones = session.map.water_deco_zone_rects() if _moves_zone_item() else []
 			else:
 				renderer.set_hidden(_move_uids)
 
@@ -574,11 +583,12 @@ func _move_fits(delta: Vector2i) -> bool:
 func _stop_move_visuals() -> void:
 	if _drag_live:
 		renderer.clear_drag_preview()
-		renderer.set_lift([], 0.0)
+		renderer.drop(_move_uids)   # lands where the drop (or the cancel) puts them
 	else:
 		renderer.set_hidden([])
 	_drag_live = false
 	overlay.end_drag()
+	overlay.water_zones = []
 
 
 func _update_drag(t: Vector2i, screen: Vector2) -> void:
@@ -729,7 +739,7 @@ func _paint_at(t: Vector2i) -> void:
 		rects.append(o.rect())
 	var r := Rect2i(origin, item.size_for(flipped))
 	rects.append(r)
-	var res := PlacementRules.check_stamp(session.layout, session.map, rects)
+	var res := PlacementRules.check_stamp(session.layout, session.map, rects, {}, PlacementRules.is_zone_item(item))
 	if not res.ok:
 		if _paint_objs.is_empty() and not _dragging:
 			session.message.emit(PlacementRules.check_item(session.layout, session.map, item, origin, flipped).message(session.layout, session.db, session.map), "warn")
@@ -748,7 +758,7 @@ func _commit_paint() -> void:
 	if _paint_objs.is_empty():
 		return
 	var item := session.db.get_item(session.active_item)
-	session.place_objects(_paint_objs, "Place %s" % item.name if _paint_objs.size() == 1 else "Paint %d × %s" % [_paint_objs.size(), item.name])
+	_land(session.place_objects(_paint_objs, "Place %s" % item.name if _paint_objs.size() == 1 else "Paint %d × %s" % [_paint_objs.size(), item.name]))
 	App.settings.push_recent("recent_items", item.id)
 	_paint_objs = []
 	overlay.ghosts = []
@@ -794,10 +804,11 @@ func _preview_multi(t: Vector2i) -> void:
 		gs.append(g)
 		rects.append(Rect2i(o, item.size_for(flipped)))
 	overlay.ghosts = gs
-	overlay.ghost_result = PlacementRules.check_stamp(session.layout, session.map, rects)
+	var zone := PlacementRules.is_zone_item(item)
+	overlay.ghost_result = PlacementRules.check_stamp(session.layout, session.map, rects, {}, zone)
 	var valid := 0
 	for r in rects:
-		if PlacementRules.check_rect(session.layout, session.map, r).ok:
+		if PlacementRules.check_rect(session.layout, session.map, r, {}, true, zone).ok:
 			valid += 1
 	overlay.cursor_text = "%d × %s · %d fit" % [origins.size(), item.name, valid]
 
@@ -811,7 +822,7 @@ func _commit_multi(t: Vector2i) -> void:
 	var skipped := 0
 	for o in _multi_origins(item, t):
 		var r := Rect2i(o, item.size_for(session.place_flipped and item.flippable))
-		if PlacementRules.check_stamp(session.layout, session.map, rects + [r]).ok:
+		if PlacementRules.check_stamp(session.layout, session.map, rects + [r], {}, PlacementRules.is_zone_item(item)).ok:
 			rects.append(r)
 			objs.append(session.make_object(item, o))
 		else:
@@ -821,7 +832,7 @@ func _commit_multi(t: Vector2i) -> void:
 	if objs.is_empty():
 		session.message.emit("Nothing fits there", "warn")
 		return
-	session.place_objects(objs, "%s %d × %s" % ["Line" if _gesture == "line" else "Fill", objs.size(), item.name])
+	_land(session.place_objects(objs, "%s %d × %s" % ["Line" if _gesture == "line" else "Fill", objs.size(), item.name]))
 	App.settings.push_recent("recent_items", item.id)
 	if skipped > 0:
 		session.message.emit("Placed %d, skipped %d blocked spot%s" % [objs.size(), skipped, "" if skipped == 1 else "s"], "info")
@@ -832,14 +843,24 @@ func _commit_stamp() -> void:
 	var t := _hover_tile
 	var at := t - Vector2i((size.x - 1) / 2, (size.y - 1) / 2)
 	var rects: Array = []
+	var zones: Array = []
 	for c in session.clipboard:
 		rects.append(Rect2i(at + (c["offset"] as Vector2i), c["size"]))
-	var r := PlacementRules.check_stamp(session.layout, session.map, rects)
+		zones.append(session.layout.zone_items.has(str(c["item"])))
+	var r := PlacementRules.check_stamp(session.layout, session.map, rects, {}, zones)
 	if not r.ok:
 		session.message.emit("Can't paste here: " + r.message(session.layout, session.db, session.map), "warn")
 		return
 	var uids := session.place_objects(session.clipboard_objects(at), "Paste %d object%s" % [rects.size(), "" if rects.size() == 1 else "s"])
 	session.select(uids, false, false)
+	_land(uids)
+
+
+func _land(uids: Array) -> void:
+	## Newly placed objects drop the last few pixels onto their tiles (feel only;
+	## instant at Ambient animation Off, never part of the undo step).
+	if renderer != null and not uids.is_empty():
+		renderer.drop(uids, PLACE_DROP_PX)
 
 
 # --- erase / pick / land / annotate ---------------------------------------------
@@ -1079,3 +1100,11 @@ func _update_overlay_state() -> void:
 	if overlay and session:
 		overlay.selection = session.selection
 		overlay.refresh()
+
+
+func _moves_zone_item() -> bool:
+	## True while the dragged objects include a water decoration (zones shown).
+	for u in _move_uids:
+		if PlacementRules.is_zone_object(session.layout, session.layout.get_obj(u)):
+			return true
+	return false

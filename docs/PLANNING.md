@@ -267,3 +267,31 @@ highlight, guide numbers, progress, cost heatmap, compare tints); the overview m
   Realistic only —, over the maximum count, can't be bought, other areas) and checks (unverified footprints,
   unknown items, no inventory record). Built from the ConflictIndex, the cached Realistic report and the budget's
   can't-buy counts, cached per edit; each row selects and frames its objects.
+
+## 7. What is recomputed after an edit (caches)
+
+Every planning view is derived from the layout; nothing below changes a result, only when it is computed. Each
+cache has an equivalence test against a fresh computation on randomized synthetic layouts
+(`tests/unit/test_realistic_cache.gd`, `tests/unit/test_plan_equivalence.gd`; reference copies of the previous
+implementations in `tests/fixtures/plan_reference.gd`).
+
+* **Realistic report** (`RealisticAnalyzer.Cached`, `EditorSession.analysis()`): incremental. Per object the codes
+  are its item's static codes (unknown item, other area, level, unverified size: the same for every copy at the
+  farm level), its placement codes (the `ConflictIndex` verdict) and its item's group codes (over the maximum / not
+  owned: which copies, in layout order, lie past the limit). An edit re-codes the objects it touched, objects whose
+  verdict the conflict index re-checked (`ConflictIndex.changed_since()`, a change log) and every copy of an item
+  whose count, order, maximum or owned count changed; the per-item rows are rebuilt from per-item counts. Mode, map,
+  farm level, inventory, prices, catalogue corrections and unsignalled edits rebuild the state from scratch. The
+  report equals `RealisticAnalyzer.analyze()` field by field (only the key order of `issues` may differ).
+* **Readiness** (`PlanContext.readiness()`): rebuilt when the Realistic report object, the budget version, the
+  profile or the history version changes (a world swap or a catalogue change without an edit is noticed through
+  the report). It reads the budget's shared per-item entries (`item_rollups`, no copies).
+* **Guide** (`PlanContext.guide()`, only while the Guide or Build tab, a guide picture or an export needs it):
+  built with the engine's primary phases, the compare diff (`compare_diff()`, same baseline) and a step memo
+  (`options.memo`): a step whose draft (kind, stage, phase, item, objects, tiles, plot, reuse) and world (map,
+  landmark visibility, catalogue, phase names) are unchanged is reused; its number and done state are set again.
+* **Build tab** (`PlanUiModels.checklist`): item group and editor-marker test looked up once per item type.
+* The budget engine's own caches are unchanged (§5: incremental per item, per-version totals).
+
+Timings (`tests/perf/perf_planning.gd` "realistic / chip / compare / readiness / guide" cases and
+`--selftest=perf`) are in KNOWN_ISSUES.md.

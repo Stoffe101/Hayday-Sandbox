@@ -579,7 +579,7 @@ static func world_badge(map: FarmMap) -> Control:
 
 func _issue_list(o: PlacedObject) -> void:
 	var codes: Array = report.issues.get(o.uid, []) if report else []
-	var place := PlacementRules.check_rect(App.session.layout, App.session.map, o.rect(), {o.uid: true})
+	var place := PlacementRules.check_object(App.session.layout, App.session.map, o)
 	if codes.is_empty() and place.ok:
 		return
 	var card := UI.card()

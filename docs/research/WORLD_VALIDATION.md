@@ -36,6 +36,7 @@ checks and the results as counts.
 | `rendering_anchors` | where the app draws centre-anchored sprites vs the client registration point | never passes: rendering is not verified by data |
 | `buildability` | client tile table `BlocksBuilding` per ground type vs world tile kind (buildable/plot vs road/blocked) | any tile disagrees |
 | `initial_objects` | world seed objects vs the client `Objects*` sections (same tile, mirroring and section) | a world object the client does not have |
+| `water_deco_zones` | the client's `WaterDecoZones` rows (rect, enabled) vs the world's `water_deco_zones` | a zone missing, extra or with another rect / enabled flag |
 | `item_footprints` | catalogue footprint as the app uses it (pack corrections applied) vs client `TileWidth x TileHeight` | different size (axis swaps only warn) |
 | `footprint_corrections` | every footprint correction in the pack's `catalog_overrides.json` is present in the catalogue the app uses | missing |
 
@@ -60,6 +61,7 @@ sprite's export name. The sprite only identifies the row; its pixel size is neve
 | initial objects | 523 world objects | 0 (58 carry a display name instead of the client row name) | pass |
 | item footprints | 1,927 linked items | 0 (34 not linkable, 2 ambiguous exports) | pass |
 | footprint corrections | 73 of 73 present and equal to the client tables | 0 | pass |
+| water-decoration zones (W5b, world rebuilt 2026-11-10) | 2 client rows, 2 world zones | 0 | pass |
 
 Without the pack's corrections the same comparison finds 50 size differences and 4 axis swaps among the 1,927 linked
 items; the 38 footprint fixes of the previous handoff are all among them and all present after the corrections.

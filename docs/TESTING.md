@@ -1,26 +1,28 @@
 # Testing
 
-All layers run locally (Windows or Linux) and in CI (`.github/workflows/ci.yml`). The static, unit and
-integration counts are from the end of the farm-planning wave (Windows development PC, Godot 4.7.2, 2026-11-10,
-`tools\ci\windows_checks.ps1 -Tag final`). The Windows build (`tools\build\build.ps1`) also smoke-tests the
+All layers run locally (Windows or Linux) and in CI (`.github/workflows/ci.yml`). The static, unit, integration,
+data, leak-guard and coverage results are from the end of W5 (cloud box, 4-CPU container with Mesa llvmpipe,
+Godot 4.7.2, 2026-11-10; the self-test once with a fresh data folder and once with a **copy** of the user's private
+pack, see "Private pack" below). The Windows build (`tools\build\build.ps1`) also smoke-tests the
 exported exe headless: start-up, `--smoke-plan` (opens all seven Plan tabs and the three planning dialogs; a
 release export compiles scripts more strictly than the editor) and installing a synthetic pack. Rows marked † are from the earlier run with `tools\ci\windows_checks.ps1 -SkipImport -Tag docs`
 on 2026-11-09 at HEAD 8c93360 (logs in `artifacts\checks\docs\`) and were not re-counted for this update.
 
 | Layer | Command (Linux form) | What it covers | Result |
 |---|---|---|---|
-| Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 162 scripts, 0 failed (end of the game-data wave) |
-| Data | `python3 tools/ci/validate_data.py` | manifests, maps, asset pack refs, samples, price file (`data/prices/`), **licence guard** | 1,967 items, 0 errors, 0 warnings † |
-| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 481 tests / 15,740 assertions, 0 failed (end of the game-data wave) |
-| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 515 checks, 0 failed (end of the game-data wave; QA 9b covers client prices) |
+| Static | `godot --headless --path . --script res://tools/ci/check_scripts.gd` | every `.gd` compiles | 173 scripts, 0 failed (end of W5) |
+| Data | `python3 tools/ci/validate_data.py` | manifests, maps, asset pack refs, samples, price file (`data/prices/`), **licence guard** | 1,967 items, 0 errors, 0 warnings (end of W5) |
+| Unit | `godot --headless --path . --script res://tests/run_tests.gd [-- --filter=x --junit=out.xml]` | core logic, art-free fixtures | 528 tests / 16,309 assertions, 0 failed (end of W5) |
+| Integration | `godot --headless --path . -- --selftest` | the real app driven by synthetic input | 539 checks, 0 failed (end of W5, fresh data folder); 544 with the private pack (copied data folder) |
 | Performance | `godot --headless --path . -- --selftest=perf` | synthetic farms 2k/5k/10k, densely packed real map, world layer, thumbnails | 7 checks, 0 failed (numbers below) † |
 | Planning perf | `godot --headless --path . --script res://tests/perf/perf_planning.gd [-- --sizes=2000,5000,10000 --reps=30]` | budget engine, scopes, phases, checklist, shopping list, guide + exports on 2k/5k/10k real-item farms | table of mean / p95 / max (numbers below) |
 | Budget perf | `godot --headless --path . --script res://tests/perf/perf_budget.gd [-- --sizes=... --reps=20]` | `BudgetEngine` alone: full recompute, incremental edits | not part of the runners; run by hand |
-| Leak guard | `python3 tools/ci/check_private_leaks.py [--self-test]` | private art can't enter git (see PRIVATE_ASSETS.md) | self-test 56/56; tracked tree OK † |
-| Export check | `python3 tools/ci/check_export_contents.py --self-test` | PCK contents scanner | OK † |
-| Coverage | `python3 tools/catalog/coverage_report.py` + `git diff --exit-code docs/CATALOG_COVERAGE.md` | report is current | OK † |
-| Exported build | `build/linux/HaydaySandbox.x86_64 --headless -- --selftest` | packaging of data/art/samples in an export | CI only (no Linux export templates on the Windows PC) |
-| Visual | `tools/ci/visual_tests.sh all` / `tools\ci\visual_tests.ps1 all` | 39 UI scenarios (12 of them planning), real rendering | screenshots, inspected by eye |
+| Leak guard | `python3 tools/ci/check_private_leaks.py [--self-test]` | private art can't enter git (see PRIVATE_ASSETS.md) | self-test 58/58; tracked + untracked OK (end of W5) |
+| Export check | `python3 tools/ci/check_export_contents.py --self-test` | PCK contents scanner | OK (end of W5) |
+| Coverage | `python3 tools/catalog/coverage_report.py` + `git diff --exit-code docs/CATALOG_COVERAGE.md` | report is current | OK (end of W5) |
+| Terrain pack | `godot --headless --path . --script res://tools/ci/check_terrain_pack.gd [-- <terrain.json>]` | a terrain pack manifest (no path: a generated synthetic pack) | `TERRAIN PACK OK` (end of W5) |
+| Exported build | `build/linux/HaydaySandbox.x86_64 --headless -- --selftest` | packaging of data/art/samples in an export | cloud box W5: 539 checks, 0 failed in 3 of 4 runs; the first crashed (segfault, KNOWN_ISSUES.md). Windows `.exe` exported and content-checked there, not executable (no Wine) |
+| Visual | `tools/ci/visual_tests.sh all` / `tools\ci\visual_tests.ps1 all` | 48 UI scenarios (12 of them planning) + extras, real rendering | screenshots, inspected by eye (W5b: the main scenarios at 4 resolutions × 4 UI scales, public and private) |
 
 ## Running everything
 
@@ -57,8 +59,10 @@ left by a crashed run is taken over.
 
 `windows_checks.ps1` runs, in order: `import` (unless `-SkipImport`; it refuses to run if
 `hayday-sandbox-private-assets` is inside the repository and restores `project.godot` afterwards), `check_scripts`,
-`unit_tests`, `selftest` (must print `SELFTEST PASS`), `selftest_perf` (with `-Perf`), `validate_data`,
-`leak_guard_selftest`, `export_check_selftest`, `leak_guard`, `coverage_report`, `coverage_diff`. Each step's
+`unit_tests`, `selftest` (must print `SELFTEST PASS`), `terrain_pack_check` (`check_terrain_pack.gd` on a generated
+synthetic pack, must print `TERRAIN PACK OK`), `selftest_perf` (with `-Perf`), `validate_data`,
+`leak_guard_selftest`, `export_check_selftest`, `leak_guard` (tracked **and untracked** files, so a stray private
+file is caught before it is added), `coverage_report`, `coverage_diff`. Each step's
 output goes to `artifacts\checks\[tag\]<step>.log`, and a PASS/FAIL table is printed at the end (exit 1 on any
 failure).
 
@@ -134,7 +138,7 @@ Test counts per file are the `func test_*` functions at a511d0c (417 in total).
 | `test_plan_context` | 3 | the session owns and disposes its budget, `set_map` rebinds it, context view state and scope |
 | `test_planning_extras` | 10 | object layer groups / states / never touching the layout, readiness rows (ready, blocking, Realistic-only level, fixed landmarks), area → stamp, accuracy wording |
 
-## Integration self-test (`tests/integration/app_selftest.gd`, 404 checks at a511d0c)
+## Integration self-test (`tests/integration/app_selftest.gd`, 539 checks at the end of W5)
 
 Runs inside the real application (autoloads, UI, renderer, controller) and feeds synthetic mouse/keyboard events.
 Areas covered: catalogue/map/art/sample integrity; v1 and v2 layout migration (frame shift, landmarks moved to the
@@ -158,14 +162,21 @@ and save data unchanged); compare tints and counts match `Baseline.diff`, turnin
 stamp keeps relative positions without editing the layout; readiness is cached and updated by undo; the overview
 map appears only with room, repaints only edited tiles, round-trips coordinates and moves the camera on click.
 
-The self-test passes when other packs are installed in the data folder, but the runners isolate it anyway. Two
-more modes exist for a user's installed original-art pack (private; see `docs/PRIVATE_ASSETS.md`):
-`--selftest=artcheck` and `--selftest=artflow`. They need the pack, are not run in CI and were not run in this
-wave.
+The self-test passes when other packs are installed in the data folder, but the runners isolate it anyway.
+
+**Private pack** (cloud box only, never in CI; `docs/PRIVATE_ASSETS.md`). Run it against a *copied* data folder so
+your real layouts, settings and autosaves are never touched: make a temporary `XDG_DATA_HOME`, put
+`HaydaySandbox/asset_packs/<pack>` (a symlink is fine) and a copy of `private_data/` into it, then run the normal
+`-- --selftest` (544 checks at the end of W5). More modes for an installed original-art pack:
+`--selftest=artcheck`, `--selftest=artflow`, and `--selftest=packcycle [--pack=<id>]` (default `hayday_original`):
+it places a pack-only item, **uninstalls the pack**, reloads and checks that the art, catalogue additions and
+corrections, world data, water-decoration zones and pack terrain revert while the open layout keeps every object
+and survives save / load (15 checks at the end of W5). Because it deletes the pack, give it a **full copy** of the
+pack folder (not a symlink).
 
 Expected noise at exit: an error about the deliberately missing `selftest_missing.png` reference image, and
-"RIDs … leaked" / "ObjectDB instances were leaked" warnings (8 RIDs and 17 instances in the 2026-11-09 run; not
-re-counted at a511d0c). These predate the planning wave.
+"RIDs … leaked" / "ObjectDB instances were leaked" warnings (end of W5: 8 RIDs and 17 instances; 13 and 27 with
+the private pack). These predate the planning wave.
 
 ## Performance (`--selftest=perf`, Windows development PC)
 
@@ -259,7 +270,10 @@ pieces; these three print `TERRAIN_FX` and FAIL when a check does not hold), and
 The overview map needs a free canvas of at least 700×420 logical px, so `plan_minimap` shows no map at
 1920×1080 @200 % by design. The asset scenarios install the synthetic placeholder-derived pack and remove
 it again. Extra scenarios (`export2x`, `export_objects`, `at_<x>_<y>_<zoom>`, `anim_perf`) are only for a real
-pack or an opened layout. Default configurations: 1920×1080 @100 %, 2560×1440 @125 %, 3440×1440 @100 %
+pack or an opened layout. More extras: `camera_perf` (animated flights + zoom-outs, every frame timed; run it alone
+for a cold start), `drag_perf` (pick-up, carry and drop timed at Ambient animation Off and Full), `ghost_art`
+(winter skin + mirror art in ghosts, prints `GHOST … same=`, FAIL on a mismatch) and `fence_junctions` (fence,
+hedge and cobblestone crosses and T junctions). Default configurations: 1920×1080 @100 %, 2560×1440 @125 %, 3440×1440 @100 %
 (ultrawide), 3840×2160 @200 %.
 
 Screenshots are inspected by eye for clipping, overlap, anchoring, depth order, scaling and readability. A

@@ -1,6 +1,8 @@
 # Windows equivalent of the CI checks. Usage (from anywhere):
 #   powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1 [-Perf] [-SkipImport] [-Tag name]
 # Logs go to artifacts\checks\[name\]. Godot children run headless against a throw-away APPDATA.
+# Steps: import, check_scripts, unit_tests, selftest, terrain_pack_check (synthetic pack), [selftest_perf],
+# validate_data, leak guard self-test, export-check self-test, leak guard (tracked + untracked), coverage + diff.
 param([switch] $Perf, [switch] $SkipImport, [string] $Tag = '')
 
 $ErrorActionPreference = 'Stop'
@@ -49,13 +51,14 @@ try {
 	Step 'check_scripts' $godot @('--headless', '--path', '.', '--script', 'res://tools/ci/check_scripts.gd') -Isolate
 	Step 'unit_tests' $godot @('--headless', '--path', '.', '--script', 'res://tests/run_tests.gd') -Isolate
 	Step 'selftest' $godot @('--headless', '--path', '.', '--', '--selftest') -MustMatch 'SELFTEST PASS' -Isolate
+	Step 'terrain_pack_check' $godot @('--headless', '--path', '.', '--script', 'res://tools/ci/check_terrain_pack.gd') -MustMatch 'TERRAIN PACK OK' -Isolate
 	if ($Perf) {
 		Step 'selftest_perf' $godot @('--headless', '--path', '.', '--', '--selftest=perf') -MustMatch 'SELFTEST PASS' -Isolate -Timeout 1800
 	}
 	Step 'validate_data' $python @('tools/ci/validate_data.py')
 	Step 'leak_guard_selftest' $python @('tools/ci/check_private_leaks.py', '--self-test')
 	Step 'export_check_selftest' $python @('tools/ci/check_export_contents.py', '--self-test')
-	Step 'leak_guard' $python @('tools/ci/check_private_leaks.py')
+	Step 'leak_guard' $python @('tools/ci/check_private_leaks.py', '--include-untracked')
 	Step 'coverage_report' $python @('tools/catalog/coverage_report.py')
 	Step 'coverage_diff' 'git' @('diff', '--exit-code', '--ignore-space-at-eol', 'docs/CATALOG_COVERAGE.md')
 }

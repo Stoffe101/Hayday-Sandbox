@@ -13,6 +13,9 @@ Read **AGENTS.md** first — it contains the project rules, commands and convent
   (`App.plan_ctx`); the `BudgetEngine` belongs to the `EditorSession`. Unknown prices are `null`, never 0.
 * The cloud dev box has Xvfb + Mesa llvmpipe: real screenshots work with `--rendering-driver opengl3` (not
   `--headless`). Windows `.exe` builds can be produced but not executed here (no Wine) — say so.
+* Private pack checks (cloud box, never in CI): run `-- --selftest` with a temporary `XDG_DATA_HOME` holding the
+  pack (symlink) + a copy of `private_data/`; `-- --selftest=packcycle` uninstalls the pack, so give it a full copy.
+  Never point a test at the real `~/.local/share/HaydaySandbox` (docs/TESTING.md "Private pack").
 
 ## Local Windows dev
 

@@ -81,6 +81,7 @@ static func validate(level: Dictionary, world: Variant, opts: Dictionary = {}) -
 	checks.append(_check_rendering_anchors(lms, wm, mx))
 	checks.append(_check_buildability(level, wm, opts.get("tiles", {}), mx))
 	checks.append(_check_initial_objects(level, wm, mx))
+	checks.append(_check_water_deco_zones(level, wm, mx))
 	var fps: Variant = opts.get("footprints", null)
 	if fps is Dictionary:
 		for k in ["item_footprints", "footprint_corrections"]:
@@ -142,7 +143,8 @@ static func world_model(world: Variant) -> Dictionary:
 	## Normalises a world.json dictionary or a FarmMap into the fields the checks
 	## read. Overlapping rects are kept (a FarmMap's painted grid would hide them).
 	var m := {"id": "", "size": Vector2i.ZERO, "provenance": {}, "ground": PackedInt32Array(), "ground_rect": Rect2i(),
-		"regions": [], "plots": [], "landmarks": [], "initial_objects": [], "tile_types": {}, "errors": []}
+		"regions": [], "plots": [], "landmarks": [], "initial_objects": [], "tile_types": {}, "errors": [],
+		"water_deco_zones": []}
 	if world is FarmMap:
 		var fm: FarmMap = world
 		m["id"] = fm.id
@@ -166,6 +168,8 @@ static func world_model(world: Variant) -> Dictionary:
 			m["initial_objects"].append(o.duplicate())
 		for k in fm.tile_types:
 			m["tile_types"][int(k)] = fm.tile_types[k]
+		for z in fm.water_deco_zones:
+			m["water_deco_zones"].append({"id": z["id"], "name": z["name"], "rect": z["rect"], "enabled": z["enabled"]})
 		return m
 	if not world is Dictionary:
 		m["errors"].append("world is neither a dictionary nor a FarmMap")
@@ -202,6 +206,12 @@ static func world_model(world: Variant) -> Dictionary:
 	for o in d.get("initial_objects", []) if d.get("initial_objects") is Array else []:
 		if o is Dictionary:
 			m["initial_objects"].append(o)
+	for z in d.get("water_deco_zones", []) if d.get("water_deco_zones") is Array else []:
+		if z is Dictionary:
+			var rs := _rects([z.get("rect", [])])
+			var en: Variant = z.get("enabled", true)
+			m["water_deco_zones"].append({"id": str(z.get("id", "")), "name": str(z.get("name", "")),
+				"rect": rs[0] if not rs.is_empty() else Rect2i(), "enabled": en if en is bool else true})
 	return m
 
 
@@ -940,6 +950,51 @@ static func _check_initial_objects(level: Dictionary, m: Dictionary, mx: int) ->
 		c["notes"].append("%d matched object(s) carry a display name instead of the client row name (same tile, mirroring and section)." % renamed)
 	if n_client - matched > 0:
 		c["notes"].append("%d client object(s) are not carried by the world (not mapped to a catalogue item, or skipped by the pack builder)." % (n_client - matched))
+	return _finish(c)
+
+
+static func _check_water_deco_zones(level: Dictionary, m: Dictionary, mx: int) -> Dictionary:
+	## The client's WaterDecoZones rows (name, X, Y, Width, Height, Enabled) vs the
+	## world's water_deco_zones (same rect and enabled flag, matched by rect).
+	var c := _mk("water_deco_zones", "Water-decoration zones (WaterDecoZones rows vs world zones)")
+	var tbl: Dictionary = (level.get("tables", {}) as Dictionary).get("WaterDecoZones", {})
+	var rows: Array = tbl.get("rows", [])
+	var world_zones: Array = m.get("water_deco_zones", [])
+	var left := {}
+	for i in world_zones.size():
+		left[i] = true
+	var missing := 0
+	for r: Dictionary in rows:
+		var x := str(r.get("X", "")).strip_edges()
+		var y := str(r.get("Y", "")).strip_edges()
+		var w := str(r.get("Width", "")).strip_edges()
+		var h := str(r.get("Height", "")).strip_edges()
+		if not (x.is_valid_int() and y.is_valid_int() and w.is_valid_int() and h.is_valid_int()):
+			c["notes"].append("row %s has no usable rect" % str(r.get("Name", "?")))
+			continue
+		c["compared"] = int(c["compared"]) + 1
+		var rect := Rect2i(int(x), int(y), int(w), int(h))
+		var enabled := str(r.get("Enabled", "true")).strip_edges().to_lower() not in ["false", "0", "no"]
+		var hit := -1
+		for i: int in left:
+			var z: Dictionary = world_zones[i]
+			if z["rect"] == rect:
+				hit = i
+				break
+		if hit < 0:
+			missing += 1
+			_ex(c, mx, {"zone": str(r.get("Name", "")), "rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y],
+				"problem": "missing in the world"})
+			continue
+		left.erase(hit)
+		if bool(world_zones[hit]["enabled"]) != enabled:
+			missing += 1
+			_ex(c, mx, {"zone": str(r.get("Name", "")), "problem": "enabled differs"})
+	for i: int in left:
+		_ex(c, mx, {"zone": str(world_zones[i]["id"]), "problem": "not in the client data"})
+	c["client_rows"] = rows.size()
+	c["world_zones"] = world_zones.size()
+	c["mismatches"] = missing + left.size()
 	return _finish(c)
 
 

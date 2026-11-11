@@ -43,11 +43,12 @@ func _build() -> void:
 	_overall_counts = PlanUiKit.wrap_label("", "Faint")
 	hv.add_child(_overall_counts)
 	# Before / after with the real farm (plan.baseline): counts and the canvas view.
-	var cr := UI.hbox(6)
+	var cr := UI.vbox(4)   # text above the button: side by side the text was squeezed into a narrow column
 	_compare_l = PlanUiKit.wrap_label("", "Faint")
 	cr.add_child(_compare_l)
 	_compare_btn = UI.button("", "git-compare", "", "Ghost")
 	_compare_btn.add_theme_font_size_override("font_size", 13)
+	_compare_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_compare_btn.pressed.connect(func():
 		if ctx.has_baseline():
 			ctx.set_compare(not ctx.compare)

@@ -16,6 +16,9 @@ const OUT_OF_SCOPE := "out_of_scope"
 
 const SEVERITY := {LEVEL_LOCKED: 2, NOT_OWNED: 2, OVER_MAX: 2, LOCKED_LAND: 2, PLACEMENT: 2, OUT_OF_SCOPE: 2, UNKNOWN_ITEM: 1, UNVERIFIED_SIZE: 1, PLANNED: 0}
 
+## Cached: an item without OVER_MAX / NOT_OWNED copies (see _item_rows()).
+const NO_GROUP := [null, null]
+
 ## Item / plot availability at a farm level (see level_state()).
 const AVAILABLE := "unlocked"
 const ABOVE_LEVEL := "locked"
@@ -60,27 +63,131 @@ class Cached:
 	## changed: layout signals plus the command stack's version catch every edit,
 	## the key below everything else (mode, map, catalogue corrections, and
 	## profile / land edited without a signal). Reports are shared: read-only.
+	##
+	## Incremental (the default): an edit re-derives only what it can change.
+	## Per object the codes are static (item, planned: same for every copy of an
+	## item at this farm level) + placement (the ConflictIndex verdict) + the
+	## item's group codes (OVER_MAX / NOT_OWNED: which copies, in layout order,
+	## lie beyond the maximum / the owned count). So an edit recomputes the codes
+	## of the objects it touched, of objects whose conflict verdict changed and of
+	## every copy of an item whose count, order, maximum or owned count changed;
+	## the per-item rows (shortages, maximum, level) are rebuilt from per-item
+	## counts. Anything else (mode, map, level, inventory, prices, catalogue
+	## corrections, unsignalled edits) rebuilds the state from scratch. The
+	## report equals analyze() field by field (tests/unit/test_realistic_cache.gd);
+	## only the key order of `issues` may differ.
 	var layout: FarmLayout
 	var stack: CommandStack
 	var conflict_index: ConflictIndex
 	var computed := 0                ## recomputations so far (tests, diagnostics)
+	var full_builds := 0             ## of which rebuilt the incremental state from scratch
+	## false: every recomputation is a plain analyze() (the reference; tests).
+	var incremental := true
 	## When set (EditorSession does), costs come from this budget (see analyze()).
 	var budget: BudgetEngine = null
 	var _report: Report = null
 	var _key: Array = []
 	var _dirty := true
+	# --- incremental state (valid while _env_key holds) ---
+	var _env_key: Array = []
+	var _state_ok := false
+	var _seq := {}                   ## uid -> insertion serial (= layout.objects order)
+	var _next_seq := 0
+	var _obj_item := {}              ## uid -> raw item id (real objects) | "" (planned)
+	var _items := {}                 ## raw item id -> {uid: true} (real objects only)
+	var _order := {}                 ## raw item id -> Array of uids in layout order
+	var _index := {}                 ## uid -> position in _order[item]
+	var _groups := {}                ## raw item id -> [over_from, short_from] (-1 = none)
+	var _static := {}                ## raw item id -> Array static codes of a real copy
+	var _conf := {}                  ## uid -> PlacementRules.Result last applied
+	var _conf_builds := -1           ## conflict_index.full_rebuilds when _conf was taken
+	var _conf_pos := -1              ## conflict_index.log_end() when _conf was taken
+	var _plot_refs := {}             ## plot id -> conflicts naming it
+	var _issues := {}                ## uid -> Array codes (master; reports get a copy)
+	var _blocking := {}              ## uid -> true: a severity-2 code
+	var _dirty_uids := {}
+	var _dirty_items := {}
+	var _tracked := 0                ## objects the state knows (unsignalled edits -> rebuild)
+	var _planned_n := 0              ## planned objects among them
 
 	func _init(l: FarmLayout, s: CommandStack, idx: ConflictIndex = null) -> void:
 		layout = l
 		stack = s
 		conflict_index = idx
-		for sig: Signal in [l.objects_added, l.objects_removed, l.objects_changed]:
-			sig.connect(_on_objects)
+		l.objects_added.connect(_on_added)
+		l.objects_changed.connect(_on_changed)
+		l.objects_removed.connect(_on_removed)
 		for sig: Signal in [l.land_changed, l.planning_changed, l.meta_changed]:
 			sig.connect(invalidate)
 
-	func _on_objects(_uids: Array) -> void:
+	func _on_added(uids: Array) -> void:
 		_dirty = true
+		if not _state_ok:
+			return
+		for u in uids:
+			var o: PlacedObject = layout.objects.get(u)
+			if o == null:
+				continue
+			_seq[u] = _next_seq
+			_next_seq += 1
+			_tracked += 1
+			_set_membership(u, o)
+
+	func _on_changed(uids: Array) -> void:
+		_dirty = true
+		if not _state_ok:
+			return
+		for u in uids:
+			var o: PlacedObject = layout.objects.get(u)
+			if o == null or not _obj_item.has(u):
+				continue
+			var now := "" if o.planned else o.item_id
+			if now != str(_obj_item[u]):
+				_drop_membership(u)
+				_set_membership(u, o)
+			else:
+				_dirty_uids[u] = true
+
+	func _on_removed(uids: Array) -> void:
+		_dirty = true
+		if not _state_ok:
+			return
+		for u in uids:
+			if not _obj_item.has(u):
+				continue
+			_drop_membership(u)
+			_obj_item.erase(u)
+			_seq.erase(u)
+			_tracked -= 1
+			if _issues.has(u):
+				_issues.erase(u)
+			_blocking.erase(u)
+			_dirty_uids.erase(u)
+			# Its conflict entry is retired by the conflict diff (plots too).
+
+	func _set_membership(u: int, o: PlacedObject) -> void:
+		_obj_item[u] = "" if o.planned else o.item_id
+		_dirty_uids[u] = true
+		if o.planned:
+			_planned_n += 1
+			return
+		if not _items.has(o.item_id):
+			_items[o.item_id] = {}
+		(_items[o.item_id] as Dictionary)[u] = true
+		_dirty_items[o.item_id] = true
+
+	func _drop_membership(u: int) -> void:
+		var was := str(_obj_item.get(u, ""))
+		if was.is_empty() and _obj_item.has(u):
+			_planned_n -= 1
+		if not was.is_empty() and _items.has(was):
+			var m: Dictionary = _items[was]
+			m.erase(u)
+			if m.is_empty():
+				_items.erase(was)
+			_dirty_items[was] = true
+		_index.erase(u)
+		_dirty_uids[u] = true
 
 	func invalidate() -> void:
 		_dirty = true
@@ -93,11 +200,196 @@ class Cached:
 			budget.get_instance_id() if budget != null else 0, budget.sync() if budget != null else 0]
 		if _report == null or _dirty or key != _key:
 			var conflicts: Variant = conflict_index.conflicts() if conflict_index != null and conflict_index.map == map else null
-			_report = RealisticAnalyzer.analyze(layout, db, map, conflicts, budget)
+			if incremental:
+				_report = _incremental(db, map, conflicts)
+			else:
+				_report = RealisticAnalyzer.analyze(layout, db, map, conflicts, budget)
 			_key = key
 			_dirty = false
 			computed += 1
 		return _report
+
+	# --- incremental ---------------------------------------------------------------------
+
+	func _incremental(db: ItemDatabase, map: FarmMap, conflicts: Variant) -> Report:
+		var level := RealisticAnalyzer.farm_level(layout)
+		var prof := layout.profile
+		var env := [layout.mode, map.get_instance_id() if map else 0, db.get_instance_id() if db else 0,
+			db.overrides_pack if db else "", str(db.overrides_report.get("hash", "")) if db else "",
+			prof.hash(), budget.get_instance_id() if budget != null else 0,
+			budget.prices.version if budget != null and budget.prices != null else -1]
+		var bad: Dictionary = conflicts if conflicts is Dictionary else PlacementRules.find_conflicts(layout, map)
+		if not _state_ok or env != _env_key or _tracked != layout.objects.size():
+			_rebuild_state(db)
+			_env_key = env
+		# Placement verdicts that changed since the last report.
+		var changed: Variant = null
+		if conflicts is Dictionary and conflict_index != null and conflict_index.full_rebuilds == _conf_builds:
+			changed = conflict_index.changed_since(_conf_pos)
+		if changed == null:
+			for u in _conf:
+				_dirty_uids[u] = true
+			for u in bad:
+				_dirty_uids[u] = true
+			_plot_refs.clear()
+			_conf = {}
+			for u: int in bad:
+				if layout.objects.has(u):
+					_conf_apply(u, bad[u])
+			_conf_builds = conflict_index.full_rebuilds if conflict_index != null else -1
+		else:
+			# Only the uids the index re-checked or dropped since the last report.
+			for u: int in changed:
+				var res: Variant = bad.get(u) if layout.objects.has(u) else null
+				if _conf.get(u) == res:
+					continue
+				if _conf.has(u):
+					_conf_retire(u)
+				if res != null:
+					_conf_apply(u, res)
+				_dirty_uids[u] = true
+		_conf_pos = conflict_index.log_end() if conflict_index != null else -1
+		# Per-item rows (counts in layout order) and which copies get group codes.
+		var r := Report.new()
+		var counts := {}
+		for id: String in _items:
+			counts[id] = (_items[id] as Dictionary).size()
+		for id: String in _dirty_items:
+			if not _items.has(id):
+				_order.erase(id)
+				continue
+			var keys := PackedInt64Array()
+			for u: int in _items[id]:
+				keys.append((int(_seq[u]) << 32) | u)
+			keys.sort()
+			var ord: Array = []
+			ord.resize(keys.size())
+			for i in keys.size():
+				var u := int(keys[i] & 0xFFFFFFFF)
+				ord[i] = u
+				if int(_index.get(u, -1)) != i:
+					_index[u] = i
+					_dirty_uids[u] = true
+			_order[id] = ord
+		var groups := RealisticAnalyzer._item_rows(r, db, counts, prof, level, budget)
+		for id: String in counts:
+			var g: Array = groups.get(id, NO_GROUP)
+			if _dirty_items.has(id) or g != _groups.get(id, NO_GROUP):
+				for u in _order.get(id, []):
+					_dirty_uids[u] = true
+		for id: String in _groups.keys():
+			if not counts.has(id):
+				_groups.erase(id)
+		for id: String in counts:
+			_groups[id] = groups.get(id, NO_GROUP)
+		_dirty_items = {}
+		# Codes of the objects whose answer may have changed.
+		for u: int in _dirty_uids:
+			_recode(u, db)
+		_dirty_uids = {}
+		# Report-level figures from per-item counts.
+		r.issues = _issues.duplicate()
+		r.planned_count = _planned_n
+		RealisticAnalyzer._item_aggregates(r, db, counts, level)
+		var plots: Array = _plot_refs.keys()
+		plots.sort()
+		r.plots_needed = plots
+		RealisticAnalyzer._check_land_levels(r, layout, map, level)
+		RealisticAnalyzer._finish(r, layout, budget, _blocking.size())
+		return r
+
+	func _rebuild_state(db: ItemDatabase) -> void:
+		full_builds += 1
+		_seq = {}
+		_next_seq = 0
+		_obj_item = {}
+		_items = {}
+		_order = {}
+		_index = {}
+		_groups = {}
+		_issues = {}
+		_blocking = {}
+		_dirty_uids = {}
+		_dirty_items = {}
+		_conf = {}
+		_conf_builds = -2
+		_conf_pos = -1
+		_plot_refs = {}
+		_static = {}
+		_planned_n = 0
+		var level := RealisticAnalyzer.farm_level(layout)
+		for o: PlacedObject in layout.objects.values():
+			_seq[o.uid] = _next_seq
+			_next_seq += 1
+			_set_membership(o.uid, o)
+		for id: String in _items:
+			_static[id] = RealisticAnalyzer._static_codes(db.get_item(id) if db else null, level)
+		_tracked = layout.objects.size()
+		_state_ok = true
+
+	func _conf_apply(u: int, res: PlacementRules.Result) -> void:
+		_conf[u] = res
+		if res.reason_counts.has(PlacementRules.LOCKED_LAND):
+			for p in res.locked_plots:
+				_plot_refs[p] = int(_plot_refs.get(p, 0)) + 1
+
+	func _conf_retire(u: int) -> void:
+		var res: PlacementRules.Result = _conf.get(u)
+		_conf.erase(u)
+		if res != null and res.reason_counts.has(PlacementRules.LOCKED_LAND):
+			for p in res.locked_plots:
+				var n := int(_plot_refs.get(p, 0)) - 1
+				if n <= 0:
+					_plot_refs.erase(p)
+				else:
+					_plot_refs[p] = n
+
+	func _recode(u: int, db: ItemDatabase) -> void:
+		var o: PlacedObject = layout.objects.get(u)
+		if o == null:
+			_issues.erase(u)
+			_blocking.erase(u)
+			return
+		var codes: Array = []
+		var known := false
+		if o.planned:
+			codes.append(PLANNED)
+		else:
+			var id := o.item_id
+			if not _static.has(id):
+				_static[id] = RealisticAnalyzer._static_codes(db.get_item(id) if db else null, RealisticAnalyzer.farm_level(layout))
+			codes.append_array(_static[id])
+			known = db != null and db.get_item(id) != null
+		var res: PlacementRules.Result = _conf.get(u)
+		if res != null:
+			var locked := res.reason_counts.has(PlacementRules.LOCKED_LAND)
+			if locked and not o.planned:
+				codes.append(LOCKED_LAND)
+			if res.reason_counts.size() > (1 if locked else 0):
+				codes.append(PLACEMENT)
+		if known:
+			var g: Array = _groups.get(o.item_id, NO_GROUP)
+			if g != NO_GROUP:
+				var i := int(_index.get(u, -1))
+				var n := (_items[o.item_id] as Dictionary).size()
+				if g[0] != null and i >= RealisticAnalyzer._slice_start(int(g[0]), n):
+					codes.append(OVER_MAX)
+				if g[1] != null and i >= RealisticAnalyzer._slice_start(int(g[1]), n):
+					codes.append(NOT_OWNED)
+		if codes.is_empty():
+			_issues.erase(u)
+			_blocking.erase(u)
+			return
+		_issues[u] = codes
+		var blocking := false
+		for c in codes:
+			if SEVERITY.get(c, 0) >= 2:
+				blocking = true
+				break
+		if blocking:
+			_blocking[u] = true
+		else:
+			_blocking.erase(u)
 
 
 static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflicts: Variant = null,
@@ -114,10 +406,7 @@ static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflict
 	## verdict, "Est. cost" and the budget chip never disagree. The issue codes
 	## (NOT_OWNED etc.) and the shortage counts keep the inventory rule above.
 	var r := Report.new()
-	var prof := layout.profile
 	var level := farm_level(layout)
-	var owned: Dictionary = prof.get("owned", {})
-	var unknown_owned := bool(prof.get("treat_unknown_as_owned", true))
 	var counts := {}
 	var by_item := {}
 	for o: PlacedObject in layout.objects.values():
@@ -163,6 +452,67 @@ static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflict
 	r.plots_needed.sort()
 	_check_land_levels(r, layout, map, level)
 	# Inventory, max counts, cost.
+	var groups := _item_rows(r, db, counts, layout.profile, level, budget)
+	var ids := groups.keys()
+	ids.sort()
+	for id in ids:
+		var g: Array = groups[id]
+		if g[0] != null:
+			for u in (by_item[id] as Array).slice(int(g[0])):
+				_add(r, u, OVER_MAX)
+		if g[1] != null:
+			for u in (by_item[id] as Array).slice(int(g[1])):
+				_add(r, u, NOT_OWNED)
+	var blocking := 0
+	for u in r.issues:
+		for c in r.issues[u]:
+			if SEVERITY.get(c, 0) >= 2:
+				blocking += 1
+				break
+	_finish(r, layout, budget, blocking)
+	return r
+
+
+static func _static_codes(it: ItemDef, level: int) -> Array:
+	## Codes every real (not planned) copy of the item gets, in analyze() order.
+	if it == null:
+		return [UNKNOWN_ITEM]
+	var out: Array = []
+	if not it.is_in_scope():
+		out.append(OUT_OF_SCOPE)
+	if it.unlock_level > 0 and it.unlock_level > level:
+		out.append(LEVEL_LOCKED)
+	if not it.is_footprint_trusted():
+		out.append(UNVERIFIED_SIZE)
+	return out
+
+
+static func _item_aggregates(r: Report, db: ItemDatabase, counts: Dictionary, _level: int) -> void:
+	## required_level, unknown_items, level_unknown_items and unverified from
+	## per-item counts of real objects (what analyze() sums object by object).
+	for id: String in counts:
+		var n := int(counts[id])
+		var it := db.get_item(id) if db else null
+		if it == null:
+			r.unknown_items[id] = n
+			continue
+		if it.unlock_level > 0:
+			r.required_level = maxi(r.required_level, it.unlock_level)
+		else:
+			r.level_unknown_items[id] = n
+		if not it.is_footprint_trusted():
+			r.unverified += n
+
+
+static func _item_rows(r: Report, db: ItemDatabase, counts: Dictionary, prof: Dictionary, level: int,
+		budget: BudgetEngine) -> Dictionary:
+	## The per-item rows (level_locked, over_max, shortages, the catalogue cost
+	## estimate) in item-id order. Returns {item: [over_from, short_from]} for
+	## items with group codes: the copies in layout order sliced from that index
+	## (Array.slice rules) are over the maximum / not owned (null = none).
+	var owned: Dictionary = prof.get("owned", {})
+	var unknown_owned := bool(prof.get("treat_unknown_as_owned", true))
+	var out := {}
 	var ids := counts.keys()
 	ids.sort()
 	for id in ids:
@@ -170,6 +520,7 @@ static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflict
 		if it == null:
 			continue
 		var placed: int = counts[id]
+		var g: Array = [null, null]
 		if it.unlock_level > level:
 			r.level_locked.append({"item": id, "name": it.name, "level": it.unlock_level, "count": placed})
 		var mx := it.max_count
@@ -179,9 +530,7 @@ static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflict
 				mx = rm
 		if mx > 0 and placed > mx:
 			r.over_max.append({"item": id, "name": it.name, "placed": placed, "max": mx})
-			var extra_uids: Array = by_item[id].slice(mx)
-			for u in extra_uids:
-				_add(r, u, OVER_MAX)
+			g[0] = mx
 		var have := placed if (unknown_owned and not owned.has(id)) else int(owned.get(id, 0))
 		if placed > have:
 			var missing := placed - have
@@ -196,23 +545,28 @@ static func analyze(layout: FarmLayout, db: ItemDatabase, map: FarmMap, conflict
 			if not it.has_known_cost():
 				r.unknown_cost_items.append(id)
 			r.shortages.append(entry)
-			var short_uids: Array = by_item[id].slice(have)
-			for u in short_uids:
-				_add(r, u, NOT_OWNED)
+			g[1] = have
+		if g[0] != null or g[1] != null:
+			out[id] = g
+	return out
+
+
+static func _slice_start(from: int, n: int) -> int:
+	## First index Array.slice(from) keeps of an n-element array.
+	return maxi(0, n + from) if from < 0 else from
+
+
+static func _finish(r: Report, layout: FarmLayout, budget: BudgetEngine, blocking: int) -> void:
 	r.level_locked.sort_custom(func(a, b): return a["level"] < b["level"])
 	r.required_level = maxi(r.required_level, r.required_land_level)
 	if budget != null:
 		_costs_from_budget(r, budget)
+	var prof := layout.profile
 	var bc := int(prof.get("budget_coins", -1))
 	var bd := int(prof.get("budget_diamonds", -1))
 	r.over_budget_coins = bc >= 0 and r.coins_needed > bc
 	r.over_budget_diamonds = bd >= 0 and r.diamonds_needed > bd
-	for u in r.issues:
-		for c in r.issues[u]:
-			if SEVERITY.get(c, 0) >= 2:
-				r.blocking_count += 1
-				break
-	return r
+	r.blocking_count = blocking
 
 
 static func _costs_from_budget(r: Report, budget: BudgetEngine) -> void:
@@ -223,7 +577,9 @@ static func _costs_from_budget(r: Report, budget: BudgetEngine) -> void:
 	r.diamonds_needed = int(t.cost.get(Currency.DIAMONDS, 0))
 	r.unknown_cost_items = t.unknown_price_types.duplicate()
 	r.unknown_ownership_types = t.unknown_ownership_types.duplicate()
-	var br := budget.item_breakdown(null, BudgetEngine.MODE_TO_BUY)
+	var br := {}   # item -> entry (shared, read only: item_rollups, no copies)
+	for row: Array in budget.item_rollups(null, BudgetEngine.MODE_TO_BUY):
+		br[row[0]] = row[1]
 	for e: Dictionary in r.shortages:
 		var b: Dictionary = br.get(budget.db.resolve_id(str(e["item"])) if budget.db != null else str(e["item"]), {})
 		var c: Dictionary = b.get("cost", {})

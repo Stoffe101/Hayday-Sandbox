@@ -14,8 +14,8 @@ original placeholder art — no item has official artwork.
 | Fields | 1 | 0 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
 | Fruit trees | 13 | 13 | 0 | 0 | 13 | 13 | 13 | 0 | 0 | 0 |
 | Bushes | 6 | 4 | 0 | 2 | 6 | 6 | 6 | 0 | 0 | 0 |
-| Fences & hedges | 123 | 123 | 0 | 0 | 123 | 20 | 11 | 112 | 0 | 0 |
-| Paths | 91 | 91 | 0 | 0 | 91 | 13 | 9 | 82 | 0 | 0 |
+| Fences & hedges | 124 | 124 | 0 | 0 | 124 | 20 | 11 | 113 | 0 | 0 |
+| Paths | 90 | 90 | 0 | 0 | 90 | 13 | 9 | 81 | 0 | 0 |
 | Water | 72 | 72 | 0 | 0 | 70 | 10 | 22 | 50 | 0 | 0 |
 | Flowers & gardens | 56 | 55 | 0 | 1 | 51 | 14 | 14 | 42 | 0 | 0 |
 | Trees & nature | 152 | 151 | 0 | 1 | 137 | 37 | 32 | 120 | 0 | 0 |

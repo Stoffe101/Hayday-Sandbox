@@ -8,6 +8,10 @@ extends Node
 ##       (counts which catalogue items resolve to an installed pack and load; memory;
 ##        writes counts only — never images — to the private root or user://)
 ##   ./HaydaySandbox.x86_64 --headless -- --selftest  (verifies an exported build)
+##   godot --headless --path . -- --selftest=packcycle [--pack=<id>]
+##       (UNINSTALLS the installed pack <id> (default hayday_original) and checks that its art,
+##        catalogue additions / corrections, world, water zones and terrain revert; run it only
+##        on a COPIED data dir, never on the real one)
 ## Prints "SELFTEST PASS"/"SELFTEST FAIL" and exits 0/1.
 
 var mode := "all"
@@ -44,6 +48,8 @@ func _run() -> void:
 		await _artcheck()
 	elif mode == "artflow":
 		await _artflow()
+	elif mode == "packcycle":
+		await _packcycle()
 	else:
 		await _integration()
 	print("\n%d checks, %d failed" % [checks, fails.size()])
@@ -407,6 +413,7 @@ func _integration() -> void:
 	await _world_ui_check()
 	await _camera_check()
 	await _drag_check()
+	await _motion_check()
 	await _world_art_check()
 	var bakery := App.db.get_item("bakery")
 	var at := _free_origin(bakery, Vector2i(14, 28))
@@ -1851,6 +1858,70 @@ func _free_area(near: Vector2i, size: Vector2i) -> Vector2i:
 				if PlacementRules.check_rect(s.layout, s.map, a).ok and not _touches_landmark(a):
 					return o
 	return Vector2i(-9999, -9999)
+
+
+func _motion_check() -> void:
+	## Lift / drop / settle motion (ObjectRenderer.lift_to / drop): feel only. It never
+	## changes the layout or the undo steps, is instant at Ambient animation Off and
+	## is never in an export.
+	print("Lift / drop motion")
+	var s := _s()
+	var rd: ObjectRenderer = main.renderer
+	var amb0 := rd.ambient_mode()
+	var lift := EditorController.LIFT_PX
+	# The curve: an eased rise, a gravity fall, one small rebound, then rest.
+	var up: Array = ObjectRenderer.motion_height(ObjectRenderer.LIFT_IN_S * 0.5, 0.0, lift, 0.0)
+	var dn: Array = ObjectRenderer.motion_height(ObjectRenderer.DROP_S * 0.5, lift, 0.0, ObjectRenderer.SETTLE_PX)
+	var peak: Array = ObjectRenderer.motion_height(ObjectRenderer.DROP_S + ObjectRenderer.SETTLE_S * 0.5, lift, 0.0, ObjectRenderer.SETTLE_PX)
+	var rest: Array = ObjectRenderer.motion_height(ObjectRenderer.DROP_S + ObjectRenderer.SETTLE_S + 0.01, lift, 0.0, ObjectRenderer.SETTLE_PX)
+	check(float(up[0]) > lift * 0.5 and not up[1] and float(dn[0]) > lift * 0.5 and is_equal_approx(float(peak[0]), ObjectRenderer.SETTLE_PX)
+		and float(rest[0]) == 0.0 and rest[1], "motion curve: quick rise %.1f, falling %.1f, rebound %.1f, rest %.1f" % [up[0], dn[0], peak[0], rest[0]])
+	var at := _free_area(Vector2i(30, 22), Vector2i(4, 4))
+	if at.x == -9999:
+		check(false, "free area for the motion checks")
+		return
+	var o := _put("bakery", at)
+	if o == null:
+		check(false, "object for the motion checks")
+		return
+	var origin0 := o.origin
+	var steps := s.stack.size()
+	rd.set_ambient_mode(ObjectRenderer.Ambient.FULL)
+	rd.lift_to([o.uid], lift)
+	check(rd.is_moving([o.uid]) and rd.lift_of(o.uid) < lift, "a pick-up eases in (starts at %.1f px)" % rd.lift_of(o.uid))
+	var t0 := Time.get_ticks_msec()
+	while rd.is_moving([o.uid]) and Time.get_ticks_msec() - t0 < 3000:
+		await _frames(1)
+	check(not rd.is_moving([o.uid]) and rd.lift_of(o.uid) == lift, "…and stops at the lift height (%.1f px after %d ms)" % [rd.lift_of(o.uid), Time.get_ticks_msec() - t0])
+	rd.drop([o.uid])
+	check(rd.is_moving([o.uid]) and rd.lift_of(o.uid) == lift, "a drop starts from the lifted height")
+	main.overlay.begin_drag([o.uid], lift)
+	main.overlay.drag_lift = 0.0
+	check(is_equal_approx(main.overlay._shown_lift(), rd.lift_of(o.uid)), "the drag outline follows the sprite's eased height")
+	main.overlay.end_drag()
+	check(o.origin == origin0 and s.stack.size() == steps, "the motion changes neither the layout nor the undo history")
+	main.exporter.capturing.emit()
+	check(not rd.is_moving() and rd.lift_of(o.uid) == 0.0, "an export starts with every object at rest")
+	# A placement lands; undo in the middle of it still removes the object at once.
+	rd.drop([o.uid], EditorController.PLACE_DROP_PX)
+	check(rd.is_moving([o.uid]) and rd.lift_of(o.uid) == EditorController.PLACE_DROP_PX, "a new placement lands from %.0f px" % EditorController.PLACE_DROP_PX)
+	s.stack.undo()
+	check(s.layout.get_obj(o.uid) == null and not rd.is_moving([o.uid]), "undo during the landing removes the object and its motion")
+	s.stack.redo()
+	o = s.layout.get_obj(o.uid)
+	check(o != null and rd.lift_of(o.uid) == 0.0, "redo puts it back on the ground (no motion)")
+	# Ambient animation Off: no motion at all.
+	rd.set_ambient_mode(ObjectRenderer.Ambient.OFF)
+	rd.lift_to([o.uid], lift)
+	var off_lift := rd.lift_of(o.uid)
+	rd.drop([o.uid])
+	check(off_lift == lift and not rd.is_moving() and rd.lift_of(o.uid) == 0.0 and rd.lift_in_seconds() == 0.0, "Ambient animation Off: lift and drop are instant")
+	rd.set_ambient_mode(ObjectRenderer.Ambient.FULL)
+	rd.drop([o.uid], lift)
+	rd.set_ambient_mode(ObjectRenderer.Ambient.OFF)
+	check(not rd.is_moving() and rd.lift_of(o.uid) == 0.0, "switching animation Off ends a running drop")
+	rd.set_ambient_mode(amb0)
+	s.stack.undo()
 
 
 func _put(item_id: String, origin: Vector2i) -> PlacedObject:
@@ -4046,4 +4117,104 @@ func _qa_layers_and_scale() -> void:
 		check(vis, "QA: the View tab scrolls to Object layers at 200 %% (below the fold at first: %s; scroll %d of %d)" % [str(below), sc.scroll_vertical, int(sc.get_v_scroll_bar().max_value)])
 	App.settings.set_v("ui_scale", 0.0, false)
 	await main._rebuild_ui()
+	await _frames(2)
+
+
+# --- pack uninstall cycle (W5b integration check) ---------------------------------------
+
+func _packcycle() -> void:
+	## Uninstalls an installed pack and checks that everything it brought reverts:
+	## catalogue additions and corrections, art, world data (water zones, landmarks),
+	## pack terrain (procedural ground returns), while the open layout keeps every
+	## object (unknown items included) and stays saveable. Destructive on the data
+	## dir, so it runs only when asked (`--selftest=packcycle`, copied data dir).
+	var pid := "hayday_original"
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--pack="):
+			pid = a.get_slice("=", 1)
+	print("Pack uninstall cycle: %s" % pid)
+	var lib: AssetLibrary = App.assets
+	var s := _s()
+	if lib.pack_by_id(pid).is_empty():
+		check(false, "pack %s is installed (run on a copied data dir with the pack)" % pid)
+		return
+	var added: Array = []
+	for it: ItemDef in App.db.added_items():
+		added.append(it.id)
+	var n_items := App.db.items.size()
+	var overridden := 0
+	for it: ItemDef in App.db.items.values():
+		if not it.footprint_source.is_empty():
+			overridden += 1
+	var had_world := App.map.is_game_data()
+	var had_zones := App.map.has_water_deco_zones()
+	var had_terrain: bool = main.ground.pack_layer().active()
+	var art_keys: Array = []
+	for key in (lib.pack_by_id(pid)["sprites"] as Dictionary).keys():
+		if lib.art_source(str(key)) == pid:
+			art_keys.append(str(key))
+	print("  before: %d items (%d added, %d corrected), world=%s zones=%s terrain=%s, %d art keys from the pack" % [n_items,
+		added.size(), overridden, had_world, had_zones, had_terrain, art_keys.size()])
+	check(not art_keys.is_empty(), "the pack supplies art (%d keys)" % art_keys.size())
+	# Put a pack-only item (a catalogue addition) into the open layout, where the world allows it.
+	var add_uid := 0
+	for id: String in added:
+		var it := App.db.get_item(id)
+		if it == null or not it.can_place():
+			continue
+		var spot := Vector2i(-99999, -99999)
+		if PlacementRules.is_zone_item(it):
+			for z: Dictionary in App.map.water_deco_zones:
+				if not z["enabled"]:
+					continue
+				var r: Rect2i = z["rect"]
+				for y in range(r.position.y, r.end.y):
+					for x in range(r.position.x, r.end.x):
+						if spot.x == -99999 and PlacementRules.check_item(s.layout, s.map, it, Vector2i(x, y), false).ok:
+							spot = Vector2i(x, y)
+		else:
+			for y in range(0, 40):
+				for x in range(0, 40):
+					if spot.x == -99999 and PlacementRules.check_item(s.layout, s.map, it, Vector2i(x, y), false).ok:
+						spot = Vector2i(x, y)
+		if spot.x == -99999:
+			continue
+		var o := s.make_object(it, spot)
+		var uids := s.place_objects([o], "packcycle")
+		if not uids.is_empty():
+			add_uid = int(uids[0])
+			print("  placed pack-only item %s at %s" % [id, str(spot)])
+			break
+	if not added.is_empty():
+		check(add_uid != 0 and s.conflicts().get(add_uid) == null, "a pack-only item is placed without a conflict")
+	var n_objs := s.layout.count()
+	var steps := s.stack.size()
+	check(PackInstaller.uninstall(pid) == OK, "pack uninstalled")
+	App.reload_assets()
+	await _frames(3)
+	check(lib.pack_by_id(pid).is_empty(), "the pack is gone from the library")
+	var still: Array = art_keys.filter(func(k): return lib.art_source(k) == pid)
+	check(still.is_empty(), "no art key resolves to the pack any more (%d left)" % still.size())
+	var left_added: Array = added.filter(func(id): return App.db.items.has(id))
+	check(App.db.added_items().is_empty() and left_added.is_empty(), "catalogue additions removed (%d → 0)" % added.size())
+	var still_over := 0
+	for it: ItemDef in App.db.items.values():
+		if not it.footprint_source.is_empty():
+			still_over += 1
+	check(still_over == 0 and App.db.overrides_pack.is_empty(), "catalogue corrections reverted (%d → %d)" % [overridden, still_over])
+	check(App.db.items.size() == n_items - added.size(), "catalogue back to the public size (%d)" % App.db.items.size())
+	check(not App.map.is_game_data() and s.map == App.map, "world back to the public approximation (%s)" % App.world_label())
+	check(not App.map.has_water_deco_zones(), "no water-decoration zones without the world data")
+	check(not main.ground.pack_layer().active(), "pack terrain off: the procedural ground draws again")
+	check(s.layout.zone_items.is_empty() or s.layout.zone_items.keys().all(func(k): return App.db.get_item(str(k)) != null),
+		"zone items follow the catalogue")
+	check(s.layout.count() == n_objs, "the open layout keeps every object (%d)" % s.layout.count())
+	if add_uid != 0:
+		check(s.layout.get_obj(add_uid) != null and App.db.get_item(s.layout.get_obj(add_uid).item_id) == null,
+			"the pack-only object stays in the layout as an unknown item")
+		var d := LayoutIO.to_dict(s.layout)
+		var back := LayoutIO.from_dict(d, App.db, LayoutIO.LoadReport.new(), App.map)
+		check(back.count() == n_objs, "…and survives a save / load without the pack (%d objects)" % back.count())
+	print("  undo steps added by the uninstall: %d" % (s.stack.size() - steps))
+	main.renderer.queue_redraw()
 	await _frames(2)

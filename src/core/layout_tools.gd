@@ -289,19 +289,30 @@ static func _same_group_at(layout: FarmLayout, db: ItemDatabase, group: String, 
 
 # --- what fits -----------------------------------------------------------------------------
 
-static func fit_mask(layout: FarmLayout, map: FarmMap, rects: Array, ignore: Dictionary = {}) -> Array:
+static func zone_flags(layout: FarmLayout, objs: Array) -> Array:
+	## Per PlacedObject: true for water decorations (fit_mask's `zones`).
+	var out: Array = []
+	for o: PlacedObject in objs:
+		out.append(PlacementRules.is_zone_object(layout, o))
+	return out
+
+
+static func fit_mask(layout: FarmLayout, map: FarmMap, rects: Array, ignore: Dictionary = {}, zones: Array = []) -> Array:
 	## In order, true for each rect the placement rules accept given everything
 	## on the farm and every rect accepted before it. Refused rects claim nothing.
+	## `zones`: true per rect of a water decoration (PlacementRules.tile_code).
 	var taken := {}
 	var out: Array = []
-	for r: Rect2i in rects:
+	for i in rects.size():
+		var r: Rect2i = rects[i]
+		var zone := i < zones.size() and bool(zones[i])
 		var keys: Array = []
 		var ok := true
 		for y in range(r.position.y, r.end.y):
 			for x in range(r.position.x, r.end.x):
 				var t := Vector2i(x, y)
 				var k := Occupancy.key(t)
-				if taken.has(k) or PlacementRules.tile_code(layout, map, t, ignore) != PlacementRules.OK_TILE:
+				if taken.has(k) or PlacementRules.tile_code(layout, map, t, ignore, zone) != PlacementRules.OK_TILE:
 					ok = false
 					break
 				keys.append(k)
@@ -330,11 +341,13 @@ static func resolve_moves(layout: FarmLayout, map: FarmMap, uids: Array, deltas:
 			ignore[uids[i]] = true
 		var rects: Array = []
 		var indices: Array = []
+		var zones: Array = []
 		for i: int in active:
 			var o := layout.get_obj(uids[i])
 			rects.append(Rect2i(o.origin + (deltas[i] as Vector2i), o.size))
 			indices.append(i)
-		var mask := fit_mask(layout, map, rects, ignore)
+			zones.append(PlacementRules.is_zone_object(layout, o))
+		var mask := fit_mask(layout, map, rects, ignore, zones)
 		var dropped := false
 		for k in mask.size():
 			if not mask[k]:

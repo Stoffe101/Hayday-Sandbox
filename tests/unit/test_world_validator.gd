@@ -293,3 +293,21 @@ func test_footprints_after_pack_overrides() -> void:
 	var rep := run(null, {"footprints": res})
 	assert_eq(_st(rep, "footprint_corrections"), "pass")
 	assert_eq(_st(rep, "item_footprints"), "warn")
+
+
+func test_water_deco_zones_check() -> void:
+	var rep := run()
+	var c := WorldValidator.check(rep, "water_deco_zones")
+	assert_eq(c["status"], "pass", str(c["examples"]))
+	assert_eq(c["compared"], 1)
+	var w := world()
+	(w["water_deco_zones"][0] as Dictionary)["rect"] = [-3, 0, 2, 3]
+	c = WorldValidator.check(run(w), "water_deco_zones")
+	assert_eq(c["status"], "fail", "moved zone")
+	assert_eq(c["mismatches"], 2, "missing + extra")
+	w = world()
+	w.erase("water_deco_zones")
+	assert_eq(WorldValidator.check(run(w), "water_deco_zones")["status"], "fail", "world without zones")
+	# The same through a FarmMap.
+	assert_eq(WorldValidator.check(run(FarmMap.from_data(world())), "water_deco_zones")["status"], "pass")
+

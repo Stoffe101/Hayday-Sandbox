@@ -82,6 +82,15 @@ static func build(layout: FarmLayout, map: FarmMap, plan: Dictionary, options: D
 	##   primary: Dictionary    uid -> primary phase id when already known (e.g.
 	##                          BudgetEngine.primary_phases(), the same rule as
 	##                          PlanDoc.primary_phases(), which is used otherwise)
+	##   diff: Dictionary       Baseline.diff(layout, baseline, db) when already known
+	##                          (e.g. PlanContext.compare_diff()); computed otherwise
+	##   memo: Dictionary       caller-owned cache of finished steps, kept between
+	##                          builds (PlanContext keeps one per layout): a step whose
+	##                          draft (kind, stage, phase, item, objects, tiles, plot...)
+	##                          and world (map, catalogue, landmark visibility, phase
+	##                          names) are unchanged is reused instead of re-describing
+	##                          it; only its number and done state are set again. The
+	##                          result is identical with or without it (tests).
 	## Returns {steps, progress, has_baseline, skipped_markers, phase_names, stages}.
 	var db: ItemDatabase = options.get("db") as ItemDatabase
 	var bv: Variant = options["baseline"] if options.has("baseline") else plan.get("baseline", {})
@@ -89,10 +98,14 @@ static func build(layout: FarmLayout, map: FarmMap, plan: Dictionary, options: D
 	var has_base := Baseline.is_valid(baseline)
 	var include_planned := bool(options.get("include_planned", true))
 	var big_area := int(options.get("big_area", BIG_AREA))
-	var diff: Dictionary = Baseline.diff(layout, baseline, db) if has_base else {}
+	var diff: Dictionary = {}
+	if has_base:
+		diff = options["diff"] if options.get("diff") is Dictionary and not (options["diff"] as Dictionary).is_empty() else Baseline.diff(layout, baseline, db)
 	var primary: Dictionary = options["primary"] if options.get("primary") is Dictionary else PlanDoc.primary_phases(layout, plan)
 	var world := _world_info(map, layout)
 	var skipped := 0
+	# Per item id (raw): [category, ItemDef] looked up once per build.
+	var item_info := {}
 	# Design objects the guide is about.
 	var design: Array = []
 	var uids := layout.objects.keys()
@@ -101,7 +114,12 @@ static func build(layout: FarmLayout, map: FarmMap, plan: Dictionary, options: D
 		var o: PlacedObject = layout.objects[u]
 		if o.planned and not include_planned:
 			continue
-		if _category(db, o.item_id) in SKIP_CATEGORIES:
+		var info: Variant = item_info.get(o.item_id)
+		if info == null:
+			var it := db.get_item(o.item_id) if db else null
+			info = [it.category if it else "", it]
+			item_info[o.item_id] = info
+		if info[0] in SKIP_CATEGORIES:
 			skipped += 1
 			continue
 		design.append(o)
@@ -136,7 +154,7 @@ static func build(layout: FarmLayout, map: FarmMap, plan: Dictionary, options: D
 			move_entries.append({"uid": o.uid, "item": o.item_id, "rect": mv["to"], "from": mv["from"], "phase": ph,
 				"delta": (mv["to"] as Rect2i).position - (mv["from"] as Rect2i).position})
 			continue
-		var stage := stage_for_item(db.get_item(o.item_id) if db else null, o.size, big_area)
+		var stage := stage_for_item(item_info[o.item_id][1], o.size, big_area)
 		(place_entries[stage] as Array).append({"uid": o.uid, "item": o.item_id, "rect": o.rect(), "phase": ph,
 			"reused": has_base and (diff["reuse"] as Dictionary).has(o.uid)})
 	drafts.append_array(_ordered_moves(_clusters(move_entries, 3, "move", "from"), plan))
@@ -148,11 +166,34 @@ static func build(layout: FarmLayout, map: FarmMap, plan: Dictionary, options: D
 			var lm := map.landmark(str(e["id"])) if map else null
 			drafts.append({"kind": "customize", "stage": 8, "phase": PlanDoc.UNPHASED, "uids": [], "item": "",
 				"bounds": lm.rect() if lm else Rect2i(), "look": "%s:%s" % [e["id"], e["skin"]], "custom": e})
-	# Finish the steps: ids, numbers, texts, done.
+	# Finish the steps: ids, numbers, texts, done (reused from `memo` when unchanged).
+	var memo: Variant = options.get("memo")
+	var reuse: Dictionary = {}
+	var fresh: Dictionary = {}
+	if memo is Dictionary:
+		var env := _memo_env(map, layout, plan, db)
+		if (memo as Dictionary).get("_env") == env:
+			reuse = (memo as Dictionary).get("steps", {})
+		(memo as Dictionary)["_env"] = env
 	var steps: Array = []
 	var by_node := {}
 	for d: Dictionary in drafts:
-		var s := _finish(d, layout, map, plan, db, world)
+		var s: Dictionary
+		var sig := _draft_sig(d) if memo is Dictionary else ""
+		var hit: Variant = reuse.get(sig) if not sig.is_empty() else null
+		if hit != null:
+			s = (hit as Dictionary).duplicate()
+			if d.has("node"):
+				s["node"] = d["node"]
+			else:
+				s.erase("node")
+			s["done"] = step_done(s, plan)
+		else:
+			s = _finish(d, layout, map, plan, db, world)
+			if not sig.is_empty():
+				hit = s.duplicate()
+		if not sig.is_empty():
+			fresh[sig] = hit
 		s["number"] = steps.size() + 1
 		steps.append(s)
 		if d.has("node"):
@@ -167,11 +208,35 @@ static func build(layout: FarmLayout, map: FarmMap, plan: Dictionary, options: D
 				s["description"] = desc + "; " + note if not desc.is_empty() else note.substr(0, 1).to_upper() + note.substr(1)
 	for s: Dictionary in steps:
 		s.erase("node")
+	if memo is Dictionary:
+		(memo as Dictionary)["steps"] = fresh
 	var names := {PlanDoc.UNPHASED: UNPHASED_NAME}
 	for p in PlanDoc.phases(plan):
 		names[str(p.get("id"))] = str(p.get("name", p.get("id")))
 	return {"steps": steps, "progress": progress(steps, plan), "has_baseline": has_base,
 		"skipped_markers": skipped, "phase_names": names, "stages": STAGES.duplicate(true)}
+
+
+static func _memo_env(map: FarmMap, layout: FarmLayout, plan: Dictionary, db: ItemDatabase) -> Array:
+	## Everything a finished step reads besides its draft and the done state: the
+	## map (landmarks, plots, regions), landmark visibility, the catalogue (names)
+	## and the phase names.
+	var names: Array = []
+	for p in PlanDoc.phases(plan):
+		names.append([str(p.get("id")), str(p.get("name", p.get("id")))])
+	return [map.get_instance_id() if map else 0, layout.world_state.hash() if layout else 0,
+		db.get_instance_id() if db else 0, db.overrides_pack if db else "", str(db.overrides_report.get("hash", "")) if db else "",
+		db.items.size() if db else 0, names]
+
+
+static func _draft_sig(d: Dictionary) -> String:
+	## Identity of a step draft for the memo ("" = never reused: design looks).
+	var kind := str(d["kind"])
+	if kind == "customize":
+		return ""
+	return "%s|%d|%s|%s|%s|%s|%s|%s|%s|%s|%s|%d" % [kind, int(d["stage"]), str(d.get("phase", "")), str(d.get("item", "")),
+		str(d.get("uids", [])), str(d["bounds"]), str(d.get("from_bounds", d["bounds"])), str(d.get("plot", "")),
+		str(d.get("via", "")), str(d.get("needed_by", [])), str(bool(d.get("unreachable", false))), int(d.get("reused", 0))]
 
 
 static func stage_for_item(it: ItemDef, size: Vector2i = Vector2i.ONE, big_area: int = BIG_AREA) -> int:

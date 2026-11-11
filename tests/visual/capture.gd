@@ -24,15 +24,18 @@ const ALL := ["overview", "place_valid", "place_invalid", "selection", "search",
 	"drag_blocked", "tools_symmetry", "tools_repeat", "winter", "terrain_pack", "terrain_pack_winter", "terrain_pack_river",
 	"terrain_pack_fg", "terrain_pack_blend", "terrain_pack_zoomout",
 	"plan_budget", "plan_areas", "plan_phases", "plan_heatmap", "plan_shop", "plan_build", "plan_guide", "plan_accuracy",
-	"plan_minimap", "plan_layers", "plan_compare", "plan_ready", "game_data", "game_data_review"]
+	"plan_minimap", "plan_layers", "plan_compare", "plan_ready", "game_data", "game_data_review", "object_glow"]
 ## Not part of "all": only meaningful with a real pack / --open layout.
-const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "anim_perf"]
+const EXTRA := ["export2x", "export_objects", "at_<x>_<y>_<zoom>", "anim_perf", "wz_<item id>", "anim_farm_perf",
+	"camera_perf", "drag_perf", "ghost_art", "fence_junctions"]
 ## Asset scenarios install a synthetic pack generated from the built-in
 ## placeholders (never real artwork); it is removed again before the next scenario.
 const SyntheticPack := preload("res://tests/fixtures/synthetic_pack.gd")
 ## terrain_pack* scenarios install a generated terrain pack (flat colours and
 ## patterns, docs/TERRAIN_PACKS.md), removed again before the next scenario.
 const SynTerrain := preload("res://tests/fixtures/synthetic_terrain.gd")
+## object_glow installs a procedural pack with glow layers and patch animations (removed by the next _reset).
+const SynGlow := preload("res://tests/fixtures/synthetic_glow_pack.gd")
 
 var out_dir := "res://artifacts/screens"
 var scale := 1.0
@@ -42,6 +45,7 @@ var tag := ""
 var _pack_installed := false
 var _terrain_installed := false
 var _client_installed := false
+var _glow_installed := false
 var real_art := false
 var outline_all := false   ## at_* scenarios select everything, so every footprint is outlined
 var hide_panels := false   ## hide top bar + side panels (Tab) for unobstructed QA shots
@@ -139,6 +143,12 @@ func _reset() -> void:
 	main.hint_hold_s = 60.0   # slow software rendering: keep the cursor hint for the shot
 	if main._hint_panel:
 		main._hint_panel.visible = false
+	# No real mouse here: the hover-tile outline of the X server's idle pointer (a white 1-tile diamond wherever
+	# the start-up camera put it) is not part of any scenario.
+	main.overlay.show_hover_tile = false
+	# drag_blocked's synthetic pointer leaves its object hovered (white outline in every later shot).
+	main.overlay.hover_uid = 0
+	main.overlay.ghosts = []   # ghost_art sets ghosts without a gesture
 	if _pack_installed:
 		PackInstaller.uninstall(SyntheticPack.PACK_ID)
 		_app().reload_assets()
@@ -147,6 +157,10 @@ func _reset() -> void:
 		PackInstaller.uninstall(SynTerrain.PACK_ID)
 		_app().reload_assets()
 		_terrain_installed = false
+	if _glow_installed:
+		PackInstaller.uninstall(SynGlow.PACK_ID)
+		_app().reload_assets()
+		_glow_installed = false
 	if _client_installed:
 		ClientPrices.remove()
 		for f in [PriceBook.DEFAULT_CLIENT.get_basename() + ClientPrices.PREVIOUS_SUFFIX, ClientPrices.REPORT_PATH,
@@ -451,6 +465,136 @@ func _find_free(item_id: String, near: Vector2i) -> Vector2i:
 	return near
 
 
+func _free_rect(size: Vector2i, near: Vector2i) -> Vector2i:
+	## Origin of a free size area near `near` (x = -9999: none).
+	var s = _session()
+	for r in range(0, 30):
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				var o := near + Vector2i(dx, dy)
+				if PlacementRules.check_rect(s.layout, s.map, Rect2i(o, size)).ok:
+					return o
+	return Vector2i(-9999, -9999)
+
+
+func _ghost_art() -> bool:
+	## Placement ghosts show the art the object gets once placed (extra scenario, meant for a real pack): in the
+	## winter theme a themed item (left: placed, right: its ghost) and a flipped item with hand-drawn mirror art.
+	## Prints "GHOST <item> theme=.. mirror=.. same=true|false" (the ghost's texture vs the placed object's); FAIL
+	## if they differ.
+	var s = _session()
+	var lib: AssetLibrary = _app().assets
+	var themed := ""
+	var mirrored := ""
+	for it: ItemDef in s.db.ordered:
+		if it.footprint == Vector2i.ZERO or s.item_block_reason(it.id) != "":
+			continue
+		if themed.is_empty() and not lib.themed_variant(it.art_key, "", "winter").is_empty():
+			themed = it.id
+		if mirrored.is_empty() and it.flippable:
+			var spr: AssetLibrary.SpriteInfo = lib.get_sprite(it.art_key, "", -1)
+			if spr and spr.mirror:
+				mirrored = it.id
+	if themed.is_empty():
+		themed = "big_pine_tree"
+	if mirrored.is_empty():
+		mirrored = "bench"
+	s.execute(SetWorldStateCommand.for_theme(s.layout, "winter"))
+	_undo_after += 1
+	await _frames(4)
+	var ok := true
+	var near := Vector2i(24, 26)
+	var ghosts: Array = []
+	var focus: Array = []
+	for pair: Array in [[themed, false], [mirrored, true]]:
+		var it: ItemDef = s.db.get_item(pair[0])
+		if it == null:
+			print("GHOST %s: not in the catalogue" % pair[0])
+			continue
+		var fl: bool = pair[1] and it.flippable
+		var sz := it.size_for(fl)
+		var o := _free_rect(Vector2i(sz.x * 2 + 1, sz.y), near)
+		if o.x == -9999:
+			print("FAIL ghost_art: no room for ", it.id)
+			return false
+		var po: PlacedObject = s.make_object(it, o)
+		po.flipped = fl
+		po.size = sz
+		po.variant = ""
+		var uids: Array = s.place_objects([po], "capture ghost_art")
+		_undo_after += 1
+		if uids.is_empty():
+			print("FAIL ghost_art: %s refused" % it.id)
+			return false
+		ghosts.append({"item": it, "origin": o + Vector2i(sz.x + 1, 0), "flipped": fl, "variant": ""})
+		focus.append(Iso.footprint_center(o + Vector2i(sz.x, 0), sz))
+		var placed: AssetLibrary.SpriteInfo = main.renderer.sprite_of(uids[0])
+		var pv: Dictionary = UI.resolve_sprite(lib, it, "", fl, s.layout.theme())
+		var same: bool = placed != null and pv["texture"] == placed.texture
+		ok = ok and same
+		print("GHOST %s theme=%s mirror=%s flipped_draw=%s same=%s" % [it.id, lib.themed_variant(it.art_key, "", s.layout.theme()),
+			str(lib.get_sprite(it.art_key, "", -1) != null and lib.get_sprite(it.art_key, "", -1).mirror != null), str(pv["flip"]), str(same)])
+		near = o + Vector2i(0, sz.y + 3)
+	main.overlay.ghosts = ghosts
+	main.overlay.ghost_result = null
+	main.camera.smooth = false
+	main.camera.set_zoom_level(2.0)
+	main.camera.zoom = Vector2(2.0, 2.0)
+	main.camera.target_zoom = 2.0
+	var mid := Vector2.ZERO
+	for f: Vector2 in focus:
+		mid += f / maxf(1.0, focus.size())
+	main.camera.center_on(mid)
+	main.overlay.refresh()
+	await _frames(8)
+	if not ok:
+		print("FAIL ghost_art: a ghost shows other art than the placed object")
+	return ok
+
+
+func _fence_junctions() -> bool:
+	## Fence, hedge and cobblestone path pieces in a cross and a T (extra scenario): how the connection art joins
+	## where three or four pieces meet. Each piece draws its own +x / +y links, so a junction is the corner piece
+	## plus its neighbours' links; nothing else is assumed.
+	var s = _session()
+	var near := Vector2i(26, 24)
+	var centres: Array = []
+	for item_id: String in ["fence", "hedge", "cobblestone_path"]:
+		var it: ItemDef = s.db.get_item(item_id)
+		if it == null:
+			continue
+		var o := _free_rect(Vector2i(11, 5), near)
+		if o.x == -9999:
+			print("FAIL fence_junctions: no room for ", item_id)
+			return false
+		var tiles: Array = []
+		var c := o + Vector2i(2, 2)
+		for d: Vector2i in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(2, 0), Vector2i(-1, 0), Vector2i(-2, 0), Vector2i(0, 1), Vector2i(0, 2), Vector2i(0, -1), Vector2i(0, -2)]:
+			tiles.append(c + d)   # cross
+		var t := o + Vector2i(8, 1)
+		for d: Vector2i in [Vector2i.ZERO, Vector2i(1, 0), Vector2i(2, 0), Vector2i(-1, 0), Vector2i(-2, 0), Vector2i(0, 1), Vector2i(0, 2)]:
+			tiles.append(t + d)   # T
+		var objs: Array = []
+		for tt: Vector2i in tiles:
+			objs.append(s.make_object(it, tt))
+		var uids: Array = s.place_objects(objs, "capture fence_junctions")
+		_undo_after += 1
+		print("JUNCTION %s at %s placed=%d of %d" % [item_id, str(o), uids.size(), objs.size()])
+		for p: Vector2 in Iso.footprint_polygon(o, Vector2i(11, 5)):
+			centres.append(p)
+		near = o + Vector2i(0, 6)
+	if centres.is_empty():
+		return false
+	var box := Rect2(centres[0], Vector2.ZERO)
+	for c: Vector2 in centres:
+		box = box.expand(c)
+	main.camera.smooth = false
+	main._update_view_rect()
+	main.camera.fit_world_rect(box.grow_individual(0, 120, 0, 0), 30.0)
+	await _frames(8)
+	return true
+
+
 func _ghost_at(item_id: String, origin: Vector2i) -> void:
 	var s = _session()
 	main._on_item_chosen(item_id)
@@ -650,11 +794,284 @@ func _focus(sc: String) -> bool:
 	return true
 
 
+func _water_zone_shot(item_id: String) -> bool:
+	## wz_<item id> (private pack + world with water_deco_zones): one copy placed
+	## inside the first zone through the command stack (must be accepted), then the
+	## same item armed one tile outside the zone (must be refused, zones shown).
+	## Prints "WZ <item> in=... out=..."; FAIL unless both answers are right.
+	var s = _session()
+	var it: ItemDef = s.db.get_item(item_id)
+	if it == null or not PlacementRules.is_zone_item(it) or not s.map.has_water_deco_zones():
+		print("WZ %s: not a water decoration or no zones in this world" % item_id)
+		return false
+	var zr: Rect2i = s.map.water_deco_zone_rects()[0]
+	var inside := zr.position
+	var in_res := PlacementRules.check_item(s.layout, s.map, it, inside, false)
+	var o := PlacedObject.new()
+	o.item_id = it.id
+	o.origin = inside
+	o.size = it.footprint
+	_exec(EditCommands.AddObjects.new([o]))
+	var placed: bool = s.layout.objects.has(o.uid) and not s.conflicts().has(o.uid)
+	var outside := Vector2i(zr.end.x, zr.position.y + mini(2, zr.size.y - 1))
+	var out_res := PlacementRules.check_item(s.layout, s.map, it, outside, false)
+	main.camera.smooth = false
+	main.camera.set_zoom_level(0.9)
+	main.camera.zoom = Vector2(0.9, 0.9)
+	main.camera.target_zoom = 0.9
+	main.camera.center_on(Iso.tile_center(zr.position + Vector2i(zr.size.x, zr.size.y / 2)))
+	_ghost_at(item_id, outside)
+	await _frames(20)
+	print("WZ %s in=%s placed=%s out=%s (%s)" % [item_id, str(in_res.ok), str(placed), "refused" if not out_res.ok else "ACCEPTED",
+		" · ".join(out_res.reasons(s.layout, s.db, s.map))])
+	return in_res.ok and placed and not out_res.ok and out_res.reason_counts.has(PlacementRules.WATER_DECO_ZONE)
+
+
 func _avg_frame_ms(n: int) -> float:
 	await _frames(10)
 	var t0 := Time.get_ticks_usec()
 	await _frames(n)
 	return (Time.get_ticks_usec() - t0) / 1000.0 / n
+
+
+func _object_glow() -> bool:
+	## Glow layers (additive) and patch animations of a procedural pack: torches (glow + flickering flame with glow
+	## frames), windmills (sails at 2/3 resolution) and lanterns (glow only), placed through the command stack.
+	## Checks: the sprites load with their glow / rect animation, glows sit on additive child items, a patch plays
+	## once in view, Off shows the static image. Prints "GLOW ..."; FAIL when a check does not hold.
+	if real_art:
+		print("GLOW skipped with --real-art (the scenario needs its own procedural pack)")
+		return true
+	var b: Dictionary = SynGlow.build_zip("user://capture_assets/synthetic_glow.zip")
+	if not b["ok"]:
+		print("FAIL glow pack: ", b["error"])
+		return false
+	var r = _app().install_pack(ProjectSettings.globalize_path("user://capture_assets/synthetic_glow.zip"))
+	_glow_installed = r.ok
+	if not r.ok:
+		print("FAIL glow pack install: ", r.summary())
+		return false
+	main.renderer.refresh_all_art()
+	var s = _session()
+	var want := ["garden_torch", "windmill", "lantern", "garden_torch", "windmill", "lantern"]
+	var spot := Vector2i(-1, -1)
+	for y in range(2, 30):
+		for x in range(2, 28):
+			var free := true
+			for k in want.size():
+				var it: ItemDef = s.db.get_item(want[k])
+				if not PlacementRules.check_item(s.layout, s.map, it, Vector2i(x + k % 3 * 2, y + k / 3 * 2), false).ok:
+					free = false
+					break
+			if free:
+				spot = Vector2i(x, y)
+				break
+		if spot.x >= 0:
+			break
+	if spot.x < 0:
+		print("FAIL glow: no free 6x4 spot")
+		return false
+	var objs: Array = []
+	for k in want.size():
+		var it: ItemDef = s.db.get_item(want[k])
+		var o := PlacedObject.new()
+		o.item_id = it.id
+		o.origin = spot + Vector2i(k % 3 * 2, k / 3 * 2)
+		o.size = it.footprint
+		objs.append(o)
+	_exec(EditCommands.AddObjects.new(objs))
+	main.renderer.ensure_sorted()
+	main.camera.smooth = false
+	main.camera.set_zoom_level(2.2)
+	main.camera.zoom = Vector2(2.2, 2.2)
+	main.camera.target_zoom = 2.2
+	main.camera.center_on(Iso.grid_to_world(Vector2(spot) + Vector2(3.0, 2.0)))
+	main.renderer.set_ambient_mode(ObjectRenderer.Ambient.FULL)
+	await _frames(12)
+	var torch: PlacedObject = objs[0]
+	var mill: PlacedObject = objs[1]
+	var lamp: PlacedObject = objs[2]
+	var ts: AssetLibrary.SpriteInfo = main.renderer.sprite_of(torch.uid)
+	var ms: AssetLibrary.SpriteInfo = main.renderer.sprite_of(mill.uid)
+	var ls: AssetLibrary.SpriteInfo = main.renderer.sprite_of(lamp.uid)
+	var checks := {
+		"torch glow + rect anim with glow frames": ts != null and ts.pack_id == SynGlow.PACK_ID and ts.glow != null and ts.anim != null and ts.anim.has_rect() and ts.anim.has_glow,
+		"windmill rect anim": ms != null and ms.anim != null and ms.anim.has_rect() and ms.glow == null,
+		"lantern glow only": ls != null and ls.glow != null and ls.anim == null,
+		"glow on an additive child item": (main.renderer._vis[lamp.uid] as ObjectRenderer.Vis).gci.is_valid() and main.renderer._add_mat != null,
+		"no glow child without glow art": not (main.renderer._vis[mill.uid] as ObjectRenderer.Vis).gci.is_valid(),
+		"patches play in view": main.renderer.anim_frame_of(mill.uid) >= 0 and main.renderer.anim_frame_of(torch.uid) >= 0,
+	}
+	main.renderer.set_ambient_mode(ObjectRenderer.Ambient.OFF)
+	checks["Off shows the static image"] = main.renderer.anim_frame_of(mill.uid) == -1
+	main.renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[_app().settings.ambient_animation()])
+	# A placement ghost of the lantern shows its glow too (additive child of the overlay).
+	_ghost_at("lantern", spot + Vector2i(6, 1))
+	await _frames(4)
+	checks["ghost draws the glow"] = not main.overlay._ghost_glows.is_empty() and main.overlay._ghost_glow != null
+	var bad: Array = []
+	for k: String in checks:
+		if not checks[k]:
+			bad.append(k)
+	print("GLOW pack=%s sprites=%d at=%s checks=%d failed=%s anim_memory=%s" % [SynGlow.PACK_ID, b["sprites"], str(spot), checks.size(),
+		str(bad), str(main.renderer.anim_memory())])
+	if not bad.is_empty():
+		print("FAIL object_glow: ", ", ".join(bad))
+		return false
+	return true
+
+
+func _frame_times(n: int) -> Array:
+	## Wall time of each of the next n frames (ms), sorted.
+	var out: Array = []
+	var t := Time.get_ticks_usec()
+	for i in n:
+		await get_tree().process_frame
+		var now := Time.get_ticks_usec()
+		out.append((now - t) / 1000.0)
+		t = now
+	out.sort()
+	return out
+
+
+func _anim_farm_perf() -> void:
+	## Frame time of the open layout (its own objects, landmarks and terrain) with ambient animation Off / Reduced /
+	## Full: mean and p95 of 300 frames, at zoom 1 over the farm centre and fitted to the whole farm (extra scenario).
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	Engine.max_fps = 0
+	main.camera.smooth = false
+	var views := {"zoom1": [1.0, Vector2i(17, 24)], "fit": [0.0, Vector2i.ZERO]}
+	for vname: String in views:
+		var v: Array = views[vname]
+		if v[0] > 0.0:
+			main.camera.set_zoom_level(v[0])
+			main.camera.zoom = Vector2(v[0], v[0])
+			main.camera.target_zoom = v[0]
+			main.camera.center_on(Iso.tile_center(v[1]))
+		else:
+			main._fit()
+		var res: Array = []
+		for mode: int in [ObjectRenderer.Ambient.OFF, ObjectRenderer.Ambient.REDUCED, ObjectRenderer.Ambient.FULL]:
+			main.renderer.set_ambient_mode(mode)
+			await _frames(40)
+			var ft: Array = await _frame_times(300)
+			var mean := 0.0
+			for x: float in ft:
+				mean += x
+			mean /= ft.size()
+			var st: Dictionary = main.renderer.anim_stats()
+			res.append("%s mean=%.2f p95=%.2f ticked=%d updates=%d" % [["off", "reduced", "full"][mode], mean, ft[int(ft.size() * 0.95)],
+				st["ticked"], st["frame_updates"]])
+		var mem: Dictionary = main.renderer.anim_memory()
+		print("PERF anim_farm view=%s zoom=%.2f objects=%d animated=%d sheets_loaded=%d sheet_mb=%.1f | %s" % [vname,
+			main.camera.zoom.x, _session().layout.objects.size(), main.renderer.anim_stats()["animated"], mem["sheets"], mem["mb"],
+			" | ".join(res)])
+	main.renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[_app().settings.ambient_animation()])
+
+
+static func _ft_stats(ft: Array) -> String:
+	## "mean=.. p95=.. max=.. n=.." of frame times (ms, any order).
+	var srt := ft.duplicate()
+	srt.sort()
+	var mean := 0.0
+	for x: float in srt:
+		mean += x
+	mean /= maxf(1.0, srt.size())
+	return "mean=%.2f p95=%.2f max=%.2f n=%d" % [mean, srt[int(srt.size() * 0.95)] if not srt.is_empty() else 0.0,
+		srt.back() if not srt.is_empty() else 0.0, srt.size()]
+
+
+func _camera_perf() -> void:
+	## Camera responsiveness (extra scenario; run it on its own for a cold start): animated flights at zoom 1.6 to
+	## five spots of the farm and a zoom-out after each, Ambient animation Full. Every frame is timed until the
+	## camera rests; prints mean / p95 / max and the animation sheets loaded on the way (they load on first view).
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	Engine.max_fps = 0
+	main.renderer.set_ambient_mode(ObjectRenderer.Ambient.FULL)
+	main._fit()
+	await _frames(30)
+	var cam: FarmCamera = main.camera
+	cam.smooth = true
+	var mem0: Dictionary = main.renderer.anim_memory()
+	var ft: Array = []
+	var worst := ""
+	for t: Vector2i in [Vector2i(17, 24), Vector2i(30, 9), Vector2i(5, 20), Vector2i(22, 36), Vector2i(10, 6)]:
+		for step in 2:
+			if step == 0:
+				cam.fly_to(Iso.tile_center(t), 1.6)
+			else:
+				cam.set_zoom_level(0.75)
+			var tt := Time.get_ticks_usec()
+			for i in 240:
+				await get_tree().process_frame
+				var now := Time.get_ticks_usec()
+				var ms := (now - tt) / 1000.0
+				tt = now
+				ft.append(ms)
+				if worst.is_empty() or ms > float(worst.split("@")[0]):
+					worst = "%.1f@%s/%d" % [ms, str(t), step]
+				if not cam.is_animating():
+					break
+	var mem1: Dictionary = main.renderer.anim_memory()
+	print("PERF camera %s worst=%s sheets=%d->%d sheet_mb=%.1f->%.1f" % [_ft_stats(ft), worst, mem0["sheets"], mem1["sheets"],
+		mem0["mb"], mem1["mb"]])
+	cam.smooth = false
+	main.renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[_app().settings.ambient_animation()])
+
+
+func _drag_perf() -> bool:
+	## Drag feel (extra scenario): one object picked up, carried 6 tiles (one pointer move per frame, 36 frames)
+	## and dropped, with Ambient animation Off (instant lift and drop) and Full (eased lift, drop and rebound).
+	## Prints the frame times while carrying and for the 12 frames after the drop; the move is undone.
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	Engine.max_fps = 0
+	var pair: Array = _drag_pair()
+	if pair.is_empty():
+		print("FAIL drag_perf: no movable object")
+		return false
+	var mover: PlacedObject = pair[0]
+	var grab: Vector2i = pair[2]
+	var s = _session()
+	main.camera.smooth = false
+	main.camera.set_zoom_level(1.0)
+	main.camera.center_on(Iso.footprint_center(mover.origin, mover.size))
+	await _frames(20)
+	for mode: int in [ObjectRenderer.Ambient.OFF, ObjectRenderer.Ambient.FULL]:
+		main.renderer.set_ambient_mode(mode)
+		await _frames(10)
+		var steps0: int = s.stack.size()
+		var a: Vector2 = main.camera.world_to_screen(Iso.tile_center(grab))
+		var b: Vector2 = main.camera.world_to_screen(Iso.tile_center(grab + Vector2i(6, 0)))
+		_canvas_move(a, 0)
+		_canvas_button(a, true)
+		var carry: Array = []
+		var tt := Time.get_ticks_usec()
+		for i in range(1, 37):
+			_canvas_move(a.lerp(b, i / 36.0), MOUSE_BUTTON_MASK_LEFT)
+			await get_tree().process_frame
+			var now := Time.get_ticks_usec()
+			carry.append((now - tt) / 1000.0)
+			tt = now
+		var lifted: float = main.renderer.lift_of(mover.uid)
+		_canvas_button(b, false)
+		var drop: Array = []
+		tt = Time.get_ticks_usec()
+		var land_frames := 0
+		for i in 12:
+			await get_tree().process_frame
+			var now := Time.get_ticks_usec()
+			drop.append((now - tt) / 1000.0)
+			tt = now
+			if main.renderer.is_moving([mover.uid]):
+				land_frames += 1
+		var moved: bool = s.stack.size() > steps0
+		print("PERF drag ambient=%s lifted=%.1fpx moved=%s carry %s | drop %s landing_frames=%d" % [["off", "reduced", "full"][mode],
+			lifted, str(moved), _ft_stats(carry), _ft_stats(drop), land_frames])
+		if moved:
+			s.stack.undo()
+		await _frames(5)
+	main.renderer.set_ambient_mode(ObjectRenderer.AMBIENT_FROM_SETTING[_app().settings.ambient_animation()])
+	return true
 
 
 func _anim_perf() -> void:
@@ -750,6 +1167,9 @@ func _scenario(sc: String) -> bool:
 			s.select(s.layout.objects.keys(), false, false)
 		await _frames(25)
 		return true
+	if sc.begins_with("wz_"):
+		var ok_wz: bool = await _water_zone_shot(sc.substr(3))
+		return ok_wz
 	match sc:
 		"asset_manager":
 			var ok_0: bool = await _asset_manager("bakery", 0)
@@ -1069,6 +1489,22 @@ func _scenario(sc: String) -> bool:
 				return false
 		"anim_perf":
 			await _anim_perf()
+		"anim_farm_perf":
+			await _anim_farm_perf()
+		"camera_perf":
+			await _camera_perf()
+		"ghost_art":
+			if not await _ghost_art():
+				return false
+		"fence_junctions":
+			if not await _fence_junctions():
+				return false
+		"drag_perf":
+			if not await _drag_perf():
+				return false
+		"object_glow":
+			if not await _object_glow():
+				return false
 		"plan_budget":
 			# Budget chip expanded (selection scope) + the Budget tab.
 			await _plan_layout(false)

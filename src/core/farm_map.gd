@@ -62,7 +62,14 @@ var terrain_path: String = ""                   ## resolved against the map file
 var source_path: String = ""                    ## file this map was loaded from ("" = built in code)
 var alias_index: Dictionary = {}                ## plot alias -> canonical plot id
 var unmapped_sections: Array = []
+## Water-decoration zones (world data, schema v2 "water_deco_zones"): the only
+## tiles where items tagged PlacementRules.ZONE_TAG (the game's WaterDeco
+## decorations) may stand, usually along the river outside the placement grid.
+## {id, name, rect: Rect2i, enabled: bool}. Values come from world data (the
+## private world builder reads the client's level data); none are invented.
+var water_deco_zones: Array[Dictionary] = []
 var _lm_mask: PackedInt32Array = PackedInt32Array()  ## per in-grid tile landmark index, -1 = none
+var _zone_tiles: Dictionary = {}                ## Occupancy.key(tile) -> zone index (enabled zones)
 
 
 static func load_file(path: String) -> FarmMap:
@@ -128,6 +135,8 @@ func from_dict(d: Dictionary, base_dir: String = "") -> void:
 	landmark_index.clear()
 	_lm_mask = PackedInt32Array()
 	scenery.clear()
+	water_deco_zones.clear()
+	_zone_tiles.clear()
 	sections.clear()
 	initial_objects.clear()
 	tile_types.clear()
@@ -154,6 +163,7 @@ func from_dict(d: Dictionary, base_dir: String = "") -> void:
 	_parse_ground(d.get("ground", null))
 	_parse_landmarks(d.get("landmarks", []))
 	_parse_scenery(d.get("scenery", []))
+	_parse_water_deco_zones(d.get("water_deco_zones", null))
 	_parse_sections(d.get("sections", []))
 	_parse_initial_objects(d.get("initial_objects", []))
 	_parse_terrain(d.get("terrain", null), base_dir)
@@ -393,6 +403,40 @@ func _parse_scenery(list: Variant) -> void:
 		scenery.append(rec)
 
 
+func _parse_water_deco_zones(list: Variant) -> void:
+	## "water_deco_zones": [{"id", "name", "rect": [x, y, w, h], "enabled": true}].
+	if list == null:
+		return
+	if not list is Array:
+		errors.append("map %s: water_deco_zones must be a list" % id)
+		return
+	var seen := {}
+	for z in list:
+		if not z is Dictionary:
+			errors.append("map %s: water_deco_zones entries must be objects" % id)
+			continue
+		var r := Landmark._rect(z.get("rect", null))
+		var zid := str(z.get("id", "zone_%d" % water_deco_zones.size()))
+		if r.size.x <= 0 or r.size.y <= 0:
+			errors.append("map %s: water deco zone %s needs rect [x, y, w, h]" % [id, zid])
+			continue
+		if seen.has(zid):
+			errors.append("map %s: duplicate water deco zone id %s" % [id, zid])
+			continue
+		seen[zid] = true
+		var en: Variant = z.get("enabled", true)
+		var rec := {"id": zid, "name": str(z.get("name", zid)), "rect": r, "enabled": Landmark._bool(en) if en != null else true}
+		var zi := water_deco_zones.size()
+		water_deco_zones.append(rec)
+		if not rec["enabled"]:
+			continue
+		for y in range(r.position.y, r.end.y):
+			for x in range(r.position.x, r.end.x):
+				var k := Occupancy.key(Vector2i(x, y))
+				if not _zone_tiles.has(k):
+					_zone_tiles[k] = zi
+
+
 func _parse_sections(list: Variant) -> void:
 	if list == null:
 		return
@@ -473,6 +517,8 @@ func _compute_world_bounds(wb: Variant) -> void:
 		b = b.merge(lm.rect())
 	for s in scenery:
 		b = b.merge(s["rect"])
+	for z in water_deco_zones:
+		b = b.merge(z["rect"])
 	world_bounds = b
 
 
@@ -771,3 +817,24 @@ func provenance_label() -> String:
 	if provenance.has("label"):
 		return str(provenance["label"])
 	return "Game data (private pack)" if is_game_data() else "Public approximation"
+
+
+# --- water-decoration zones ----------------------------------------------------------
+
+func has_water_deco_zones() -> bool:
+	## True when the world data names at least one enabled zone.
+	return not _zone_tiles.is_empty()
+
+
+func water_deco_zone_at(t: Vector2i) -> int:
+	## Index into water_deco_zones of the enabled zone covering the tile, -1 = none.
+	return int(_zone_tiles.get(Occupancy.key(t), -1))
+
+
+func water_deco_zone_rects() -> Array[Rect2i]:
+	## Rects of the enabled zones (the placement overlay draws them).
+	var out: Array[Rect2i] = []
+	for z in water_deco_zones:
+		if z["enabled"]:
+			out.append(z["rect"])
+	return out

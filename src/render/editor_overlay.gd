@@ -57,9 +57,15 @@ var drag_delta := Vector2i.ZERO
 var drag_lift := 0.0
 var drag_result: PlacementRules.Result
 ## What blocks the current drop / placement: outlined in red.
+## Water-decoration zones (Rect2i tiles) drawn while a water decoration is
+## armed or dragged: the only places it may stand (FarmMap.water_deco_zones).
+var water_zones: Array = []
+const C_WATER_ZONE := Color(0.35, 0.8, 1.0)
 var blocker_uids: Array = []
 var blocker_rects: Array = []
 var _silhouettes: Dictionary = {}   ## texture instance id -> Array[PackedVector2Array]
+var _ghost_glow: Node2D             ## child drawing the ghosts' glow layers additively (created on first use)
+var _ghost_glows: Array = []        ## [sprite, centre, flipped, tint] of this redraw's ghosts with a glow
 
 ## Above this many selected objects, footprints are outlined instead of silhouettes.
 const SILHOUETTE_MAX := 150
@@ -74,6 +80,7 @@ const C_INVALID := Color(1.0, 0.35, 0.3, 0.95)
 
 func _ready() -> void:
 	font = ThemeDB.fallback_font
+	set_process(false)
 
 
 func refresh() -> void:
@@ -88,6 +95,7 @@ static func tile_color(code: int) -> Color:
 		PlacementRules.LOCKED_LAND: return C_LOCKED
 		PlacementRules.OUT_OF_BOUNDS: return C_OUT
 		PlacementRules.LANDMARK: return C_FIXED
+		PlacementRules.WATER_DECO_ZONE: return C_OUT
 	return C_BAD
 
 
@@ -95,6 +103,20 @@ func begin_drag(uids: Array, lift: float) -> void:
 	drag_uids = uids
 	drag_lift = lift
 	drag_delta = Vector2i.ZERO
+	set_process(renderer != null)   # follows the renderer's eased lift (ObjectRenderer.lift_to)
+
+
+func _process(_dt: float) -> void:
+	## Only while a drag's lift is still rising: keeps the outlines on the sprites.
+	queue_redraw()
+	if drag_uids.is_empty() or renderer == null or not renderer.is_moving(drag_uids):
+		set_process(false)
+
+
+func _shown_lift() -> float:
+	if renderer != null and not drag_uids.is_empty() and renderer.is_moving(drag_uids):
+		return renderer.lift_of(int(drag_uids[0]))
+	return drag_lift
 
 
 func end_drag() -> void:
@@ -173,7 +195,7 @@ func _draw_blockers() -> void:
 func _draw_drag() -> void:
 	## Where the dragged objects came from (dashed) and their outline at the drop.
 	var col := C_VALID if drag_result == null or drag_result.ok else C_INVALID
-	var off := Iso.grid_to_world(Vector2(drag_delta)) - Vector2(0.0, drag_lift)
+	var off := Iso.grid_to_world(Vector2(drag_delta)) - Vector2(0.0, _shown_lift())
 	var sil := drag_uids.size() <= SILHOUETTE_MAX
 	for u in drag_uids:
 		var o := layout.get_obj(u)
@@ -237,9 +259,14 @@ func shown_issue_uids() -> Array:
 
 
 func _draw() -> void:
+	if not _ghost_glows.is_empty():
+		_ghost_glows.clear()
+		_ghost_glow.queue_redraw()
 	if layout == null:
 		return
 	var lw := 1.0
+	if not water_zones.is_empty():
+		_draw_water_zones()
 	if show_annotations:
 		_draw_annotations()
 	_draw_diff()
@@ -307,6 +334,16 @@ func _draw() -> void:
 	_draw_cursor_chips()
 
 
+func _draw_water_zones() -> void:
+	## Soft blue fill, dashed outline and a label per zone.
+	for r: Rect2i in water_zones:
+		var poly := Iso.grid_rect_polygon(r)
+		draw_colored_polygon(poly, Color(C_WATER_ZONE.r, C_WATER_ZONE.g, C_WATER_ZONE.b, 0.22))
+		_dashed(poly, Color(C_WATER_ZONE.r, C_WATER_ZONE.g, C_WATER_ZONE.b, 0.95))
+		if zoom > 0.3:
+			_draw_tag(Iso.footprint_center(r.position, r.size), "Water decorations", Color(0.06, 0.24, 0.36, 0.9), true)
+
+
 func _draw_landmark_marks() -> void:
 	if landmark_selected.size != Vector2i.ZERO:
 		var poly := Iso.footprint_polygon(landmark_selected.position, landmark_selected.size)
@@ -346,6 +383,9 @@ func _draw_ghost(g: Dictionary) -> void:
 		draw_set_transform(center, 0.0, Vector2(-1.0 if draw_flip else 1.0, 1.0))
 		draw_texture_rect(spr.texture, Rect2(-spr.anchor * spr.scale, spr.texture.get_size() * spr.scale), false, tint)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		if spr.glow:
+			_ghost_glows.append([spr, center, draw_flip, tint])
+			_ghost_glow_layer().queue_redraw()
 	else:
 		var h := (0.4 + 0.25 * mini(sz.x, sz.y)) * Iso.Z_UNIT
 		var poly := Iso.footprint_polygon(g["origin"], sz)
@@ -355,6 +395,28 @@ func _draw_ghost(g: Dictionary) -> void:
 		var c: Color = db.category(it.category)["color"]
 		c.a = ghost_alpha
 		draw_colored_polygon(top, c)
+
+
+func _ghost_glow_layer() -> Node2D:
+	## Additive child layer: a ghost shows its art's glow like the placed object (ObjectRenderer).
+	if _ghost_glow == null:
+		_ghost_glow = Node2D.new()
+		_ghost_glow.name = "GhostGlow"
+		var m := CanvasItemMaterial.new()
+		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		_ghost_glow.material = m
+		_ghost_glow.visibility_layer = visibility_layer
+		_ghost_glow.draw.connect(_draw_ghost_glows)
+		add_child(_ghost_glow)
+	return _ghost_glow
+
+
+func _draw_ghost_glows() -> void:
+	for g: Array in _ghost_glows:
+		var spr: AssetLibrary.SpriteInfo = g[0]
+		_ghost_glow.draw_set_transform(g[1], 0.0, Vector2(-1.0 if g[2] else 1.0, 1.0))
+		_ghost_glow.draw_texture_rect(spr.glow, Rect2(-spr.anchor * spr.scale, spr.glow.get_size() * spr.scale), false, g[3])
+	_ghost_glow.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _dashed(poly: PackedVector2Array, col: Color) -> void:

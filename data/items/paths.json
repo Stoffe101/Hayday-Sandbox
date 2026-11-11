@@ -1895,33 +1895,6 @@
    "notes": "game_id=Ski tracks; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); added: Winter update 2024"
   },
   {
-   "id": "slat_fence",
-   "name": "Slat fence",
-   "category": "path",
-   "footprint": [
-    1,
-    1
-   ],
-   "footprint_status": "community",
-   "unlock_level": 1,
-   "cost": {
-    "coins": null,
-    "diamonds": null,
-    "other": "not sold in shop (source lists 999-diamond placeholder)"
-   },
-   "flippable": false,
-   "connect": {
-    "group": "slat_fence",
-    "style": "path"
-   },
-   "layer": "ground",
-   "data_status": "community",
-   "sources": [
-    "https://hayday.fandom.com/ru/wiki/%D0%94%D0%BE%D1%89%D0%B0%D1%82%D0%B0%D1%8F_%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D0%B0"
-   ],
-   "notes": "English name unavailable; using internal game id; game_id=Slat fence; level 1 = no level gate recorded (non-shop item); connectable piece (auto-joins neighbours); obtained via: Farm Pass; added: Summer update 2024"
-  },
-  {
    "id": "snake_tile",
    "name": "Snake tile",
    "category": "path",

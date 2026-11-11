@@ -52,6 +52,11 @@ Pipeline:
                  client states is never mirrored to fit an old catalogue size), and world/world.json, the landmark
                  sprites "lm_<id>" and catalog_overrides.json are copied into the pack; pack.json declares "world"
                  and "catalog_overrides".
+  Anims / glow   build_anims.py (default on; --no-anims / --no-glow): every image made from ONE client export (base,
+                 variant, connection piece, mirror, plain landmark state) whose static frame has add/screen/multiply
+                 parts or looping nested clips is re-rendered by extract_from_apk.Renderer.render_layers: the image
+                 (same registration point), an additive "glow" layer and an "anim" patch sheet (anims/, frames replace
+                 anim.rect of the image). Cached in <root>/raw/apk_anims/; report mapping/anim_report.json.
   Terrain        when build_terrain.py has written <root>/packs/hayday_original_terrain/terrain/ (or with --terrain):
                  that folder is copied into the pack as terrain/ and pack.json declares "terrain" (main-farm ground
                  tiles, edges, river, cliff, forests, water clips; docs/TERRAIN_PACKS.md). --no-terrain leaves it out.
@@ -64,6 +69,7 @@ Usage:
   python3 tools/private_assets/build_pack.py --report                # print the last coverage summary and exit
   python3 tools/private_assets/build_pack.py --build-world --install-dir ...   # world data + landmarks too
   python3 tools/private_assets/build_pack.py --terrain --install-dir ...       # + terrain (build_terrain.py)
+  python3 tools/private_assets/build_pack.py --no-anims --no-glow              # static images only (old look)
 
 Requires Python 3.10+, Pillow (with WebP) and numpy; rapidfuzz is used when installed (difflib otherwise).
 """
@@ -1614,6 +1620,28 @@ def ppw_for_density(p50: float | None) -> float:
 
 
 # ------------------------------------------------------------------------------------------------- builder
+def layer_fields(res: dict) -> dict:
+	"""Pack entry fields for a job result's glow layer / animation (build_anims.py)."""
+	out = {}
+	if res.get("glow"):
+		out["glow"] = res["glow"]
+	if res.get("anim"):
+		out["anim"] = res["anim"]
+	return out
+
+
+def layer_files(e: dict) -> set:
+	files = set()
+	if isinstance(e.get("glow"), dict) and e["glow"].get("file"):
+		files.add(e["glow"]["file"])
+	a = e.get("anim")
+	if isinstance(a, dict):
+		for f in ("sheet", "glow_sheet"):
+			if a.get(f):
+				files.add(a[f])
+	return files
+
+
 class Builder:
 	def __init__(self, args):
 		self.args = args
@@ -2221,6 +2249,12 @@ class Builder:
 			if layers:
 				j["layers"] = layers
 				j["anchor_rel"] = anchor_rel
+			a = r.get("apk") or {}
+			if r["source"] == "apk" and not layers and not strip and a.get("derived") != "gatherer_nests":
+				# one client export: build_anims.py can re-render it with its glow layer and ambient animation
+				j["sc_spec"] = {"build": a["build"], "sc": a["sc"], "export": a["export"],
+					"frame": int(a.get("frame_rendered") or 0), "nested_frame": a.get("nested_frame"),
+					"hidden": list(a.get("hud_removed") or []), "origin": a["origin"], "scale": float(a["scale"])}
 			jobs.append(j)
 			return j
 
@@ -2451,6 +2485,69 @@ class Builder:
 			return out
 		return {}
 
+	def _anim_glow_jobs(self, jobs: list[dict]) -> dict:
+		"""build_anims.py on every job that is one client export: glow layers (blend modes) and ambient animation
+		sheets; copies the cached images into the pack. Returns render_job-like results for the jobs it handled."""
+		anims, glow = getattr(self.args, "anims", True), not getattr(self.args, "no_glow", False)
+		self.anim_report = {"enabled": {"anims": anims, "glow": glow}}
+		if not (anims or glow):
+			return {}
+		sys.path.insert(0, str(Path(__file__).resolve().parent))
+		try:
+			import build_anims as BA  # noqa: PLC0415
+			BA._X().need("zstandard")
+		except Exception as ex:  # noqa: BLE001 - the plain pipeline still works
+			log(f"animations/glow skipped ({ex})")
+			return {}
+		spec_jobs = [j for j in jobs if j.get("sc_spec")]
+		run = BA.run(self.root, spec_jobs, self.workers, anims=anims, glow=glow)
+		pd = self.packdir
+		(pd / "anims").mkdir(parents=True, exist_ok=True)
+		by_id = {j["id"]: j for j in spec_jobs}
+		out = {}
+		vram = 0
+		for jid, rr in run["results"].items():
+			j, d, m = by_id[jid], Path(rr["dir"]), rr["meta"]
+			stem = Path(j["rel"]).stem
+			shutil.copyfile(d / "static.webp", j["out"])
+			res = {"id": jid, "file": j["rel"], "anchor": m["anchor"], "ppw": m["ppw"], "size": m["size"], "notes": []}
+			sums = [sha256_file(Path(j["out"]))]
+			if j.get("thumb"):
+				shutil.copyfile(d / "thumb.webp", j["thumb"])
+				res["thumb"] = j["thumb_rel"]
+				res["thumb_sha256"] = sha256_file(Path(j["thumb"]))
+			if m.get("glow"):
+				rel = f"items/{stem}.glow.webp"
+				shutil.copyfile(d / "glow.webp", pd / rel)
+				res["glow"] = {"file": rel, "blend": m["glow"].get("blend", "add")}
+				sums.append(sha256_file(pd / rel))
+			if m.get("anim"):
+				a = dict(m["anim"])
+				rel = f"anims/{stem}.webp"
+				shutil.copyfile(d / "sheet.webp", pd / rel)
+				sums.append(sha256_file(pd / rel))
+				a["sheet"] = rel
+				if a.pop("glow_sheet", False):
+					grel = f"anims/{stem}.glow.webp"
+					shutil.copyfile(d / "glow_sheet.webp", pd / grel)
+					sums.append(sha256_file(pd / grel))
+					a["glow_sheet"] = grel
+				w, h = a.pop("sheet_size", [0, 0])
+				vram += w * h * 4 * (2 if a.get("glow_sheet") else 1)
+				res["anim"] = {k: a[k] for k in ("sheet", "glow_sheet", "frames", "columns", "fps", "mode", "rect", "cell",
+					"cell_padding", "source_fps", "frame_step", "loop_s") if k in a}
+			res["sha256"] = hashlib.sha256("".join(sums).encode()).hexdigest()
+			out[jid] = res
+		self.anim_report.update({"client_images": len(spec_jobs), "glow_layers": sum(1 for r in out.values() if r.get("glow")),
+			"animations": sum(1 for r in out.values() if r.get("anim")), "errors": run["errors"],
+			"sheets_mb_rgba": round(vram / 1e6, 1)})
+		log(f"glow layers {self.anim_report['glow_layers']}, animations {self.anim_report['animations']} "
+			f"(sheets {self.anim_report['sheets_mb_rgba']} MB decoded RGBA), errors {len(run['errors'])}")
+		write_json(self.mapdir / "anim_report.json", {**self.anim_report, "generated": now_iso(),
+			"per_job": {k: {f: v["meta"].get(f) for f in ("anim", "glow", "frame0_diff", "render_s", "size")}
+				for k, v in run["results"].items()}})
+		return out
+
 	# --- output
 	def write_pack(self, jobs: list[dict]):
 		pd = self.packdir
@@ -2460,9 +2557,12 @@ class Builder:
 			(pd / sub).mkdir(parents=True, exist_ok=True)
 		# review images
 		rjobs, rentries = self._review_plan()
+		results = {}
+		layered = self._anim_glow_jobs(jobs)
+		results.update(layered)
+		jobs = [j for j in jobs if j["id"] not in layered]
 		log(f"rendering {len(jobs)} sprite images + {len(rjobs)} review images ({self.workers} workers)")
 		t0 = time.time()
-		results = {}
 		with mp.Pool(self.workers) as pool:
 			for i, res in enumerate(pool.imap_unordered(render_job, jobs + rjobs, chunksize=4), 1):
 				results[res["id"]] = res
@@ -2478,7 +2578,7 @@ class Builder:
 			res = results.get(key)
 			if not res or "error" in res:
 				continue
-			out = {"file": res["file"], "anchor": res["anchor"], "pixels_per_world_px": res["ppw"]}
+			out = {"file": res["file"], "anchor": res["anchor"], "pixels_per_world_px": res["ppw"], **layer_fields(res)}
 			if res.get("thumb"):
 				out["thumb"] = res["thumb"]
 			if res.get("notes"):
@@ -2489,7 +2589,7 @@ class Builder:
 			mres = results.get(f"{key}|m")
 			if mres and "error" not in mres:
 				out["mirror"] = {"file": mres["file"], "anchor": mres["anchor"], "pixels_per_world_px": mres["ppw"],
-					"source": ent.get("mirror_source")}
+					**layer_fields(mres), "source": ent.get("mirror_source")}
 			if ent.get("references"):
 				refs = {}
 				for vid, rd in ent["references"].items():
@@ -2505,19 +2605,21 @@ class Builder:
 					if not vr or "error" in vr:
 						continue
 					vs[vid] = {"file": vr["file"], "anchor": vr["anchor"], "pixels_per_world_px": vr["ppw"],
-						"thumb": vr.get("thumb"), "auto_anchor": vd["auto_anchor"], "source": vd["source"]}
+						**layer_fields(vr), "thumb": vr.get("thumb"), "auto_anchor": vd["auto_anchor"], "source": vd["source"]}
 				if vs:
 					out["variants"] = vs
 			if ent.get("connections"):
 				cs = {}
 				for mask, cd in ent["connections"].items():
 					if cd["piece"] == "@base":
-						cs[mask] = {"file": out["file"], "anchor": out["anchor"], "pixels_per_world_px": out["pixels_per_world_px"]}
+						cs[mask] = {"file": out["file"], "anchor": out["anchor"], "pixels_per_world_px": out["pixels_per_world_px"],
+							**layer_fields(res)}
 						continue
 					cres = results.get(f"{key}|c|{cd['piece']}")
 					if cres is None or "error" in cres:
 						continue
-					cs[mask] = {"file": cres["file"], "anchor": cres["anchor"], "pixels_per_world_px": cres["ppw"]}
+					cs[mask] = {"file": cres["file"], "anchor": cres["anchor"], "pixels_per_world_px": cres["ppw"],
+						**layer_fields(cres)}
 				if cs:
 					out["connections"] = dict(sorted(cs.items(), key=lambda x: int(x[0])))
 					tp = ent.get("thumb_piece")
@@ -2559,9 +2661,12 @@ class Builder:
 				live.add(sp["mirror"]["file"])
 			for rf in (sp.get("references") or {}).values():
 				live.add(rf["file"])
+			for e_ in [sp, sp.get("mirror") or {}] + list((sp.get("variants") or {}).values()) + \
+					list((sp.get("connections") or {}).values()):
+				live |= layer_files(e_)
 		live |= {ri["file"] for ri in review_items}
 		removed = 0
-		for sub in ("items", "thumbs", "review", "refs"):
+		for sub in ("items", "thumbs", "review", "refs", "anims"):
 			for p in (pd / sub).glob("*"):
 				if f"{sub}/{p.name}" not in live:
 					p.unlink()
@@ -2592,7 +2697,15 @@ class Builder:
 				"mirror": "the client's own mirrored drawing (decorations.csv ExportNameMirror); when the object is flipped, "
 					"draw this texture UNflipped at this anchor instead of mirroring the base image",
 				"shared_from": "a duplicate catalogue item of the same client object reuses that item's art",
-				"nested_frame": "rendered with nested clips at this frame (frame 0 is unrepresentative)"},
+				"nested_frame": "rendered with nested clips at this frame (frame 0 is unrepresentative)",
+				"glow": "draw ops under add/screen/multiply blending (Flash ids 8/4/3), composited exactly over an opaque "
+					"backdrop by build_anims.py: the sprite image carries what normal alpha can, glow.file the additive "
+					"remainder (same size and anchor), drawn with additive blending; thumbnails bake it in (alpha = "
+					"brightest channel)",
+				"anim": "the client's own nested-clip loops (and root idle loop) replayed at the client frame rate (halved "
+					"or thirded to fit the size cap); frames REPLACE anim.rect of the static image (static px), cells are "
+					"anim.cell px with anim.cell_padding px of edge extrusion; code-controlled clips (labels, < 3 frames, HUD) "
+					"are held; frame 0 = the static image"},
 			"provenance": {"generated": now_iso(), "tool": f"tools/private_assets/build_pack.py {TOOL_VERSION}",
 				"private_root": str(self.root), "client_build": self.game_version,
 				"sources": self.src_meta.get("sources", {}),
@@ -2656,6 +2769,7 @@ class Builder:
 			dst.parent.mkdir(parents=True, exist_ok=True)
 			shutil.copy2(wd / f, dst)
 			sums.append(f"{f}:{sha256_file(dst)}")
+		sums += self._landmark_layers(pd, lm, read_json(pd / "world" / "world.json", {}) or {})
 		sprites.update(lm)
 		if (wd / "catalog_overrides.json").exists() or self.additions:
 			cov = read_json(wd / "catalog_overrides.json", None) if (wd / "catalog_overrides.json").exists() else None
@@ -2678,6 +2792,101 @@ class Builder:
 		log(f"world: world.json + {len(lm)} landmark sprites ({self.world_stats['landmark_variants']} variants)"
 			+ (" + catalog_overrides.json" if "catalog_overrides" in decl else ""))
 		return decl, sums
+
+	def _landmark_layers(self, pd: Path, lm: dict, world: dict) -> list[str]:
+		"""Glow layers and ambient animations for the landmark sprites (build_anims.py on the same client exports
+		build_world.py rendered; skin composites are left as they are). Rewrites the affected world/sprites images
+		(same registration point) and their pack entries in `lm`. Returns file digests for the pack version."""
+		anims, glow = getattr(self.args, "anims", True), not getattr(self.args, "no_glow", False)
+		if not (anims or glow) or not lm:
+			return []
+		sys.path.insert(0, str(Path(__file__).resolve().parent))
+		try:
+			import build_anims as BA  # noqa: PLC0415
+			import build_world as BW  # noqa: PLC0415
+			X = BA._X()
+			X.need("zstandard")
+		except Exception as ex:  # noqa: BLE001
+			log(f"landmark animations skipped ({ex})")
+			return []
+		defs = {d["id"]: d for d in BW.LANDMARK_DEFS}
+		lms = {x["id"]: x for x in world.get("landmarks") or []}
+		build = (world.get("provenance") or {}).get("client_version") or self.game_version
+		sc_dir = self.root / "raw" / "apk_extracted" / str(build) / "assets" / "sc"
+		cache = ScCache(X, sc_dir)
+		jobs = []
+		for key, e in lm.items():
+			lid = e.get("landmark")
+			d, w = defs.get(lid), lms.get(lid)
+			if not d or not w or w.get("mirrored"):
+				continue
+			off = BW.landmark_anchor_offset(w, BW.PPW)
+			for vid, v in sorted((e.get("variants") or {}).items()):
+				state, _, theme = vid.partition("__")
+				st = next((x for x in d["states"] if x[0] == state), None)
+				if st is None or (d.get("skin") and state == d.get("default_state")):
+					continue   # skin presets are composites (build_world.SkinComposer)
+				export = st[2] + (f"_{theme}" if theme else "")
+				swf = cache.get(st[1], textures=False)
+				ids = {n: i for i, n in swf.exports} if swf else {}
+				if export not in ids:
+					continue
+				hidden = sorted({n for c in swf.clips.values() for n in c.names if n and BW.RUNTIME_SLOT_RE.match(n)})
+				if hidden and not any(o[0] == "draw" for o in X.Renderer(swf, hidden_names=hidden).display_list(
+						ids[export], _label_frame(swf, ids[export], BW.FRAME_LABELS))[0]):
+					hidden = []   # as build_world.Art.render_export: an export made only of runtime slots keeps them
+				jobs.append({"id": f"{key}|{vid}", "key": key, "vid": vid, "rel": v["file"], "out": str(pd / v["file"]),
+					"anchor": [off[0], off[1]], "ppw": float(v.get("pixels_per_world_px", BW.PPW)), "max_ppw": BW.PPW,
+					"mirror": False, "sc_spec": {"build": str(build), "sc": st[1], "export": export,
+						"frame": _label_frame(swf, ids[export], BW.FRAME_LABELS), "nested_frame": None, "hidden": hidden,
+						"origin": [0.0, 0.0], "scale": BW.PPW / BW.SC_UNITS_PER_WORLD_PX}})
+		if not jobs:
+			return []
+		run = BA.run(self.root, jobs, self.workers, anims=anims, glow=glow)
+		by_id = {j["id"]: j for j in jobs}
+		sums, n_anim, n_glow = [], 0, 0
+		(pd / "world" / "anims").mkdir(parents=True, exist_ok=True)
+		for jid, rr in sorted(run["results"].items()):
+			j, dd, m = by_id[jid], Path(rr["dir"]), rr["meta"]
+			stem = Path(j["rel"]).stem
+			shutil.copyfile(dd / "static.webp", j["out"])
+			fields = {"file": j["rel"], "anchor": m["anchor"], "pixels_per_world_px": m["ppw"]}
+			if m.get("glow"):
+				rel = f"world/sprites/{stem}.glow.webp"
+				shutil.copyfile(dd / "glow.webp", pd / rel)
+				fields["glow"] = {"file": rel, "blend": "add"}
+				sums.append(f"{rel}:{sha256_file(pd / rel)}")
+				n_glow += 1
+			if m.get("anim"):
+				a = dict(m["anim"])
+				rel = f"world/anims/{stem}.webp"
+				shutil.copyfile(dd / "sheet.webp", pd / rel)
+				sums.append(f"{rel}:{sha256_file(pd / rel)}")
+				a["sheet"] = rel
+				if a.pop("glow_sheet", False):
+					grel = f"world/anims/{stem}.glow.webp"
+					shutil.copyfile(dd / "glow_sheet.webp", pd / grel)
+					a["glow_sheet"] = grel
+				a.pop("sheet_size", None)
+				fields["anim"] = {k: a[k] for k in ("sheet", "glow_sheet", "frames", "columns", "fps", "mode", "rect", "cell",
+					"cell_padding", "source_fps", "frame_step", "loop_s") if k in a}
+				n_anim += 1
+			sums.append(f"{j['rel']}:{sha256_file(Path(j['out']))}")
+			e = lm[j["key"]]
+			for target in [e["variants"][j["vid"]]] + ([e] if e.get("file") == j["rel"] else []):
+				for f in ("glow", "anim"):
+					target.pop(f, None)
+				target.update(fields)
+		log(f"landmarks: {n_glow} glow layers, {n_anim} animations ({len(jobs)} client exports checked, "
+			f"{len(run['errors'])} errors)")
+		self.anim_report = {**(getattr(self, "anim_report", None) or {}), "landmark_animations": n_anim,
+			"landmark_glow_layers": n_glow, "landmark_errors": run["errors"]}
+		rep = read_json(self.mapdir / "anim_report.json", {}) or {}
+		rep.update({k: self.anim_report[k] for k in ("landmark_animations", "landmark_glow_layers", "landmark_errors")})
+		rep["landmark_per_job"] = {k: {f: v["meta"].get(f) for f in ("anim", "glow", "frame0_diff", "size")}
+			for k, v in run["results"].items()}
+		write_json(self.mapdir / "anim_report.json", rep)
+		return sums
 
 	def _merge_terrain(self, pd: Path) -> tuple[dict, list[str]]:
 		"""Copy build_terrain.py's output folder (terrain/) into the pack. Returns (pack.json declarations, digests)."""
@@ -2823,7 +3032,9 @@ class Builder:
 				c["fp_unverified"] += 1
 			s = self.sel.get(it["id"])
 			has = (it["art_key"] in sprites) if built else (s is not None)
-			if has:
+			if has and s is None and it["art_key"] in getattr(self, "shared", {}):
+				s = self.sel.get(self.shared[it["art_key"]]["with"])   # share_art duplicate: counted as its source
+			if has and s is not None:
 				c["matched"] += 1
 				src = inv[s["primary"]]["source"]
 				if src == "apk":
@@ -3343,6 +3554,10 @@ def main(argv=None) -> int:
 	ap.add_argument("--app-check", action="store_true",
 		help="after installing, load the pack with the app's AssetLibrary in headless Godot (needs --install-dir)")
 	ap.add_argument("--workers", type=int, default=min(4, os.cpu_count() or 1))
+	ap.add_argument("--anims", action=argparse.BooleanOptionalAction, default=True,
+		help="ambient animation sheets from the client's own clips (build_anims.py; cached in <root>/raw/apk_anims)")
+	ap.add_argument("--no-glow", action="store_true",
+		help="draw add/screen/multiply parts as normal alpha (old look) instead of a separate additive glow layer")
 	ap.add_argument("--world-dir", type=Path, default=None,
 		help=f"build_world.py output to include (default <root>/packs/{WORLD_DIR_NAME})")
 	ap.add_argument("--build-world", action="store_true", help="run build_world.py (world, overrides, landmark sprites) first")

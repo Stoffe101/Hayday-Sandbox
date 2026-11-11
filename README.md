@@ -85,9 +85,16 @@ step-by-step guide.
 * **Export** PNG images of the whole farm, unlocked land, objects or the view, up to poster size (tiled
   rendering), with optional transparency, grid and labels.
 * **Your own artwork**: import PNG/WebP/JPG folders or sprite sheets into a *private* pack, then tune anchors and
-  scale in the Asset Manager. A pack can also carry world data (landmark positions, terrain, initial objects) and
-  catalogue corrections. That code path is covered by tests with synthetic packs only; see
-  [PRIVATE_ASSETS.md](docs/PRIVATE_ASSETS.md).
+  scale in the Asset Manager. A pack can also carry world data (landmark positions, terrain, initial objects,
+  water-decoration zones), catalogue corrections and additions. See [PRIVATE_ASSETS.md](docs/PRIVATE_ASSETS.md).
+* **Private game-file pack (for your own use only, never shared):** tools in `tools/private_assets/` turn game files
+  you already have into a pack on your PC: the farm's real ground, edges, river and seasons
+  ([TERRAIN_PACKS.md](docs/TERRAIN_PACKS.md)), object art with the game's own ambient animations and glow layers,
+  the world as the client's level data has it (checked in Plan → Accuracy), client-only items such as the
+  pearl-priced water decorations (which may stand only in the river's decoration zones) and client prices. Removing
+  the pack restores the public catalogue, world and procedural ground. This was verified with the maintainer's own
+  pack (privately); what still needs an in-game screenshot is listed in
+  [KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md#pending-a-real-screenshot-and-how-to-settle-each-one).
 * **Interface**: light and dark themes, UI scale 100–300 %, resizable and collapsible side panels with remembered
   widths, an inspector that hides itself when nothing needs it, and an ambient-animation setting (Off / Reduced /
   Full; the default follows the OS reduce-motion preference).

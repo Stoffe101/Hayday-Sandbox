@@ -17,6 +17,21 @@ retired and its layouts migrate), fixed landmarks as world data, layout schema 2
 packs with Asset Manager, pack world data and catalogue corrections, leak guard and git hooks, incremental depth
 order, farm level with Creative as the full sandbox.
 
+**W5: authentic visual fidelity + real-world verification (7ce14cc and the W5b commit; 2026-11-10):**
+* Private pipeline from the user's own game files (never in git): pack terrain (ground per season, edge meshes,
+  foreground, blend modes, water clips, camera limits from the pieces), object animations and glow layers
+  (`build_anims.py`), 72 client-only catalogue additions (incl. the pearl water decorations), client prices,
+  pack QA and calibration sheets.
+* World check against the client's level data (ground, plots, landmarks, water-decoration zones; Plan → Accuracy
+  evidence ladder) and water decorations limited to the river's zones.
+* Faster planning at 10k objects: incremental Realistic report, cached readiness card, Build tab model and guide
+  steps (equivalence-tested against fresh computations).
+* Editor feel: lift / drop motion, fence junctions, theme and mirror art in ghosts, catalogue thumbnails below the
+  badges.
+* Verification with the real pack: self-test with the pack installed, `--selftest=packcycle` (uninstall reverts
+  everything), private captures at 4 resolutions × 4 UI scales, installed-art exports; Windows and Linux exports
+  built and content-checked on the cloud box.
+
 **Farm planning wave (817748c, b256fbc, a511d0c; 2026-11-10):**
 * Researched price data (`data/prices/hayday_prices.json`, 1,962 records with sources and confidence;
   `docs/research/PRICING_RESEARCH.md`), price layers with user overrides, inventory with CSV/JSON import/export.
@@ -54,12 +69,11 @@ order, farm level with Creative as the full sandbox.
   help built from the key bindings.
 * Eight verification fixes, each with a regression test (see the commit message of 8c93360).
 
-## Not done in these waves
+## Not done yet
 
-Left out on purpose, with no commitment either way: client-file (XAPK) extraction, Fan Kit / wiki downloads,
-private terrain mesh replay, animation-sheet extraction from game files, map authoring against game data,
-screenshots with private art, and verification with the installed private pack. The existing tools in
-`tools/private_assets/` were not changed.
+Snow particles and clouds / light rays (their placement is not in the client data), per-mesh mixed blend modes,
+map authoring for the upper and across-the-road plots, and the questions that need an in-game screenshot
+([KNOWN_ISSUES.md](KNOWN_ISSUES.md#pending-a-real-screenshot-and-how-to-settle-each-one)).
 
 ## Next (highest value)
 1. **Settle the price-step basis in game** (buy, delete and re-check a cheap coin decoration such as a fence;
@@ -70,13 +84,14 @@ screenshots with private art, and verification with the installed private pack. 
    the guide's directions more trustworthy.
 3. **Verify the Windows build** on real hardware (checklist in TESTING.md, now with planning steps); fix any
    DPI/IME/dialog issues.
-4. **One price source for Realistic Mode**: let the Realistic report use `PriceBook` (or point to the budget), so
-   the two never disagree (KNOWN_ISSUES.md).
-5. **Remaining slow planning paths at 10k objects**: Build tab model (~105 ms), guide JSON export (~490 ms),
-   `Baseline.diff` while comparing (~70 ms per edit), and the Realistic analysis per edit.
-6. **Verify private-pack paths** (installed-art exports, pack terrain) with a real pack, on the user's machine only.
+4. **Settle the pending-screenshot items** (truck anchor, farmhouse art, tile seam, clouds, camera limits, water-zone
+   rule; KNOWN_ISSUES.md) with the user's own screenshots and the placement check.
+5. **Remaining slow planning paths at 10k objects**: the guide (~450 ms after an edit while its tab is open), guide
+   JSON export (~230 ms), `Baseline.diff` while comparing (~50 ms per edit, not incremental).
+6. **Run the Windows smoke test** of the exported `.exe` on the PC (`tools\build\build.ps1`) and watch the Linux
+   export self-test for the one-off crash seen in W5b.
 7. Items from KNOWN_ISSUES.md: moving / reshaping areas, stamp rotation while placing, the library's map choice,
-   the help line for J.
+   framing full-land exports by the pack terrain's extent.
 8. **More dedicated placeholder art:** recipes for the most common "monument" fallbacks, production-building
    silhouettes beyond plaques.
 

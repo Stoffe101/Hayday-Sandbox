@@ -69,6 +69,10 @@ var footprint_source: Dictionary = {}
 ## database and map). add_objects() refuses them, so no command or import
 ## can put a landmark copy into `objects`. Not saved.
 var fixed_items: Dictionary = {}
+## Item ids (and aliases) that may stand only in the map's water-decoration
+## zones (PlacementRules.zone_item_ids; EditorSession sets it from the catalogue).
+## Not saved: derived from the catalogue like fixed_items.
+var zone_items: Dictionary = {}
 ## Schema version of the file this layout was read from (-1 = created in this
 ## session). LayoutIO.save_file backs up an older-schema file before overwriting it.
 var loaded_schema: int = -1

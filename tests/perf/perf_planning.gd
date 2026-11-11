@@ -326,6 +326,56 @@ func _run(n: int, db: ItemDatabase, pb: PriceBook, map: FarmMap, pool: Array[Ite
 		_note("guide: GuideExport.to_" + k, n, "%d KB" % ceili(int(out_len[k]) / 1024.0))
 	print("  engine: %d full recomputes, %d item re-allocations" % [eng.full_recomputes, eng.item_recomputes])
 	eng.dispose()
+	_run_session(n, layout, db, pb, map, pool, rng)
+
+
+func _run_session(n: int, layout: FarmLayout, db: ItemDatabase, pb: PriceBook, map: FarmMap, pool: Array[ItemDef],
+		rng: RandomNumberGenerator) -> void:
+	## What the app recomputes after one edit, through the real EditorSession
+	## (command stack, ConflictIndex, the session's BudgetEngine) and PlanContext
+	## (App.plan_ctx's models): the Realistic report, the budget chip's data
+	## (scope totals + design customization), "Compare with my farm"
+	## (Baseline.diff), the readiness card and the Build tab checklist.
+	## "after an edit" = one undoable one-tile move through the session first
+	## (outside the timed part).
+	layout.mode = FarmLayout.MODE_REALISTIC
+	var s := EditorSession.new(layout, db, map, pb)
+	var ctx := PlanContext.new()
+	ctx.bind(s, s.budget, pb, db, map)
+	var keys: Array = layout.objects.keys()
+	var edit := func() -> void:
+		var u: int = keys[rng.randi() % keys.size()]
+		if layout.objects.has(u):
+			s.execute(EditCommands.MoveObjects.new([u], Vector2i(1, 0) if rng.randf() < 0.5 else Vector2i(-1, 0)))
+	_t("realistic: report after an edit (session.analysis)", n, reps, func() -> void: s.analysis(), edit)
+	_t("realistic: edit + report (move command, analysis)", n, reps, func() -> void:
+		edit.call()
+		s.analysis())
+	_t("realistic: report, unchanged (cached)", n, reps, func() -> void: s.analysis())
+	_t("realistic: analyze from scratch (index conflicts + budget)", n, 10, func() -> void:
+		RealisticAnalyzer.analyze(layout, db, map, s.conflict_index.conflicts(), s.budget))
+	var chip := func() -> Variant:
+		var sc := ctx.scope()
+		var t := ctx.scope_totals()
+		var sk := ctx.customization()
+		return [sc, t, sk.hash()]
+	_t("chip: budget chip data after an edit (scope, totals, look)", n, reps, chip, edit)
+	_t("chip: budget chip data, unchanged", n, reps, chip)
+	_t("compare: Baseline.diff (from scratch)", n, 10, func() -> void: Baseline.diff(layout, layout.planning["baseline"], db))
+	ctx.set_compare(true)
+	_t("compare: compare_diff after an edit", n, reps, func() -> void: ctx.compare_diff(), edit)
+	_t("readiness: card data after an edit", n, reps, func() -> void: ctx.readiness(), edit)
+	_t("checklist: Build tab model after an edit (batched)", n, 10, func() -> void:
+		_batch(s.budget, func() -> Variant: return PlanUiModels.checklist(s.budget, layout, db, layout.planning)), edit)
+	_t("guide: ctx.guide() after an edit", n, 5, func() -> void: ctx.guide(), edit)
+	var all_after := func() -> void:
+		edit.call()
+		s.analysis()
+		chip.call()
+		ctx.compare_diff()
+		ctx.readiness()
+	_t("edit: Realistic edit + report + chip + compare + readiness", n, reps, all_after)
+	s.dispose()
 
 
 func _cold(eng: BudgetEngine) -> void:

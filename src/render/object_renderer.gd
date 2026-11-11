@@ -23,7 +23,11 @@ extends Node2D
 ##
 ## Ambient animation (pack field "anim"): one global clock (advance_anim), only
 ## on-screen sprites change frame, and a sprite's frames live on its own canvas
-## item or a child of it, so playback never touches the draw order.
+## item or a child of it, so playback never touches the draw order. A frame that
+## replaces a rectangle of the static image ("rect") is drawn as the static image
+## around that rectangle plus the frame inside it (nothing is drawn twice).
+## Glow layers (pack field "glow", and an animation's glow frames) are drawn on a
+## child canvas item with additive blending, right over their sprite.
 
 signal order_rebuilt(ms: float)
 
@@ -75,6 +79,7 @@ var _anim_clock := 0.0             ## seconds; the single clock every animation 
 var _anim: Dictionary = {}         ## id -> Vis of sprites that have an animation
 var _theme := ""                   ## world theme the object sprites were last drawn with
 var _anim_stats := {"ticked": 0, "frame_updates": 0}
+var _add_mat: CanvasItemMaterial   ## shared additive material of the glow layers
 var _stats := {"last_flush": "none", "last_flush_ms": 0.0, "full": 0, "incremental": 0,
 	"fallback": 0, "draw_index_updates": 0, "last_draw_index_updates": 0}
 
@@ -92,6 +97,7 @@ class Vis:
 	var sci: RID
 	var lci: RID                   ## lift shadow
 	var aci: RID                   ## overlay animation frames (child of ci)
+	var gci: RID                   ## additive glow layer (child of ci)
 	var anim_frame := -2           ## frame on screen (-1 = static, -2 = nothing drawn yet)
 	var sprite: AssetLibrary.SpriteInfo
 	var bounds: Rect2              ## sprite bounds at the real position
@@ -155,6 +161,7 @@ func rebuild_all() -> void:
 	_group_cache.clear()
 	_preview.clear()
 	_lifted.clear()
+	_motion.clear()
 	_pending.clear()
 	if layout != null:
 		for o: PlacedObject in layout.objects.values():
@@ -180,6 +187,9 @@ func _free_vis(v: Vis) -> void:
 	if v.aci.is_valid():
 		RenderingServer.free_rid(v.aci)
 		v.aci = RID()
+	if v.gci.is_valid():
+		RenderingServer.free_rid(v.gci)
+		v.gci = RID()
 	if v.ci.is_valid():
 		RenderingServer.free_rid(v.ci)
 		v.ci = RID()
@@ -223,14 +233,13 @@ func _draw_vis(v: Vis, o: PlacedObject, it: ItemDef) -> void:
 		v.sprite = assets.get_sprite(art_key, assets.themed_variant(art_key, o.variant, _theme), _connection_mask(o, it))
 	_apply_mirror(v)
 	if v.sprite:
-		var sz := v.sprite.texture.get_size() * v.sprite.scale
-		var r := Rect2(-v.sprite.anchor * v.sprite.scale, sz)
-		RenderingServer.canvas_item_add_texture_rect(v.ci, r, v.sprite.texture.get_rid())
+		_paint(v, -1)
 		v.bounds = v.sprite.world_rect(v.center, v.flipped)
 		v.fallback_poly = PackedVector2Array()
 		_setup_anim(v)
 	else:
 		_clear_anim(v)
+		_paint_glow(v, -1)
 		var col: Color = db.category(it.category)["color"] if it else Color(0.6, 0.6, 0.6)
 		var label := "?" if (it == null or o.missing) else ""
 		_draw_block(v, o.origin, o.size, o.flipped, col, it != null and it.layer == "ground", label)
@@ -409,6 +418,7 @@ func _on_removed(uids: Array) -> void:
 			_vtints.erase(u)
 			_preview.erase(u)
 			_lifted.erase(u)
+			_motion.erase(u)
 			_pending[u] = true
 	_refresh_neighbours(rects, [])
 
@@ -575,6 +585,8 @@ func refresh_theme() -> void:
 
 func set_ambient_mode(mode: int) -> void:
 	_ambient = mode
+	if mode == Ambient.OFF:
+		finish_motion()
 	for v: Vis in _anim.values():
 		_show_anim_frame(v, _anim_frame_for(v))
 
@@ -603,6 +615,19 @@ func advance_anim(dt: float, view: Rect2) -> void:
 func anim_stats() -> Dictionary:
 	## {"animated": sprites with an animation, "ticked" / "frame_updates": of the last advance}.
 	return {"animated": _anim.size(), "ticked": _anim_stats["ticked"], "frame_updates": _anim_stats["frame_updates"]}
+
+
+func anim_memory() -> Dictionary:
+	## {"sheets": animation sheets loaded (glow sheets included), "mb": their decoded size with mipmaps}.
+	var seen := {}
+	var px := 0.0
+	for v: Vis in _anim.values():
+		var a := v.sprite.anim
+		for tex: Texture2D in a.loaded_sheets():
+			if not seen.has(tex.get_rid()):
+				seen[tex.get_rid()] = true
+				px += tex.get_width() * tex.get_height()
+	return {"sheets": seen.size(), "mb": px * 4.0 * 4.0 / 3.0 / 1e6}
 
 
 func anim_frame_of(uid: int) -> int:
@@ -639,6 +664,11 @@ func _setup_anim(v: Vis) -> void:
 		RenderingServer.free_rid(v.aci)
 		v.aci = RID()
 	v.bounds = v.bounds.merge(a.world_rect(v.center, v.flipped, v.sprite.scale))
+	if a.has_rect():
+		# The static image is frame 0 and is on screen; advance_anim switches to the frames once the sprite is in
+		# view, so sheets of objects never seen are never loaded.
+		v.anim_frame = -1
+		return
 	_show_anim_frame(v, _anim_frame_for(v))
 
 
@@ -657,6 +687,10 @@ func _show_anim_frame(v: Vis, f: int) -> void:
 	v.anim_frame = f
 	var a := v.sprite.anim
 	var sc := v.sprite.scale
+	if a.has_rect():
+		if f >= 0 or not had_static:
+			_paint(v, f)
+		return
 	var r := Rect2(-a.anchor * sc, a.frame_size * sc)
 	if a.overlay:
 		if not v.aci.is_valid():
@@ -670,6 +704,59 @@ func _show_anim_frame(v: Vis, f: int) -> void:
 	elif not had_static:
 		RenderingServer.canvas_item_clear(v.ci)
 		RenderingServer.canvas_item_add_texture_rect(v.ci, Rect2(-v.sprite.anchor * sc, v.sprite.texture.get_size() * sc), v.sprite.texture.get_rid())
+
+
+# --- sprite + glow painting ---------------------------------------------------------------
+
+func _paint(v: Vis, f: int) -> void:
+	## The sprite on v.ci: the static image, or (f >= 0, animation with a "rect")
+	## the static image around the rectangle plus frame f inside it; then the glow.
+	RenderingServer.canvas_item_clear(v.ci)
+	var spr := v.sprite
+	var a := spr.anim
+	if f >= 0 and a != null and a.has_rect() and a.sheet != null:
+		_add_patched(v.ci, spr.texture, a.sheet, spr.anchor, spr.scale, a, f)
+	else:
+		RenderingServer.canvas_item_add_texture_rect(v.ci, Rect2(-spr.anchor * spr.scale, spr.texture.get_size() * spr.scale), spr.texture.get_rid())
+	_paint_glow(v, f)
+
+
+func _paint_glow(v: Vis, f: int) -> void:
+	## Additive layer over the sprite (child of v.ci, so it shares transform,
+	## modulate, visibility and draw order); freed when the sprite has none.
+	var spr := v.sprite
+	var a: AssetLibrary.AnimInfo = spr.anim if spr else null
+	var frame_glow := f >= 0 and a != null and a.has_rect() and a.has_glow
+	if spr == null or (spr.glow == null and not frame_glow):
+		if v.gci.is_valid():
+			RenderingServer.free_rid(v.gci)
+			v.gci = RID()
+		return
+	if not v.gci.is_valid():
+		if _add_mat == null:
+			_add_mat = CanvasItemMaterial.new()
+			_add_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		v.gci = RenderingServer.canvas_item_create()
+		RenderingServer.canvas_item_set_parent(v.gci, v.ci)
+		RenderingServer.canvas_item_set_material(v.gci, _add_mat.get_rid())
+	RenderingServer.canvas_item_clear(v.gci)
+	if frame_glow:
+		_add_patched(v.gci, spr.glow, a.glow_sheet, spr.anchor, spr.scale, a, f)
+	elif spr.glow:
+		RenderingServer.canvas_item_add_texture_rect(v.gci, Rect2(-spr.anchor * spr.scale, spr.glow.get_size() * spr.scale), spr.glow.get_rid())
+
+
+static func _add_patched(ci: RID, tex: Texture2D, sheet: Texture2D, anchor: Vector2, sc: float, a: AssetLibrary.AnimInfo, f: int) -> void:
+	## `tex` (may be null) except anim rect a.rect, plus cell f of `sheet` stretched over that rect.
+	var r := a.rect
+	if tex:
+		var sz := Vector2(tex.get_size())
+		for part: Rect2 in [Rect2(0, 0, sz.x, r.position.y), Rect2(0, r.end.y, sz.x, sz.y - r.end.y),
+				Rect2(0, r.position.y, r.position.x, r.size.y), Rect2(r.end.x, r.position.y, sz.x - r.end.x, r.size.y)]:
+			if part.size.x > 0.0 and part.size.y > 0.0:
+				RenderingServer.canvas_item_add_texture_rect_region(ci, Rect2((part.position - anchor) * sc, part.size * sc), tex.get_rid(), part)
+	if sheet:
+		RenderingServer.canvas_item_add_texture_rect_region(ci, Rect2((r.position - anchor) * sc, r.size * sc), sheet.get_rid(), a.frame_rect(f))
 
 
 # --- drag preview / lift ------------------------------------------------------------
@@ -724,9 +811,11 @@ func set_lift(uids: Array, px: float) -> void:
 			want[u] = true
 	for u in _lifted.keys():
 		if not want.has(u):
+			_motion.erase(u)
 			_set_lift(_vis.get(u), 0.0)
 			_lifted.erase(u)
 	for u in want:
+		_motion.erase(u)
 		_set_lift(_vis[u], maxf(0.0, px))
 		if px > 0.0:
 			_lifted[u] = true
@@ -740,6 +829,110 @@ func _set_lift(v: Vis, px: float) -> void:
 	v.lift = px
 	_apply_transform(v)
 	_pending[v.uid] = true
+
+
+# --- lift / drop motion (feel only) ----------------------------------------------------
+## A drag eases its objects up (LIFT_IN_S); a drop, a cancelled drag or a fresh
+## placement lands them with gravity (DROP_S) and, at Ambient animation Full, a
+## SETTLE_PX rebound. Purely visual: the layout, the commands and the picking
+## positions never see it. Ambient animation Off (and big batches) are instant,
+## and finish_motion() puts everything at rest (exports call it first).
+const LIFT_IN_S := 0.08
+const DROP_S := 0.11
+const SETTLE_S := 0.1
+const SETTLE_PX := 1.5
+const MOTION_MAX := 120
+var _motion: Dictionary = {}       ## uid -> [elapsed s, from px, to px, rebound px]
+
+
+func lift_in_seconds() -> float:
+	## How long lift_to() takes to reach its height (0 = instant).
+	return 0.0 if _ambient == Ambient.OFF else LIFT_IN_S
+
+
+func lift_to(uids: Array, px: float) -> void:
+	## set_lift() with an eased rise (instant at Ambient Off or above MOTION_MAX objects).
+	if _ambient == Ambient.OFF or uids.size() > MOTION_MAX:
+		for u in uids:
+			_motion.erase(u)
+		set_lift(uids, px)
+		return
+	for u in uids:
+		var v: Vis = _vis.get(u)
+		if v == null:
+			continue
+		_lifted[u] = true
+		_motion[u] = [0.0, v.lift, maxf(0.0, px), 0.0]
+
+
+func drop(uids: Array, from_px: float = -1.0) -> void:
+	## Lands these objects from their current lift (or from `from_px`) onto the
+	## ground; they stop counting as lifted at once.
+	var instant := _ambient == Ambient.OFF or uids.size() > MOTION_MAX
+	for u in uids:
+		var v: Vis = _vis.get(u)
+		if v == null:
+			continue
+		_lifted.erase(u)
+		var h := v.lift if from_px < 0.0 else from_px
+		if instant or h <= 0.0:
+			_motion.erase(u)
+			_set_lift(v, 0.0)
+			continue
+		_motion[u] = [0.0, h, 0.0, SETTLE_PX if _ambient == Ambient.FULL else 0.0]
+		_set_lift(v, h)
+
+
+func finish_motion() -> int:
+	## Ends every lift / drop at its target height; returns how many were running.
+	var n := _motion.size()
+	for u in _motion.keys():
+		_set_lift(_vis.get(u), float(_motion[u][2]))
+	_motion.clear()
+	return n
+
+
+func is_moving(uids: Array = []) -> bool:
+	## A lift / drop is running (for any of `uids`; [] = any object).
+	if uids.is_empty():
+		return not _motion.is_empty()
+	for u in uids:
+		if _motion.has(u):
+			return true
+	return false
+
+
+func lift_of(uid: int) -> float:
+	## Height the object is drawn above its footprint right now (world px).
+	var v: Vis = _vis.get(uid)
+	return v.lift if v else 0.0
+
+
+static func motion_height(t: float, from: float, to: float, rebound: float) -> Array:
+	## [height, finished] of a lift / drop `t` seconds after it started.
+	var dur := LIFT_IN_S if to > from else DROP_S
+	if t < dur:
+		var k := t / dur
+		if to > from:
+			return [lerpf(from, to, 1.0 - pow(1.0 - k, 3.0)), false]   # ease out: a quick pick-up
+		return [lerpf(from, to, k * k), false]                         # ease in: falls
+	if rebound > 0.0 and t < dur + SETTLE_S:
+		return [to + rebound * sin(PI * (t - dur) / SETTLE_S), false]
+	return [to, true]
+
+
+func _step_motion(dt: float) -> void:
+	for u in _motion.keys():
+		var v: Vis = _vis.get(u)
+		var m: Array = _motion[u]
+		if v == null:
+			_motion.erase(u)
+			continue
+		m[0] = float(m[0]) + dt
+		var r := motion_height(m[0], m[1], m[2], m[3])
+		_set_lift(v, r[0])
+		if r[1]:
+			_motion.erase(u)
 
 
 # --- world entries ---------------------------------------------------------------------
@@ -895,13 +1088,13 @@ func _draw_world(v: Vis) -> void:
 	v.sprite = _world_sprite(e)
 	_apply_mirror(v)
 	if v.sprite:
-		var sz := v.sprite.texture.get_size() * v.sprite.scale
-		RenderingServer.canvas_item_add_texture_rect(v.ci, Rect2(-v.sprite.anchor * v.sprite.scale, sz), v.sprite.texture.get_rid())
+		_paint(v, -1)
 		v.bounds = v.sprite.world_rect(v.center, v.flipped)
 		v.fallback_poly = PackedVector2Array()
 		_setup_anim(v)
 	else:
 		_clear_anim(v)
+		_paint_glow(v, -1)
 		_draw_block(v, v.rect.position, v.rect.size, v.flipped, WORLD_MARKER_COLOR, false, "")
 	_draw_shadow(v)
 	_apply_transform(v)
@@ -916,6 +1109,8 @@ func _draw_world(v: Vis) -> void:
 # --- draw order ------------------------------------------------------------------------
 
 func _process(dt: float) -> void:
+	if not _motion.is_empty():
+		_step_motion(dt)
 	if _order_dirty or not _pending.is_empty():
 		ensure_sorted()
 	if not _anim.is_empty():

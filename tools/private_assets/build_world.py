@@ -1341,6 +1341,7 @@ class WorldBuilder:
 			scenery.append({"id": "east_forest", "kind": "forest", "rect": [W, by0, bx1 - W + 1, by1 - by0 + 1]})
 		if by1 >= H:
 			scenery.append({"id": "south_forest", "kind": "forest", "rect": [0, H, W, by1 - H + 1]})
+		water_zones = self.water_deco_zones(wdz)
 		world = {
 			"format": MAP_FORMAT, "schema_version": MAP_SCHEMA, "id": MAP_ID, "name": "Hay Day farm", "frame": "game",
 			"PRIVATE": PRIVATE_NOTE,
@@ -1353,9 +1354,9 @@ class WorldBuilder:
 			"regions": regions, "sections": sections,
 			"ground": {"encoding": "rle-rows", "rows": ground_rows},
 			"tile_types": self.tile_types(),
-			"landmarks": lms, "scenery": scenery, "initial_objects": inits,
+			"landmarks": lms, "scenery": scenery, "water_deco_zones": water_zones, "initial_objects": inits,
 			"labels": [], "unmapped_sections": [],
-			"sources": [f"client {c.version}: assets/data/level_0.csv (TileMap, SpecialObjects, Objects*), tiles.csv, "
+			"sources": [f"client {c.version}: assets/data/level_0.csv (TileMap, SpecialObjects, Objects*, WaterDecoZones), tiles.csv, "
 				"expansions.csv, features.csv, the special objects' own tables, localization/texts.csv",
 				"data/research/expansions_research.json (public wiki plot numbers, costs, adjacency, level rules)",
 				"mapping/mapping.json (client object -> catalogue item, build_pack.py)"],
@@ -1364,14 +1365,17 @@ class WorldBuilder:
 				"Plot ids are canonical (main_NN = wiki main-section plot NN); aliases exp_<game id> resolve too.",
 				"Plots of the client-locked strip carry client_locked=true with the client's locked text; whether the "
 				"server has unlocked them since cannot be read from the client.",
-				"Landmark positions are the client's SpecialObjects rows; they are fixed for every player."],
+				"Landmark positions are the client's SpecialObjects rows; they are fixed for every player.",
+				"water_deco_zones are the client's WaterDecoZones rows (tile rects, usually in the river west of the "
+				"grid): the only tiles where WaterDeco decorations may stand. That an item's whole footprint must lie "
+				"inside a zone is the app's reading (plausible), not stated by the data."],
 		}
 		self.report["counts"] = {
 			"size": [W, H], "plots": len(plots), "plots_by_section": {s["id"]: len(s["plots"]) for s in sections},
 			"plots_client_locked": sum(1 for p in plots if p["client_locked"]),
 			"plots_wiki_numbered": sum(1 for p in plots if p["wiki"]),
 			"plots_numbering_confidence": dict(collections.Counter(p["wiki"]["confidence"] for p in plots if p["wiki"])),
-			"landmarks": len(lms), "initial_objects_mapped": len(inits),
+			"landmarks": len(lms), "water_deco_zones": len(water_zones), "initial_objects_mapped": len(inits),
 			"initial_objects_unmapped": sum(unmapped_objs.values()), "initial_objects_offgrid_skipped": offgrid,
 			"exclusive_decorations_mapped": sum(len(p["exclusive_decorations"]) for p in plots),
 			"exclusive_decorations_unmapped": sum(unmapped_decos.values()),
@@ -1379,6 +1383,25 @@ class WorldBuilder:
 		self.report["unmapped_initial_objects"] = dict(unmapped_objs.most_common())
 		self.report["unmapped_exclusive_decorations"] = dict(unmapped_decos.most_common())
 		return world
+
+	def water_deco_zones(self, rows: list) -> list:
+		"""The level's WaterDecoZones rows as {id, name, rect: [x, y, w, h], enabled}; malformed rows are skipped
+		with a warning. Ids are slugs of the client names (unique)."""
+		out, ids = [], set()
+		for i, z in enumerate(rows):
+			x, y = _int(z.get("X")), _int(z.get("Y"))
+			w, h = _int(z.get("Width"), 0), _int(z.get("Height"), 0)
+			name = str(z.get("Name") or "").strip()
+			if x is None or y is None or w <= 0 or h <= 0:
+				self.warn(f"water deco zone row {i + 1} ({name or '?'}) has no usable rect: skipped")
+				continue
+			zid = slug(name) or f"zone_{i + 1}"
+			while zid in ids:
+				zid += "_2"
+			ids.add(zid)
+			out.append({"id": zid, "name": name or zid, "rect": [x, y, w, h],
+				"enabled": str(z.get("Enabled", "true")).strip().lower() not in ("false", "0", "no")})
+		return out
 
 	def _section_label(self, sid: str) -> str:
 		names = {"upper_2021": "Upper", "regular_2015": "Across the road 2015", "regular_2018": "Across the road 2018",
@@ -1569,6 +1592,16 @@ def validate_world(w: dict) -> list[str]:
 		if o["group"] != "start" and o["group"] not in aliases and o["group"] not in plot_ids:
 			e.append(f"initial object {o['item']}: group {o['group']} is not a plot")
 			break
+	zids = set()
+	for z in w.get("water_deco_zones", []) or []:
+		if not isinstance(z, dict) or not _rect_ok(z.get("rect")) or z["rect"][2] <= 0 or z["rect"][3] <= 0:
+			e.append(f"water deco zone invalid: {z!r:.60}")
+			continue
+		if not isinstance(z.get("id"), str) or not z["id"] or z["id"] in zids:
+			e.append(f"water deco zone id missing or duplicate: {z.get('id')!r}")
+		zids.add(z.get("id"))
+		if not isinstance(z.get("enabled", True), bool):
+			e.append(f"water deco zone {z.get('id')}: enabled must be a boolean")
 	for s in w.get("scenery", []) or []:
 		if not isinstance(s, dict) or s.get("kind") not in SCENERY_KINDS or not _rect_ok(s.get("rect")):
 			e.append(f"scenery entry invalid: {s!r:.60}")
@@ -1721,6 +1754,9 @@ def validate_overrides(doc: dict, catalog: dict | None = None) -> list[str]:
 # Landmark art (the extractor's renderer + the skin composer)
 # =====================================================================================================================
 
+RUNTIME_SLOT_RE = re.compile(r"^(Glow|Collect)\d+$")
+
+
 class Art:
 	def __init__(self, client: Client):
 		sys.path.insert(0, str(TOOLS_DIR))
@@ -1756,7 +1792,12 @@ class Art:
 		swf._ids = {}
 		for i, n in swf.exports:
 			swf._ids.setdefault(n, i)
-		swf._rend = X.Renderer(swf)
+		# Numbered collect slots and their pulsing glows (instances "Collect<N>" / "Glow<N>" of the helpers' and the
+		# neighbourhood donations' collection areas) are runtime state: the game shows them only while something is
+		# waiting to be collected (named, numbered like the slots, and code-addressed; strong, pending screenshot).
+		# Drawn always, they made soft white-yellow circles in the idle art.
+		slots = {n for c in swf.clips.values() for n in c.names if n and RUNTIME_SLOT_RE.match(n)}
+		swf._rend = X.Renderer(swf, hidden_names=slots)
 		self._swf[base] = swf
 		return swf
 
@@ -1777,7 +1818,20 @@ class Art:
 		if oid is None:
 			return None, None
 		ops, _ = swf._rend.display_list(oid, self.frame_of(swf, oid))
+		if swf._rend.hidden_names and not any(o[0] == "draw" for o in ops):
+			# The export is nothing but runtime slots (the helpers' collection area): the game shows an empty zone
+			# there at idle. The slots are kept as the zone's only visible marker (not the idle look).
+			ops, _ = self.X.Renderer(swf).display_list(oid, self.frame_of(swf, oid))
 		return swf._rend.render(ops, scale=scale)
+
+	def hidden_for(self, base: str, export: str) -> list:
+		"""Instance names render_export hides for this export (empty when it keeps them; see render_export)."""
+		swf = self.swf(base)
+		oid = swf._ids.get(export) if swf else None
+		if oid is None or not swf._rend.hidden_names:
+			return []
+		ops, _ = swf._rend.display_list(oid, self.frame_of(swf, oid))
+		return sorted(swf._rend.hidden_names) if any(o[0] == "draw" for o in ops) else []
 
 
 # Placement of the client's farm-edge art (background.sc). No table states it; the rules were derived by fitting the
@@ -2542,6 +2596,9 @@ def self_test() -> int:
 		check(wb.report["counts"]["initial_objects_offgrid_skipped"] == 1, "off-grid seed skipped")
 		check(world["world_bounds"][0] < -3 and world["world_bounds"][1] < -3, "world bounds include off-grid content")
 		check(any(s["kind"] == "river" for s in world["scenery"]), "river scenery from water zones")
+		check(world["water_deco_zones"] == [{"id": "bank", "name": "Bank", "rect": [-3, 0, 2, 3], "enabled": True}],
+			f"water deco zones: {world['water_deco_zones']}")
+		check(validate_world({**world, "water_deco_zones": [{"id": "z", "rect": [0, 0, 0, 1]}]}) != [], "bad zone rejected")
 		# validator negatives
 		bad = json.loads(json.dumps(world))
 		bad["regions"].append(dict(plots["main_01"], id="dup"))

@@ -168,6 +168,7 @@ func reload_assets() -> void:
 			session.set_map(map)
 			_bind_plan()
 		if catalogue_changed:
+			session.refresh_catalogue_rules()   # landmark copies / water decorations may differ now
 			_reconcile_open_layout()
 	assets_reloaded.emit()
 	if world_changed:

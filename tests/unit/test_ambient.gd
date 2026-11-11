@@ -239,6 +239,26 @@ func test_item_theme_variant_only_when_it_exists() -> void:
 	assert_eq(lib.item_themes(), ["winter"])
 
 
+func test_client_seasonal_skins() -> void:
+	## Packs built from the client name seasonal skins "<look>__<theme>" ("" = the base image).
+	var base := TMP.path_join("builtin")
+	_save(30, 30, Color.WHITE, base.path_join("tree_w.png"))
+	_save(30, 30, Color.WHITE, base.path_join("mill_l2.png"))
+	var lib := _lib({"t_tree": {"file": "path.png", "anchor": [32, 16], "variants": {
+			"__winter": {"file": "tree_w.png", "anchor": [15, 25]}, "__halloween": {"file": "tree_w.png", "anchor": [15, 25]}}},
+		"t_mill": {"file": "path.png", "anchor": [32, 16], "variants": {
+			"lvl_2": {"file": "mill_l2.png", "anchor": [15, 25]}, "lvl_2__winter": {"file": "tree_w.png", "anchor": [15, 25]}}}})
+	assert_eq(lib.themed_variant("t_tree", "", "winter"), "__winter", "the base image's winter skin")
+	assert_eq(lib.themed_variant("t_tree", AssetLibrary.BASE_VARIANT, "winter"), "__winter")
+	assert_eq(lib.themed_variant("t_tree", "", "autumn"), "", "no autumn skin: nothing invented")
+	assert_eq(lib.themed_variant("t_mill", "lvl_2", "winter"), "lvl_2__winter", "a look's own winter skin")
+	assert_eq(lib.themed_variant("t_mill", "", "winter"), "", "the base image has no winter skin here")
+	assert_eq(lib.themed_variant("t_mill", "lvl_2__winter", FarmLayout.DEFAULT_THEME), "lvl_2__winter", "a skin chosen by hand stays")
+	assert_true(lib.has_theme_variants("t_tree") and not lib.has_theme_variants("t_lamp"))
+	assert_eq(lib.item_themes(), ["halloween", "winter"])
+	assert_eq(lib.get_sprite("t_tree", lib.themed_variant("t_tree", "", "winter")).path, "tree_w.png")
+
+
 func test_theme_change_redraws_only_themed_items() -> void:
 	var db := fixture_db()
 	var lib := _lib()
@@ -278,4 +298,107 @@ func test_flipped_object_draws_mirror_art_unflipped() -> void:
 	assert_eq(r.bounds_of(turned), spr.world_rect(c, false), "drawn unflipped")
 	assert_true(spr.shadow_mirrored, "no own shadow: the base shadow is reused, flipped")
 	assert_eq(r.pick(c + Vector2(0, -40)), turned, "picks on the mirror art")
+	_dispose(r)
+
+
+# --- patch animations ("rect") and glow layers ------------------------------------------
+
+func _patch_lib() -> AssetLibrary:
+	## t_mystery: 60x50 static with an 8-frame patch animation over its rectangle
+	## (10, 6, 20, 16) at half resolution (10x8 cells, 1 px padding) + a glow
+	## layer and glow frames; t_fence: glow only; t_fence_stone: a bad rect.
+	var base := TMP.path_join("builtin")
+	_save(60, 50, Color.DIM_GRAY, base.path_join("mill.png"))
+	_save(60, 50, Color(1.0, 0.8, 0.2, 0.5), base.path_join("mill.glow.png"))
+	_save(4 * 12, 2 * 10, Color.WHITE, base.path_join("mill.anim.png"))
+	_save(4 * 12, 2 * 10, Color(1.0, 0.5, 0.1, 0.8), base.path_join("mill.anim.glow.png"))
+	_save(30, 30, Color.BLACK, base.path_join("lantern.png"))
+	_save(30, 30, Color.YELLOW, base.path_join("lantern.glow.png"))
+	_save(31, 30, Color.YELLOW, base.path_join("lantern.glow_bad.png"))
+	return _lib({
+		"t_mystery": {"file": "mill.png", "anchor": [30, 40], "glow": {"file": "mill.glow.png", "blend": "add"},
+			"anim": {"sheet": "mill.anim.png", "glow_sheet": "mill.anim.glow.png", "frames": 8, "columns": 4, "fps": 8.0,
+				"mode": "replace", "rect": [10, 6, 20, 16], "cell": [10, 8], "cell_padding": 1}},
+		"t_fence": {"file": "lantern.png", "anchor": [15, 28], "glow": {"file": "lantern.glow.png", "blend": "add"}},
+		"t_fence_stone": {"file": "lantern.png", "anchor": [15, 28], "glow": {"file": "lantern.glow_bad.png"},
+			"anim": {"sheet": "mill.anim.png", "frames": 8, "columns": 4, "fps": 8.0, "rect": [20, 20, 20, 16], "cell": [10, 8]}},
+	})
+
+
+func test_patch_anim_entry_is_parsed_and_sheet_loads_lazily() -> void:
+	var lib := _patch_lib()
+	var loads := lib.texture_loads
+	var spr := lib.get_sprite("t_mystery")
+	var a := spr.anim
+	assert_not_null(a)
+	assert_true(a.has_rect())
+	assert_false(a.overlay, "a rect animation replaces part of the static image")
+	assert_eq(a.rect, Rect2(10, 6, 20, 16))
+	assert_eq(a.frame_size, Vector2(10, 8), "cell size from the entry")
+	assert_eq(a.padding, 1)
+	assert_true(a.has_glow)
+	assert_eq(a.frame_rect(0), Rect2(1, 1, 10, 8), "cells skip their padding")
+	assert_eq(a.frame_rect(5), Rect2(13, 11, 10, 8), "row 2, column 2")
+	assert_eq(lib.texture_loads, loads + 2, "static + glow loaded, the sheets not yet")
+	assert_not_null(a.sheet)
+	assert_not_null(a.glow_sheet)
+	assert_eq(lib.texture_loads, loads + 2, "sheets load outside the shared cache")
+	var c := Vector2(100, 100)
+	assert_eq(a.world_rect(c, false, spr.scale), Rect2(c + (Vector2(10, 6) - Vector2(30, 40)) * spr.scale, Vector2(20, 16) * spr.scale))
+	var fl := a.world_rect(c, true, spr.scale)
+	assert_true(absf(fl.position.x - (c.x - (10.0 + 20.0 - 30.0) * spr.scale)) < 0.001, "flipped about the anchor")
+	assert_true(spr.world_rect(c, false).encloses(a.world_rect(c, false, spr.scale)), "the rect lies on the sprite")
+
+
+func test_glow_layer_is_parsed_and_checked() -> void:
+	var lib := _patch_lib()
+	var g := lib.get_sprite("t_fence")
+	assert_not_null(g.glow, "glow texture")
+	assert_eq(g.glow.get_size(), g.texture.get_size())
+	assert_null(g.anim)
+	var bad := lib.get_sprite("t_fence_stone")
+	assert_not_null(bad, "still draws")
+	assert_null(bad.glow, "a glow of another size is refused")
+	assert_null(bad.anim, "a rect outside the image is refused")
+	var joined := "\n".join(lib.errors)
+	assert_true(joined.contains("does not match the size"), joined)
+	assert_true(joined.contains("Bad animation rect"), joined)
+	var st := lib.pack_stats(AssetLibrary.BUILTIN_ID)
+	assert_eq(st["glows"], 3)
+	assert_false(st["missing_files"].has("mill.anim.glow.png"), "glow sheets are counted as pack files")
+
+
+func test_renderer_draws_glow_on_an_additive_child_and_plays_patches() -> void:
+	var db := fixture_db()
+	var layout := FarmLayout.new()
+	var mill: int = layout.add_objects([make_obj(db.get_item("t_mystery"), Vector2i(0, 0))], false)[0]
+	var lantern: int = layout.add_objects([make_obj(db.get_item("t_fence"), Vector2i(6, 0))], false)[0]
+	var plain: int = layout.add_objects([make_obj(db.get_item("t_path"), Vector2i(10, 0))], false)[0]
+	var r := _renderer(layout, db, _patch_lib())
+	var vm: ObjectRenderer.Vis = r._vis[mill]
+	var vl: ObjectRenderer.Vis = r._vis[lantern]
+	assert_true(vl.gci.is_valid(), "glow child canvas item")
+	assert_false((r._vis[plain] as ObjectRenderer.Vis).gci.is_valid(), "no glow, no child")
+	assert_not_null(r._add_mat)
+	assert_eq(r._add_mat.blend_mode, CanvasItemMaterial.BLEND_MODE_ADD)
+	assert_true(vm.gci.is_valid())
+	assert_false(vm.aci.is_valid(), "a rect animation needs no overlay item")
+	assert_eq(r.anim_frame_of(mill), -1, "static (= frame 0) until it is first seen")
+	assert_eq(r.anim_memory()["sheets"], 0, "so no sheet is loaded yet")
+	r.advance_anim(0.0, NOWHERE)
+	assert_eq(r.anim_frame_of(mill), -1, "not in view: still static")
+	r.advance_anim(0.0, VIEW)
+	var f0: int = r.anim_frame_of(mill)
+	assert_true(f0 >= 0, "in view: frames")
+	assert_eq(r.anim_memory()["sheets"], 2, "sheet + glow sheet loaded on first sight")
+	r.advance_anim(0.126, VIEW)
+	assert_eq(r.anim_frame_of(mill), (f0 + 1) % 8, "8 fps")
+	r.set_ambient_mode(ObjectRenderer.Ambient.OFF)
+	assert_eq(r.anim_frame_of(mill), -1, "Off: static image")
+	assert_true(vm.gci.is_valid(), "the static glow stays")
+	var c := Iso.footprint_center(Vector2i.ZERO, layout.get_obj(mill).size)
+	assert_eq(r.bounds_of(mill), vm.sprite.world_rect(c, false), "a rect inside the image adds no bounds")
+	# the glow goes with its sprite
+	layout.remove_objects([lantern])
+	assert_false(vl.gci.is_valid(), "freed with the object")
 	_dispose(r)

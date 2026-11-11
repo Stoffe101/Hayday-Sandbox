@@ -23,14 +23,17 @@ these layouts in the real game, so **never invent facts** — unknown data stays
    `python3 tools/ci/check_private_leaks.py` must pass. See `docs/PRIVATE_ASSETS.md`.
 
 ## Commands
-Linux / cloud box (counts at the end of the farm-planning wave, 2026-11-10; refreshed at the end of each wave):
+Linux / cloud box (counts at the end of W5, 2026-11-10; refreshed at the end of each wave):
 ```bash
 godot --headless --path . --import                                   # after adding class_name scripts / assets
-godot --headless --path . --script res://tools/ci/check_scripts.gd   # compile every script (148)
-godot --headless --path . --script res://tests/run_tests.gd          # unit tests (481 tests / 15,740 assertions)
-godot --headless --path . -- --selftest                              # in-app integration test (515 checks)
+godot --headless --path . --script res://tools/ci/check_scripts.gd   # compile every script (173)
+godot --headless --path . --script res://tests/run_tests.gd          # unit tests (528 tests / 16,309 assertions)
+godot --headless --path . -- --selftest                              # in-app integration test (539 checks)
 godot --headless --path . -- --selftest=perf                         # benchmarks (7 checks)
 godot --headless --path . --script res://tests/perf/perf_planning.gd # planning benchmarks (2k/5k/10k)
+godot --headless --path . --script res://tools/ci/check_terrain_pack.gd [-- <terrain.json>] # terrain pack check
+godot --headless --path . -- --selftest=packcycle [--pack=<id>]      # UNINSTALLS a pack and checks the revert:
+#   only on a copied data dir (XDG_DATA_HOME) holding a full copy of the pack; see docs/TESTING.md "Private pack"
 godot --path . -- --install-pack=<zip> [--quit-after-install]        # install an asset pack into user://asset_packs
 tools/ci/visual_tests.sh all [1920x1080:1 ...]                       # Xvfb screenshots → artifacts/screens (isolated data dir)
 python3 tools/ci/validate_data.py                                    # data + licence guard (1,967 items)
@@ -45,8 +48,8 @@ powershell -ExecutionPolicy Bypass -File tools\ci\run_godot.ps1 [-Log f] [-Timeo
 #   ONE headless Godot command ("--headless --path ." added), e.g. --script res://tests/run_tests.gd -- --filter=budget,
 #   -- --selftest, --import (restores project.godot afterwards). Use this instead of calling Godot directly.
 powershell -ExecutionPolicy Bypass -File tools\ci\windows_checks.ps1 [-Perf] [-SkipImport] [-Tag name]
-#   import, check_scripts, unit_tests, selftest[, selftest_perf], validate_data, leak guard (+ self-test),
-#   export-check self-test, coverage report + diff. Logs: artifacts\checks\[name\]<step>.log
+#   import, check_scripts, unit_tests, selftest, terrain_pack_check[, selftest_perf], validate_data, leak guard
+#   (+ self-test; tracked + untracked), export-check self-test, coverage report + diff. Logs: artifacts\checks\[name\]<step>.log
 powershell -ExecutionPolicy Bypass -File tools\ci\visual_tests.ps1 [scenarios] [WxH:scale ...]
 #   real OpenGL screenshots → artifacts\screens\ (one run at a time: it writes a temporary override.cfg)
 ```

@@ -265,6 +265,10 @@
    "scope": "fishing_lake",
    "note": "Stands at the Fishing Lake, not on the main farm: reference only (not placeable).",
    "placeable": false
+  },
+  "Slat fence": {
+   "category": "fence",
+   "note": "Category corrected from path to fence (W5): the RU name 'Doshchataya ograda' means plank fence, its art is a fence set (pole / straight / corner pieces), and the client's own tables list it with the fences (private check of the user's client files; strong). The community list had it under paths."
   }
  },
  "extra_items": [

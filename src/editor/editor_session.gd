@@ -67,6 +67,7 @@ func _init(l: FarmLayout, item_db: ItemDatabase, farm_map: FarmMap, prices: Pric
 	stack.changed.connect(_on_stack_changed)
 	layout.objects_removed.connect(_on_removed)
 	layout.fixed_items = fixed_item_ids(db, map)
+	layout.zone_items = PlacementRules.zone_item_ids(db)
 	conflict_index = ConflictIndex.new(layout, map)
 	_analysis = RealisticAnalyzer.Cached.new(layout, stack, conflict_index)
 	symmetry["pos"] = default_mirror_pos(symmetry["kind"])
@@ -120,6 +121,7 @@ func set_map(m: FarmMap) -> void:
 	## installed). The layout itself is untouched.
 	map = m
 	layout.fixed_items = fixed_item_ids(db, map)
+	layout.zone_items = PlacementRules.zone_item_ids(db)
 	conflict_index.set_map(map)
 	_analysis.invalidate()
 	if budget != null:
@@ -127,6 +129,15 @@ func set_map(m: FarmMap) -> void:
 		budget.invalidate()
 	if not selected_landmark.is_empty() and (map == null or map.landmark(selected_landmark) == null):
 		clear_landmark_selection()
+
+
+func refresh_catalogue_rules() -> void:
+	## The catalogue changed (pack reload): items that are landmark copies or
+	## water decorations may differ; placement verdicts are re-checked.
+	layout.fixed_items = fixed_item_ids(db, map)
+	layout.zone_items = PlacementRules.zone_item_ids(db)
+	conflict_index.invalidate_all()
+	_analysis.invalidate()
 
 
 func conflicts() -> Dictionary:
@@ -502,7 +513,7 @@ func flip_selection() -> void:
 	var conflicts := 0
 	for u in uids:
 		var o := layout.get_obj(u)
-		if not PlacementRules.check_rect(layout, map, o.rect(), {u: true}).ok:
+		if not PlacementRules.check_object(layout, map, o).ok:
 			conflicts += 1
 	if conflicts > 0:
 		message.emit("Rotated — %d object(s) now overlap or leave the land (shown in red)" % conflicts, "warn")
@@ -739,7 +750,7 @@ func mirrored_objects(objs: Array) -> Dictionary:
 		c.flipped = m["flipped"]
 		copies.append(c)
 		rects.append(r)
-	var fit := LayoutTools.fit_mask(layout, map, rects)
+	var fit := LayoutTools.fit_mask(layout, map, rects, {}, LayoutTools.zone_flags(layout, objs) + LayoutTools.zone_flags(layout, copies))
 	var out: Array = []
 	for i in copies.size():
 		if fit[objs.size() + i]:
@@ -785,7 +796,8 @@ func _move_each(verb: String, label: String, minimum: int, compute: Callable) ->
 
 func repeat_plan(cols: int, rows: int, spacing: Vector2i) -> Dictionary:
 	## What repeating the selection as a cols x rows array would do:
-	## {"objs": copies that fit, "rects": every wanted rect, "skipped": n}.
+	## {"objs": copies that fit, "rects": every wanted rect, "zones": water-decoration
+	## flag per rect, "skipped": n}.
 	## {} when nothing in the selection may be copied.
 	var src: Array = []
 	var uids: Array = []
@@ -808,12 +820,13 @@ func repeat_plan(cols: int, rows: int, spacing: Vector2i) -> Dictionary:
 			c.origin += off
 			copies.append(c)
 			rects.append(c.rect())
-	var fit := LayoutTools.fit_mask(layout, map, rects)
+	var zones := LayoutTools.zone_flags(layout, copies)
+	var fit := LayoutTools.fit_mask(layout, map, rects, {}, zones)
 	var out: Array = []
 	for i in copies.size():
 		if fit[i]:
 			out.append(copies[i])
-	return {"objs": out, "rects": rects, "skipped": copies.size() - out.size()}
+	return {"objs": out, "rects": rects, "zones": zones, "skipped": copies.size() - out.size()}
 
 
 func apply_repeat(cols: int, rows: int, spacing: Vector2i) -> Array:
@@ -865,7 +878,8 @@ func make_stamp(stamp_name: String) -> Dictionary:
 func stamp_plan(stamp: Dictionary, at: Vector2i) -> Dictionary:
 	## Fresh objects for a stamp with its top corner at `at`, keeping what the
 	## catalogue, farm level and placement rules allow.
-	## {"objs": those that fit, "rects": every wanted rect, "skipped": n}.
+	## {"objs": those that fit, "rects": every wanted rect, "zones": water-decoration
+	## flag per rect, "skipped": n}.
 	var wanted: Array = []
 	var rects: Array = []
 	var skipped := 0
@@ -882,14 +896,15 @@ func stamp_plan(stamp: Dictionary, at: Vector2i) -> Dictionary:
 		o.planned = bool(e.get("planned", false))
 		wanted.append(o)
 		rects.append(o.rect())
-	var fit := LayoutTools.fit_mask(layout, map, rects)
+	var zones := LayoutTools.zone_flags(layout, wanted)
+	var fit := LayoutTools.fit_mask(layout, map, rects, {}, zones)
 	var out: Array = []
 	for i in wanted.size():
 		if fit[i]:
 			out.append(wanted[i])
 		else:
 			skipped += 1
-	return {"objs": out, "rects": rects, "skipped": skipped}
+	return {"objs": out, "rects": rects, "zones": zones, "skipped": skipped}
 
 
 func place_stamp(stamp: Dictionary, at: Vector2i) -> Array:

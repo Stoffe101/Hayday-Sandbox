@@ -49,6 +49,7 @@ None of these folders may be inside a git work tree. `fetch_fankit.py`, `fetch_w
 | **Hay Day Wiki** (Fandom), en + ru | `tools/private_assets/fetch_wiki.py --out <root> --wiki en\|ru --resume` | Public MediaWiki API plus the wiki's static image CDN (`format=original`). Each file is verified against the API's SHA-1. Discovery uses object categories plus the catalogue's item names and cited pages. |
 | Game client files **you already have** (optional) | `tools/private_assets/extract_from_apk.py extract <apk/xapk> --out <root>` | Verifies the APK signature is Supercell's, then decodes the `.sc`/`.sctx` files and renders sprites locally. It never downloads anything and never contacts a server. Details: [research/ASSET_ACQUISITION.md](research/ASSET_ACQUISITION.md). |
 | Pack build | `tools/private_assets/build_pack.py --root <root> --install-dir <dir>` | Matches images to catalogue items, calibrates anchors and scale, and writes and installs the pack. This tool is maintained separately. `acquire.py` reads its options and imports at run time. |
+| Animations and glow (default on) | `build_pack.py` runs `tools/private_assets/build_anims.py` (`--no-anims`, `--no-glow` to skip) | Re-renders every image that comes from one client export when it has add/screen/multiply parts (written as a separate additive `glow` layer) or nested clips that loop (an `anim` patch sheet in `anims/`, docs/ASSET_PIPELINE.md). Plays the client's own clips at their frame rate; clips that code controls (frame labels, fewer than 3 frames, HUD children) are held; caps the loop (12 s, 120 frames, 1.2 Mpx per sheet, frames at 2 px per world px) and drops the clips that move least to fit. Landmark sprites from `build_world.py` get the same layers. Results are cached in `<root>/raw/apk_anims/` (keyed by every input, incl. the renderer revision); `mapping/anim_report.json` lists each sheet with its frame-0 check against the static image. `python3 tools/private_assets/build_anims.py --sc <sc> --export <export> --out <dir>` renders one export for inspection. |
 | Pack terrain (optional) | `tools/private_assets/build_terrain.py [--install-dir <dir>]` (or `build_pack.py --terrain`) | Turns the client's own background art (extracted with the tool above) into the pack's `terrain/` folder ([TERRAIN_PACKS.md](TERRAIN_PACKS.md)): ground-tile images per world tile type and season, the edge exports as triangle meshes over the client atlases ("mesh replay"), and the animated water clips. Where each edge sits comes from a private placement file written by the terrain research (anchors are not in the client tables); the tool itself holds no game numbers. `--install-dir` backs the installed pack up to `<root>/archive/installed_<version>/` first and adds `-t<digest>` to its version. `--self-test` runs on made-up data; `--validate` runs `tools/ci/check_terrain_pack.gd`. |
 
 `tools/private_assets/acquire.py` runs these steps in order with resume (details below). On the development
@@ -233,6 +234,10 @@ Where only the game itself can decide (the truck's half-tile question, see
   with `--open=`, and `at_<x>_<y>_<zoom>` scenarios with `--real-art --hide-panels --out=<root>/screens/...`. The
   `terrain_pack*` scenarios print build times and frame times with and without the pack. Your real `layouts/`,
   `settings.cfg` and autosaves are never touched that way.
+* Self-test with the pack: the same kind of copied data folder (the pack may be a symlink, plus a copy of
+  `private_data/`) and `godot --headless --path . -- --selftest`. Uninstall check: `-- --selftest=packcycle
+  [--pack=<id>]` **deletes** the pack from the data folder it runs on, so give it a full copy, never a symlink or
+  the real folder (docs/TESTING.md, "Private pack").
 
 ### Client-only items (catalogue additions)
 
@@ -262,6 +267,22 @@ without them. To see the farm's look in the budget of a private capture, add `--
 * Run `tools/ci/install_git_hooks.sh` once per clone. Before pushing, `python3 tools/ci/check_private_leaks.py`
   (add `--include-untracked` for a pre-flight of new files) must pass.
 * Tools you write must not embed art and must default their output to the private root.
+
+## Verification status (2026-11-10, end of W5, Linux cloud development box)
+
+* With the installed pack (copied data folder): the self-test passes (544 checks; before W5 eight
+  placeholder-specific checks failed), and `--selftest=packcycle` on a full copy of the pack places a pack-only item,
+  uninstalls the pack and confirms that the art (2,059 keys), 72 catalogue additions, 81 catalogue corrections, the
+  world, both water-decoration zones and the pack terrain revert, the procedural ground returns, and the open layout
+  keeps every object and survives save / load (15 checks).
+* Private captures (copied data folder, `--real-art`) of the main scenarios (overview, catalogue search, every Plan
+  tab, the readiness card, Game data) at 1920×1080, 2560×1440, 3440×1440 and 3840×2160, each at 100 / 125 / 150 /
+  200 % UI scale, plus full-land, objects and phase-picture exports with installed art, are in
+  `<root>/screens/w5/b2/` and were looked at.
+* Windows Desktop and Linux exports built on the box were clean by `check_export_contents.py` (PCK v4, 4,590 and
+  4,625 entries; only placeholder textures and `assets/ui`). The `.exe` cannot run there (no Wine).
+* Leak guard: tracked + untracked OK, self-test 58/58; the installed pack was backed up to
+  `<root>/archive/installed_<version>/` before every replacement.
 
 ## Verification status (2026-11-09, Linux cloud development box)
 

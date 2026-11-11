@@ -123,6 +123,7 @@ func _build_export() -> Control:
 	_art_opt.fit_to_longest_item = false
 	_art_opt.clip_text = true
 	_art_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_art_opt.custom_minimum_size.x = 168   # readable choice; the flow wraps the export button below when narrow
 	_art_opt.add_item("Placeholder art")
 	_art_opt.add_item("Installed art (private)")
 	_art_opt.tooltip_text = "Which art the exported pictures use. Pictures with installed art stay on this PC."

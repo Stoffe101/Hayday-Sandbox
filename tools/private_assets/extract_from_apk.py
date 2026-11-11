@@ -65,7 +65,10 @@ What is IMPLEMENTED BUT UNTESTED (no sample files; treat output with suspicion):
 What is NOT IMPLEMENTED (the tool reports it and skips the file):
   * SC2 version 6 ("compressed movie clips") and SC2 external delta-compressed matrix banks;
   * LZHAM-compressed SC ("SCLZ") unless the ``lzham`` module is importable;
-  * text fields (rendered as nothing), blend modes other than normal, 9-slice scaling grids.
+  * text fields (rendered as nothing), 9-slice scaling grids. Blend modes: render() draws them as normal (see the
+    degenerate-fill rule above); Renderer.render_layers() composites add (8), screen (4) and multiply (3) exactly
+    over an opaque backdrop and returns the additive excess as a separate glow image (used by build_anims.py);
+    ids 8/4 = add/screen are strong (visual), 3 = multiply and 64 (drawn as normal) are plausible / unknown.
 
 Dependencies: Python 3.10+, Pillow, numpy, zstandard, texture2ddecoder (ASTC/ETC), cryptography
 (signature check); optional pyasn1 + pyasn1-modules (v1 JAR signature check).
@@ -119,6 +122,8 @@ SC_EXTS = (".sc", ".sctx", ".ktx", ".zktx")
 SC_UNITS_PER_WORLD_PX = 2.0
 # Bumped whenever rendering output changes for the same input (consumers re-render cached derived images).
 RENDER_REV = "2026-11-09.2"
+# render_layers(): additive excess below this (0..1) is dropped (compression noise, invisible when added).
+GLOW_MIN = 3.0 / 255.0
 # Largest canvas rendered in one piece (RGBA float32 working layers: 16 bytes per pixel per layer).
 MAX_CANVAS_PIXELS = 64_000_000
 
@@ -1101,13 +1106,19 @@ PLACEHOLDER_WARN = "runtime placeholder fills (pure-red single texel) dropped"
 
 
 class Renderer:
-	def __init__(self, swf: Swf, max_depth: int = 64, drop_placeholders: bool = True, nested_frame: int | None = None):
+	def __init__(self, swf: Swf, max_depth: int = 64, drop_placeholders: bool = True, nested_frame: int | None = None,
+			clip_frame=None, hidden_names=None):
 		"""``nested_frame`` None: nested clips at frame 0 (default). An int G: every nested clip plays frame
-		G mod its frame count (instances placed at frame 0 advance with the root timeline)."""
+		G mod its frame count (instances placed at frame 0 advance with the root timeline).
+		``clip_frame(clip_id, instance_name, clip)``, when given, picks the frame of every NESTED clip (an int, taken
+		mod the clip's length; None = the default above): ambient-animation export plays some clips and holds others.
+		``hidden_names``: instance names that are not drawn at any depth (e.g. HUD children)."""
 		self.swf = swf
 		self.max_depth = max_depth
 		self.drop_placeholders = drop_placeholders
 		self.nested_frame = nested_frame
+		self.clip_frame = clip_frame
+		self.hidden_names = set(hidden_names or ())
 		self._ph_cache: dict = {}
 
 	def is_runtime_placeholder(self, cmd: Command) -> bool:
@@ -1137,7 +1148,7 @@ class Renderer:
 		self._emit(obj_id, IDENT, CT_IDENT, frame, ops, warns, 0)
 		return ops, warns
 
-	def _emit(self, oid, m, ct, frame, ops, warns, depth, blend: int = 0):
+	def _emit(self, oid, m, ct, frame, ops, warns, depth, blend: int = 0, name: str | None = None):
 		swf = self.swf
 		if depth > self.max_depth:
 			warns.append("max nesting depth reached")
@@ -1167,6 +1178,10 @@ class Renderer:
 			fi = min(frame, len(clip.frames) - 1)
 		else:
 			fi = self.nested_frame % len(clip.frames) if self.nested_frame is not None else 0
+			if self.clip_frame is not None:
+				want = self.clip_frame(oid, name, clip)
+				if want is not None:
+					fi = int(want) % len(clip.frames)
 		start = sum(n for n, _ in clip.frames[:fi])
 		count = clip.frames[fi][0]
 		bank = swf.banks[clip.bank] if clip.bank < len(swf.banks) else swf.banks[0]
@@ -1177,10 +1192,13 @@ class Renderer:
 			cm = bank["m"][mi] if mi != 0xFFFF and mi < len(bank["m"]) else IDENT
 			cc = bank["c"][ki] if ki != 0xFFFF and ki < len(bank["c"]) else CT_IDENT
 			b = clip.blends[ci] if ci < len(clip.blends) else 0
+			nm = clip.names[ci] if ci < len(clip.names) else None
+			if nm and nm in self.hidden_names:
+				continue
 			if b not in (0, 1) and "non-normal blend modes ignored" not in warns:
 				warns.append("non-normal blend modes ignored")
 			self._emit(clip.children[ci], mat_mul(m, cm), ct_mul(ct, cc), 0, ops, warns, depth + 1,
-				b if b not in (0, 1) else blend)
+				b if b not in (0, 1) else blend, nm)
 
 	# ---- geometry -----------------------------------------------------------------------------
 	@staticmethod
@@ -1315,53 +1333,13 @@ class Renderer:
 				continue
 			if marker_only:
 				continue
-			cmd, m, ct = op[1], op[2], op[3]
 			blend = op[4] if len(op) > 4 else 0
-			tex = self.swf.textures[cmd.tex] if cmd.tex < len(self.swf.textures) else None
-			if tex is None or tex.image is None:
-				continue
-			world = [(px * scale - x0, py * scale - y0) for px, py in _world(cmd.xy, m)]
-			uv = self._uv_px(cmd, tex)
 			# Non-normal blend modes are drawn as normal (historic behaviour, renders checked by eye), EXCEPT solid
 			# degenerate-uv fills: those were invisible before the 2026-11-09 fix and are almost always screen/add
 			# glows or multiply shading whose black/white fill must not become an opaque block. Screen (4) and add (8)
 			# fills become normal fills whose alpha is their brightest channel (black = no-op, as in the game);
-			# other modes keep the old behaviour for such fills (not drawn).
-			solid_blend = blend not in (0, 1) and _uv_degenerate(uv)
-			if solid_blend and blend not in (4, 8):
-				continue
-			pieces = _pieces(world, uv)
-			for poly_xy, poly_uv, inv in pieces:  # inv: xy -> uv
-				if inv is None:
-					continue
-				bx0 = max(0, math.floor(min(p[0] for p in poly_xy)))
-				by0 = max(0, math.floor(min(p[1] for p in poly_xy)))
-				bx1 = min(W, math.ceil(max(p[0] for p in poly_xy)))
-				by1 = min(H, math.ceil(max(p[1] for p in poly_xy)))
-				if bx1 <= bx0 or by1 <= by0:
-					continue
-				w, h = bx1 - bx0, by1 - by0
-				# PIL maps output pixel CENTRES (x+0.5) through the coefficients.
-				a, b, c, d, e, f = inv
-				coeffs = (a, b, a * bx0 + b * by0 + c, d, e, d * bx0 + e * by0 + f)
-				patch = tex.image.transform((w, h), Image.Transform.AFFINE, coeffs, resample=Image.Resampling.BILINEAR)
-				mask = Image.new("L", (w * 4, h * 4), 0)
-				ImageDraw.Draw(mask).polygon([((x - bx0) * 4, (y - by0) * 4) for x, y in poly_xy], fill=255)
-				mask = mask.resize((w, h), Image.Resampling.BOX)
-				arr = np.asarray(patch, np.float32) / 255.0
-				if solid_blend:   # screen/add -> premultiplied colour with alpha = brightest channel
-					arr[..., 3] = arr[..., :3].max(axis=-1)
-				arr *= (np.asarray(mask, np.float32) / 255.0)[..., None]
-				(rm, gm, bm, am), (ra, ga, ba) = ct
-				if (rm, gm, bm, am, ra, ga, ba) != (255.0, 255.0, 255.0, 255.0, 0.0, 0.0, 0.0):
-					alpha = arr[..., 3:4].copy()
-					arr[..., 0] *= rm / 255.0
-					arr[..., 1] *= gm / 255.0
-					arr[..., 2] *= bm / 255.0
-					arr[..., :3] += np.array([ra, ga, ba], np.float32) / 255.0 * alpha
-					arr *= am / 255.0
-					np.clip(arr, 0.0, 1.0, out=arr)
-					arr[..., :3] = np.minimum(arr[..., :3], arr[..., 3:4])
+			# other modes keep the old behaviour for such fills (not drawn). render_layers() composites them exactly.
+			for by0, by1, bx0, bx1, arr in self._op_patches(op, scale, x0, y0, W, H, legacy_solid=True):
 				dst = layers[-1][by0:by1, bx0:bx1]
 				dst *= 1.0 - arr[..., 3:4]
 				dst += arr
@@ -1375,6 +1353,159 @@ class Renderer:
 		img = np.concatenate([np.clip(rgb, 0, 1), np.clip(alpha, 0, 1)], -1)
 		img = (img * 255.0 + 0.5).astype(np.uint8)
 		return Image.fromarray(img, "RGBA"), (-x0, -y0)
+
+
+	def _op_patches(self, op, scale: float, x0: int, y0: int, W: int, H: int, legacy_solid: bool):
+		"""Rasterised pieces of one draw op inside the (x0, y0, W, H) window: (by0, by1, bx0, bx1, premultiplied RGBA
+		float32 array with the colour transform applied). ``legacy_solid``: solid (degenerate-uv) fills under a
+		non-normal blend mode follow render()'s historic rule (screen/add: alpha = brightest channel; others skipped)."""
+		import numpy as np
+		from PIL import Image, ImageDraw
+		cmd, m, ct = op[1], op[2], op[3]
+		blend = op[4] if len(op) > 4 else 0
+		tex = self.swf.textures[cmd.tex] if cmd.tex < len(self.swf.textures) else None
+		if tex is None or tex.image is None:
+			return
+		world = [(px * scale - x0, py * scale - y0) for px, py in _world(cmd.xy, m)]
+		if (max(p[0] for p in world) <= 0 or max(p[1] for p in world) <= 0 or min(p[0] for p in world) >= W
+				or min(p[1] for p in world) >= H):
+			return
+		uv = self._uv_px(cmd, tex)
+		solid_blend = legacy_solid and blend not in (0, 1) and _uv_degenerate(uv)
+		if solid_blend and blend not in (4, 8):
+			return
+		for poly_xy, poly_uv, inv in _pieces(world, uv):  # inv: xy -> uv
+			if inv is None:
+				continue
+			bx0 = max(0, math.floor(min(p[0] for p in poly_xy)))
+			by0 = max(0, math.floor(min(p[1] for p in poly_xy)))
+			bx1 = min(W, math.ceil(max(p[0] for p in poly_xy)))
+			by1 = min(H, math.ceil(max(p[1] for p in poly_xy)))
+			if bx1 <= bx0 or by1 <= by0:
+				continue
+			w, h = bx1 - bx0, by1 - by0
+			# PIL maps output pixel CENTRES (x+0.5) through the coefficients.
+			a, b, c, d, e, f = inv
+			coeffs = (a, b, a * bx0 + b * by0 + c, d, e, d * bx0 + e * by0 + f)
+			patch = tex.image.transform((w, h), Image.Transform.AFFINE, coeffs, resample=Image.Resampling.BILINEAR)
+			mask = Image.new("L", (w * 4, h * 4), 0)
+			ImageDraw.Draw(mask).polygon([((x - bx0) * 4, (y - by0) * 4) for x, y in poly_xy], fill=255)
+			mask = mask.resize((w, h), Image.Resampling.BOX)
+			arr = np.asarray(patch, np.float32) / 255.0
+			if solid_blend:   # screen/add -> premultiplied colour with alpha = brightest channel
+				arr[..., 3] = arr[..., :3].max(axis=-1)
+			arr *= (np.asarray(mask, np.float32) / 255.0)[..., None]
+			(rm, gm, bm, am), (ra, ga, ba) = ct
+			if (rm, gm, bm, am, ra, ga, ba) != (255.0, 255.0, 255.0, 255.0, 0.0, 0.0, 0.0):
+				alpha = arr[..., 3:4].copy()
+				arr[..., 0] *= rm / 255.0
+				arr[..., 1] *= gm / 255.0
+				arr[..., 2] *= bm / 255.0
+				arr[..., :3] += np.array([ra, ga, ba], np.float32) / 255.0 * alpha
+				arr *= am / 255.0
+				np.clip(arr, 0.0, 1.0, out=arr)
+				arr[..., :3] = np.minimum(arr[..., :3], arr[..., 3:4])
+			yield by0, by1, bx0, bx1, arr
+
+	def render_layers(self, ops, scale: float = 1.0, pad: int = 2, window=None, max_pixels: int = MAX_CANVAS_PIXELS):
+		"""Blend-mode-exact render, split into what a normal-alpha image can carry and an additive remainder.
+
+		Over an opaque backdrop G every op is affine in G per channel, so the whole display list composites to
+		R(G) = C + T*G (C = premultiplied colour, T = transmittance per channel). Tracked per pixel:
+		  normal (0/1, and the unknown modes, e.g. 64): C = s + (1-sa)C, T = (1-sa)T
+		  add (8):      C = min(1, C + s)                      (Flash numbering; strong, not verified in the game)
+		  screen (4):   C = s + (1-s)C, T = (1-s)T   per channel
+		  multiply (3): k = s + 1 - sa; C = kC, T = kT per channel (plausible)
+		Masks keep their (C, T) layers; the mask's coverage is 1 - mean(T).
+		Output: a straight-alpha RGBA image with A = 1 - mean(T) and colour P = min(C, A) (drawn normally), plus the
+		excess E = C - P as an RGBA "glow" image (rgb = E / max(E), alpha = max(E)) to be drawn with ADDITIVE blending
+		(rgb * alpha is added). Exact for add over any opaque backdrop; screen and multiply over pixels that the art
+		does not cover are approximated by the mean transmittance (error (T_c - mean T) * G per channel).
+		Without non-normal ops the normal image equals render()'s output and the glow is None.
+		Returns (normal RGBA image, glow RGBA image or None, origin) like render()."""
+		import numpy as np
+		from PIL import Image
+		if window is None:
+			bb = self.canvas(ops, scale, pad)
+			if bb is None:
+				return None, None, None
+			x0, y0, x1, y1 = bb
+		else:
+			x0, y0, x1, y1 = (int(v) for v in window)
+		W, H = x1 - x0, y1 - y0
+		if W <= 0 or H <= 0 or W * H > max_pixels:
+			raise ToolError(f"unreasonable canvas size {W}x{H}")
+
+		def new_layer():
+			return [np.zeros((H, W, 3), np.float32), np.ones((H, W, 3), np.float32)]
+
+		layers = [new_layer()]
+		mask_depth = 0
+		draws = [op for op in ops if op[0] == "draw"]
+		marker_only = bool(draws) and all(op[1].uv and all(q == op[1].uv[0] for q in op[1].uv) for op in draws)
+		for op in ops:
+			kind = op[0]
+			if kind == "mask":
+				layers.append(new_layer())
+				mask_depth += 1
+				continue
+			if kind == "masked":
+				if mask_depth:
+					layers.append(new_layer())
+				continue
+			if kind == "unmask":
+				if mask_depth and len(layers) >= 3:
+					cc, ctr = layers.pop()
+					mc, mt = layers.pop()
+					mask_depth -= 1
+					mcov = 1.0 - mt.mean(axis=-1, keepdims=True)
+					dc, dt = layers[-1]
+					layers[-1] = [mcov * (cc + ctr * dc) + (1.0 - mcov) * dc, mcov * ctr * dt + (1.0 - mcov) * dt]
+				continue
+			if marker_only:
+				continue
+			blend = op[4] if len(op) > 4 else 0
+			for by0, by1, bx0, bx1, arr in self._op_patches(op, scale, x0, y0, W, H, legacy_solid=False):
+				C = layers[-1][0][by0:by1, bx0:bx1]
+				T = layers[-1][1][by0:by1, bx0:bx1]
+				s, sa = arr[..., :3], arr[..., 3:4]
+				if blend == 8:
+					C += s
+					np.minimum(C, 1.0, out=C)
+				elif blend == 4:
+					C *= 1.0 - s
+					C += s
+					T *= 1.0 - s
+				elif blend == 3:
+					k = s + 1.0 - sa
+					C *= k
+					T *= k
+				else:
+					C *= 1.0 - sa
+					C += s
+					T *= 1.0 - sa
+		while len(layers) > 1:  # unterminated masks: content unmasked
+			cc, ctr = layers.pop()
+			dc, dt = layers[-1]
+			layers[-1] = [cc + ctr * dc, ctr * dt]
+		C, T = layers[0]
+		A = np.clip(1.0 - T.mean(axis=-1, keepdims=True), 0.0, 1.0)
+		C = np.clip(C, 0.0, None)
+		P = np.minimum(C, A)
+		E = np.clip(C - P, 0.0, 1.0)
+		rgb = np.where(A > 1e-6, P / np.maximum(A, 1e-6), 0.0)
+		img = (np.concatenate([np.clip(rgb, 0, 1), A], -1) * 255.0 + 0.5).astype(np.uint8)
+		normal = Image.fromarray(img, "RGBA")
+		glow = None
+		# Only real add/screen/multiply ops make a glow: atlas texels whose colour slightly exceeds their alpha (block
+		# compression noise) would otherwise leave a faint excess under normal blending; render() clips it the same way.
+		E[E < GLOW_MIN] = 0.0
+		ga = E.max(axis=-1, keepdims=True)
+		if any(op[0] == "draw" and len(op) > 4 and op[4] in (3, 4, 8) for op in ops) and float(ga.max()) > 0.0:
+			grgb = np.where(ga > 1e-6, E / np.maximum(ga, 1e-6), 0.0)
+			gimg = (np.concatenate([np.clip(grgb, 0, 1), ga], -1) * 255.0 + 0.5).astype(np.uint8)
+			glow = Image.fromarray(gimg, "RGBA")
+		return normal, glow, (-x0, -y0)
 
 
 def render_chunked(rend: Renderer, ops, scale: float, out_dir: Path, chunk: int = 2048, pad: int = 2) -> dict | None:

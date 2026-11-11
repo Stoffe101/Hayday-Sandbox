@@ -12,8 +12,13 @@ const LAYER_GRID := 2
 const LAYER_OVERLAY := 4
 const LAYER_LABELS := 8
 
+## Emitted when a capture starts, before anything is rendered (main.gd ends the
+## renderer's lift / drop motion here, so it never shows in an export).
+signal capturing
+
 
 func capture(world_rect: Rect2, scale: float, transparent: bool = false, include_grid: bool = false, include_overlay: bool = false) -> Image:
+	capturing.emit()
 	var total := Vector2i((world_rect.size * scale).ceil())
 	total = total.max(Vector2i.ONE)
 	if total.x * total.y > MAX_PIXELS:

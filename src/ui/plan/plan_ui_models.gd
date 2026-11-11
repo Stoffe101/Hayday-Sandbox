@@ -503,6 +503,7 @@ static func checklist(engine: BudgetEngine, layout: FarmLayout, db: ItemDatabase
 	var phases: Array = []
 	var overall := _counts()
 	var skipped := 0
+	var group_of := {}   # raw item id -> group ("" = editor marker, skipped); once per item type
 	for pid in engine.phase_ids(true):
 		var ph := PlanDoc.phase(plan, pid)
 		var acc := _counts()
@@ -511,17 +512,29 @@ static func checklist(engine: BudgetEngine, layout: FarmLayout, db: ItemDatabase
 			var o: PlacedObject = layout.objects.get(int(u))
 			if o == null:
 				continue
-			var it: ItemDef = db.get_item(o.item_id) if db != null else null
-			if it != null and it.category in RecreationGuide.SKIP_CATEGORIES:
+			var gv: Variant = group_of.get(o.item_id)
+			if gv == null:
+				var it: ItemDef = db.get_item(o.item_id) if db != null else null
+				if it != null and it.category in RecreationGuide.SKIP_CATEGORIES:
+					gv = ""
+				else:
+					gv = ShoppingList.group_of_category(it.category) if it != null else ShoppingList.GROUP_OTHER
+				group_of[o.item_id] = gv
+			var g: String = gv
+			if g.is_empty():
 				skipped += 1
 				continue
-			var g := ShoppingList.group_of_category(it.category) if it != null else ShoppingList.GROUP_OTHER
 			var st: String = states.get(int(u), ST_NOT_ACQUIRED)
-			if not groups.has(g):
-				groups[g] = _counts()
-			_count_into(groups[g], int(u), st)
+			var gc: Variant = groups.get(g)
+			if gc == null:
+				gc = _counts()
+				groups[g] = gc
+			_count_into(gc, int(u), st)
 			_count_into(acc, int(u), st)
-			_count_into(overall, int(u), st)
+		(overall["uids"] as Array).append_array(acc["uids"])
+		(overall["open_uids"] as Array).append_array(acc["open_uids"])
+		for k: String in ["total", ST_NOT_ACQUIRED, ST_ACQUIRED, ST_PLACED]:
+			overall[k] += int(acc[k])
 		if acc["total"] == 0 and pid == BudgetEngine.UNPHASED:
 			continue
 		var glist: Array = []

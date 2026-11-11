@@ -305,7 +305,7 @@ func _preview_stamp(at: Vector2i, e: InputEventMouse) -> void:
 	var gs: Array = []
 	for o: PlacedObject in plan["objs"]:
 		gs.append(_ghost_of(o))
-	var shown := _with_mirror(gs, PlacementRules.check_stamp(session.layout, session.map, plan["rects"]), bool(session.symmetry["enabled"]))
+	var shown := _with_mirror(gs, PlacementRules.check_stamp(session.layout, session.map, plan["rects"], {}, plan.get("zones", [])), bool(session.symmetry["enabled"]))
 	_set_preview(shown[0], shown[1])
 	var n: int = (plan["objs"] as Array).size()
 	_tag(e, "%s · %d fit%s" % [str(active_stamp.get("name", "")), n, "" if int(plan["skipped"]) == 0 else ", %d skipped" % int(plan["skipped"])])
@@ -365,7 +365,8 @@ func _preview_brush(t: Vector2i, e: InputEventMouse) -> void:
 		return
 	var flipped := session.place_flipped and item.flippable
 	var rects := _brush_shape(item, t)
-	var fit := LayoutTools.fit_mask(session.layout, session.map, rects)
+	var zones := _zone_list(item, rects.size())
+	var fit := LayoutTools.fit_mask(session.layout, session.map, rects, {}, zones)
 	var masks: Array = LayoutTools.connection_masks(session.layout, session.db, item.connect_group, rects) if not item.connect_group.is_empty() else []
 	var gs: Array = []
 	var n := 0
@@ -375,7 +376,7 @@ func _preview_brush(t: Vector2i, e: InputEventMouse) -> void:
 			g["mask"] = masks[i]
 		gs.append(g)
 		n += 1 if fit[i] else 0
-	var shown := _with_mirror(gs, PlacementRules.check_stamp(session.layout, session.map, rects), bool(session.symmetry["enabled"]))
+	var shown := _with_mirror(gs, PlacementRules.check_stamp(session.layout, session.map, rects, {}, zones), bool(session.symmetry["enabled"]))
 	_set_preview(shown[0], shown[1])
 	_tag(e, "%d × %s · %d fit" % [rects.size(), item.name, n])
 
@@ -387,7 +388,7 @@ func _commit_brush(t: Vector2i) -> void:
 	if item == null:
 		return
 	var rects := _brush_shape(item, t)
-	var fit := LayoutTools.fit_mask(session.layout, session.map, rects)
+	var fit := LayoutTools.fit_mask(session.layout, session.map, rects, {}, _zone_list(item, rects.size()))
 	var objs: Array = []
 	for i in rects.size():
 		if fit[i]:
@@ -410,8 +411,16 @@ func _update_repeat_preview() -> void:
 	var gs: Array = []
 	for o: PlacedObject in plan["objs"]:
 		gs.append(_ghost_of(o))
-	_set_preview(gs, PlacementRules.check_stamp(session.layout, session.map, plan["rects"]))
+	_set_preview(gs, PlacementRules.check_stamp(session.layout, session.map, plan["rects"], {}, plan.get("zones", [])))
 	dock.set_status("Repeat: %d fit%s" % [(plan["objs"] as Array).size(), "" if int(plan["skipped"]) == 0 else ", %d blocked" % int(plan["skipped"])])
+
+
+static func _zone_list(item: ItemDef, n: int) -> Array:
+	## fit_mask / check_stamp zone flags for n rects of one item (water decorations).
+	var out: Array = []
+	out.resize(n)
+	out.fill(PlacementRules.is_zone_item(item))
+	return out
 
 
 # --- previews ---------------------------------------------------------------------------
@@ -465,7 +474,7 @@ func _with_mirror(gs: Array, result: PlacementRules.Result, on: bool) -> Array:
 		if g.has("mask"):
 			mg["mask"] = LayoutTools.mirror_mask(g["mask"], line)
 		out.append(mg)
-		PlacementRules._merge(merged, PlacementRules.check_rect(session.layout, session.map, m["rect"]))
+		PlacementRules._merge(merged, PlacementRules.check_rect(session.layout, session.map, m["rect"], {}, true, PlacementRules.is_zone_item(it)))
 	return [out, merged]
 
 

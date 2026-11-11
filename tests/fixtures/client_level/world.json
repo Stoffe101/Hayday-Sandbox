@@ -46,5 +46,6 @@
 		{"item": "t_lamp", "x": 1, "y": 2, "flip": true, "group": "start", "game_name": "Wheat", "source_group": "Objects"},
 		{"item": "t_lamp", "x": 4, "y": 0, "flip": false, "group": "exp_1", "game_name": "Stone", "source_group": "Objects1"}
 	],
+	"water_deco_zones": [{"id": "testbank", "name": "TestBank", "rect": [-2, 0, 2, 3], "enabled": true}],
 	"notes": ["Synthetic fixture for WorldValidator tests: invented numbers, not game data."]
 }

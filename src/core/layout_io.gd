@@ -52,7 +52,7 @@ const H1_REVIEW_MIN_X := 53
 ## (fixed landmarks or ground that is not buildable at all). Overlaps between
 ## objects and locked plots are ordinary editing states and are not reported.
 const COLLISION_CODES := [PlacementRules.LANDMARK, PlacementRules.OUT_OF_BOUNDS, PlacementRules.ROAD,
-	PlacementRules.WATER, PlacementRules.BLOCKED]
+	PlacementRules.WATER, PlacementRules.BLOCKED, PlacementRules.WATER_DECO_ZONE]
 const KNOWN_KEYS := ["format", "schema_version", "app_version", "meta", "map", "next_uid", "next_group", "objects",
 	"groups", "annotations", "profile", "reference", "camera", "world", "migration", "footprint_source", "planning"]
 
@@ -329,6 +329,8 @@ static func from_dict(d: Dictionary, db: ItemDatabase, report: LoadReport = null
 	else:
 		l.footprint_source = saved_src
 	# --- collisions with the world ---
+	if db != null:
+		l.zone_items = PlacementRules.zone_item_ids(db)
 	if map != null and WorldLoader.canonical_map_id(map.id) == l.map_id:
 		report.collisions = find_collisions(l, map)
 	for k in data.keys():
@@ -361,7 +363,7 @@ static func find_collisions(l: FarmLayout, map: FarmMap) -> Array:
 	uids.sort()
 	for u in uids:
 		var o: PlacedObject = l.objects[u]
-		var r := PlacementRules.check_rect(l, map, o.rect(), {o.uid: true})
+		var r := PlacementRules.check_object(l, map, o)
 		if r.ok:
 			continue
 		var parts := PackedStringArray()

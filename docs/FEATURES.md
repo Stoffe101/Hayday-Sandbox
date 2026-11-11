@@ -208,7 +208,11 @@ unless noted.
 
 ## Art & data
 * ✅ Original CC0 placeholder art for all items (475 dedicated + shared generic), 16 connection shapes for fences/paths, truck landmark placeholder
-* 🟡 Private packs can carry world data (landmark positions, initial objects) and catalogue corrections; tested with synthetic packs only, not with a real private pack
+* ✅ Private packs can carry world data (landmark positions, initial objects, water-decoration zones), catalogue corrections and additions; verified with the maintainer's own pack in W5 (self-test with the pack installed, world check against the client's level data, uninstall cycle `--selftest=packcycle`)
+* ✅ Pack terrain ([TERRAIN_PACKS.md](TERRAIN_PACKS.md)): ground tiles per season, edge meshes, foreground pieces, add / multiply / screen blending, animated water clips, camera limits from the pieces; the procedural ground returns when the pack is removed
+* ✅ Object animations and glow from a pack (`anim` patch sheets that replace part of the static image, additive `glow` layers), on the canvas, in ghosts and in PNG exports; lazily loaded, only in view, Off / Reduced / Full
+* ✅ Water decorations (items tagged `water_deco`) only inside the world's water-decoration zones; the zones are drawn while such an item is armed or dragged
+* 🟡 What still needs an in-game screenshot (truck anchor, farmhouse art, tile seam, clouds, camera limits, water-zone rule): [KNOWN_ISSUES.md](KNOWN_ISSUES.md#pending-a-real-screenshot-and-how-to-settle-each-one)
 * ✅ In-app art importer (folders, sprite sheets, manifests, trimming, hashing, report) into private packs
 * ✅ Layered asset packs, hot reload after import; `.zip` pack install (Settings or `-- --install-pack=`)
 * ✅ Asset Manager (Ctrl+Shift+A): footprint preview with original/placeholder/onion skin, drag/arrow anchor
